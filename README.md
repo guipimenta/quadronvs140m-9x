@@ -25,7 +25,7 @@ documentation as hardware references.
   `vxd_nv.{c,h}` (G86 detect + MMIO/VRAM access), `vxd_main_nv.c`, `nv50_disp.h`
   (NV50 register map), `tools/nvprobe.c` (user-space probe/peek tool), plus the
   `nvmini` makefile target and small `#ifdef NV_DETECT` hooks.
-- `dist/m2-nvdetect/` — the current built driver + INF + `nvprobe.exe` + dump
+- `dist/driver/` — the current built driver + INF + `nvprobe.exe` + dump
   batches, ready to copy to the T61.
 - `tools/` — Python reverse-engineering helpers (LE/VxD parser, trace scripts).
 - `analysis/` — our RE write-ups (the raw proprietary binaries are gitignored).

@@ -50,7 +50,7 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
   reads `PMC_BOOT_0` and decodes chipset/family/rev. Built into the `nvmini`
   pair (VESA scanout + probe); results read on the laptop with `nvprobe.exe`
   via `OP_NV_PROBE` (0x5000), so no serial port is needed. Package:
-  `dist/m2-nvdetect/`. Success = `nvprobe` prints `chipset 0x86, mmio_ok 1`.
+  `dist/driver/`. Success = `nvprobe` prints `chipset 0x86, mmio_ok 1`.
   Still scanning out via VESA. (Needs T61 to run.)
 - **M3 — native modeset (the hard one).** Program the NV50 display engine
   (PLLs, CRTC, LVDS/panel) to light the T61 panel at native resolution with a
