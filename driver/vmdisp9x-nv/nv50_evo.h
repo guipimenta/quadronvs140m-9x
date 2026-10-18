@@ -65,4 +65,36 @@
 /* EVO pushbuffer method header: method dword = (count<<18) | (method & 0x3ffff). */
 #define NV50_EVO_MTHD(method, count)  (((count) << 18) | ((method) & 0x3ffff))
 
+/* wh15 / xy15 packing: width/x in low 16, height/y in high 16. */
+#define NV50_EVO_WH(w, h)             (((w) & 0xffff) | (((h) & 0xffff) << 16))
+
+/* Handle we will give the framebuffer ctxdma (created in E3). */
+#define NVFB_ISO_HANDLE              0xcafe0001UL
+
+/* ---- E2 staging (VRAM-only, no hardware activation) ---- */
+/* Scratch VRAM byte offsets, well clear of the live scanout at offset 0.
+ * Proven writable by the build-2005 VRAM tests. */
+#define NVFB_FB_VRAM_OFFSET          0x01000000UL  /* 16 MB: our framebuffer   */
+#define NVFB_PUSH_VRAM_OFFSET        0x01800000UL  /* 24 MB: EVO pushbuffer     */
+#define NVFB_NOTIFY_VRAM_OFFSET      0x01810000UL  /* notifier                  */
+
+typedef struct nv_evo_layout
+{
+	unsigned long fb_offset;      /* VRAM byte offset of the framebuffer      */
+	unsigned long fb_width;
+	unsigned long fb_height;
+	unsigned long fb_bpp;
+	unsigned long fb_pitch;       /* bytes per row                            */
+	unsigned long push_offset;    /* VRAM byte offset of the pushbuffer       */
+	unsigned long push_dwords;    /* method-stream length in dwords           */
+	unsigned long notify_offset;  /* VRAM byte offset of the notifier         */
+	unsigned long iso_handle;     /* fb ctxdma handle the stream references   */
+	unsigned long first_method;   /* pushbuffer[0], for readback verification */
+	unsigned long ok;             /* 1 if staged (VRAM mapped & written)      */
+} nv_evo_layout_t;
+
+/* Build head0 framebuffer + pushbuffer + test pattern in VRAM. VRAM writes
+ * only; does NOT touch the display engine. Returns 1 on success. */
+int NV_evo_stage(nv_evo_layout_t *out);
+
 #endif /* __NV50_EVO_H__ */

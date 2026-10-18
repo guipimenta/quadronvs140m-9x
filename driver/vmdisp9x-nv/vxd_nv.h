@@ -15,7 +15,7 @@
 /* Build stamp. Bump on every rebuild. nvprobe compares the VxD's value against
  * the one it was compiled with, so version skew (stale VxD or stale EXE) is
  * obvious. Scheme: milestone*1000 + revision. */
-#define NV_BUILD            2005UL   /* M3 r1: BAR1 VRAM read/write/fill */
+#define NV_BUILD            2006UL   /* M3 r2: EVO staging in VRAM (E2, safe) */
 
 #define NV_PCI_VENDOR       0x10DEUL  /* NVIDIA */
 #define NV_DEV_NVS140M      0x0429UL  /* Quadro NVS 140M (G86) */
@@ -33,6 +33,7 @@
 #define OP_NV_RD32          0x5001  /* read a range of BAR0 MMIO dwords (RO) */
 #define OP_NV_VRAM_RD       0x5002  /* read a range of BAR1 VRAM dwords       */
 #define OP_NV_VRAM_FILL     0x5003  /* fill BAR1 VRAM dwords with a value     */
+#define OP_NV_EVO_STAGE     0x5004  /* E2: stage fb+pushbuffer in VRAM (safe) */
 
 #define NV_RD32_MAX         256     /* max dwords per read request            */
 
@@ -86,5 +87,7 @@ unsigned long NV_rd32(unsigned long offset);
 unsigned long NV_vram_rd32(unsigned long offset);
 /* Fill `count` dwords at VRAM byte `offset` with `value`. Returns dwords written. */
 unsigned long NV_vram_fill(unsigned long offset, unsigned long count, unsigned long value);
+/* Write one dword to VRAM byte `offset`. Returns 1 on success, 0 if out of range. */
+int NV_vram_wr32(unsigned long offset, unsigned long value);
 
 #endif /* __VXD_NV_H__ */

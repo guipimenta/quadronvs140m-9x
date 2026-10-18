@@ -240,3 +240,15 @@ unsigned long NV_vram_fill(unsigned long offset, unsigned long count, unsigned l
 		nv_bar1[(offset >> 2) + i] = value;
 	return count;
 }
+
+/* Write one dword to VRAM through the BAR1 aperture. Bounds-checked. */
+int NV_vram_wr32(unsigned long offset, unsigned long value)
+{
+	if(!NV_map_bar1())
+		return 0;
+	offset &= ~3UL;
+	if(offset + 4 > nv_bar1_bytes)
+		return 0;
+	nv_bar1[offset >> 2] = value;
+	return 1;
+}

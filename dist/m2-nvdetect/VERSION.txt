@@ -1,6 +1,5 @@
-M2/M3 package version: build 2005 (M3 r1: VRAM read/write/fill)
-Expected file sizes (verify with DIR on the T61):
-  nvmini.vxd   34877 bytes
+package build 2006 (M3 r2: EVO staging E2, safe VRAM-only)
+  nvmini.vxd   34929 bytes
   nvprobe.exe  31232 bytes
   nvmini.drv   16158 bytes
-nvprobe prints 'build: vxd=2005 exe=2005' when the matching VxD is loaded.
+nvprobe prints 'build: vxd=2006 exe=2006' when matched.

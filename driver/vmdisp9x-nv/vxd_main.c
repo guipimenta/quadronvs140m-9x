@@ -60,6 +60,7 @@ BOOL VESA_check_int10h(DWORD vm, PCRS_32 regs);
 
 #ifdef NV_DETECT
 #include "vxd_nv.h"
+#include "nv50_evo.h"
 #endif
 
 #include "code32.h"
@@ -1055,6 +1056,15 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			outBuf[0] = NV_vram_fill(inBuf[0], inBuf[1], inBuf[2]);
 			rc = 0;
 			break;
+		case OP_NV_EVO_STAGE:
+		{
+			/* E2: build fb + pushbuffer + test pattern in VRAM (safe). */
+			nv_evo_layout_t lay;
+			NV_evo_stage(&lay);
+			memcpy(outBuf, &lay, sizeof(lay));
+			rc = 0;
+			break;
+		}
 #endif
 		default:
 			dbg_printf("DeviceIOControl: Unknown: %d\n", params->dwIoControlCode);

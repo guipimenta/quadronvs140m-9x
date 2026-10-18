@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 #include "../vxd_nv.h"
+#include "../nv50_evo.h"
 
 int main(int argc, char **argv)
 {
@@ -102,6 +103,31 @@ int main(int argc, char **argv)
 		}
 		printf("filled %lu dwords at VRAM+%08lX with %08lX\n",
 			out[0], in[0], in[2]);
+		CloseHandle(vxd);
+		return 0;
+	}
+
+	/* "nvprobe evostage" : build the fb + pushbuffer in VRAM (safe, E2). */
+	if(argc >= 2 && strcmp(argv[1], "evostage") == 0)
+	{
+		nv_evo_layout_t lay;
+		DWORD i;
+		memset(&lay, 0, sizeof(lay));
+		if(!DeviceIoControl(vxd, OP_NV_EVO_STAGE, NULL, 0,
+			&lay, sizeof(lay), &ret, NULL))
+		{
+			printf("OP_NV_EVO_STAGE failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		printf("EVO staged (ok=%lu)\n", lay.ok);
+		printf("  framebuffer : VRAM+%08lX  %lux%lu %lubpp pitch %lu\n",
+			lay.fb_offset, lay.fb_width, lay.fb_height, lay.fb_bpp, lay.fb_pitch);
+		printf("  pushbuffer  : VRAM+%08lX  %lu dwords, first method %08lX\n",
+			lay.push_offset, lay.push_dwords, lay.first_method);
+		printf("  notifier    : VRAM+%08lX   iso handle %08lX\n",
+			lay.notify_offset, lay.iso_handle);
+		printf("  (read it back with: nvprobe vramrd %lX %lu)\n",
+			lay.push_offset, lay.push_dwords);
 		CloseHandle(vxd);
 		return 0;
 	}

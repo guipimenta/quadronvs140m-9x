@@ -267,6 +267,9 @@ vxd_main_nv.obj : vxd_main_nv.c .autodepend
 vxd_vesa_nv.obj : vxd_vesa.c .autodepend
 	$(CC32) $(CFLAGS32) $(INCS) $(FLAGS) -DNV_DETECT -fo=$@ vxd_vesa.c
 
+nv50_evo.obj : nv50_evo.c .autodepend
+	$(CC32) $(CFLAGS32) $(INCS) $(FLAGS) $<
+
 # Resources
 boxvmini.res : res/boxvmini.rc res/colortab.bin res/config.bin res/fonts.bin res/fonts120.bin .autodepend
 	wrc -q -r -ad -bt=windows -fo=$@ -Ires -I$(%WATCOM)/h/win $(FLAGS) res/boxvmini.rc
@@ -691,7 +694,7 @@ export VXD_DDB.1
 	$(FIXLINK_EXE) -vxd32 $@
 
 # NVIDIA G86 driver pair (Milestone 2). Scans out via VESA; adds native detection.
-nvmini.vxd : $(OBJS) vxd_main_nv.obj vxd_nv.obj vxd_vesa_nv.obj $(FIXLINK_EXE)
+nvmini.vxd : $(OBJS) vxd_main_nv.obj vxd_nv.obj vxd_vesa_nv.obj nv50_evo.obj $(FIXLINK_EXE)
 	wlink op quiet $(DBGFILE32) @<<nvmini_vxd.lnk
 system win_vxd dynamic
 option map=nvmini_vxd.map
@@ -704,6 +707,7 @@ file vxd_fbhda_dd.obj
 file vxd_lib.obj
 file vxd_vesa_nv.obj
 file vxd_nv.obj
+file nv50_evo.obj
 file vxd_gtf.obj
 file vxd_vdd_vesa.obj
 file vxd_mouse.obj
