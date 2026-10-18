@@ -1,0 +1,740 @@
+[0000ABAC] Loading Device = C:\WINDOWS\HIMEM.SYS
+[0000ABAD] LoadSuccess    = C:\WINDOWS\HIMEM.SYS
+[0000ABAD] Loading Device = C:\WINDOWS\DBLBUFF.SYS
+[0000ABAD] LoadSuccess    = C:\WINDOWS\DBLBUFF.SYS
+[0000ABAD] Loading Device = C:\WINDOWS\IFSHLP.SYS
+[0000ABAD] LoadSuccess    = C:\WINDOWS\IFSHLP.SYS
+[0000ABC3] Loading Vxd = C:\WINDOWS\system\VMM32\VMM.VXD
+[0000ABC3] LoadSuccess = C:\WINDOWS\system\VMM32\VMM.VXD
+[0000ABC3] Loading Vxd = C:\WINDOWS\SMARTDRV.EXE
+[0000ABC3] LoadSuccess = C:\WINDOWS\SMARTDRV.EXE
+[0000ABC3] Loading Vxd = ndis.vxd
+[0000ABC3] LoadSuccess = ndis.vxd
+[0000ABC3] Loading Vxd = ndis2sup.vxd
+[0000ABC3] LoadFailed = ndis2sup.vxd
+[0000ABC3] Loading Vxd = JAVASUP.VXD
+[0000ABC3] LoadSuccess = JAVASUP.VXD
+[0000ABC3] Loading Vxd = CONFIGMG
+[0000ABC4] LoadSuccess = CONFIGMG
+[0000ABC4] Loading Vxd = NTKERN
+[0000ABC4] LoadSuccess = NTKERN
+[0000ABC4] Loading Vxd = VWIN32
+[0000ABC4] LoadSuccess = VWIN32
+[0000ABC4] Loading Vxd = VFBACKUP
+[0000ABC4] LoadSuccess = VFBACKUP
+[0000ABC4] Loading Vxd = VCOMM
+[0000ABC4] LoadSuccess = VCOMM
+[0000ABC4] Loading Vxd = COMBUFF
+[0000ABC4] LoadSuccess = COMBUFF
+[0000ABC4] Loading Vxd = C:\WINDOWS\system\VMM32\IFSMGR.VXD
+[0000ABC4] LoadSuccess = C:\WINDOWS\system\VMM32\IFSMGR.VXD
+[0000ABC4] Loading Vxd = C:\WINDOWS\system\VMM32\IOS.VXD
+[0000ABC4] LoadSuccess = C:\WINDOWS\system\VMM32\IOS.VXD
+[0000ABC4] Loading Vxd = mtrr
+[0000ABC4] LoadSuccess = mtrr
+[0000ABC4] Loading Vxd = SPOOLER
+[0000ABC4] LoadSuccess = SPOOLER
+[0000ABC4] Loading Vxd = UDF
+[0000ABC4] LoadSuccess = UDF
+[0000ABC4] Loading Vxd = VFAT
+[0000ABC4] LoadSuccess = VFAT
+[0000ABC4] Loading Vxd = C:\WINDOWS\system\VMM32\VCACHE.VXD
+[0000ABC4] LoadSuccess = C:\WINDOWS\system\VMM32\VCACHE.VXD
+[0000ABC4] Loading Vxd = VCOND
+[0000ABC4] LoadSuccess = VCOND
+[0000ABC4] Loading Vxd = VCDFSD
+[0000ABC4] LoadSuccess = VCDFSD
+[0000ABC4] Loading Vxd = VXDLDR
+[0000ABC4] LoadSuccess = VXDLDR
+[0000ABC4] Loading Vxd = VDEF
+[0000ABC4] LoadSuccess = VDEF
+[0000ABC4] Loading Vxd = VPICD
+[0000ABC4] LoadSuccess = VPICD
+[0000ABC4] Loading Vxd = VTD
+[0000ABC4] LoadSuccess = VTD
+[0000ABC4] Loading Vxd = REBOOT
+[0000ABC4] LoadSuccess = REBOOT
+[0000ABC4] Loading Vxd = VDMAD
+[0000ABC4] LoadSuccess = VDMAD
+[0000ABC4] Loading Vxd = VSD
+[0000ABC4] LoadSuccess = VSD
+[0000ABC4] Loading Vxd = V86MMGR
+[0000ABC4] LoadSuccess = V86MMGR
+[0000ABC4] Loading Vxd = PAGESWAP
+[0000ABC4] LoadSuccess = PAGESWAP
+[0000ABC4] Loading Vxd = DOSMGR
+[0000ABC4] LoadSuccess = DOSMGR
+[0000ABC4] Loading Vxd = VMPOLL
+[0000ABC4] LoadSuccess = VMPOLL
+[0000ABC4] Loading Vxd = SHELL
+[0000ABC4] LoadSuccess = SHELL
+[0000ABC4] Loading Vxd = PARITY
+[0000ABC4] LoadSuccess = PARITY
+[0000ABC4] Loading Vxd = BIOSXLAT
+[0000ABC4] LoadSuccess = BIOSXLAT
+[0000ABC4] Loading Vxd = VMCPD
+[0000ABC4] LoadSuccess = VMCPD
+[0000ABC4] Loading Vxd = VTDAPI
+[0000ABC4] LoadSuccess = VTDAPI
+[0000ABC4] Loading Vxd = PERF
+[0000ABC4] LoadSuccess = PERF
+[0000ABC4] Loading Vxd = C:\WINDOWS\SYSTEM\vrtwd.386
+[0000ABC4] LoadSuccess = C:\WINDOWS\SYSTEM\vrtwd.386
+[0000ABC4] Loading Vxd = C:\WINDOWS\SYSTEM\vfixd.vxd
+[0000ABC4] LoadSuccess = C:\WINDOWS\SYSTEM\vfixd.vxd
+[0000ABC4] Loading Vxd = vnetbios.vxd
+[0000ABC5] LoadSuccess = vnetbios.vxd
+[0000ABC5] Loading Vxd = VGARTD.VXD
+[0000ABC5] LoadSuccess = VGARTD.VXD
+[0000ABC5] Loading Vxd = ebios
+[0000ABC5] LoadSuccess = ebios
+[0000ABC5] Loading Vxd = vmouse
+[0000ABC5] LoadSuccess = vmouse
+[0000ABC5] Loading Vxd = msmouse.vxd
+[0000ABC5] LoadSuccess = msmouse.vxd
+[0000ABC5] Loading Vxd = dynapage
+[0000ABC5] LoadSuccess = dynapage
+[0000ABC5] Loading Vxd = vcd
+[0000ABC5] LoadSuccess = vcd
+[0000ABC5] Loading Vxd = vpd
+[0000ABC5] LoadSuccess = vpd
+[0000ABC5] Loading Vxd = int13
+[0000ABC5] LoadSuccess = int13
+[0000ABC5] Loading Vxd = enable
+[0000ABC5] LoadSuccess = enable
+[0000ABC5] Loading Vxd = vkd
+[0000ABC5] LoadSuccess = vkd
+[0000ABC5] Loading Vxd = vdd
+[0000ABC5] LoadSuccess = vdd
+[0000ABC5] Loading Vxd = vflatd
+[0000ABC5] LoadSuccess = vflatd
+[0000ABC6] SYSCRITINIT  = VMM     
+[0000ABC6] SYSCRITINITSUCCESS  = VMM     
+[0000ABC6] SYSCRITINIT  = MTRR    
+[0000ABC6] SYSCRITINITSUCCESS  = MTRR    
+[0000ABC6] SYSCRITINIT  = VCACHE  
+[0000ABC6] SYSCRITINITSUCCESS  = VCACHE  
+[0000ABC6] SYSCRITINIT  = VGARTD  
+[0000ABC6] SYSCRITINITSUCCESS  = VGARTD  
+[0000ABC6] SYSCRITINIT  = PERF    
+[0000ABC6] SYSCRITINITSUCCESS  = PERF    
+[0000ABC6] SYSCRITINIT  = VFIXD   
+[0000ABC6] SYSCRITINITSUCCESS  = VFIXD   
+[0000ABC6] SYSCRITINIT  = VPICD   
+[0000ABC6] SYSCRITINITSUCCESS  = VPICD   
+[0000ABC6] SYSCRITINIT  = VrtwD   
+[0000ABC6] SYSCRITINITSUCCESS  = VrtwD   
+[0000ABC6] SYSCRITINIT  = VTD     
+[0000ABC6] SYSCRITINITSUCCESS  = VTD     
+[0000ABC6] SYSCRITINIT  = VWIN32  
+[0000ABC6] SYSCRITINITSUCCESS  = VWIN32  
+[0000ABC6] SYSCRITINIT  = VXDLDR  
+[0000ABC6] SYSCRITINITSUCCESS  = VXDLDR  
+[0000ABC6] SYSCRITINIT  = NTKERN  
+[0000ABC6] SYSCRITINITSUCCESS  = NTKERN  
+[0000ABC6] SYSCRITINIT  = CONFIGMG
+[0000ABC6] SYSCRITINITSUCCESS  = CONFIGMG
+[0000ABC6] SYSCRITINIT  = VCDFSD  
+[0000ABC6] SYSCRITINITSUCCESS  = VCDFSD  
+[0000ABC6] SYSCRITINIT  = IOS     
+[0000ABC6] SYSCRITINITSUCCESS  = IOS     
+[0000ABC6] SYSCRITINIT  = PAGEFILE
+[0000ABC6] SYSCRITINITSUCCESS  = PAGEFILE
+[0000ABC6] SYSCRITINIT  = PAGESWAP
+[0000ABC6] SYSCRITINITSUCCESS  = PAGESWAP
+[0000ABC6] SYSCRITINIT  = PARITY  
+[0000ABC6] SYSCRITINITSUCCESS  = PARITY  
+[0000ABC6] SYSCRITINIT  = REBOOT  
+[0000ABC6] SYSCRITINITSUCCESS  = REBOOT  
+[0000ABC6] SYSCRITINIT  = EBIOS   
+[0000ABC6] SYSCRITINITSUCCESS  = EBIOS   
+[0000ABC6] SYSCRITINIT  = VDD     
+[0000ABC6] SYSCRITINITSUCCESS  = VDD     
+[0000ABC6] SYSCRITINIT  = VSD     
+[0000ABC6] SYSCRITINITSUCCESS  = VSD     
+[0000ABC6] SYSCRITINIT  = COMBUFF 
+[0000ABC6] SYSCRITINITSUCCESS  = COMBUFF 
+[0000ABC6] SYSCRITINIT  = VCD     
+[0000ABC6] SYSCRITINITSUCCESS  = VCD     
+[0000ABC6] SYSCRITINIT  = VMOUSE  
+[0000ABC6] SYSCRITINITSUCCESS  = VMOUSE  
+[0000ABC6] SYSCRITINIT  = MSMINI  
+[0000ABC6] SYSCRITINITSUCCESS  = MSMINI  
+[0000ABC6] SYSCRITINIT  = ENABLE  
+[0000ABC6] SYSCRITINITSUCCESS  = ENABLE  
+[0000ABC6] SYSCRITINIT  = VKD     
+[0000ABC6] SYSCRITINITSUCCESS  = VKD     
+[0000ABC6] SYSCRITINIT  = VPD     
+[0000ABC6] SYSCRITINITSUCCESS  = VPD     
+[0000ABC6] SYSCRITINIT  = INT13   
+[0000ABC6] SYSCRITINITSUCCESS  = INT13   
+[0000ABC6] SYSCRITINIT  = VMCPD   
+[0000ABC6] SYSCRITINITSUCCESS  = VMCPD   
+[0000ABC6] SYSCRITINIT  = BIOSXLAT
+[0000ABC6] SYSCRITINITSUCCESS  = BIOSXLAT
+[0000ABC6] SYSCRITINIT  = SDVXD   
+[0000ABC6] SYSCRITINITSUCCESS  = SDVXD   
+[0000ABC6] SYSCRITINIT  = VNETBIOS
+[0000ABC6] SYSCRITINITSUCCESS  = VNETBIOS
+[0000ABC6] SYSCRITINIT  = NDIS    
+[0000ABC6] SYSCRITINITSUCCESS  = NDIS    
+[0000ABC6] SYSCRITINIT  = DOSMGR  
+[0000ABC6] SYSCRITINITSUCCESS  = DOSMGR  
+[0000ABC6] SYSCRITINIT  = VMPOLL  
+[0000ABC6] SYSCRITINITSUCCESS  = VMPOLL  
+[0000ABC6] SYSCRITINIT  = JAVASUP 
+[0000ABC6] SYSCRITINITSUCCESS  = JAVASUP 
+[0000ABC6] SYSCRITINIT  = VCOMM   
+[0000ABC6] SYSCRITINITSUCCESS  = VCOMM   
+[0000ABC6] SYSCRITINIT  = VCOND   
+[0000ABC6] SYSCRITINITSUCCESS  = VCOND   
+[0000ABC6] SYSCRITINIT  = VTDAPI  
+[0000ABC6] SYSCRITINITSUCCESS  = VTDAPI  
+[0000ABC6] SYSCRITINIT  = VFLATD  
+[0000ABC6] SYSCRITINITSUCCESS  = VFLATD  
+[0000ABC6] SYSCRITINIT  = VDMAD   
+[0000ABC6] SYSCRITINITSUCCESS  = VDMAD   
+[0000ABC6] SYSCRITINIT  = V86MMGR 
+[0000ABC6] SYSCRITINITSUCCESS  = V86MMGR 
+[0000ABC6] SYSCRITINIT  = SPOOLER 
+[0000ABC6] SYSCRITINITSUCCESS  = SPOOLER 
+[0000ABC6] SYSCRITINIT  = UDF     
+[0000ABC6] SYSCRITINITSUCCESS  = UDF     
+[0000ABC6] SYSCRITINIT  = VFAT    
+[0000ABC6] SYSCRITINITSUCCESS  = VFAT    
+[0000ABC6] SYSCRITINIT  = VDEF    
+[0000ABC6] SYSCRITINITSUCCESS  = VDEF    
+[0000ABC6] SYSCRITINIT  = IFSMGR  
+[0000ABC6] SYSCRITINITSUCCESS  = IFSMGR  
+[0000ABC6] SYSCRITINIT  = VFBACKUP
+[0000ABC6] SYSCRITINITSUCCESS  = VFBACKUP
+[0000ABC6] SYSCRITINIT  = SHELL   
+[0000ABC6] SYSCRITINITSUCCESS  = SHELL   
+[0000ABC7] DEVICEINIT   = VMM     
+[0000ABC7] DEVICEINITSUCCESS   = VMM     
+[0000ABC7] DEVICEINIT   = MTRR    
+[0000ABC7] DEVICEINITSUCCESS   = MTRR    
+[0000ABC7] DEVICEINIT   = VCACHE  
+[0000ABC7] DEVICEINITSUCCESS   = VCACHE  
+[0000ABC7] DEVICEINIT   = VGARTD  
+[0000ABC7] DEVICEINITSUCCESS   = VGARTD  
+[0000ABC7] DEVICEINIT   = PERF    
+[0000ABC7] DEVICEINITSUCCESS   = PERF    
+[0000ABC7] DEVICEINIT   = VFIXD   
+[0000ABC7] DEVICEINITSUCCESS   = VFIXD   
+[0000ABC7] DEVICEINIT   = VPICD   
+[0000ABC7] DEVICEINITSUCCESS   = VPICD   
+[0000ABC7] DEVICEINIT   = VrtwD   
+[0000ABC7] DEVICEINITSUCCESS   = VrtwD   
+[0000ABC7] DEVICEINIT   = VTD     
+[0000ABC7] DEVICEINITSUCCESS   = VTD     
+[0000ABC7] DEVICEINIT   = VWIN32  
+[0000ABC7] DEVICEINITSUCCESS   = VWIN32  
+[0000ABC7] DEVICEINIT   = VXDLDR  
+[0000ABC7] DEVICEINITSUCCESS   = VXDLDR  
+[0000ABC7] DEVICEINIT   = NTKERN  
+[0000ABC7] DEVICEINITSUCCESS   = NTKERN  
+[0000ABC7] DEVICEINIT   = CONFIGMG
+[0000ABC7] Starting Unknown (HTREE\ROOT\0)
+[0000ABC7] Started Unknown (HTREE\ROOT\0)
+[0000ABC7] Enumerating Unknown (HTREE\ROOT\0)
+[0000ABC7] Enumerated Unknown (HTREE\ROOT\0)
+[0000ABC7] Starting Unknown (HTREE\RESERVED\0)
+[0000ABC7] Started Unknown (HTREE\RESERVED\0)
+[0000ABC7] Enumerating Unknown (HTREE\RESERVED\0)
+[0000ABC7] Enumerated Unknown (HTREE\RESERVED\0)
+[0000ABC7] Loading PNP drivers of Dial-Up Adapter (ROOT\NET\0000)
+[0000ABC7] Loading PNP drivers of Processor support (ROOT\PROCESSOR_UPDATE\0000)
+[0000ABC7] Loaded PNP drivers of Processor support (ROOT\PROCESSOR_UPDATE\0000)
+[0000ABC7] Starting Processor support (ROOT\PROCESSOR_UPDATE\0000)
+[0000ABC7] Started Processor support (ROOT\PROCESSOR_UPDATE\0000)
+[0000ABC7] Loading PNP drivers of Plug and Play Software Device Enumerator (ROOT\SWENUM\0000)
+[0000ABC7] Loaded PNP drivers of Plug and Play Software Device Enumerator (ROOT\SWENUM\0000)
+[0000ABC7] Starting Plug and Play Software Device Enumerator (ROOT\SWENUM\0000)
+[0000ABC7] Started Plug and Play Software Device Enumerator (ROOT\SWENUM\0000)
+[0000ABC7] Loading PNP drivers of Plug and Play BIOS (ROOT\*PNP0C00\0000)
+[0000ABC7] Dynamic load device  bios.vxd
+[0000ABC9] Dynamic init device  BIOS
+[0000ABC9] Dynamic init success BIOS
+[0000ABC9] Dynamic load success bios.vxd
+[0000ABC9] Starting Plug and Play BIOS (ROOT\*PNP0C00\0000)
+[0000ABC9] Started Plug and Play BIOS (ROOT\*PNP0C00\0000)
+[0000ABC9] Enumerating Plug and Play BIOS (ROOT\*PNP0C00\0000)
+[0000ABC9] Enumerated Plug and Play BIOS (ROOT\*PNP0C00\0000)
+[0000ABC9] Starting Motherboard resources (BIOS\*PNP0C02\00)
+[0000ABC9] Started Motherboard resources (BIOS\*PNP0C02\00)
+[0000ABC9] Enumerating Motherboard resources (BIOS\*PNP0C02\00)
+[0000ABC9] Enumerated Motherboard resources (BIOS\*PNP0C02\00)
+[0000ABC9] Starting Motherboard resources (BIOS\*PNP0C02\01)
+[0000ABC9] Started Motherboard resources (BIOS\*PNP0C02\01)
+[0000ABC9] Enumerating Motherboard resources (BIOS\*PNP0C02\01)
+[0000ABC9] Enumerated Motherboard resources (BIOS\*PNP0C02\01)
+[0000ABC9] Loading PNP drivers of System board extension for PnP BIOS (BIOS\*PNP0C01\02)
+[0000ABC9] Loaded PNP drivers of System board extension for PnP BIOS (BIOS\*PNP0C01\02)
+[0000ABC9] Starting System board extension for PnP BIOS (BIOS\*PNP0C01\02)
+[0000ABC9] Started System board extension for PnP BIOS (BIOS\*PNP0C01\02)
+[0000ABC9] Enumerating System board extension for PnP BIOS (BIOS\*PNP0C01\02)
+[0000ABC9] Enumerated System board extension for PnP BIOS (BIOS\*PNP0C01\02)
+[0000ABC9] Loading PNP drivers of Direct memory access controller (BIOS\*PNP0200\03)
+[0000ABC9] Loaded PNP drivers of Direct memory access controller (BIOS\*PNP0200\03)
+[0000ABC9] Starting Direct memory access controller (BIOS\*PNP0200\03)
+[0000ABC9] Started Direct memory access controller (BIOS\*PNP0200\03)
+[0000ABC9] Enumerating Direct memory access controller (BIOS\*PNP0200\03)
+[0000ABC9] Enumerated Direct memory access controller (BIOS\*PNP0200\03)
+[0000ABC9] Starting Programmable interrupt controller (BIOS\*PNP0000\04)
+[0000ABC9] Started Programmable interrupt controller (BIOS\*PNP0000\04)
+[0000ABC9] Enumerating Programmable interrupt controller (BIOS\*PNP0000\04)
+[0000ABC9] Enumerated Programmable interrupt controller (BIOS\*PNP0000\04)
+[0000ABC9] Loading PNP drivers of System timer (BIOS\*PNP0100\05)
+[0000ABC9] Loaded PNP drivers of System timer (BIOS\*PNP0100\05)
+[0000ABC9] Starting System timer (BIOS\*PNP0100\05)
+[0000ABC9] Started System timer (BIOS\*PNP0100\05)
+[0000ABC9] Enumerating System timer (BIOS\*PNP0100\05)
+[0000ABC9] Enumerated System timer (BIOS\*PNP0100\05)
+[0000ABC9] Loading PNP drivers of System CMOS/real time clock (BIOS\*PNP0B00\06)
+[0000ABC9] Loaded PNP drivers of System CMOS/real time clock (BIOS\*PNP0B00\06)
+[0000ABCA] Starting System CMOS/real time clock (BIOS\*PNP0B00\06)
+[0000ABCA] Started System CMOS/real time clock (BIOS\*PNP0B00\06)
+[0000ABCA] Enumerating System CMOS/real time clock (BIOS\*PNP0B00\06)
+[0000ABCA] Enumerated System CMOS/real time clock (BIOS\*PNP0B00\06)
+[0000ABCA] Loading PNP drivers of Standard 101/102-Key or Microsoft Natural Keyboard (BIOS\*PNP0303\07)
+[0000ABCA] Loaded PNP drivers of Standard 101/102-Key or Microsoft Natural Keyboard (BIOS\*PNP0303\07)
+[0000ABCA] Loading PNP drivers of Numeric data processor (BIOS\*PNP0C04\08)
+[0000ABCA] Loaded PNP drivers of Numeric data processor (BIOS\*PNP0C04\08)
+[0000ABCA] Starting Numeric data processor (BIOS\*PNP0C04\08)
+[0000ABCA] Started Numeric data processor (BIOS\*PNP0C04\08)
+[0000ABCA] Enumerating Numeric data processor (BIOS\*PNP0C04\08)
+[0000ABCA] Enumerated Numeric data processor (BIOS\*PNP0C04\08)
+[0000ABCA] Loading PNP drivers of System speaker (BIOS\*PNP0800\09)
+[0000ABCA] Loaded PNP drivers of System speaker (BIOS\*PNP0800\09)
+[0000ABCA] Starting System speaker (BIOS\*PNP0800\09)
+[0000ABCA] Started System speaker (BIOS\*PNP0800\09)
+[0000ABCA] Enumerating System speaker (BIOS\*PNP0800\09)
+[0000ABCA] Enumerated System speaker (BIOS\*PNP0800\09)
+[0000ABCA] Starting Motherboard resources (BIOS\*PNP0C02\0A)
+[0000ABCA] Started Motherboard resources (BIOS\*PNP0C02\0A)
+[0000ABCA] Enumerating Motherboard resources (BIOS\*PNP0C02\0A)
+[0000ABCA] Enumerated Motherboard resources (BIOS\*PNP0C02\0A)
+[0000ABCA] Starting Motherboard resources (BIOS\*PNP0C02\0B)
+[0000ABCA] Started Motherboard resources (BIOS\*PNP0C02\0B)
+[0000ABCA] Enumerating Motherboard resources (BIOS\*PNP0C02\0B)
+[0000ABCA] Enumerated Motherboard resources (BIOS\*PNP0C02\0B)
+[0000ABCA] Loading PNP drivers of PCI bus (BIOS\*PNP0A03\0C)
+[0000ABCA] Dynamic load device  pci.vxd
+[0000ABCA] Dynamic init device  PCI
+[0000ABCA] Dynamic init success PCI
+[0000ABCA] Dynamic load success pci.vxd
+[0000ABCA] Starting PCI bus (BIOS\*PNP0A03\0C)
+[0000ABCA] Started PCI bus (BIOS\*PNP0A03\0C)
+[0000ABCA] Enumerating PCI bus (BIOS\*PNP0A03\0C)
+[0000ABCA] Starting PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2A01&SUBSYS_00000000&REV_0C\BUS_00&DEV_01&FUNC_00)
+[0000ABCA] Started PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2A01&SUBSYS_00000000&REV_0C\BUS_00&DEV_01&FUNC_00)
+[0000ABCA] Enumerating PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2A01&SUBSYS_00000000&REV_0C\BUS_00&DEV_01&FUNC_00)
+[0000ABCA] Enumerated PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2A01&SUBSYS_00000000&REV_0C\BUS_00&DEV_01&FUNC_00)
+[0000ABCA] Starting PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_283F&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_00)
+[0000ABCA] Started PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_283F&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_00)
+[0000ABCA] Enumerating PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_283F&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_00)
+[0000ABCA] Enumerated PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_283F&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_00)
+[0000ABCA] Starting PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2843&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_02)
+[0000ABCA] Started PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2843&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_02)
+[0000ABCA] Enumerating PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2843&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_02)
+[0000ABCA] Enumerated PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2843&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_02)
+[0000ABCA] Starting PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2448&SUBSYS_00000000&REV_F3\BUS_00&DEV_1E&FUNC_00)
+[0000ABCA] Started PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2448&SUBSYS_00000000&REV_F3\BUS_00&DEV_1E&FUNC_00)
+[0000ABCA] Enumerating PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2448&SUBSYS_00000000&REV_F3\BUS_00&DEV_1E&FUNC_00)
+[0000ABCA] Enumerated PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2448&SUBSYS_00000000&REV_F3\BUS_00&DEV_1E&FUNC_00)
+[0000ABCA] Enumerated PCI bus (BIOS\*PNP0A03\0C)
+[0000ABCA] Starting PCI standard host CPU bridge (PCI\VEN_8086&DEV_2A00&SUBSYS_20B117AA&REV_0C\BUS_00&DEV_00&FUNC_00)
+[0000ABCA] Started PCI standard host CPU bridge (PCI\VEN_8086&DEV_2A00&SUBSYS_20B117AA&REV_0C\BUS_00&DEV_00&FUNC_00)
+[0000ABCA] Enumerating PCI standard host CPU bridge (PCI\VEN_8086&DEV_2A00&SUBSYS_20B117AA&REV_0C\BUS_00&DEV_00&FUNC_00)
+[0000ABCA] Enumerated PCI standard host CPU bridge (PCI\VEN_8086&DEV_2A00&SUBSYS_20B117AA&REV_0C\BUS_00&DEV_00&FUNC_00)
+[0000ABCA] Loaded PNP drivers of PCI bus (BIOS\*PNP0A03\0C)
+[0000ABCA] Starting Motherboard resources (BIOS\*PNP0C02\0D)
+[0000ABCA] Started Motherboard resources (BIOS\*PNP0C02\0D)
+[0000ABCB] Enumerating Motherboard resources (BIOS\*PNP0C02\0D)
+[0000ABCB] Enumerated Motherboard resources (BIOS\*PNP0C02\0D)
+[0000ABCB] Starting Motherboard resources (BIOS\*PNP0C02\0E)
+[0000ABCB] Started Motherboard resources (BIOS\*PNP0C02\0E)
+[0000ABCB] Enumerating Motherboard resources (BIOS\*PNP0C02\0E)
+[0000ABCB] Enumerated Motherboard resources (BIOS\*PNP0C02\0E)
+[0000ABCB] Starting Motherboard resources (BIOS\*PNP0C02\0F)
+[0000ABCB] Started Motherboard resources (BIOS\*PNP0C02\0F)
+[0000ABCB] Enumerating Motherboard resources (BIOS\*PNP0C02\0F)
+[0000ABCB] Enumerated Motherboard resources (BIOS\*PNP0C02\0F)
+[0000ABCB] Starting Motherboard resources (BIOS\*PNP0C02\10)
+[0000ABCB] Started Motherboard resources (BIOS\*PNP0C02\10)
+[0000ABCB] Enumerating Motherboard resources (BIOS\*PNP0C02\10)
+[0000ABCB] Enumerated Motherboard resources (BIOS\*PNP0C02\10)
+[0000ABCB] Starting Motherboard resources (BIOS\*PNP0C02\11)
+[0000ABCB] Started Motherboard resources (BIOS\*PNP0C02\11)
+[0000ABCB] Enumerating Motherboard resources (BIOS\*PNP0C02\11)
+[0000ABCB] Enumerated Motherboard resources (BIOS\*PNP0C02\11)
+[0000ABCB] Starting Motherboard resources (BIOS\*PNP0C02\12)
+[0000ABCB] Started Motherboard resources (BIOS\*PNP0C02\12)
+[0000ABCB] Enumerating Motherboard resources (BIOS\*PNP0C02\12)
+[0000ABCB] Enumerated Motherboard resources (BIOS\*PNP0C02\12)
+[0000ABCB] Starting Motherboard resources (BIOS\*PNP0C02\13)
+[0000ABCB] Started Motherboard resources (BIOS\*PNP0C02\13)
+[0000ABCB] Enumerating Motherboard resources (BIOS\*PNP0C02\13)
+[0000ABCB] Enumerated Motherboard resources (BIOS\*PNP0C02\13)
+[0000ABCB] Starting Motherboard resources (BIOS\*PNP0C02\14)
+[0000ABCB] Started Motherboard resources (BIOS\*PNP0C02\14)
+[0000ABCB] Enumerating Motherboard resources (BIOS\*PNP0C02\14)
+[0000ABCB] Enumerated Motherboard resources (BIOS\*PNP0C02\14)
+[0000ABCB] Starting Motherboard resources (BIOS\*PNP0C02\16)
+[0000ABCB] Started Motherboard resources (BIOS\*PNP0C02\16)
+[0000ABCB] Enumerating Motherboard resources (BIOS\*PNP0C02\16)
+[0000ABCB] Enumerated Motherboard resources (BIOS\*PNP0C02\16)
+[0000ABCB] Loaded PNP drivers of Plug and Play BIOS (ROOT\*PNP0C00\0000)
+[0000ABCB] Loading PNP drivers of System board (ROOT\*PNP0C01\0000)
+[0000ABCB] Loaded PNP drivers of System board (ROOT\*PNP0C01\0000)
+[0000ABCB] Starting System board (ROOT\*PNP0C01\0000)
+[0000ABCB] Started System board (ROOT\*PNP0C01\0000)
+[0000ABCB] Enumerating System board (ROOT\*PNP0C01\0000)
+[0000ABCB] Enumerated System board (ROOT\*PNP0C01\0000)
+[0000ABCB] Loading PNP drivers of Standard 101/102-Key or Microsoft Natural Keyboard (ROOT\*PNP0303\0000)
+[0000ABCB] Loaded PNP drivers of Standard 101/102-Key or Microsoft Natural Keyboard (ROOT\*PNP0303\0000)
+[0000ABCB] Starting Standard 101/102-Key or Microsoft Natural Keyboard (ROOT\*PNP0303\0000)
+[0000ABCB] Started Standard 101/102-Key or Microsoft Natural Keyboard (ROOT\*PNP0303\0000)
+[0000ABCB] Loading PNP drivers of Advanced Power Management support (ROOT\*PNP0C05\0000)
+[0000ABCB] Dynamic load device  VPOWERD.VXD
+[0000ABCB] Dynamic init device  VPOWERD
+[0000ABCB] Dynamic init success VPOWERD
+[0000ABCB] Dynamic load success VPOWERD.VXD
+[0000ABCB] Loaded PNP drivers of Advanced Power Management support (ROOT\*PNP0C05\0000)
+[0000ABCB] Starting Advanced Power Management support (ROOT\*PNP0C05\0000)
+[0000ABCB] Loading PNP drivers of Standard PS/2 Port Mouse (ROOT\*PNP0F0E\0000)
+[0000ABCB] Loading PNP drivers of Infrared Communication Device (ROOT\INFRARED\0000)
+[0000ABCB] Dynamic load device  irenum.vxd
+[0000ABCB] Dynamic init device  IRENUM
+[0000ABCB] Dynamic init success IRENUM
+[0000ABCB] Dynamic load success irenum.vxd
+[0000ABCB] Loaded PNP drivers of Infrared Communication Device (ROOT\INFRARED\0000)
+[0000ABCB] Starting Infrared Communication Device (ROOT\INFRARED\0000)
+[0000ABCB] Started Infrared Communication Device (ROOT\INFRARED\0000)
+[0000ABCB] Enumerating Infrared Communication Device (ROOT\INFRARED\0000)
+[0000ABCB] Enumerated Infrared Communication Device (ROOT\INFRARED\0000)
+[0000ABCB] Loading PNP drivers of Infrared Serial (COM) Port (INFRARED\COM\ROOT&INFRARED&0000)
+[0000ABCB] Loaded PNP drivers of Infrared Serial (COM) Port (INFRARED\COM\ROOT&INFRARED&0000)
+[0000ABCB] Starting Infrared Serial (COM) Port (INFRARED\COM\ROOT&INFRARED&0000)
+[0000ABCB] Started Infrared Serial (COM) Port (INFRARED\COM\ROOT&INFRARED&0000)
+[0000ABCB] Loading PNP drivers of Infrared Printing (LPT) Port (INFRARED\LPT\ROOT&INFRARED&0000)
+[0000ABCB] Loaded PNP drivers of Infrared Printing (LPT) Port (INFRARED\LPT\ROOT&INFRARED&0000)
+[0000ABCB] Starting Infrared Printing (LPT) Port (INFRARED\LPT\ROOT&INFRARED&0000)
+[0000ABCB] Started Infrared Printing (LPT) Port (INFRARED\LPT\ROOT&INFRARED&0000)
+[0000ABCC] Enumerating Processor support (ROOT\PROCESSOR_UPDATE\0000)
+[0000ABCC] Enumerated Processor support (ROOT\PROCESSOR_UPDATE\0000)
+[0000ABCC] Enumerating Plug and Play Software Device Enumerator (ROOT\SWENUM\0000)
+[0000ABCC] Enumerated Plug and Play Software Device Enumerator (ROOT\SWENUM\0000)
+[0000ABCC] Enumerating Standard 101/102-Key or Microsoft Natural Keyboard (ROOT\*PNP0303\0000)
+[0000ABCC] Enumerated Standard 101/102-Key or Microsoft Natural Keyboard (ROOT\*PNP0303\0000)
+[0000ABCC] DEVICEINITSUCCESS   = CONFIGMG
+[0000ABCC] Loading PNP drivers of PCIC or compatible PCMCIA controller (ROOT\*PNP0E00\0000)
+[0000ABCC] Dynamic load device  PCCARD.vxd
+[0000ABCC] Dynamic init device  PCCARD
+[0000ABCC] Dynamic init success PCCARD
+[0000ABCC] Dynamic load success PCCARD.vxd
+[0000ABCC] Dynamic load device  SocketSv.vxd
+[0000ABCC] Dynamic init device  SOCKETSV
+[0000ABCC] Dynamic init success SOCKETSV
+[0000ABCC] Dynamic load success SocketSv.vxd
+[0000ABCC] Loaded PNP drivers of PCIC or compatible PCMCIA controller (ROOT\*PNP0E00\0000)
+[0000ABCC] Starting PCIC or compatible PCMCIA controller (ROOT\*PNP0E00\0000)
+[0000ABCC] Loading PNP drivers of Standard Bus Mastering IDE Hard Disk Controller (BIOS\*PNP0680\17)
+[0000ABCC] Loading PNP drivers of Standard Bus Mastering IDE Hard Disk Controller (BIOS\*PNP0680\18)
+[0000ABCC] Loading PNP drivers of PS/2 Compatible Mouse Port (BIOS\*IBM0057\19)
+[0000ABCC] Loading PNP drivers of IBM ThinkPad Fast Infrared Port (BIOS\*IBM0071\1A)
+[0000ABCC] Loading PNP drivers of Communications Port (BIOS\*PNP0501\1B)
+[0000ABCC] Loaded PNP drivers of Communications Port (BIOS\*PNP0501\1B)
+[0000ABCC] Starting Communications Port (BIOS\*PNP0501\1B)
+[0000ABCC] ASD: failing Calling a PnP BIOS, d=P02001B000D00F8000100F000, rc=00000001[0000ABCC] 
+[0000ABCC] Loading PNP drivers of Printer Port (BIOS\*PNP0400\1D)
+[0000ABCC] Loaded PNP drivers of Printer Port (BIOS\*PNP0400\1D)
+[0000ABCC] Starting Printer Port (BIOS\*PNP0400\1D)
+[0000ABCC] ASD: failing Calling a PnP BIOS, d=P02001D000D00F8000100F000, rc=00000001[0000ABCC] 
+[0000ABCC] Loading PNP drivers of IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0A)
+[0000ABCC] Dynamic load device  PCI.VxD
+[0000ABCC] Dynamic init device  PCI
+[0000ABCC] Dynamic init success PCI
+[0000ABCC] Dynamic load success PCI.VxD
+[0000ABCC] Loaded PNP drivers of IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0A)
+[0000ABCC] Starting IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0A)
+[0000ABCC] Started IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0A)
+[0000ABCC] Enumerating IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0A)
+[0000ABCC] Enumerated IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0A)
+[0000ABCC] Loading PNP drivers of Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_00)
+[0000ABCC] Loaded PNP drivers of Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_00)
+[0000ABCC] Starting Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_00)
+[0000ABCD] Started Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_00)
+[0000ABCD] Loading PNP drivers of IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0B)
+[0000ABCD] Dynamic load device  PCI.VxD
+[0000ABCD] Dynamic init device  PCI
+[0000ABCD] Dynamic init success PCI
+[0000ABCD] Dynamic load success PCI.VxD
+[0000ABCD] Loaded PNP drivers of IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0B)
+[0000ABCD] Starting IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0B)
+[0000ABCD] Started IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0B)
+[0000ABCD] Enumerating IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0B)
+[0000ABCD] Enumerated IRQ Holder for PCI Steering (PCI\IRQHOLDER\IRQ0B)
+[0000ABCD] Loading PNP drivers of Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_01)
+[0000ABCD] Loaded PNP drivers of Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_01)
+[0000ABCD] Starting Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_01)
+[0000ABCD] Started Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_01)
+[0000ABCD] Loading PNP drivers of Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_00)
+[0000ABCD] Loaded PNP drivers of Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_00)
+[0000ABCD] Starting Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_00)
+[0000ABCE] Started Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_00)
+[0000ABCE] Loading PNP drivers of Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_01)
+[0000ABCE] Loaded PNP drivers of Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_01)
+[0000ABCE] Starting Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_01)
+[0000ABCE] Started Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_01)
+[0000ABCE] Loading PNP drivers of Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_02)
+[0000ABCE] Loaded PNP drivers of Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_02)
+[0000ABCE] Starting Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_02)
+[0000ABCF] Started Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_02)
+[0000ABCF] Loading PNP drivers of Standard Dual PCI IDE Controller (PCI\VEN_8086&DEV_2828&SUBSYS_20A817AA&REV_03\BUS_00&DEV_1F&FUNC_02)
+[0000ABCF] Loaded PNP drivers of Standard Dual PCI IDE Controller (PCI\VEN_8086&DEV_2828&SUBSYS_20A817AA&REV_03\BUS_00&DEV_1F&FUNC_02)
+[0000ABCF] Loading PNP drivers of NVIDIA Quadro NVS 140M (PCI\VEN_10DE&DEV_0429&SUBSYS_20D817AA&REV_A1\000800)
+[0000ABCF] Loaded PNP drivers of NVIDIA Quadro NVS 140M (PCI\VEN_10DE&DEV_0429&SUBSYS_20D817AA&REV_A1\000800)
+[0000ABCF] Enumerating Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_00)
+[0000ABCF] Enumerated Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_00)
+[0000ABCF] Loading PNP drivers of USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_00)
+[0000ABCF] Loaded PNP drivers of USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_00)
+[0000ABCF] Starting USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_00)
+[0000ABD0] Started USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_00)
+[0000ABD0] Enumerating Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_01)
+[0000ABD0] Enumerated Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1A&FUNC_01)
+[0000ABD0] Loading PNP drivers of USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_01)
+[0000ABD0] Loaded PNP drivers of USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_01)
+[0000ABD0] Starting USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_01)
+[0000ABD1] Started USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_01)
+[0000ABD1] Enumerating Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_00)
+[0000ABD1] Enumerated Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_00)
+[0000ABD1] Loading PNP drivers of USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_00)
+[0000ABD1] Loaded PNP drivers of USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_00)
+[0000ABD1] Starting USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_00)
+[0000ABD2] Started USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_00)
+[0000ABD2] Enumerating Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_01)
+[0000ABD2] Enumerated Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_01)
+[0000ABD2] Loading PNP drivers of USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_01)
+[0000ABD2] Loaded PNP drivers of USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_01)
+[0000ABD2] Starting USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_01)
+[0000ABD3] Started USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_01)
+[0000ABD3] Enumerating Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_02)
+[0000ABD3] Enumerated Standard Universal PCI to USB Host Controller (PCI\VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03\BUS_00&DEV_1D&FUNC_02)
+[0000ABD3] Loading PNP drivers of USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_02)
+[0000ABD3] Loaded PNP drivers of USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_02)
+[0000ABD3] Starting USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_02)
+[0000ABD4] Started USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_02)
+[0000ABD4] Enumerating USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_00)
+[0000ABDA] Enumerated USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2834&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_00)
+[0000ABDA] Enumerating USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_01)
+[0000ABDA] Enumerated USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2835&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1A&FUNC_01)
+[0000ABDA] Enumerating USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_00)
+[0000ABDA] Enumerated USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2830&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_00)
+[0000ABDA] Enumerating USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_01)
+[0000ABDA] Enumerated USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2831&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_01)
+[0000ABDA] Enumerating USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_02)
+[0000ABDA] Enumerated USB Root Hub (USB\ROOT_HUB\PCI&VEN_8086&DEV_2832&SUBSYS_20AA17AA&REV_03&BUS_00&DEV_1D&FUNC_02)
+[0000ABDA] DEVICEINIT   = VCDFSD  
+[0000ABDA] DEVICEINITSUCCESS   = VCDFSD  
+[0000ABDA] DEVICEINIT   = IOS     
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\apix.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\apix.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\atapchng.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\atapchng.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\cdfs.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\cdfs.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\cdtsd.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\cdtsd.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\cdvsd.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\cdvsd.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\disktsd.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\disktsd.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\diskvsd.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\diskvsd.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\necatapi.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\necatapi.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\scsi1hlp.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\scsi1hlp.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\torisan3.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\torisan3.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\voltrack.vxd
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\voltrack.vxd
+[0000ABDA] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\rmm.pdr
+[0000ABDA] Dynamic load success C:\WINDOWS\system\IOSUBSYS\rmm.pdr
+[0000ABDB] Dynamic load device  C:\WINDOWS\system\IOSUBSYS\bigmem.drv
+[0000ABDB] Dynamic load success C:\WINDOWS\system\IOSUBSYS\bigmem.drv
+[0000ABDB] DEVICEINITSUCCESS   = IOS     
+[0000ABDB] DEVICEINIT   = PAGEFILE
+[0000ABDB] DEVICEINITSUCCESS   = PAGEFILE
+[0000ABDB] DEVICEINIT   = PAGESWAP
+[0000ABDB] DEVICEINITSUCCESS   = PAGESWAP
+[0000ABDB] DEVICEINIT   = PARITY  
+[0000ABDB] DEVICEINITSUCCESS   = PARITY  
+[0000ABDB] DEVICEINIT   = REBOOT  
+[0000ABDB] DEVICEINITSUCCESS   = REBOOT  
+[0000ABDB] DEVICEINIT   = EBIOS   
+[0000ABDB] DEVICEINITSUCCESS   = EBIOS   
+[0000ABDB] DEVICEINIT   = VDD     
+[0000ABDB] DEVICEINITSUCCESS   = VDD     
+[0000ABDB] DEVICEINIT   = VSD     
+[0000ABDB] DEVICEINITSUCCESS   = VSD     
+[0000ABDB] DEVICEINIT   = COMBUFF 
+[0000ABDB] DEVICEINITSUCCESS   = COMBUFF 
+[0000ABDB] DEVICEINIT   = VCD     
+[0000ABDB] DEVICEINITSUCCESS   = VCD     
+[0000ABDB] DEVICEINIT   = VMOUSE  
+[0000ABDB] DEVICEINITSUCCESS   = VMOUSE  
+[0000ABDB] Loading PNP drivers of Standard PS/2 Port Mouse (ROOT\*PNP0F0E\0000)
+[0000ABDB] Loaded PNP drivers of Standard PS/2 Port Mouse (ROOT\*PNP0F0E\0000)
+[0000ABDB] Starting Standard PS/2 Port Mouse (ROOT\*PNP0F0E\0000)
+[0000ABE9] Started Standard PS/2 Port Mouse (ROOT\*PNP0F0E\0000)
+[0000ABE9] Enumerating Standard PS/2 Port Mouse (ROOT\*PNP0F0E\0000)
+[0000ABE9] Enumerated Standard PS/2 Port Mouse (ROOT\*PNP0F0E\0000)
+[0000ABE9] Loading PNP drivers of PS/2 Compatible Mouse Port (BIOS\*IBM0057\19)
+[0000ABE9] Loaded PNP drivers of PS/2 Compatible Mouse Port (BIOS\*IBM0057\19)
+[0000ABE9] DEVICEINIT   = MSMINI  
+[0000ABE9] DEVICEINITSUCCESS   = MSMINI  
+[0000ABE9] DEVICEINIT   = ENABLE  
+[0000ABE9] DEVICEINITSUCCESS   = ENABLE  
+[0000ABE9] DEVICEINIT   = VKD     
+[0000ABE9] DEVICEINITSUCCESS   = VKD     
+[0000ABE9] DEVICEINIT   = VPD     
+[0000ABE9] DEVICEINITFAILED    = VPD     
+[0000ABE9] DEVICEINIT   = INT13   
+[0000ABE9] DEVICEINITSUCCESS   = INT13   
+[0000ABE9] DEVICEINIT   = VMCPD   
+[0000ABE9] DEVICEINITSUCCESS   = VMCPD   
+[0000ABE9] DEVICEINIT   = BIOSXLAT
+[0000ABE9] DEVICEINITSUCCESS   = BIOSXLAT
+[0000ABE9] DEVICEINIT   = SDVXD   
+[0000ABE9] DEVICEINITSUCCESS   = SDVXD   
+[0000ABE9] DEVICEINIT   = VNETBIOS
+[0000ABE9] DEVICEINITSUCCESS   = VNETBIOS
+[0000ABE9] DEVICEINIT   = NDIS    
+[0000ABE9] DEVICEINITSUCCESS   = NDIS    
+[0000ABEB] Loading PNP drivers of Dial-Up Adapter (ROOT\NET\0000)
+[0000ABEB] Dynamic load device  pppmac.vxd
+[0000ABEB] Dynamic init device  PPPMAC
+[0000ABEB] Dynamic load device  C:\WINDOWS\system\spap.vxd
+[0000ABEC] Dynamic init device  SPAP
+[0000ABEC] Dynamic init success SPAP
+[0000ABEC] Dynamic load success C:\WINDOWS\system\spap.vxd
+[0000ABEC] Dynamic init success PPPMAC
+[0000ABEC] Dynamic load success pppmac.vxd
+[0000ABEC] Loaded PNP drivers of Dial-Up Adapter (ROOT\NET\0000)
+[0000ABEC] Starting Dial-Up Adapter (ROOT\NET\0000)
+[0000ABEC] Started Dial-Up Adapter (ROOT\NET\0000)
+[0000ABEC] Enumerating Dial-Up Adapter (ROOT\NET\0000)
+[0000ABEC] Enumerated Dial-Up Adapter (ROOT\NET\0000)
+[0000ABEC] Loading PNP drivers of IBM ThinkPad Fast Infrared Port (BIOS\*IBM0071\1A)
+[0000ABEC] Loaded PNP drivers of IBM ThinkPad Fast Infrared Port (BIOS\*IBM0071\1A)
+[0000ABEC] Starting IBM ThinkPad Fast Infrared Port (BIOS\*IBM0071\1A)
+[0000ABEC] ASD: failing Calling a PnP BIOS, d=P02001A000D00F8000100F000, rc=00000001[0000ABEC] 
+[0000ABEC] Loading PNP drivers of TCP/IP (NETWORK\MSTCP\0000)
+[0000ABEC] Dynamic load device  vtdi.386
+[0000ABEC] Dynamic init device  VTDI
+[0000ABEC] Dynamic init success VTDI
+[0000ABEC] Dynamic load success vtdi.386
+[0000ABEC] Dynamic load device  vip.386
+[0000ABEC] Dynamic init device  VIP
+[0000ABEC] Dynamic init success VIP
+[0000ABEC] Dynamic load success vip.386
+[0000ABEC] Dynamic load device  vtcp.386
+[0000ABEC] Dynamic init device  MSTCP
+[0000ABEC] Dynamic init success MSTCP
+[0000ABEC] Dynamic load success vtcp.386
+[0000ABEC] Dynamic load device  vdhcp.386
+[0000ABEC] Dynamic init device  VDHCP
+[0000ABEC] Dynamic init success VDHCP
+[0000ABEC] Dynamic load success vdhcp.386
+[0000ABEC] Dynamic load device  vnbt.386
+[0000ABEC] Dynamic init device  VNBT
+[0000ABEC] Dynamic init success VNBT
+[0000ABEC] Dynamic load success vnbt.386
+[0000ABEC] Starting TCP/IP (NETWORK\MSTCP\0000)
+[0000ABEC] Started TCP/IP (NETWORK\MSTCP\0000)
+[0000ABEC] Enumerating TCP/IP (NETWORK\MSTCP\0000)
+[0000ABEC] Enumerated TCP/IP (NETWORK\MSTCP\0000)
+[0000ABEC] Starting Microsoft Family Logon (NETWORK\FAMILY\0000)
+[0000ABEC] Started Microsoft Family Logon (NETWORK\FAMILY\0000)
+[0000ABEC] Enumerating Microsoft Family Logon (NETWORK\FAMILY\0000)
+[0000ABEC] Enumerated Microsoft Family Logon (NETWORK\FAMILY\0000)
+[0000ABEC] Loaded PNP drivers of TCP/IP (NETWORK\MSTCP\0000)
+[0000ABEC] DEVICEINIT   = DOSMGR  
+[0000ABEC] DEVICEINITSUCCESS   = DOSMGR  
+[0000ABEC] DEVICEINIT   = VMPOLL  
+[0000ABEE] DEVICEINITSUCCESS   = VMPOLL  
+[0000ABEE] DEVICEINIT   = JAVASUP 
+[0000ABEE] DEVICEINITSUCCESS   = JAVASUP 
+[0000ABEE] DEVICEINIT   = VCOMM   
+[0000ABEE] DEVICEINITSUCCESS   = VCOMM   
+[0000ABEE] DEVICEINIT   = VCOND   
+[0000ABEE] DEVICEINITSUCCESS   = VCOND   
+[0000ABEE] DEVICEINIT   = VTDAPI  
+[0000ABEE] DEVICEINITSUCCESS   = VTDAPI  
+[0000ABEE] DEVICEINIT   = VFLATD  
+[0000ABEE] DEVICEINITSUCCESS   = VFLATD  
+[0000ABEE] DEVICEINIT   = VDMAD   
+[0000ABEE] DEVICEINITSUCCESS   = VDMAD   
+[0000ABEE] DEVICEINIT   = V86MMGR 
+[0000ABEE] DEVICEINITSUCCESS   = V86MMGR 
+[0000ABEE] DEVICEINIT   = SPOOLER 
+[0000ABEE] DEVICEINITSUCCESS   = SPOOLER 
+[0000ABEE] DEVICEINIT   = UDF     
+[0000ABEE] DEVICEINITSUCCESS   = UDF     
+[0000ABEE] DEVICEINIT   = VFAT    
+[0000ABEE] DEVICEINITSUCCESS   = VFAT    
+[0000ABEE] DEVICEINIT   = VDEF    
+[0000ABEE] DEVICEINITSUCCESS   = VDEF    
+[0000ABEE] Initing esdi_506.pdr
+[0000AC06] Init Success esdi_506.pdr
+[0000AC06] Initing esdi_506.pdr
+[0000AC22] Init Success esdi_506.pdr
+[0000AC23] INITCOMPLETE = VMM     
+[0000AC23] INITCOMPLETESUCCESS = VMM     
+[0000AC23] INITCOMPLETE = MTRR    
+[0000AC23] INITCOMPLETESUCCESS = MTRR    
+[0000AC23] INITCOMPLETE = VCACHE  
+[0000AC23] INITCOMPLETESUCCESS = VCACHE  
+[0000AC23] INITCOMPLETE = VGARTD  
+[0000AC23] INITCOMPLETESUCCESS = VGARTD  
+[0000AC23] INITCOMPLETE = PERF    
+[0000AC23] INITCOMPLETESUCCESS = PERF    
+[0000AC23] INITCOMPLETE = VFIXD   
+[0000AC23] INITCOMPLETESUCCESS = VFIXD   
+[0000AC23] INITCOMPLETE = VPOWERD 
+[0000AC23] INITCOMPLETESUCCESS = VPOWERD 
+[0000AC23] INITCOMPLETE = VPICD   
+[0000AC23] INITCOMPLETESUCCESS = VPICD   
+[0000AC23] INITCOMPLETE = VrtwD   
+[0000AC23] INITCOMPLETESUCCESS = VrtwD   
+[0000AC23] INITCOMPLETE = VTD     
+[0000AC23] INITCOMPLETESUCCESS = VTD     
+[0000AC23] INITCOMPLETE = VWIN32  
+[0000AC23] INITCOMPLETESUCCESS = VWIN32  
+[0000AC23] INITCOMPLETE = VXDLDR  
+[0000AC23] INITCOMPLETESUCCESS = VXDLDR  
+[0000AC23] INITCOMPLETE = NTKERN  
+[0000AC23] INITCOMPLETESUCCESS = NTKERN  
+[0000AC23] INITCOMPLETE = CONFIGMG
+[0000AC23] Starting PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2A01&SUBSYS_00000000&REV_0C\BUS_00&DEV_01&FUNC_00)
+[0000AC24] Started PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2A01&SUBSYS_00000000&REV_0C\BUS_00&DEV_01&FUNC_00)
+[0000AC24] Starting PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_283F&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_00)
+[0000AC24] Started PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_283F&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_00)
+[0000AC24] Starting PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2843&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_02)
+[0000AC24] Started PCI standard PCI-to-PCI bridge (PCI\VEN_8086&DEV_2843&SUBSYS_00000000&REV_03\BUS_00&DEV_1C&FUNC_02)
+[0000AC25] Starting NVIDIA Quadro NVS 140M (PCI\VEN_10DE&DEV_0429&SUBSYS_20D817AA&REV_A1\000800)
+[0000AC25] Dynamic load device  NVMINI.VXD
+[0000AC27] Dynamic init device  NVMINI
+[0000AC27] Dynamic load device  NVCORE.VXD
+[0000AC40] Dynamic init device  NVCORE
+[0000AC40] Dynamic init success NVCORE
+[0000AC40] Dynamic load success NVCORE.VXD
+[0000AC40] Dynamic init success NVMINI
+[0000AC40] Dynamic load success NVMINI.VXD
+[0000AC40] Dynamic load device  NVCORE.VXD
+[0000AC40] Dynamic init device  NVCORE
+[0000AC40] Dynamic init success NVCORE
+[0000AC40] Dynamic load success NVCORE.VXD

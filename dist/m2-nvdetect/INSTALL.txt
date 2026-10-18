@@ -1,0 +1,29 @@
+M2 package — NVIDIA G86 hardware detection (scans out via VESA, adds native probe)
+
+What this is: the same working VESA framebuffer desktop as M1, PLUS our own
+code that finds the G86 on the PCI bus, maps its MMIO, and reads the chip ID
+(PMC_BOOT_0). It does NOT yet drive the GPU natively. Goal of this step: prove
+our code can see and talk to the real chip.
+
+Files:
+  nvmini.vxd      - 32-bit VxD: VESA scanout + NV_probe (chip detection)
+  nvmini.drv      - 16-bit DIBENG display driver (companion)
+  vmdisp9x.inf    - installs the pair; bound to PCI\VEN_10DE&DEV_0429 (NVS 140M)
+  nvprobe.exe     - Win32 tool that reads the probe result (no serial needed)
+
+Install on the T61 (Win98 SE), fully reversible:
+  1. In Safe Mode, set the display adapter to "Standard Display Adapter (VGA)"
+     (removes the broken stock NVIDIA driver). Reboot to a VGA desktop.
+  2. Copy all four files to e.g. C:\NVMINI\ .
+  3. Control Panel > Display > Settings > Advanced > Adapter > Change >
+     Have Disk > C:\NVMINI\vmdisp9x.inf. Pick
+     "NVIDIA Quadro NVS 140M (G86) [native, T61]". Finish, reboot.
+  4. Expected: a working desktop (via VESA), same as M1.
+  5. Open an MS-DOS Prompt (or Run) and run C:\NVMINI\nvprobe.exe.
+     Report the full output. Success looks like:
+        chipset : 0x86  family 0x08  ...  mmio_ok 1
+        => G86 confirmed. We can talk to the chip.
+
+If the desktop does not come up: fall back to Standard VGA in Safe Mode and
+report what happened. If the desktop works but nvprobe reports mmio_ok 0 or a
+wrong chipset, that is still useful - send the BOOT0/BAR values it prints.

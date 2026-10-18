@@ -1,0 +1,5 @@
+Driver base is a fork of vmdisp9x (MIT), vendored under driver/vmdisp9x-nv/.
+Upstream: https://github.com/JHRobotics/vmdisp9x  commit 767761d0a49e4c9d4c66e906f38e6118b8b44f89
+Submodule fixlink: https://github.com/JHRobotics/fixlink commit c1fd1d2264995b9fa76985c76ef2bd1396af377a
+Our changes vs upstream are the nvmini target and vxd_nv.* / vxd_main_nv.c,
+plus two guarded (#ifdef NV_DETECT) hooks in vxd_main.c. See docs/ROADMAP.md.

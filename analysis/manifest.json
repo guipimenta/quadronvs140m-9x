@@ -1,0 +1,42 @@
+{
+  "DISPLAY/NVLT.inf": {
+    "size": 28640,
+    "sha256": "9a556abe35f4020abe43f1e4bebc2fbd7d064a364373fef2186b7733d767f135"
+  },
+  "modified_driver/NVAML.INF": {
+    "size": 60802,
+    "sha256": "4eced396637669160ab17a0f2abcb4c129504399872968cd70a5f90b81425253"
+  },
+  "modified_driver/NVCORE.VXD": {
+    "size": 3317853,
+    "sha256": "9c0fcab13b0c56a1ff7854e2e7f43b3596a80b5caea40581679be57303327a71"
+  },
+  "modified_driver/NVMINI.VXD": {
+    "size": 250174,
+    "sha256": "5339fe07b831d83862e58d7cc40be141ad26c35867a13b8c2e241e82cc7e53a1"
+  },
+  "modified_driver/NVDISP.DRV": {
+    "size": 131712,
+    "sha256": "0f92f5c55f1432e5b12311244140be4ce2651e52fce0a3969603dfd5a2102dce"
+  },
+  "modified_driver/NVDD32.DLL": {
+    "size": 3140096,
+    "sha256": "d2c3414260eee470b2359b9d54a341300aaf2dfa01eafcc281c73b9f91feb82d"
+  },
+  "modified_driver/NVOPENGL.DLL": {
+    "size": 5079040,
+    "sha256": "f27043b26bbafa5bb4ab185f86d78fe76986753e06425548d818c8bbc4756e7e"
+  },
+  "analysis/xp_extracted/nv4_mini.sys": {
+    "size": 6620064,
+    "sha256": "2251ed039a735516d0e10dfc238e3fd0db5deaa9d46d588010d4e3519dc32afc"
+  },
+  "analysis/xp_extracted/nv4_disp.dll": {
+    "size": 6284160,
+    "sha256": "1e84bf3841b2c7c9dffdfeb07e1933b7ca7ffe09a56f18f825bf4010d85becd4"
+  },
+  "analysis/xp_extracted/nvoglnt.dll": {
+    "size": 8777728,
+    "sha256": "2e3908c41643779320fd44f6eb7fc9c8b5eff0272ebf197e1cfdc699dfaadcde"
+  }
+}

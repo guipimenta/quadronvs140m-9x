@@ -1,0 +1,7 @@
+[0000AF83] Loading Device = C:\WINDOWS\HIMEM.SYS
+(Logo disabled)
+[0000AF84] LoadSuccess    = C:\WINDOWS\HIMEM.SYS
+[0000AF84] Loading Device = C:\WINDOWS\DBLBUFF.SYS
+[0000AF84] LoadSuccess    = C:\WINDOWS\DBLBUFF.SYS
+[0000AF84] Loading Device = C:\WINDOWS\IFSHLP.SYS
+[0000AF84] LoadSuccess    = C:\WINDOWS\IFSHLP.SYS

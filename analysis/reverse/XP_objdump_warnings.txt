@@ -1,0 +1,4 @@
+objdump: analysis/xp_extracted/nv4_mini.sys: warning: ignoring section flag IMAGE_SCN_MEM_NOT_PAGED in section .text
+objdump: analysis/xp_extracted/nv4_mini.sys: warning: ignoring section flag IMAGE_SCN_MEM_NOT_PAGED in section _NVTEXT3
+objdump: analysis/xp_extracted/nv4_mini.sys: warning: ignoring section flag IMAGE_SCN_MEM_NOT_PAGED in section .rdata
+objdump: analysis/xp_extracted/nv4_mini.sys: warning: ignoring section flag IMAGE_SCN_MEM_NOT_PAGED in section .data

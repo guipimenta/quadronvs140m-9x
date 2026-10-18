@@ -1,0 +1,43 @@
+{
+  "source_sha256": "9c0fcab13b0c56a1ff7854e2e7f43b3596a80b5caea40581679be57303327a71",
+  "analysis": "Static conditional failure path; not an observed runtime fault",
+  "selector": "0x1413bc",
+  "no_match_id": "0x1f",
+  "no_match_status": "0xffffffff",
+  "valid_slot_ids": "0x00..0x1e",
+  "unchecked_bind_call": "0x18bd1e",
+  "first_null_based_call": "0x18bd4b",
+  "assumptions": [
+    "Recovered object methods are active at runtime",
+    "All active chip predicates reject the actual ID read",
+    "Slot identifiers retain their initialized values"
+  ],
+  "debugger_points": [
+    {
+      "lcod_offset": "0x18bd12",
+      "original_file_offset": "0x1d5b12",
+      "purpose": "Chip-selection call: inspect ID argument and output pointer"
+    },
+    {
+      "lcod_offset": "0x18bd18",
+      "original_file_offset": "0x1d5b18",
+      "purpose": "Selection returned: inspect EAX and device+0x84"
+    },
+    {
+      "lcod_offset": "0x18bd40",
+      "original_file_offset": "0x1d5b40",
+      "purpose": "Type-6 lookup returned: inspect EAX for null"
+    },
+    {
+      "lcod_offset": "0x18bd4b",
+      "original_file_offset": "0x1d5b4b",
+      "purpose": "First unchecked indirect call through descriptor object"
+    },
+    {
+      "lcod_offset": "0x18bbed",
+      "original_file_offset": "0x1d59ed",
+      "purpose": "Outer caller finally checks selection status"
+    }
+  ],
+  "address_warning": "LCOD offsets require the live object base; file offsets are not breakpoint addresses"
+}

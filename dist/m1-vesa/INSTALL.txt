@@ -1,0 +1,22 @@
+M1 bring-up package — generic VESA linear-framebuffer display driver (vmdisp9x)
+Purpose: prove the Win9x display-driver stack works on the T61 BEFORE any
+NVIDIA-specific code. This uses the G86's VESA/VBE video BIOS, not native code.
+
+Files: vesamini.vxd, vesamini.drv, vmdisp9x.inf  (built from source, Open Watcom)
+
+Install on the T61 (Windows 98 SE):
+  1. Copy all three files to the T61 (e.g. C:\VESADRV\).
+  2. First, in Safe Mode, remove the current NVIDIA display adapter entry in
+     Device Manager so it stops trying the broken NVCORE path, and set the
+     display to "Standard Display Adapter (VGA)". Reboot to a VGA desktop.
+  3. Control Panel > Display > Settings > Advanced > Adapter > Change >
+     Have Disk > point to C:\VESADRV\vmdisp9x.inf.
+  4. Choose the "VESA VBE 2.0+" entry. Finish, reboot.
+  5. Expected: desktop comes up through the VESA framebuffer at a higher
+     resolution/colour depth than plain VGA. Note which resolutions are offered.
+
+If it does NOT work, capture: the exact error, whether VGA still works, and
+BOOTLOG.TXT. A failure here is about the display stack, not NVIDIA — good to
+know before M2/M3.
+
+This is reversible: fall back to Standard VGA in Safe Mode at any time.

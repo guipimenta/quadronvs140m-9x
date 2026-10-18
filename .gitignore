@@ -1,0 +1,33 @@
+# === NVIDIA proprietary material — never commit/redistribute ===
+# The original XP driver, the modified 9x package, and anything extracted from
+# them stay on disk (needed to build/flash and to reference) but out of git.
+/DISPLAY/
+/modified_driver/
+/analysis/xp_extracted/
+
+# Raw disassembly and binary dumps derived from the proprietary binaries.
+# Our *findings* live in the .md/.small-json files, which we do keep.
+analysis/reverse/*.asm
+analysis/reverse/*.bin
+analysis/*.headers.txt
+analysis/reverse/NVCORE.VXD.json
+analysis/reverse/NVMINI.VXD.json
+
+# === Build intermediates / outputs in the working driver tree ===
+# (The shippable binaries under dist/ are kept deliberately.)
+driver/vmdisp9x-nv/*.obj
+driver/vmdisp9x-nv/*.vxd
+driver/vmdisp9x-nv/*.drv
+driver/vmdisp9x-nv/*.exe
+driver/vmdisp9x-nv/*.res
+driver/vmdisp9x-nv/*.lib
+driver/vmdisp9x-nv/*.map
+driver/vmdisp9x-nv/fixlink.bin
+driver/vmdisp9x-nv/res/*.obj
+driver/vmdisp9x-nv/res/*.bin
+driver/vmdisp9x-nv/vmware/*.obj
+driver/build/
+
+# === Misc ===
+*.pyc
+__pycache__/

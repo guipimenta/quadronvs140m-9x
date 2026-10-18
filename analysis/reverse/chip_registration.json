@@ -1,0 +1,199 @@
+{
+  "scope": "Recovered registration routine, not an exhaustive proof of every possible execution path",
+  "registration_routine": "NVCORE LCOD+0x134ccd",
+  "registrations": [
+    {
+      "call": "0x134cd0",
+      "constructor": "0x223c33",
+      "predicate": "0x223ccd",
+      "required_mask": "0x1f000000",
+      "required_value": "0x1000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134cd5",
+      "constructor": "0x223b71",
+      "predicate": "0x223c0b",
+      "required_mask": "0x1f000000",
+      "required_value": "0x1000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134cda",
+      "constructor": "0x223aaf",
+      "predicate": "0x223b49",
+      "required_mask": "0x1f000000",
+      "required_value": "0x1000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134cdf",
+      "constructor": "0x2239ed",
+      "predicate": "0x223a87",
+      "required_mask": "0x1f000000",
+      "required_value": "0x1000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134ce4",
+      "constructor": "0x22392e",
+      "predicate": "0x2239c8",
+      "required_mask": "0x1f000000",
+      "required_value": "0x1000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134ce9",
+      "constructor": "0x247f5a",
+      "predicate": "0x247ff4",
+      "required_mask": "0x1f000000",
+      "required_value": "0x2000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134cee",
+      "constructor": "0x247e98",
+      "predicate": "0x247f32",
+      "required_mask": "0x1f000000",
+      "required_value": "0x2000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134cf3",
+      "constructor": "0x247dd6",
+      "predicate": "0x247e70",
+      "required_mask": "0x1f000000",
+      "required_value": "0x2000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134cf8",
+      "constructor": "0x25d9aa",
+      "predicate": "0x25da44",
+      "required_mask": "0x1f000000",
+      "required_value": "0x3000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134cfd",
+      "constructor": "0x25d8e8",
+      "predicate": "0x25d982",
+      "required_mask": "0x1f000000",
+      "required_value": "0x3000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d02",
+      "constructor": "0x25d826",
+      "predicate": "0x25d8c0",
+      "required_mask": "0x1f000000",
+      "required_value": "0x3000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d07",
+      "constructor": "0x25d764",
+      "predicate": "0x25d7fe",
+      "required_mask": "0x1f000000",
+      "required_value": "0x3000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d0c",
+      "constructor": "0x25d6a2",
+      "predicate": "0x25d73c",
+      "required_mask": "0x1f000000",
+      "required_value": "0x3000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d11",
+      "constructor": "0x2858ab",
+      "predicate": "0x285945",
+      "required_mask": "0x1f000000",
+      "required_value": "0x4000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d16",
+      "constructor": "0x2857e1",
+      "predicate": "0x28587b",
+      "required_mask": "0x1f000000",
+      "required_value": "0x4000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d1b",
+      "constructor": "0x28571f",
+      "predicate": "0x2857b9",
+      "required_mask": "0x1f000000",
+      "required_value": "0x4000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d20",
+      "constructor": "0x28565d",
+      "predicate": "0x2856f7",
+      "required_mask": "0x1f000000",
+      "required_value": "0x4000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d25",
+      "constructor": "0x28559b",
+      "predicate": "0x285635",
+      "required_mask": "0x1f000000",
+      "required_value": "0x4000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d2a",
+      "constructor": "0x2854d9",
+      "predicate": "0x285573",
+      "required_mask": "0x1f000000",
+      "required_value": "0x4000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d2f",
+      "constructor": "0x285417",
+      "predicate": "0x2854b1",
+      "required_mask": "0x1f000000",
+      "required_value": "0x4000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d34",
+      "constructor": "0x28534d",
+      "predicate": "0x2853e7",
+      "required_mask": "0x1f000000",
+      "required_value": "0x4000000",
+      "rejects_g86_family": true
+    },
+    {
+      "call": "0x134d39",
+      "constructor": "0x28528b",
+      "predicate": "0x285325",
+      "required_mask": "0x1f000000",
+      "required_value": "0x4000000",
+      "rejects_g86_family": true
+    }
+  ],
+  "all_22_reject_g86_family": true,
+  "mini_ddb": {
+    "object": 1,
+    "offset": 200416,
+    "name": "NVMINI",
+    "control": 202384,
+    "v86_api": 0,
+    "pm_api": 0
+  },
+  "core_ddb": {
+    "object": 1,
+    "offset": 3012960,
+    "name": "NVCORE",
+    "control": 3013119,
+    "v86_api": 0,
+    "pm_api": 3013136
+  }
+}

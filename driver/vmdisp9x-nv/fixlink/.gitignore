@@ -1,0 +1,11 @@
+#backup
+/test/
+/gltest/
+
+*.exe
+*.bat
+*.bak
+*.backup
+*.obj
+*.o
+

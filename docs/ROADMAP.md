@@ -1,0 +1,84 @@
+# Native G86 Windows 9x display driver — roadmap
+
+Target hardware: NVIDIA Quadro NVS 140M (G86, `PCI\VEN_10DE&DEV_0429`),
+in a ThinkPad T61, running Windows 98 SE. No emulator can stand in for a G86
+(86Box/PCem stop around the Riva/GeForce-256 era), so all GPU bring-up is
+tested on the real T61.
+
+## Why this is a new driver, not a patch
+
+The Win9x NVIDIA stack (`NVCORE.VXD`) registers 22 chip descriptors covering
+families `0x01`–`0x04` (NV1x…G7x). G86's BOOT0 family is `0x08`; no descriptor
+matches, and the no-match path makes an unchecked indirect call through a null
+object (`NVCORE` LCOD `0x18bd4b`) — the CONFIGMG protection-error hang.
+See `analysis/reverse/CHIP_FAILURE_PATH.md`.
+
+NVIDIA never wrote G86 code for the Win9x VxD architecture (the last official
+9x driver, 81.98, topped out at GeForce 7). The XP driver *does* have G86
+(`nv4_mini.sys` predicate `0xe0230`, family `0x08` + impl `0x600000`), but it is
+NT kernel-mode (imports ntoskrnl/HAL/videoprt/win32k) and cannot be transplanted.
+So G86 support must be *re-implemented* for the Win9x model, using the XP binary
+and the open nouveau/envytools NV50-family documentation as hardware references
+(G80/G84/G86 share the NV50 display engine).
+
+## Architecture: fork vmdisp9x, add an NVIDIA backend
+
+Base: JHRobotics/vmdisp9x (MIT), a DIBENG-based Win9x display driver with a
+clean backend split — a shared 16-bit display driver (`.drv`) + 32-bit VxD
+framework, behind swappable backends (VMware, VESA, QEMU). Our G86 backend
+slots in where the **VESA** backend sits, providing the same framebuffer
+abstraction (`vxd_fbhda.c`) via native MMIO instead of VBE BIOS calls.
+
+Our fork lives in `driver/vmdisp9x-nv/` (de-nested from the MIT clone; upstream
+commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
+`vxd_main_nv.c`, `tools/nvprobe.c`, the `nvmini` makefile target, and small
+`#ifdef NV_DETECT` hooks in `vxd_main.c` / `vxd.h` / `vxd_vesa.c`.
+
+## Milestones
+
+- **M0 — toolchain (DONE).** Open Watcom 2.0 (`/home/guilherme/watcom`) builds
+  the vmdisp9x VESA pair from source on this Linux host:
+  `vesamini.vxd` (LE) + `vesamini.drv` (NE). Self-verified with
+  `tools/le_vxd.py` (DDB `VESAVXD`, 484 fixups). Build→inspect loop closed here;
+  only loading/running needs the T61.
+- **M1 — prove the display stack on the T61.** Install the stock vmdisp9x VESA
+  driver on the T61 via its INF; confirm a working 9x desktop over the G86 VBIOS
+  linear framebuffer. De-risks the whole DIBENG/VxD path independent of NVIDIA
+  specifics. (Needs T61.)
+- **M2 — touch the hardware from our code (CODE DONE, awaiting T61 test).**
+  `vxd_nv.c` enumerates the NVIDIA display device on PCI, maps BAR0 (MMIO),
+  reads `PMC_BOOT_0` and decodes chipset/family/rev. Built into the `nvmini`
+  pair (VESA scanout + probe); results read on the laptop with `nvprobe.exe`
+  via `OP_NV_PROBE` (0x5000), so no serial port is needed. Package:
+  `dist/m2-nvdetect/`. Success = `nvprobe` prints `chipset 0x86, mmio_ok 1`.
+  Still scanning out via VESA. (Needs T61 to run.)
+- **M3 — native modeset (the hard one).** Program the NV50 display engine
+  (PLLs, CRTC, LVDS/panel) to light the T61 panel at native resolution with a
+  linear framebuffer, per nouveau's documented sequence; read panel EDID over
+  DDC or hardcode T61 timings. This is the first genuinely native driver.
+- **M4+ — polish.** Native memory setup, hardware cursor, mode list, power.
+  2D/3D acceleration is explicitly out of scope for the foreseeable future.
+
+## Build (verified, this host)
+
+```
+export WATCOM=/home/guilherme/watcom
+export PATH="$WATCOM/binl64:$WATCOM/binl:$PATH"
+export INCLUDE="$WATCOM/h/win:$WATCOM/h"
+export EDPATH="$WATCOM/eddat"
+cd driver/vmdisp9x-nv
+gcc fixlink/fixlink.c -o ./fixlink.bin   # one-time, Linux host fixup tool
+wmake vesamini.vxd vesamini.drv          # M1: stock VESA pair
+wmake nvmini.vxd nvmini.drv              # M2: NVIDIA detection pair
+INCLUDE="$WATCOM/h/nt:$WATCOM/h" wcl386 -bt=nt -l=nt -q -fe=nvprobe.exe tools/nvprobe.c
+```
+
+Inspect any built VxD:
+`python3 -c "import sys;sys.path.insert(0,'tools');from le_vxd import LE;print(LE('<file>').ddb)"`
+
+## References
+
+- vmdisp9x: https://github.com/JHRobotics/vmdisp9x (MIT; our base)
+- envytools NV50 display: https://envytools.readthedocs.io/
+- nouveau (NV50 modeset reference implementation)
+- XP G86 predicate/tables: `analysis/reverse/xp_g86_predicate_and_registration.asm`
