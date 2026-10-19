@@ -1,5 +1,13 @@
-package build 2006 (M3 r2: EVO staging E2, safe VRAM-only)
-  nvmini.vxd   34929 bytes
-  nvprobe.exe  31232 bytes
+package build 3010 (M3 ACHIEVED: native G86 modeset - color bars on the panel)
+  nvmini.vxd   39053 bytes
+  nvprobe.exe  36352 bytes
   nvmini.drv   16158 bytes
-nvprobe prints 'build: vxd=2006 exe=2006' when matched.
+nvprobe prints 'build: vxd=3010 exe=3010' when matched.
+
+`nvprobe evoflip go` performs the full native takeover (verified on the T61,
+2026-10-19): display-engine re-init, EVO core channel bring-up, complete
+1024x768@60 head state, supervised commit (unk10/20/40 handshake), completion
+notifier, scanout from our framebuffer at VRAM 16MB. The desktop is no longer
+scanned out after a flip; recover with a cold boot. Diagnostic written to
+nvflip.txt. Next milestone (E4): the display driver renders the Windows desktop
+into the native framebuffer instead of a test pattern.

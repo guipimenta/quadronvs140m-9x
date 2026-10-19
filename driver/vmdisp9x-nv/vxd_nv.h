@@ -15,7 +15,7 @@
 /* Build stamp. Bump on every rebuild. nvprobe compares the VxD's value against
  * the one it was compiled with, so version skew (stale VxD or stale EXE) is
  * obvious. Scheme: milestone*1000 + revision. */
-#define NV_BUILD            2006UL   /* M3 r2: EVO staging in VRAM (E2, safe) */
+#define NV_BUILD            3010UL   /* M3 E3 r10: r9 + supervisor (unk10/20/40) handshake */
 
 #define NV_PCI_VENDOR       0x10DEUL  /* NVIDIA */
 #define NV_DEV_NVS140M      0x0429UL  /* Quadro NVS 140M (G86) */
@@ -34,6 +34,7 @@
 #define OP_NV_VRAM_RD       0x5002  /* read a range of BAR1 VRAM dwords       */
 #define OP_NV_VRAM_FILL     0x5003  /* fill BAR1 VRAM dwords with a value     */
 #define OP_NV_EVO_STAGE     0x5004  /* E2: stage fb+pushbuffer in VRAM (safe) */
+#define OP_NV_EVO_FLIP      0x5005  /* E3: bring up EVO + flip scanout (RISKY) */
 
 #define NV_RD32_MAX         256     /* max dwords per read request            */
 
@@ -81,6 +82,11 @@ extern nv_hwinfo_t nv_hwinfo;
  * 0xDEAD00xx sentinels if BAR0 could not be mapped or the offset is out of
  * range. Maps BAR0 once and caches it. */
 unsigned long NV_rd32(unsigned long offset);
+
+/* Write one BAR0 MMIO register (dword). Maps BAR0 on first use (shared with
+ * NV_rd32), bounds-checked. Returns 1 on success, 0 if BAR0 is unavailable or
+ * the offset is out of range. Used only by the E3 EVO bring-up. */
+int NV_wr32(unsigned long offset, unsigned long value);
 
 /* BAR1 VRAM access (maps BAR1 once, cached). Bounds-checked. Touches video
  * memory only, never the display raster/PLL, so it is safe for the panel. */

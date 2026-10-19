@@ -16,6 +16,7 @@ analysis/reverse/NVMINI.VXD.json
 # === Build intermediates / outputs in the working driver tree ===
 # (The shippable binaries under dist/ are kept deliberately.)
 driver/vmdisp9x-nv/*.obj
+driver/vmdisp9x-nv/*.o
 driver/vmdisp9x-nv/*.vxd
 driver/vmdisp9x-nv/*.drv
 driver/vmdisp9x-nv/*.exe

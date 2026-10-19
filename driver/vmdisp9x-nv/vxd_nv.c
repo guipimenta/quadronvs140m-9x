@@ -186,6 +186,28 @@ unsigned long NV_rd32(unsigned long offset)
 	return nv_bar0[offset >> 2];
 }
 
+/*
+ * NV_wr32 --
+ *
+ *   Write one BAR0 MMIO register. Ensures BAR0 is mapped (reuses NV_rd32's
+ *   mapping path by poking offset 0), then bounds-checks and writes. Only the
+ *   E3 EVO bring-up uses this; everything earlier is read-only.
+ */
+int NV_wr32(unsigned long offset, unsigned long value)
+{
+	if(nv_bar0 == 0)
+		(void)NV_rd32(0);          /* side effect: maps and caches BAR0 */
+	if(nv_bar0 == 0)
+		return 0;
+
+	offset &= ~3UL;
+	if(offset + 4 > nv_bar0_bytes)
+		return 0;
+
+	nv_bar0[offset >> 2] = value;
+	return 1;
+}
+
 /* Cached linear mapping of BAR1 (VRAM aperture) for framebuffer access. */
 static volatile unsigned long *nv_bar1 = 0;
 static unsigned long nv_bar1_bytes = 0;

@@ -1065,6 +1065,17 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			rc = 0;
 			break;
 		}
+		case OP_NV_EVO_FLIP:
+		{
+			/* E3: bring up EVO + flip scanout to our framebuffer (RISKY).
+			 * Opt-in only (never Device_Init); self-diagnosing; recover from
+			 * a bad flip by rebooting into Safe Mode -> Standard VGA. */
+			nv_evo_flip_t flip;
+			NV_evo_flip(&flip);
+			memcpy(outBuf, &flip, sizeof(flip));
+			rc = 0;
+			break;
+		}
 #endif
 		default:
 			dbg_printf("DeviceIOControl: Unknown: %d\n", params->dwIoControlCode);

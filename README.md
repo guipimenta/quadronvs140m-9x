@@ -15,9 +15,13 @@ documentation as hardware references.
 - **M2 — hardware bring-up (on real T61):** our code enumerates the G86, maps
   BAR0 MMIO, reads `PMC_BOOT_0` (chipset 0x86 confirmed), reads/writes VRAM, and
   **puts pixels on the panel** from our own code. ✓
-- **M3 — native modeset (in progress):** panel recovered as 1024×768@60 on SOR0,
-  pixel clock 64.8 MHz. Next: EVO channel bring-up to scan out our own linear
-  framebuffer. See `docs/M3_PLAN.md`.
+- **M3 — native modeset: ACHIEVED (build 3010).** Our driver re-initialises the
+  G86 display engine, brings up the EVO core channel, programs the complete
+  1024×768@60 head state through its method ring, services the supervised
+  commit handshake, and scans out our own linear framebuffer — verified by
+  8 color bars on the T61 panel. See `docs/EVO_PLAN.md` for the full recipe.
+- **M4/E4 — next: wire the native framebuffer into DIBENG** (FBHDA) so Windows
+  renders a real 1024×768 high-color desktop into it.
 
 ## Layout
 

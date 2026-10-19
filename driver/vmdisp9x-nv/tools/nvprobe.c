@@ -16,6 +16,47 @@
 #include "../vxd_nv.h"
 #include "../nv50_evo.h"
 
+/* Emit the EVO flip diagnostic to a stream. Called twice: once to nvflip.txt
+ * (so the result survives even if the flip black-screens the console) and once
+ * to stdout (readable when the screen survives). */
+static void print_flip(FILE *o, const nv_evo_flip_t *f)
+{
+	fprintf(o, "EVO flip PIO (vxd build %lu): ok=%lu stage=%lu\n",
+		f->build, f->ok, f->stage);
+	fprintf(o, "  built   : ramin=%08lX ctxdma=%08lX fb=%08lX\n",
+		f->ramin, f->ctxdma, f->fb_offset);
+	fprintf(o, "            ctxdma.flags0=%08lX  ramht[%08lX]=handle %08lX ctx %08lX\n",
+		f->ctxdma_flags0, f->ramht_slot, f->iso_handle, f->ramht_ctx);
+	fprintf(o, "            objects: pre=%08lX wrote=%08lX post=%08lX\n",
+		f->pre_objects, f->objects_val, f->post_objects);
+	fprintf(o, "  preamble: cursor0 %08lX->%08lX cursor1=%08lX cur_loops=%lu text_61e8=%08lX\n",
+		f->pre_cursor0, f->cur0_state, f->cur1_state, f->cur_loops, f->text_61e8);
+	fprintf(o, "  recover : pre=%08lX post=%08lX (stuck-state nudge, 0x02xxxx -> +0x800000)\n",
+		f->fini_ctrl, f->fini_loops);
+	fprintf(o, "  channel : ctrl=%08lX accept_loops=%lu\n",
+		f->ctrl_after_init, f->accept_loops);
+	fprintf(o, "  ring    : put=%08lX get=%08lX  notify %08lX->%08lX sync_loops=%lu\n",
+		f->put_bytes, f->post_get, f->ntfy_pre, f->ntfy_post, f->sync_loops);
+	fprintf(o, "  superv  : unk10 acked %lu, unk20 acked %lu, unk40 acked %lu\n",
+		f->sv10, f->sv20, f->sv40);
+	fprintf(o, "  trap    : addr=%08lX data=%08lX   intr0=%08lX intr1=%08lX\n",
+		f->trapped_addr, f->trapped_data, f->intr0, f->intr1);
+	/* The notifier going non-zero = the channel actually processed our ring.
+	 * INTR_0 bit16 = FIFO_ERR_MASTER (a method the engine rejected). */
+	if(f->cur0_state & 0x00020000UL)
+		fprintf(o, "  => cursor channel never went ACTIVE (preamble stalled); engine not ready.\n");
+	else if(f->intr0 & 0x00010000UL)
+		fprintf(o, "  => FIFO ERROR: method 0x%04lX data %08lX (engine rejected it)\n",
+			f->trapped_addr & 0xffcUL, f->trapped_data);
+	else if(f->ntfy_post != 0)
+		fprintf(o, "  => SUCCESS: channel processed the ring (notifier posted). Look at the panel!\n");
+	else if(f->post_get == f->put_bytes)
+		fprintf(o, "  => ring drained (get==put) but notifier silent; check scanout/notifier ctxdma.\n");
+	else
+		fprintf(o, "  => channel still did not drain (get=%08lX put=%08lX); engine init insufficient.\n",
+			f->post_get, f->put_bytes);
+}
+
 int main(int argc, char **argv)
 {
 	nv_hwinfo_t info;
@@ -129,6 +170,48 @@ int main(int argc, char **argv)
 		printf("  (read it back with: nvprobe vramrd %lX %lu)\n",
 			lay.push_offset, lay.push_dwords);
 		CloseHandle(vxd);
+		return 0;
+	}
+
+	/* "nvprobe evoflip go" : E3 - bring up EVO and flip scanout to our own
+	 * framebuffer. RISKY: may black-screen; recover by rebooting into Safe Mode
+	 * (F8) -> Standard VGA. Requires the literal word "go" so it is never run by
+	 * accident. Prints the full before/after diagnostic snapshot either way. */
+	if(argc >= 2 && strcmp(argv[1], "evoflip") == 0)
+	{
+		nv_evo_flip_t f;
+		if(argc < 3 || strcmp(argv[2], "go") != 0)
+		{
+			printf("evoflip performs the RISKY scanout flip (E3).\n");
+			printf("It may black-screen the panel; recovery is reboot -> Safe Mode\n");
+			printf("(hold F8 at boot) -> Standard VGA. To proceed, run:\n");
+			printf("    nvprobe evoflip go\n");
+			CloseHandle(vxd);
+			return 0;
+		}
+		memset(&f, 0, sizeof(f));
+		if(!DeviceIoControl(vxd, OP_NV_EVO_FLIP, NULL, 0,
+			&f, sizeof(f), &ret, NULL))
+		{
+			printf("OP_NV_EVO_FLIP failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+
+		/* Save to a file FIRST - the flip may have blanked/garbaged the
+		 * console, in which case the stdout copy below is unreadable, but the
+		 * file survives the reboot. */
+		{
+			FILE *fp = fopen("nvflip.txt", "w");
+			if(fp)
+			{
+				print_flip(fp, &f);
+				fflush(fp);
+				fclose(fp);
+			}
+		}
+		print_flip(stdout, &f);
+		printf("(diagnostic also written to nvflip.txt - bring that back)\n");
 		return 0;
 	}
 
