@@ -1,0 +1,34 @@
+REGEDIT4
+
+; nvsetup.reg - NVIDIA Quadro NVS 140M (G86) Win98SE native driver settings.
+; Merge on the T61 by double-clicking, or: regedit /s nvsetup.reg
+; Reboot afterwards.
+
+; --- VxD backend switches (read by nvmini.vxd at Device_Init) ---------------
+; Native      1 = native G86 modeset (default since build 3033), 0 = vga.drv boot
+; InitStop    0 = full init; N = debug: stop NV_init_hw_native after stage N
+; BootPattern 0 = normal; 1 = draw test bars in the boot modeset
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\vesa]
+"Native"=dword:00000001
+"InitStop"=dword:00000000
+"BootPattern"=dword:00000000
+
+; --- Display class key of the NVIDIA adapter --------------------------------
+; DDC "0" stops the Windows VDD from probing the monitor EDID itself through
+; INT 10h 4F15 in V86 mode (that probe takes ~3 minutes at every boot on the
+; G86). The adapter is normally Class\Display\0000: confirm in regedit that
+; 0000\DEFAULT holds minivdd=nvmini.vxd; if yours is 0001 etc., edit this path.
+; (DDC=0 is harmless on any other display key, so a wrong guess cannot break anything.)
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\Class\Display\0000\DEFAULT]
+"DDC"="0"
+; Mode = the desktop mode Windows expects the driver to come up in. Must match
+; the [Display] x_resolution/y_resolution/bpp in SYSTEM.INI (1024x768x16, the
+; only mode the native backend accepts), otherwise Windows shows "There is a
+; problem with your display settings" at every boot.
+"Mode"="16,1024,768"
+
+; --- Current hardware profile: the mode the shell/Display Properties believe
+; is active. Same reason as above; 0001 is the default hardware profile. ---
+[HKEY_LOCAL_MACHINE\Config\0001\Display\Settings]
+"Resolution"="1024,768"
+"BitsPerPixel"="16"

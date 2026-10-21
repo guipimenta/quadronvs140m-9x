@@ -27,3 +27,21 @@ Install on the T61 (Win98 SE), fully reversible:
 If the desktop does not come up: fall back to Standard VGA in Safe Mode and
 report what happened. If the desktop works but nvprobe reports mmio_ok 0 or a
 wrong chipset, that is still useful - send the BOOT0/BAR values it prints.
+
+
+UPDATE 2026-10-21 (build 3033 package):
+  - Also copy SYSTEM.INI over C:\WINDOWS\SYSTEM.INI and merge nvsetup.reg
+    (regedit /s nvsetup.reg). Never add IgnoreRegistry=1 to [Display]: the
+    Win98 VDD reads that key and then does not load nvmini.vxd at all.
+  - To check what really loaded, use a logged boot's BOOTLOG.TXT, not DxDiag.
+  - Build 3035: after any boot run  nvprobe log > nvlog.txt  - it holds the
+    debug output of both nvmini.vxd (V>) and nvmini.drv (D>) for that boot.
+    nvmini.drv also appends its lines to C:\NVMINI.LOG - send that file too.
+  - Full findings and the current diagnostic checklist:
+    analysis/BOOT_DIAGNOSIS_2026-10-21.md in the repo.
+
+UPDATE 2026-10-22 (build 3037): the reason nvmini.drv NEVER loaded (LoadFail
+0000) was a bad NE relocation produced by the toolchain from a __segname("_TEXT")
+declaration in init.c; fixed. Install the three 3037 files, keep SYSTEM.INI
+display.drv=nvmini.drv and the nvsetup.reg values, reboot. Expect
+'LoadSuccess = nvmini.drv' in a logged BOOTLOG.TXT and a 1024x768 desktop.

@@ -59,6 +59,20 @@ extern ULONG hda_sem;
 
 #ifdef NV_DETECT
 static char vesa_vxd_name[] = "nvmini.vxd";
+/* E4: native G86 mode-set path (nv50_evo.c). When the hardware is present and
+ * the requested mode matches the panel, the VBE INT10 call is replaced by our
+ * own display-engine takeover; everything else (shadow rendering, blitting,
+ * cursor) stays on the shared vmdisp9x machinery. */
+int NV_native_valid(unsigned long w, unsigned long h, unsigned long bpp);
+int NV_native_modeset(unsigned long w, unsigned long h, unsigned long bpp);
+/* mode-path instrumentation (defined in nv50_evo.c, read via OP_NV_LASTSET) */
+extern unsigned long nv_dbg_valid_calls, nv_dbg_set_calls;
+extern unsigned long nv_dbg_set_w, nv_dbg_set_h, nv_dbg_set_bpp;
+extern unsigned long nv_dbg_branch, nv_dbg_phylin;
+extern unsigned long nv_dbg_init;   /* 0=none, 1=VBE init, 2=native init */
+void NV_blog(unsigned long code);   /* boot progress log (VRAM 25 MB)     */
+void NV_blog_reset(void);
+#include "vxd_nv.h"                 /* nv_hwinfo: BAR1 from the PCI probe */
 #else
 static char vesa_vxd_name[] = "vesamini.vxd";
 #endif
@@ -182,6 +196,25 @@ static BOOL vesa_valid = FALSE;
 static DWORD conf_dos_window = 0;
 static DWORD conf_hw_double_buf = 1; /* much better performance on real HW */
 static DWORD conf_mtrr = 1;
+#ifdef NV_DETECT
+/* E4 kill switch: 0 = boot on the plain VBE path (safe bring-up), 1 = use the
+ * native G86 modeset. Read from HKLM\Software\vmdisp9x\vesa "Native". Default 0
+ * so a freshly-bound driver comes up on VBE first and cannot black-screen on
+ * the native takeover before we have confirmed the driver even loads. */
+static DWORD conf_native = 1;   /* 3033: native G86 modeset is the DEFAULT; registry Native=0 is the opt-out (vga.drv fallback) */
+static DWORD nv_backend_native = 0;  /* 1 once NV_init_hw_native() succeeds */
+/* E4 boot-hang bisection: HKLM\...\vesa "InitStop" = N makes NV_init_hw_native
+ * run only stages 1..N then return FALSE. If the logged boot then reaches
+ * DEVICEINITSUCCESS=VDD (black screen, not a hang), stages 1..N are innocent.
+ * Stages: 1=probe, 2=BAR1 map, 3=wram, 4=FBHDA, 5=hda fields, 6=full(timer). */
+static DWORD conf_init_stop = 0;
+/* E4 panel diagnostic: HKLM\...\vesa "BootPattern" = 1 makes the native modeset
+ * paint the 8-bar test image into the scanout buffer. With no console/serial on
+ * the T61 the panel is the only output: bars => the .drv reached our setmode and
+ * EVO works at boot; blinking underscore => setmode never ran (.drv load/Enable
+ * failed before us). Read in nv50_evo.c NV_native_modeset. Non-static on purpose. */
+DWORD nv_boot_pattern = 0;
+#endif
 
 #define MODE_OFFSET 1024
 #define CRTC_OFFSET 2048
@@ -258,12 +291,128 @@ static const char VESA_conf_path[] = "Software\\vmdisp9x\\vesa";
 
 void VESA_load_vbios_pm();
 
+#ifdef NV_DETECT
+/*
+ * NV_init_hw_native --
+ *
+ *   Backend init with NO VBIOS/VBE dependence: on this hardware (G86) the
+ *   VBE 2.0 interaction fails, which made VESA_init_hw return FALSE and the
+ *   display driver fall back to vga.drv forever. Everything VBE provided is
+ *   available elsewhere: VRAM physical base/size come from the PCI BARs (M2
+ *   probe), scanout comes from the native mode-set (E3). The shared shadow
+ *   (wram) + blitter machinery is initialised exactly as the VBE path does.
+ */
+static BOOL NV_init_hw_native(DWORD conf_vram_limit, DWORD wram_size)
+{
+	void *vram_lin;
+	DWORD vram_size;
+
+	/* VESA_init_hw runs during Device_Init, BEFORE NV_probe populates
+	 * nv_hwinfo in the later Device_Init stage - so probe here on demand,
+	 * otherwise native init always fell through to the (hanging) VBE path. */
+	if(!nv_hwinfo.found)
+		NV_probe(&nv_hwinfo);
+
+	if(!nv_hwinfo.found || !nv_hwinfo.mmio_ok || nv_hwinfo.chipset != 0x86)
+		return FALSE;
+	if(nv_hwinfo.bar1_phys == 0)
+		return FALSE;
+
+	NV_blog_reset();     /* BAR1 reachable now (probe done) -> start the log */
+	NV_blog(0x100);
+	/* stage 1 done = NV_probe survived at Device_Init */
+	if(conf_init_stop == 1) return FALSE;
+
+	/* The blit destination only ever needs the visible fb + flip buffers.
+	 * Keep the window well below our EVO structures at VRAM 16 MB+. */
+	vram_size = conf_vram_limit * 1024 * 1024;
+	if(vram_size > 12*1024*1024)
+		vram_size = 12*1024*1024;
+
+	vram_lin = (void*)_MapPhysToLinear(nv_hwinfo.bar1_phys, vram_size, 0);
+	if(vram_lin == NULL || vram_lin == (void*)0xFFFFFFFFUL)
+		return FALSE;
+	NV_blog(0x103);
+	if(conf_init_stop == 2) return FALSE;   /* stage 2 = BAR1 12MB map */
+
+	if(!wram_init(wram_size*1024*1024))
+	{
+		dbg_printf("native init: wram_init(%lu MB) failed\n", wram_size);
+		return FALSE;
+	}
+	NV_blog(0x104);
+	if(conf_init_stop == 3) return FALSE;   /* stage 3 = wram_init(64MB) */
+	if(!FBHDA_init_hw())
+	{
+		dbg_printf("native init: FBHDA_init_hw failed\n");
+		return FALSE;
+	}
+	NV_blog(0x105);
+	if(conf_init_stop == 4) return FALSE;   /* stage 4 = FBHDA_init_hw */
+
+	memcpy(hda->vxdname, vesa_vxd_name, sizeof(vesa_vxd_name));
+	hda->vram_size      = vram_size;
+	hda->vram_size_bar  = vram_size;
+	hda->vram_phylin    = vram_lin;
+	hda->vram_pm32      = (BYTE*)wram + wram->regs.s.fbmin;
+	hda->vram_size_virt = wram->regs.s.fbmax - wram->regs.s.fbmin;
+	hda->flags |= FB_SUPPORT_FLIPING;
+
+	vesa_version   = 0;      /* no VBE anywhere in this path  */
+	vesa_caps      = 0;
+	vesa_modes_cnt = 0;      /* mode list = the native modes  */
+	vram_phy       = nv_hwinfo.bar1_phys;
+	vesa_valid     = TRUE;
+	nv_dbg_init    = 2;
+	nv_backend_native = 1;   /* -> mode path is native-only, never VBE/V86 */
+
+	NV_blog(0x106);
+	if(conf_init_stop == 5) return FALSE;   /* stage 5 = everything but the blit timer */
+	wblit.num_changes = 0;
+	/* E4 FIX3: do NOT start the async blit timer here. Set_Global_Time_Out()
+	 * inside the Device_Init critical section hard-freezes the G86 - this is the
+	 * SOLE remaining boot hang (InitStop=5, which skips exactly this call, boots
+	 * to a live black screen; InitStop unset hangs). Leave timer_set=FALSE so
+	 * FBHDA_access_end()/FBHDA_swap() blit the shadow synchronously on each GDI
+	 * access - the desktop still renders, just without a periodic timer. The
+	 * timer is started lazily at the first native setmode (live VM context,
+	 * outside the critical section); see VESA_setmode_phy. */
+	timer_set = FALSE;
+	NV_blog(0x107);
+
+	dbg_printf("NV_init_hw_native OK: vram_phy=%lX lin=%lX size=%lu\n",
+		vram_phy, (DWORD)vram_lin, vram_size);
+	return TRUE;
+}
+
+/* E4: run the EXACT backend init the boot display driver runs, on demand from
+ * nvprobe (OP_NV_INITSIM). Logs the 0x100..0x107 markers; if the boot hang is
+ * in the backend (12MB map / 64MB wram / FBHDA / blit timer) it reproduces it
+ * here recoverably. Returns what VESA_init_hw's native branch would return. */
+BOOL NV_initsim(void)
+{
+	return NV_init_hw_native(32, 64);
+}
+
+/* defined later in this file */
+BOOL VESA_setmode_phy(DWORD w, DWORD h, DWORD bpp, DWORD rr_min, DWORD rr_max);
+
+/* E4: run the EXACT display-driver setmode hook on demand (OP_NV_SETMODESIM):
+ * the 0x210..0x212 path, the post-modeset wblit/wram reconfiguration, and the
+ * full 1024x768x16 blit it kicks off - the one boot piece the sims miss. Must
+ * be called AFTER NV_initsim (needs hda/wram/wblit set up). */
+BOOL NV_setmodesim(void)
+{
+	return VESA_setmode_phy(1024, 768, 16, 0, 0);
+}
+#endif /* NV_DETECT */
+
 BOOL VESA_init_hw()
 {
 	DWORD flat;
 	DWORD conf_vram_limit = 32;
 	DWORD wram_size = 64;
-	
+
 	dbg_printf("VESA init begin...\n");
 
 	RegReadConf(HKEY_LOCAL_MACHINE, reg_path,       "WRAMSize",         &wram_size);
@@ -271,11 +420,36 @@ BOOL VESA_init_hw()
 	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "MTRR",             &conf_mtrr);
 	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "DosWindowSetMode", &conf_dos_window);
 	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "HWDoubleBuffer",   &conf_hw_double_buf);
+#ifdef NV_DETECT
+	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "Native",           &conf_native);
+	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "InitStop",         &conf_init_stop);
+	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "BootPattern",      &nv_boot_pattern);
+	dbg_printf("NV native modeset = %lu, InitStop = %lu, BootPattern = %lu\n",
+		conf_native, conf_init_stop, nv_boot_pattern);
+#endif
 
 	if(wram_size < WRAM_MIN_MB)
 	{
 		wram_size = WRAM_MIN_MB;
 	}
+
+#ifdef NV_DETECT
+	/* Native-ONLY on the G86: the VBE 2.0 / V86 INT10h interaction DEADLOCKS on
+	 * this hardware (vesa_bios_V86 below never returns), so it is not a safe
+	 * fallback here - it only hangs the boot. Drive the backend from the PCI
+	 * probe instead of the video BIOS; when native is off or fails, fail CLEANLY
+	 * to Windows' own vga.drv rather than touching V86 at all.
+	 *
+	 * Consequence: Native=0 is a reliable non-hang boot (desktop on vga.drv)
+	 * that STILL loads this VxD, so the boot log can be read back with nvprobe
+	 * after a Native=1 boot has hung. */
+	if(conf_native)
+	{
+		return NV_init_hw_native(conf_vram_limit, wram_size);
+	}
+	dbg_printf("Native=0: VBE path skipped (deadlocks on G86), falling to vga.drv\n");
+	return FALSE;
+#endif
 
 	flat = _PageAllocate(1, PG_SYS, 0, 0x0, PAGE_ALLOC_MIN, PAGE_ALLOC_MAX, &vesa_buf_phy, PAGEUSEALIGN | PAGECONTIG | PAGEFIXED);
 	vesa_buf = (void*)flat;
@@ -492,6 +666,9 @@ BOOL VESA_init_hw()
 				vesa_pal = (vesa_palette_entry_t*)(((BYTE*)vesa_buf)+PAL_OFFSET);
 
 				vesa_valid  = TRUE;
+#ifdef NV_DETECT
+				nv_dbg_init = 1;
+#endif
 
 				VESA_load_vbios_pm();
 
@@ -738,8 +915,23 @@ static DWORD VESA_freqchoice(int mode, DWORD rr_min, DWORD rr_max)
 
 BOOL VESA_validmode(DWORD w, DWORD h, DWORD bpp)
 {
-	DWORD mode = VESA_modechoice(w, h, bpp);
+	DWORD mode;
 
+#ifdef NV_DETECT
+	nv_dbg_valid_calls++;
+	if(nv_backend_native)
+	{
+		/* Native-only backend: the valid mode list IS the native list; there is
+		 * no VBE mode table to consult. */
+		return NV_native_valid(w, h, bpp) ? TRUE : FALSE;
+	}
+	if(conf_native && NV_native_valid(w, h, bpp))
+	{
+		return TRUE;
+	}
+#endif
+
+	mode = VESA_modechoice(w, h, bpp);
 	if(mode < vesa_modes_cnt)
 	{
 		return TRUE;
@@ -759,7 +951,93 @@ BOOL VESA_setmode_phy(DWORD w, DWORD h, DWORD bpp, DWORD rr_min, DWORD rr_max)
 	vesa_crtc_info_t *crtc_info = NULL;
 	DWORD refresh = ASYNC_DEFAULT;
 
-	VESA_HIRES_enable();	
+#ifdef NV_DETECT
+	/* E4: native G86 mode set. The engine scans out VRAM offset 0 - exactly
+	 * where the shadow blitter already writes (hda->vram_phylin = the BAR1
+	 * LFB mapping) - so on success we only have to fill the same soft state
+	 * the VBE path fills, and the shared machinery does the rest. */
+	nv_dbg_set_calls++;
+	nv_dbg_set_w = w; nv_dbg_set_h = h; nv_dbg_set_bpp = bpp;
+	nv_dbg_phylin = (DWORD)hda->vram_phylin;
+	nv_dbg_branch = !NV_native_valid(w, h, bpp) ? 1 :
+	                (hda->vram_phylin == NULL ? 2 : 3);
+	NV_blog(0x210);
+	if((nv_backend_native || conf_native) && NV_native_valid(w, h, bpp) && hda->vram_phylin != NULL)
+	{
+		NV_blog(0x211);
+		if(NV_native_modeset(w, h, bpp))
+		{
+			DWORD pitch = w * ((bpp + 7) / 8);
+			NV_blog(0x212);
+
+			hda->width  = w;
+			hda->height = h;
+			hda->bpp    = bpp;
+			hda->pitch  = pitch;
+			hda->stride = h * pitch;
+			hda->surface        = 0;
+			hda->system_surface = 0;
+			hda->flags &= ~FB_SUPPORT_VSYNC;
+
+			video_bpp   = bpp;
+			video_pitch = pitch;
+
+			wblit.base.ptr        = hda->vram_phylin;
+			wblit.dst[0].flat.ptr = hda->vram_phylin;
+			wblit.dst[1].flat.ptr = NULL;
+			wblit.dst[2].flat.ptr = NULL;
+			wblit.dst_w     = w;
+			wblit.dst_h     = h;
+			wblit.dst_pitch = pitch;
+			wblit.dst_mode  = (bpp == 32) ? MODE_32 : MODE_16;
+			wblit.dst_scans = 1;
+			wblit.dst_padx  = 0;
+			wblit.dst_pady  = 0;
+
+			wram->regs.s.width  = w;
+			wram->regs.s.height = h;
+			wram->regs.s.mode   = (bpp == 32) ? MODE_32 : MODE_16;
+			wram->regs.s.pitch  = pitch;
+
+			async_blit_settime(ASYNC_DEFAULT);
+
+			/* E4 FIX3 (cont.): start the async blit timer HERE, at the first
+			 * native setmode, not at Device_Init. This runs in live GUI context
+			 * (DISPLAY.drv load, long after DEVICEINITSUCCESS), where
+			 * Set_Global_Time_Out is safe - unlike the Device_Init critical
+			 * section, where it hard-freezes the G86. Until the timer is up the
+			 * shadow blits synchronously on each GDI access (correct but slow);
+			 * once it is, blits batch dirty rects on the timer (fast). */
+			if(!timer_set)
+			{
+				timer_set = async_blit_init(&wblit, VESA_draw);
+				dbg_printf("native: async blit timer started = %d\n", timer_set);
+			}
+
+			/* 3032: arm the blitter. VESA_draw() returns at once while vga_mode is
+			 * set or act_mode < 0; the VBE path clears both further down
+			 * (VESA_HIRES_enable() and "act_mode = mode"), which this early
+			 * return used to skip - GDI painted the shadow, nothing reached VRAM. */
+			vga_mode = FALSE;
+			act_mode = 0;
+
+			dbg_printf("native mode set: %lux%lux%lu pitch=%lu\n", w, h, bpp, pitch);
+			return TRUE;
+		}
+		dbg_printf("native mode set FAILED\n");
+	}
+	/* On the native-only backend there is NO VBE to fall back to (no mode table,
+	 * and the V86 BIOS call is exactly what hangs on this HW). Fail cleanly so
+	 * Windows falls back to its own vga.drv rather than hanging in our V86 path. */
+	if(nv_backend_native)
+	{
+		dbg_printf("native backend: mode %lux%lux%lu not available (no VBE fallback)\n",
+			w, h, bpp);
+		return FALSE;
+	}
+#endif
+
+	VESA_HIRES_enable();
 
 	mode = VESA_modechoice(w, h, bpp);
 	if(mode >= vesa_modes_cnt) return FALSE;

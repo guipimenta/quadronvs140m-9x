@@ -112,7 +112,9 @@ AddReg=VESA.AddReg,VM.AddReg,DX.addReg,VM.regextra
 [NV]
 CopyFiles=NV.Copy,Dx.Copy,Voodoo.Copy
 DelReg=VM.DelReg
-AddReg=NV.AddReg,VM.AddReg,DX.addReg,VM.regextra
+; VM.AddReg first so that the NV-specific DEFAULT values (DDC=0 in particular)
+; override the shared ones (VM.AddReg writes DDC=1).
+AddReg=VM.AddReg,NV.AddReg,DX.addReg,VM.regextra
 
 [NV.Copy]
 nvmini.drv,,,0x00000004
@@ -122,6 +124,14 @@ nvmini.vxd,,,0x00000004
 HKR,DEFAULT,drv,,nvmini.drv
 HKR,DEFAULT,minivdd,,nvmini.vxd
 HKR,DEFAULT,Mode,,"16,1024,768"
+; DDC=0 tells the Win98 VDD monitor enumerator (_VDDEnumMonitor) NOT to read
+; the EDID itself via INT 10h AX=4F15 in V86 mode: on the G86 that V86 VBIOS
+; call crawls for ~3 minutes at every boot (BOOTLOG: "Enumerating NVIDIA ..."
+; -> "Enumerated" = 173 s). A Default Monitor is created immediately instead.
+HKR,DEFAULT,DDC,,0
+; Native G86 modeset on (the VxD default since 3033 too; set 0 to force the
+; vga.drv fallback boot). Same string convention as VRAMLimit below.
+HKLM,Software\vmdisp9x\vesa,Native,,1
 
 [VBox.Copy]
 boxvmini.drv,,,0x00000004

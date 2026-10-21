@@ -42,6 +42,7 @@ THE SOFTWARE.
 #include "vmm.h"
 #include "vxd.h"
 #include "vxd_lib.h"
+#include "dbgring.h"
 
 #include "3d_accel.h"
 #include "vxd_vdd.h"
@@ -61,6 +62,7 @@ BOOL VESA_check_int10h(DWORD vm, PCRS_32 regs);
 #ifdef NV_DETECT
 #include "vxd_nv.h"
 #include "nv50_evo.h"
+extern unsigned long nv_dbg_fbhda;  /* OP_FBHDA_SETUP count = nvmini.drv loaded */
 #endif
 
 #include "code32.h"
@@ -357,6 +359,14 @@ WORD __stdcall VXD_API_Proc(PCRS_32 state)
 {
 	WORD rc = 0xFFFF;
 	WORD service = state->Client_EDX & 0xFFFF;
+#ifdef DBGRING
+	static int first_call = 1;
+	if(first_call && service != OP_NV_DBG_PUTC)
+	{
+		first_call = 0;
+		dbg_printf("PM16 API: first call from 16-bit side, service %X\n", service);
+	}
+#endif
 	
 	//dbg_printf("VXD_API_Proc, service: %X\n", service);
 	//Begin_Critical_Section(0);
@@ -369,9 +379,26 @@ WORD __stdcall VXD_API_Proc(PCRS_32 state)
 		case VXD_PM16_VMM_VERSION:
 			rc = Get_VMM_Version();
 			break;
+#ifdef DBGRING
+		case OP_NV_DBG_PUTC:
+			/* one dbg_printf character from the 16-bit driver (dbgring.h) */
+			dbg_ring_putc((char)state->Client_ECX);
+			rc = 1;
+			break;
+#endif
 		case OP_FBHDA_SETUP:
 			{
-				DWORD dptr = (DWORD)FBHDA_setup();
+				DWORD dptr;
+				dbg_printf("OP_FBHDA_SETUP from the 16-bit driver\n");
+#ifdef NV_DETECT
+				/* E4 breadcrumb: the 16-bit nvmini.drv calls FBHDA_SETUP as it
+				 * loads. Logging 0x108 here (post-Device_Init, so NV_blog writes)
+				 * proves the .drv reached us - distinguishes "driver never loaded"
+				 * from "loaded but Enable/setmode failed" in the warm-reboot VRAM
+				 * marker trail. */
+				NV_blog(0x108);
+#endif
+				dptr = (DWORD)FBHDA_setup();
 				if(dptr)
 				{
 					state->Client_ECX = dptr;
@@ -571,6 +598,10 @@ WORD __stdcall VXD_API_Proc(PCRS_32 state)
 	if(rc == 0xFFFF)
 	{
 		state->Client_EFlags |= 0x1; // set carry
+#ifdef DBGRING
+		if(service != OP_NV_DBG_PUTC)
+			dbg_printf("PM16 API: unknown service %X\n", service);
+#endif
 	}
 	else
 	{
@@ -726,6 +757,13 @@ void Device_Init_proc(DWORD VM)
  	ThisVM = VM;
  	DeviceCTX = _GetCurrentContext();
 
+#ifdef NV_DETECT
+	/* Early init runs inside a VMM critical section; a BAR0 MMIO read here
+	 * hard-freezes the G86. Make every NV_probe below decode the chip from the
+	 * PCI device id instead, and defer real MMIO to the Ring-3 path. */
+	nv_probe_skip_mmio = 1;
+#endif
+
 #ifdef SVGA
 	gpu_allocated = vxd_hinit();
 	SVGA_init_hw();
@@ -741,6 +779,11 @@ void Device_Init_proc(DWORD VM)
 
 #ifdef NV_DETECT
 	NV_probe(&nv_hwinfo);
+	nv_probe_skip_mmio = 0;   /* back to real MMIO for the Ring-3 path */
+	/* NOTE: do NOT write the VRAM boot log here - we are still inside the
+	 * Device_Init critical section, where a BAR1 write hard-freezes the G86
+	 * (3025). The boot-handshake trace is emitted from register_display_driver,
+	 * which runs later in live VM context. */
 #endif
 
 #if defined(VESA)
@@ -766,6 +809,8 @@ void Device_Init_proc(DWORD VM)
 
 	/* register miniVDD functions */
 	VDD_Get_Mini_Dispatch_Table();
+	dbg_printf("VDD mini dispatch table: ptr=%lX len=%lX (%s)\n", (DWORD)DispatchTable,
+		(DWORD)DispatchTableLength, DispatchTableLength >= 0x31 ? "handlers installed" : "TOO SHORT - handlers NOT installed");
 	if(DispatchTableLength >= 0x31)
 	{
 		#include "vxd_vdd_list.h"
@@ -833,6 +878,9 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			rc = 0;
 			break;
 		case OP_FBHDA_SETUP:
+#ifdef NV_DETECT
+			nv_dbg_fbhda++;   /* only nvmini.drv issues this; vga.drv never does */
+#endif
 			outBuf[0] = (DWORD)FBHDA_setup();
 			rc = 0;
 			break;
@@ -1017,6 +1065,17 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			FBHDA_page_modify(inBuf[0], inBuf[1], (BYTE *)&inBuf[2]);
 			rc = 0;
 			break;
+#ifdef DBGRING
+		case OP_NV_DBGLOG:
+		{
+			/* "nvprobe log": hand the ring to user space, oldest byte first */
+			DWORD n = dbg_ring_read((char*)outBuf, params->cbOutBuffer);
+			if(params->lpcbBytesReturned)
+				*(DWORD*)params->lpcbBytesReturned = n;
+			rc = 0;
+			break;
+		}
+#endif
 #ifdef NV_DETECT
 		case OP_NV_PROBE:
 			/* refresh the probe and hand the struct back to user space */
@@ -1073,6 +1132,57 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			nv_evo_flip_t flip;
 			NV_evo_flip(&flip);
 			memcpy(outBuf, &flip, sizeof(flip));
+			rc = 0;
+			break;
+		}
+		case OP_NV_LASTSET:
+		{
+			/* E4: diagnostics of the last display-driver native mode set
+			 * (survives the attempt; readable from the VGA fallback). */
+			nv_evo_flip_t diag;
+			DWORD cnts[16];
+			NV_native_lastdiag(&diag, cnts);
+			memcpy(outBuf, &diag, sizeof(diag));
+			memcpy((BYTE*)outBuf + sizeof(diag), cnts, sizeof(cnts));
+			rc = 0;
+			break;
+		}
+		case OP_NV_BOOTSIM:
+		{
+			/* E4: run the EXACT takeover the boot display driver runs
+			 * (NV_native_modeset: fb offset 0, no pattern), but on demand
+			 * from a safe Standard-VGA desktop. The VxD is dynamically
+			 * loaded by nvprobe, so this needs neither nvmini bound nor a
+			 * reboot - it reproduces the boot hang recoverably and logs the
+			 * same 0x2xx markers. Returns the same diag blob as LASTSET. */
+			nv_evo_flip_t diag;
+			DWORD cnts[16];
+			NV_blog_reset();      /* clean log for this on-demand run */
+			NV_native_modeset(1024UL, 768UL, 16UL);
+			NV_native_lastdiag(&diag, cnts);
+			memcpy(outBuf, &diag, sizeof(diag));
+			memcpy((BYTE*)outBuf + sizeof(diag), cnts, sizeof(cnts));
+			rc = 0;
+			break;
+		}
+		case OP_NV_INITSIM:
+		{
+			/* E4: run the EXACT backend init the boot display driver runs
+			 * (NV_init_hw_native: 12MB BAR1 map, 64MB wram, FBHDA, blit
+			 * timer), on demand from a safe desktop. Logs 0x100..0x107;
+			 * outBuf[0] = the BOOL it returned (reached the end). If the
+			 * boot hang is in the backend it reproduces it recoverably. */
+			outBuf[0] = (DWORD)NV_initsim();
+			rc = 0;
+			break;
+		}
+		case OP_NV_SETMODESIM:
+		{
+			/* E4: run the EXACT display-driver setmode hook (VESA_setmode_phy
+			 * 1024x768x16) on demand - the 0x210..0x212 path, post-modeset
+			 * wblit/wram reconfig and full-frame blit. Call after initsim.
+			 * outBuf[0] = the BOOL it returned. */
+			outBuf[0] = (DWORD)NV_setmodesim();
 			rc = 0;
 			break;
 		}

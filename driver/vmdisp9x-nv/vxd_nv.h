@@ -15,7 +15,7 @@
 /* Build stamp. Bump on every rebuild. nvprobe compares the VxD's value against
  * the one it was compiled with, so version skew (stale VxD or stale EXE) is
  * obvious. Scheme: milestone*1000 + revision. */
-#define NV_BUILD            3010UL   /* M3 E3 r10: r9 + supervisor (unk10/20/40) handshake */
+#define NV_BUILD            3037UL   /* E4 r27: 16-bit driver linked with explicit FIXED DATA/BSS segment directives and the 2025-08 Open Watcom toolchain (the Oct-2026 wlink left DGROUP moveable -> Win98 KERNEL never called DriverInit: LoadFail 0000 on T61 and in QEMU). 3036 = E4 r26: dbg output also mirrored to I/O port 0xE9 (QEMU -debugcon) from both sides. 3035 = E4 r25: nvmini.drv also appends its dbg lines to C:\\NVMINI.LOG (KERNEL _lopen/_lwrite, capped 600 lines); VxD logs dispatch-table length, first PM16 call, unknown PM16 services, FBHDA_SETUP arrival. 3034 = E4 r24: DBGPRINT on, routed to an in-VxD ring (dbgring.h): VxD lines 'V> ', nvmini.drv lines 'D> ' via OP_NV_DBG_PUTC; read with 'nvprobe log' (OP_NV_DBGLOG). 3033 = E4 r23: Native defaults to 1 (registry Native=0 opts out); INF writes Native=1 and ships nvsetup.reg. 3032 = E4 r22: native setmode arms the blitter (vga_mode/act_mode), register_display_driver tolerates hda==NULL (Native=0), EVO takeover claims nv_owned only after a completed commit; INF adds DEFAULT\DDC=0 (skips the VDD's 173 s V86 EDID probe). 3031 = E4 r21: nvmini.drv probes VDD device ids 1..4 in VDD_REGISTER_DISPLAY_DRIVER_INFO (Win98 VDD keys EBX as a DEVICE id; id 1 = the VGA devnode, served by the global mini-VDD table; a mini-VDD loaded for a non-VGA devnode lives in that device's private table). register_display_driver now logs the id after 0x300. */
 
 #define NV_PCI_VENDOR       0x10DEUL  /* NVIDIA */
 #define NV_DEV_NVS140M      0x0429UL  /* Quadro NVS 140M (G86) */
@@ -35,6 +35,10 @@
 #define OP_NV_VRAM_FILL     0x5003  /* fill BAR1 VRAM dwords with a value     */
 #define OP_NV_EVO_STAGE     0x5004  /* E2: stage fb+pushbuffer in VRAM (safe) */
 #define OP_NV_EVO_FLIP      0x5005  /* E3: bring up EVO + flip scanout (RISKY) */
+#define OP_NV_LASTSET       0x5006  /* E4: last native mode-set diag + counters */
+#define OP_NV_BOOTSIM       0x5007  /* E4: run the EXACT boot takeover on demand */
+#define OP_NV_INITSIM       0x5008  /* E4: run the EXACT backend init on demand   */
+#define OP_NV_SETMODESIM    0x5009  /* E4: run the EXACT DRV setmode hook on demand*/
 
 #define NV_RD32_MAX         256     /* max dwords per read request            */
 
@@ -77,6 +81,18 @@ int NV_probe(nv_hwinfo_t *out);
 
 /* Last probe result, filled during Device_Init_proc when NV_DETECT is built. */
 extern nv_hwinfo_t nv_hwinfo;
+
+/* Non-zero => NV_probe decodes the chip from the PCI device id and does NOT
+ * touch BAR0 MMIO (which hard-freezes at VDD DEVICEINIT). Set during early
+ * Device_Init only; the Ring-3 path leaves it 0 and reads real registers. */
+extern unsigned long nv_probe_skip_mmio;
+
+/* E4: run the display driver's native backend init on demand (OP_NV_INITSIM).
+ * Defined in vxd_vesa.c (NV_DETECT builds only). */
+int NV_initsim(void);
+/* E4: run the display driver's setmode hook on demand (OP_NV_SETMODESIM).
+ * Call after NV_initsim. Defined in vxd_vesa.c (NV_DETECT builds only). */
+int NV_setmodesim(void);
 
 /* Read one BAR0 MMIO register (dword). Read-only; bounds-checked. Returns
  * 0xDEAD00xx sentinels if BAR0 could not be mapped or the offset is out of

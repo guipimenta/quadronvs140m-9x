@@ -49,7 +49,9 @@ FIXLINK_CC = gcc fixlink/fixlink.c -o ./fixlink.bin
 #FLAGS += -DHWBLT
 
 # Set DBGPRINT to add debug printf logging.
-#DBGPRINT = 1
+# nvmini (3034+): ON, routed to the in-memory ring (DBGRING, see dbgring.h)
+# and read back with "nvprobe log"; no COM port involved.
+DBGPRINT = 1
 
 # Generate code for i486, otherwise is code generated for Pentium Pro
 #I486 = 1
@@ -82,8 +84,10 @@ CFLAGS32 += -6s -fp6
 # This allows to change mapping debug COM port (for 32bit VXD and 16bit DRV)
 # -DCOM0 means mute in current module (for example: your HW has only one port
 # and you want debug only VXD)
-CFLAGS   += -DCOM2
-CFLAGS32 += -DCOM1
+#CFLAGS   += -DCOM2
+#CFLAGS32 += -DCOM1
+CFLAGS   += -DDBGRING
+CFLAGS32 += -DDBGRING
 !else
 CFLAGS32 += -d0
 !endif
@@ -108,7 +112,7 @@ all : vmwsmini.drv vmwsmini.vxd qemumini.drv qemumini.vxd boxvmini.drv boxvmini.
 
 # Object files: PM16 RING-3
 dbgprint.obj : dbgprint.c .autodepend
-	$(CC) $(CFLAGS) -zW $(FLAGS) $<
+	$(CC) $(CFLAGS) -zW $(INCS) $(FLAGS) $<
 
 dibcall.obj : dibcall.c .autodepend
 	$(CC) $(CFLAGS) -zW $(INCS) $(FLAGS) $<
@@ -170,7 +174,7 @@ scrsw_vesa.obj : scrsw_vesa.c .autodepend
 # Object files: PM32 RING-0
 
 dbgprint32.obj : dbgprint32.c .autodepend
-	$(CC32) $(CFLAGS32) $(FLAGS) $<
+	$(CC32) $(CFLAGS32) $(INCS) $(FLAGS) $<
 	
 svga.obj : vmware/svga.c .autodepend
 	$(CC32) $(CFLAGS32) $(INCS) $(FLAGS) $<
@@ -266,6 +270,10 @@ vxd_main_nv.obj : vxd_main_nv.c .autodepend
 # VESA backend recompiled with NV_DETECT so its companion filename becomes nvmini.vxd
 vxd_vesa_nv.obj : vxd_vesa.c .autodepend
 	$(CC32) $(CFLAGS32) $(INCS) $(FLAGS) -DNV_DETECT -fo=$@ vxd_vesa.c
+
+# mini-VDD dispatch handlers with NV_DETECT (boot-handshake NV_blog breadcrumbs)
+vxd_vdd_nv.obj : vxd_vdd_nv.c .autodepend
+	$(CC32) $(CFLAGS32) $(INCS) $(FLAGS) -DNV_DETECT -fo=$@ vxd_vdd_nv.c
 
 nv50_evo.obj : nv50_evo.c .autodepend
 	$(CC32) $(CFLAGS32) $(INCS) $(FLAGS) $<
@@ -534,6 +542,12 @@ option modname=DISPLAY
 option description 'DISPLAY : 100, 96, 96 : DIB Engine based Mini display driver.'
 option oneautodata
 segment type data preload fixed
+# Open Watcom wlink snapshots from 2026 ignore the line above and leave DGROUP
+# MOVEABLE; far data references then become entry-table thunks into the data
+# segment and Win98's KERNEL refuses the module (LoadFail 0000, entry never
+# called). Spell it out per class so any wlink produces a FIXED data segment.
+segment class 'DATA' preload fixed
+segment class 'BSS'  preload fixed
 segment '_TEXT'  preload shared
 segment '_INIT'  preload moveable
 export BitBlt.1
@@ -694,7 +708,7 @@ export VXD_DDB.1
 	$(FIXLINK_EXE) -vxd32 $@
 
 # NVIDIA G86 driver pair (Milestone 2). Scans out via VESA; adds native detection.
-nvmini.vxd : $(OBJS) vxd_main_nv.obj vxd_nv.obj vxd_vesa_nv.obj nv50_evo.obj $(FIXLINK_EXE)
+nvmini.vxd : $(OBJS) vxd_main_nv.obj vxd_nv.obj vxd_vesa_nv.obj vxd_vdd_nv.obj nv50_evo.obj $(FIXLINK_EXE)
 	wlink op quiet $(DBGFILE32) @<<nvmini_vxd.lnk
 system win_vxd dynamic
 option map=nvmini_vxd.map
@@ -709,7 +723,7 @@ file vxd_vesa_nv.obj
 file vxd_nv.obj
 file nv50_evo.obj
 file vxd_gtf.obj
-file vxd_vdd_vesa.obj
+file vxd_vdd_nv.obj
 file vxd_mouse.obj
 file vxd_mtrr.obj
 file vxd_wram.obj
@@ -747,6 +761,12 @@ option modname=DISPLAY
 option description 'DISPLAY : 100, 96, 96 : NVIDIA G86 (VESA scanout) Mini display driver.'
 option oneautodata
 segment type data preload fixed
+# Open Watcom wlink snapshots from 2026 ignore the line above and leave DGROUP
+# MOVEABLE; far data references then become entry-table thunks into the data
+# segment and Win98's KERNEL refuses the module (LoadFail 0000, entry never
+# called). Spell it out per class so any wlink produces a FIXED data segment.
+segment class 'DATA' preload fixed
+segment class 'BSS'  preload fixed
 segment '_TEXT'  preload shared
 segment '_INIT'  preload moveable
 export BitBlt.1

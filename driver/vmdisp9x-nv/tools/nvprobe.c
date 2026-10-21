@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 #include "../vxd_nv.h"
+#include "../dbgring.h"
 #include "../nv50_evo.h"
 
 /* Emit the EVO flip diagnostic to a stream. Called twice: once to nvflip.txt
@@ -212,6 +213,168 @@ int main(int argc, char **argv)
 		}
 		print_flip(stdout, &f);
 		printf("(diagnostic also written to nvflip.txt - bring that back)\n");
+		return 0;
+	}
+
+	/* "nvprobe bootsim [go]" : run the EXACT takeover the boot display driver
+	 * runs (NV_native_modeset, 1024x768x16, fb offset 0, no pattern) on demand.
+	 * Reproduces the boot hang from a safe desktop; if it hangs, warm-reset and
+	 * read the 0x1900000 log. Needs "go" to actually fire (it IS the risky op). */
+	if(argc >= 2 && strcmp(argv[1], "bootsim") == 0)
+	{
+		struct { nv_evo_flip_t f; DWORD cnts[16]; } d;
+		if(argc < 3 || strcmp(argv[2], "go") != 0)
+		{
+			printf("bootsim runs the boot-path native mode set (RISKY: may hang).\n");
+			printf("Recovery: warm-reset, then 'nvprobe vramrd 0x1900000 48'.\n");
+			printf("Re-run as: nvprobe bootsim go\n");
+			CloseHandle(vxd);
+			return 0;
+		}
+		memset(&d, 0, sizeof(d));
+		if(!DeviceIoControl(vxd, OP_NV_BOOTSIM, NULL, 0,
+			&d, sizeof(d), &ret, NULL))
+		{
+			printf("OP_NV_BOOTSIM failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("bootsim returned (did NOT hang).\n");
+		printf("native-path counters: valid=%lu set=%lu ok=%lu  last req %lux%lux%lu\n",
+			d.cnts[0], d.cnts[1], d.cnts[2], d.cnts[3], d.cnts[4], d.cnts[5]);
+		print_flip(stdout, &d.f);
+		/* The screen is now garbage (scanout moved to VRAM 0), so also write
+		 * the result to disk where it can be read after a warm-reset + VGA. */
+		{
+			FILE *fp = fopen("nvboot.txt", "w");
+			if(fp)
+			{
+				fprintf(fp, "bootsim returned (did NOT hang). build=%lu\n", (unsigned long)NV_BUILD);
+				fprintf(fp, "counters: valid=%lu set=%lu ok=%lu last %lux%lux%lu\n",
+					d.cnts[0], d.cnts[1], d.cnts[2], d.cnts[3], d.cnts[4], d.cnts[5]);
+				print_flip(fp, &d.f);
+				fclose(fp);
+			}
+		}
+		return 0;
+	}
+
+	/* "nvprobe initsim [go]" : run the EXACT backend init the boot display
+	 * driver runs (12MB BAR1 map, 64MB wram, FBHDA, blit timer). Reproduces a
+	 * backend boot hang from a safe desktop. The VGA desktop stays readable
+	 * (the blit timer writes to VRAM, not VGA memory), so output is visible. */
+	if(argc >= 2 && strcmp(argv[1], "initsim") == 0)
+	{
+		DWORD out = 0;
+		if(argc < 3 || strcmp(argv[2], "go") != 0)
+		{
+			printf("initsim runs the boot-path backend init (may hang).\n");
+			printf("Recovery: warm-reset, then 'nvprobe vramrd 0x1900000 48'.\n");
+			printf("Re-run as: nvprobe initsim go\n");
+			CloseHandle(vxd);
+			return 0;
+		}
+		if(!DeviceIoControl(vxd, OP_NV_INITSIM, NULL, 0,
+			&out, sizeof(out), &ret, NULL))
+		{
+			printf("OP_NV_INITSIM failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("initsim returned (did NOT hang): NV_init_hw_native() = %lu\n", out);
+		printf("markers reached: run 'nvprobe vramrd 0x1900000 48' (expect up to 00000107).\n");
+		return 0;
+	}
+
+	/* "nvprobe setmodesim [go]" : run the EXACT display-driver setmode hook
+	 * (VESA_setmode_phy 1024x768x16) on demand. MUST be preceded by a
+	 * 'nvprobe initsim go' in the same (resident) VxD session. Reproduces the
+	 * hard boot hang recoverably if it is in the setmode-hook context. */
+	if(argc >= 2 && strcmp(argv[1], "setmodesim") == 0)
+	{
+		DWORD out = 0;
+		if(argc < 3 || strcmp(argv[2], "go") != 0)
+		{
+			printf("setmodesim runs the DRV setmode hook (may hard-hang).\n");
+			printf("Run 'nvprobe initsim go' FIRST, then 'nvprobe setmodesim go'.\n");
+			printf("Recovery: power-cycle -> Safe Mode -> Standard VGA.\n");
+			CloseHandle(vxd);
+			return 0;
+		}
+		if(!DeviceIoControl(vxd, OP_NV_SETMODESIM, NULL, 0,
+			&out, sizeof(out), &ret, NULL))
+		{
+			printf("OP_NV_SETMODESIM failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("setmodesim returned (did NOT hang): VESA_setmode_phy() = %lu\n", out);
+		return 0;
+	}
+
+	/* "nvprobe log" : dump the VxD's in-memory dbg_printf ring (dbgring.h).
+	 * Holds both the VxD's lines ("V> ") and nvmini.drv's ("D> "), in order,
+	 * since the VxD was loaded. Read-only. */
+	if(argc >= 2 && strcmp(argv[1], "log") == 0)
+	{
+		static char buf[DBG_RING_SIZE + 16];
+		memset(buf, 0, sizeof(buf));
+		if(!DeviceIoControl(vxd, OP_NV_DBGLOG, NULL, 0,
+			buf, DBG_RING_SIZE, &ret, NULL))
+		{
+			printf("OP_NV_DBGLOG failed (error %lu) - VxD built without DBGRING?\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		buf[ret] = 0;
+		fwrite(buf, 1, ret, stdout);
+		printf("\n[nvprobe log: %lu bytes]\n", ret);
+		return 0;
+	}
+
+	/* "nvprobe lastset" : diagnostics of the last native mode set performed by
+	 * the display driver (e.g. a failed boot-time attempt). Read-only. */
+	if(argc >= 2 && strcmp(argv[1], "lastset") == 0)
+	{
+		struct { nv_evo_flip_t f; DWORD cnts[16]; } d;
+		memset(&d, 0, sizeof(d));
+		if(!DeviceIoControl(vxd, OP_NV_LASTSET, NULL, 0,
+			&d, sizeof(d), &ret, NULL))
+		{
+			printf("OP_NV_LASTSET failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("native-path counters: valid=%lu set=%lu ok=%lu  last req %lux%lux%lu\n",
+			d.cnts[0], d.cnts[1], d.cnts[2], d.cnts[3], d.cnts[4], d.cnts[5]);
+		printf("mode-path calls    : validmode=%lu setmode=%lu last setmode %lux%lux%lu\n",
+			d.cnts[6], d.cnts[7], d.cnts[8], d.cnts[9], d.cnts[10]);
+		printf("backend init       : %lu (0=none 1=VBE 2=native)  nvmini.drv FBHDA calls=%lu\n", d.cnts[13], d.cnts[14]);
+		if(d.cnts[14] == 0)
+			printf("=> nvmini.drv did NOT load this boot - Windows is on vga.drv (binding/primary-adapter).\n");
+		else
+			printf("=> nvmini.drv DID load (FBHDA calls>0) but aborted before setmode.\n");
+		printf("hook branch        : %lu (0=never ran, 1=mode not native, 2=no LFB map, 3=native tried)"
+			"  phylin=%08lX\n", d.cnts[11], d.cnts[12]);
+		if(d.cnts[7] == 0)
+			printf("=> the display driver NEVER called the VxD mode-set this boot (binding/drv issue).\n");
+		if(d.cnts[1] == 0)
+		{
+			printf("no native mode set was attempted since boot.\n");
+			return 0;
+		}
+		print_flip(stdout, &d.f);
+		{
+			FILE *fp = fopen("nvlast.txt", "w");
+			if(fp)
+			{
+				fprintf(fp, "counters: valid=%lu set=%lu ok=%lu last %lux%lux%lu\n",
+					d.cnts[0], d.cnts[1], d.cnts[2], d.cnts[3], d.cnts[4], d.cnts[5]);
+				print_flip(fp, &d.f);
+				fclose(fp);
+				printf("(also written to nvlast.txt)\n");
+			}
+		}
 		return 0;
 	}
 

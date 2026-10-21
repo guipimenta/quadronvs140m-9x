@@ -53,6 +53,11 @@ THE SOFTWARE.
 extern FBHDA_t *hda;
 extern DWORD ThisVM;
 
+#ifdef NV_DETECT
+extern void NV_blog(unsigned long code);   /* VRAM boot-handshake trace */
+extern void NV_blog_reset(void);
+#endif
+
 extern DWORD is_qemu;
 
 static DWORD hda_pm16 = 0;
@@ -150,7 +155,38 @@ See also VDD_REGISTER_DISPLAY_DRIVER_INFO.
 VDDPROC(REGISTER_DISPLAY_DRIVER, register_display_driver)
 {
 	dbg_printf("register: ebx = %ld, ecx = %ld, VM = %lX\n", state->Client_EBX, state->Client_ECX, ThisVM);
-	
+
+#ifdef NV_DETECT
+	/* E4 boot handshake trace. This handler runs in live VM context (the .drv's
+	 * DriverInit), NOT the Device_Init critical section, so a BAR1 write is safe
+	 * here. Reset the VRAM log first: if the user pre-clears 0x1900000 and this
+	 * magic is ABSENT after the (vga.drv-fallback) boot, register_display_driver
+	 * was never reached -> the handshake dies before our mini-VDD. If present,
+	 * the codes that follow show how far it got.
+	 *   0x300 = handler entered; then raw hda pointer. */
+	NV_blog_reset();
+	NV_blog(0x300);
+	NV_blog(state->Client_EBX);   /* VDD device id the .drv registered with */
+	NV_blog((DWORD)hda);
+#endif
+
+	if(hda == NULL)
+	{
+		/* 3032: Native=0 (or a failed native init) returns from VESA_init_hw
+		 * before FBHDA_init_hw, yet Device_Init_proc still registers this
+		 * table. Hand back zeros so nvmini.drv's DriverInit fails cleanly and
+		 * Windows falls back to vga.drv, instead of faulting on NULL here. */
+		state->Client_EAX = ThisVM;
+		state->Client_EDX = 0;
+		state->Client_ECX = 0;
+		state->Client_ESI = 0;
+#ifdef NV_DETECT
+		NV_blog(0x302);
+#endif
+		VDD_CY;
+		return;
+	}
+
 	if(hda->vram_pm16 == 0)
 	{
 		hda->vram_pm16 = map_pm16(state->Client_EBX, (DWORD)hda->vram_pm32, hda->vram_size_virt);
@@ -176,7 +212,17 @@ VDDPROC(REGISTER_DISPLAY_DRIVER, register_display_driver)
 	state->Client_EDX = hda_pm16;
 	state->Client_ECX = mouse_pm16;
 	state->Client_ESI = (DWORD)hda;
-	
+
+#ifdef NV_DETECT
+	/* 0x301 = returning a valid 16-bit FBHDA alias (DriverInit should pass the
+	 * hda==NULL check); 0x302 = map_pm16 produced a null selector. Then the raw
+	 * selector<<16 value for each of the three maps. */
+	NV_blog(hda_pm16 ? 0x301 : 0x302);
+	NV_blog(hda_pm16);
+	NV_blog(mouse_pm16);
+	NV_blog(hda->vram_pm16);
+#endif
+
 	VDD_CY;
 }
 
@@ -372,7 +418,7 @@ For performance reasons, you should implement this function.
 **/
 VDDPROC(GET_TOTAL_VRAM_SIZE, get_total_vram_size)
 {
-	state->Client_ECX = hda->vram_size_virt;
+	state->Client_ECX = hda ? hda->vram_size_virt : 0;
 	VDD_CY;
 }
 

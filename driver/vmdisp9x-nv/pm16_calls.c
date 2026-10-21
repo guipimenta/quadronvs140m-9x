@@ -57,6 +57,10 @@ static DWORD vxd_fbhda16 = 0;
 static DWORD vxd_fbhda32 = 0;
 static DWORD vxd_mouse16  = 0;
 
+/* How many VDD display device ids to try in VXD_VM_connect (1 = the VGA
+ * device, 2.. = the other display devnodes, e.g. a ghost adapter). */
+#define VXD_VDD_MAX_DEV 4
+
 #pragma code_seg( _INIT )
 
 BOOL VXD_VM_connect()
@@ -89,33 +93,70 @@ BOOL VXD_VM_connect()
 		pop es
 	};
 
-	dbg_printf("VDD_REGISTER_DISPLAY_DRIVER_INFO for VM: %d\n", OurVMHandle);
+	/* Register with the VDD and fetch the FBHDA aliases from our mini-VDD.
+	 *
+	 * E4 r21: on Windows 98 the VDD treats EBX of EVERY display-driver call as
+	 * a DISPLAY DEVICE ID (1..N), not a VM handle (see the 98 DDK minivdd.h:
+	 * "Client_EBX - device handle, or device id (1-N)"). Id 1 is the device the
+	 * VDD considers "the VGA" and is served by the global mini-VDD dispatch
+	 * table; any other id is served by that device's private table, which is
+	 * where the VDD files a mini-VDD it loaded for a NON-VGA devnode (its
+	 * _LoadMiniVDD copies the table away and restores the VGA one). Upstream
+	 * always passed the VM id (=1), which only works while our adapter is the
+	 * VGA devnode. On the T61 a ghost "Standard PCI Graphics Adapter (VGA)"
+	 * holds id 1, so id 1 has no mini-VDD and EDX came back 0 -> DriverInit
+	 * returned 0 -> "LoadFail nvmini.drv 0000" -> vga.drv fallback.
+	 * So probe ids 1..VXD_VDD_MAX_DEV until one returns a non-zero FBHDA
+	 * alias, and keep that id in OurVMHandle so all later VDD calls
+	 * (DRIVER_REGISTER, PRE/POST_MODE_CHANGE, ...) address the same device. */
+	{
+		WORD id;
+		for(id = 1; id <= VXD_VDD_MAX_DEV; id++)
+		{
+			OurVMHandle = id;
+			vxd_fbhda16 = 0;
+			vxd_mouse16 = 0;
+			vxd_fbhda32 = 0;
+			dbg_printf("VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: %d\n", OurVMHandle);
 
-	_asm{
-		.386
-    push   eax
-    push   ebx
-    push   ecx
-    push   edx
-    push   esi
-    
-    mov    eax, VDD_REGISTER_DISPLAY_DRIVER_INFO
-    movzx  ebx, word ptr [OurVMHandle]
-    call dword ptr [VDDEntryPoint]
-    
-    mov  [vxd_fbhda16], edx
-    mov  [vxd_mouse16], ecx
-    mov  [vxd_fbhda32], esi
-    
-    pop    esi
-    pop    edx
-    pop    ecx
-    pop    ebx
-    pop    eax
-  }
-  
-  dbg_printf("VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=%lX, edx=%lX, ecx=%lX\n", VXD_VM, vxd_fbhda16, vxd_mouse16);
-  
+			_asm{
+				.386
+				push   eax
+				push   ebx
+				push   ecx
+				push   edx
+				push   esi
+
+				mov    eax, VDD_REGISTER_DISPLAY_DRIVER_INFO
+				movzx  ebx, word ptr [OurVMHandle]
+				xor    ecx, ecx
+				xor    edx, edx
+				xor    esi, esi
+				call dword ptr [VDDEntryPoint]
+
+				mov  [vxd_fbhda16], edx
+				mov  [vxd_mouse16], ecx
+				mov  [vxd_fbhda32], esi
+
+				pop    esi
+				pop    edx
+				pop    ecx
+				pop    ebx
+				pop    eax
+			}
+
+			dbg_printf("VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=%lX, edx=%lX, ecx=%lX\n", VXD_VM, vxd_fbhda16, vxd_mouse16);
+			if(vxd_fbhda16 != 0)
+			{
+				break;
+			}
+		}
+		if(vxd_fbhda16 == 0)
+		{
+			OurVMHandle = 1;   /* nothing answered; behave like upstream */
+		}
+	}
+
 	return VXD_VM != 0;
 }
 

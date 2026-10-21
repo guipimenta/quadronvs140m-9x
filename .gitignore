@@ -32,3 +32,27 @@ driver/build/
 # === Misc ===
 *.pyc
 __pycache__/
+
+# === Third-party material kept on disk only (2026-10-22) ===
+/win98se/
+/nvidia_old_drivers/
+/nvidia_9x_81.98.zip
+/*.pdf
+# Microsoft 98 DDK binaries/symbols/headers used for the VDD analysis; our
+# findings are in analysis/win98_vdd/README.md which IS committed.
+/analysis/win98_vdd/*
+!/analysis/win98_vdd/README.md
+
+# === Raw captures copied over from the T61 (machine-specific evidence) ===
+/BOOTLOG.TXT
+/nvlog.txt
+/lastset.txt
+/nvboot.txt
+/evoflip.txt
+/evostage.txt
+/vramrd.txt
+/dir.txt
+/commands
+/c[0-9].txt
+/display.reg
+/enum.reg

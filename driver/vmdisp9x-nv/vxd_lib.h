@@ -124,6 +124,10 @@ void dbg_printf( const char *s, ... );
 #else
 #define dbg_printf(s, ...)
 #endif
+#ifdef DBGRING
+void  dbg_ring_putc( char c );
+DWORD dbg_ring_read( char *out, DWORD max );
+#endif
 
 struct _VPICD_IRQ_Descriptor;
 

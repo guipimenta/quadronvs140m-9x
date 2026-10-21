@@ -1,0 +1,139 @@
+NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
+Build: 3037  (E4 r27)
+
+Files:
+  nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
+  nvmini.drv   - 16-bit DIBENG display driver (3031: VDD device-id probe)
+  nvprobe.exe  - Win32 diagnostic/control tool (3034: 'nvprobe log' dumps the ring)
+  vmdisp9x.inf - installer (3032: HKR,DEFAULT,DDC,,0; 3033: vesa\Native=1)
+  nvsetup.reg  - REGEDIT4 file: Native=1, InitStop=0, BootPattern=0, DDC=0,
+                 Mode=16,1024,768 + Config\0001 Display Settings 1024x768x16
+
+Registry (HKLM\Software\vmdisp9x\vesa):
+  Native      DWORD  1 = native G86 modeset (DEFAULT since 3033), 0 = vga.drv fallback
+  InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
+  BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3037: *** ROOT CAUSE OF EVERY 'LoadFail = nvmini.drv 0000' SINCE M1 - FIXED ***
+CONFIRMED ON THE T61 2026-10-22: LoadSuccess = nvmini.drv, native EVO modeset
+1024x768x32 at boot, desktop usable, Display Properties can change depth.
+nvmini.drv never ran: Win98 KERNEL rejected the NE image before calling
+DriverInit. init.c declared `extern char __based(__segname("_TEXT")) *pText`
+and locked (__segment)pText. Current Open Watcom compilers treat "_TEXT" in
+__segname() as a user DATA segment: they emit an empty FAR_DATA segment named
+_TEXT, wlink drops it, and the .drv keeps a SEGMENT relocation to non-existent
+segment 3 (see tools: `python3 -I <scratch>/nerelocs.py nvmini.drv`). The
+loader fails the fixup -> LoadModule error 0 -> vga.drv. Upstream's 2023-era
+toolchain did not do this, which is why the official release loads.
+Fix: GlobalSmartPageLock(get_cs()) with `#pragma aux get_cs = "mov ax,cs"`.
+Proven in a QEMU Win98SE harness: with the fix, vesamini.drv (same 16-bit
+objects) logs 'D> DriverInit: ENTER', connects to the VxD, and brings up a
+1024x768x16 desktop. Also in 3037: the 16-bit driver is linked with the
+2025-08 Open Watcom (the Oct-2026 wlink snapshot ignores 'segment type data
+preload fixed'; the makefile now also names class DATA/BSS explicitly), the
+DIBENG mini driver's NE now matches the official layout (flags 8201, FIXED
+DGROUP, no data-segment entries). dbg output additionally mirrored to I/O
+port E9h (QEMU -debugcon), harmless on real hardware.
+TEST ON T61: copy nvmini.drv + nvmini.vxd + nvprobe.exe (3037). Keep SYSTEM.INI
+display.drv=nvmini.drv (direct name is fine now; pnpdrvr.drv also works once
+the devnode is bound) and the nvsetup.reg values. Reboot. Expect BOOTLOG
+'LoadSuccess = nvmini.drv' and the native 1024x768x16 desktop. Then collect
+nvprobe log > nvlog.txt (now full of 'D>' lines) and BOOTLOG.TXT.
+
+3035: SECOND LOG CHANNEL + more VxD breadcrumbs. The 3034 ring from the T61
+showed a healthy VxD (native init OK, Device_Init DONE) but NOT ONE 'D> ' line
+and no 'register:' line: the 16-bit driver reached neither the VxD PM16 API
+nor our mini-VDD table. To see the 16-bit side regardless, nvmini.drv now
+ALSO appends every dbg line to C:\NVMINI.LOG (KERNEL _lopen/_lwrite, max 600
+lines per boot session; delete the file to start clean). The VxD additionally
+logs: the VDD mini dispatch table length (handlers installed only if >= 0x31),
+the first PM16 API call it receives, any unknown PM16 service number, and the
+arrival of OP_FBHDA_SETUP.
+TEST: copy the three files, reboot, then collect  nvprobe log > nvlog.txt,
+C:\NVMINI.LOG, BOOTLOG.TXT (logged boot) and the live C:\WINDOWS\SYSTEM.INI.
+
+3034: DEBUG LOG WITHOUT A SERIAL PORT. DBGPRINT is now compiled in, but the
+sink is a 16 KB ring buffer inside nvmini.vxd (dbgring.h) instead of COM1:
+  V> ...   lines printed by the VxD (Device_Init, VESA/native init, mini-VDD
+           register handler, mode set hooks)
+  D> ...   lines printed by nvmini.drv (DriverInit, VXD connect per device id,
+           FBHDA, PhysicalEnable/SetDisplayMode), pushed one character at a
+           time through the VxD PM16 API (OP_NV_DBG_PUTC)
+Read it after the boot with:   nvprobe log > nvlog.txt
+It survives the vga.drv fallback (the VxD stays loaded). As with lastset: if
+BOOTLOG has no 'Dynamic load device nvmini.vxd', nvprobe loads a fresh VxD and
+the ring only holds that fresh instance's init. Nothing is written to disk at
+boot. Ops: OP_NV_DBGLOG 0x500A (W32 ioctl), OP_NV_DBG_PUTC 0x500B (PM16).
+TEST: copy nvmini.vxd/.drv/nvprobe.exe (3034), SYSTEM.INI (no IgnoreRegistry),
+merge nvsetup.reg, reboot, then:  nvprobe log > nvlog.txt  and send it with
+BOOTLOG.TXT. First expected lines: 'D> DriverInit: ENTER (nvmini.drv build
+3034)' followed by 'D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: N' and
+'V> register: ebx = N ...' - the exact point DriverInit gives up.
+
+FIELD NOTE 2026-10-21: do NOT use [display] IgnoreRegistry=1 in SYSTEM.INI.
+The Win98 VDD reads the same key (VDD_PNP_Load_MiniVDD) and, when set, skips
+loading DEFAULT\minivdd -> nvmini.vxd never loads, nvmini.drv DriverInit
+fails (LoadFail 0000) and Windows is on vga.drv. Set the desktop mode through
+the registry instead (nvsetup.reg now writes Config\0001\Display\Settings
+1024x768x16 and DEFAULT\Mode=16,1024,768); keep x_resolution/y_resolution/bpp
+in [Display] only as the fallback. dist/driver/SYSTEM.INI is the reference.
+
+3033: Native=1 is now the built-in default (no registry value needed); set
+Native=0 to get the safe vga.drv boot. The INF also writes Native=1, and
+nvsetup.reg sets everything in one go: double-click it on the T61 (or
+`regedit /s nvsetup.reg`). It assumes the adapter's class key is
+Class\Display\0000 - check in regedit that 0000\DEFAULT holds
+minivdd=nvmini.vxd; if your NVIDIA key is 0001 etc., edit the path in the file.
+
+3032: SLOW-BOOT FIX + three static-review fixes (on top of 3031).
+ a) ~3 min boot: BOOTLOG tick stamps put 173 of the ~181 s of the VxD phase
+    inside CONFIGMG "Enumerating NVIDIA Quadro NVS 140M" -> "Enumerated". That
+    is the Win98 VDD's monitor enumerator reading the EDID itself through INT
+    10h AX=4F15 in V86 mode (no mini-VDD GET_MONITOR_INFO); the G86 VBIOS
+    under V86 crawls. The VDD skips the probe when HKR\DEFAULT\DDC is "0":
+    added to vmdisp9x.inf ([NV.AddReg]; the shared [VM.AddReg] wrote DDC=1, so
+    the T61 registry currently says 1). Without reinstalling, CHANGE it with
+    regedit: HKLM\System\CurrentControlSet\Services\Class\Display\000N\DEFAULT
+      (the key holding minivdd=nvmini.vxd): String value DDC: 1 -> 0
+ b) native setmode never armed the blitter: VESA_draw() bailed on vga_mode /
+    act_mode, so a successful handshake would have shown a black desktop.
+ c) Native=0 with display.drv=nvmini.drv: register_display_driver dereferenced
+    hda==NULL once 3031's id probe made it reachable. Now returns zeros ->
+    clean vga.drv fallback (VRAM slot[3]=0x302 marks that case).
+ d) EVO takeover claims nv_owned only after a completed commit.
+TEST: regedit DDC=0 (or reinstall INF), copy the three files, Native=1, reboot.
+Expect: VxD phase seconds instead of minutes, desktop 1024x768x16 on nvmini.drv.
+
+3031: THE DRIVERINIT FIX (from Win98SE VDD.VXD disassembly, 98 DDK symbols).
+The Win98 VDD keys every display-driver call on EBX as a DISPLAY DEVICE ID
+(1..N), not a VM handle. Id 1 = the devnode the VDD considers "the VGA" and
+is served by the global mini-VDD dispatch table. A mini-VDD the VDD loads for
+any OTHER display devnode is moved into that device's private table and the
+global table is restored (VDD _LoadMiniVDD). The upstream vmdisp9x .drv
+always registers with EBX = VM id = 1, so on this T61 - where the ghost
+"Standard PCI Graphics Adapter (VGA)" is id 1 and the NVIDIA devnode is id 2 -
+the register call hit an empty table, EDX stayed 0, DriverInit returned 0.
+nvmini.drv now tries VDD_REGISTER_DISPLAY_DRIVER_INFO with ids 1..4 and keeps
+the first id whose mini-VDD returns an FBHDA alias for all later VDD calls.
+The VxD logs that id right after the 0x300 marker (slot [1]).
+TEST: same SYSTEM.INI as before (display.drv=nvmini.drv, [display] 1024x768
+bpp=16 IgnoreRegistry=1), Native=1, replace the three files, reboot.
+Expect the desktop at 1024x768x16 on nvmini.drv. If it still falls back:
+  nvprobe vramrd 0x1900000 16  -> slot[0]=B0070100, slot[1]=device id,
+  slot[3]=0x301/0x302. BOOTLOG.TXT "LoadFail = nvmini.drv" code tells the rest.
+
+3030: boot-handshake VRAM trace. With display.drv=nvmini.drv the 16-bit driver
+now LOADS at boot (file-found; pnpdrvr.drv was missing -> that was the earlier
+LoadFail 0002), but its DriverInit returns 0 => "LoadFail nvmini.drv 0000" and
+Windows falls back to vga.drv. lastset shows hook branch 0 (setmode never
+reached), so DriverInit fails in the VxD connect handshake, before any modeset.
+register_display_driver (the mini-VDD side of the driver's
+VDD_REGISTER_DISPLAY_DRIVER_INFO call) now resets the VRAM boot log and logs how
+far the handshake gets. Diagnostic procedure:
+  1. nvprobe vramfill 0x1900000 16 0        (pre-clear the log)
+  2. reboot (Native=1) -> it falls back to vga.drv as before
+  3. nvprobe vramrd 0x1900000 16
+     [0]=B0070100 magic -> register_display_driver WAS reached
+       (absent/all-zero -> handshake dies BEFORE our mini-VDD)
+     then 0x300, raw hda ptr, 0x301(ok)/0x302(null), hda_pm16, mouse_pm16,
+     vram_pm16 selectors.

@@ -31,6 +31,13 @@ nv_hwinfo_t nv_hwinfo = {0};
 static volatile unsigned long *nv_bar0 = 0;
 static unsigned long nv_bar0_bytes = 0;
 
+/* E4: when non-zero, NV_probe does NOT touch BAR0 MMIO (it decodes the chip
+ * from the PCI device id instead). A BAR0 read of PMC_BOOT_0 at VDD DEVICEINIT
+ * - which runs inside a VMM critical section - hard-freezes the machine on the
+ * G86. Device_Init_proc sets this for the duration of early init and clears it
+ * afterwards, so the Ring-3 IOCTL/detection path still reads real registers. */
+unsigned long nv_probe_skip_mmio = 0;
+
 /*
  * NV_probe --
  *
@@ -122,7 +129,7 @@ int NV_probe(nv_hwinfo_t *out)
 	dbg_printf("NV_probe: BAR0=%lX (%lX) BAR1=%lX (%lX)\n",
 		out->bar0_phys, out->bar0_size, out->bar1_phys, out->bar1_size);
 
-	if(out->bar0_phys != 0 && out->bar0_size != 0)
+	if(out->bar0_phys != 0 && out->bar0_size != 0 && !nv_probe_skip_mmio)
 	{
 		volatile unsigned long *regs;
 
@@ -144,6 +151,23 @@ int NV_probe(nv_hwinfo_t *out)
 		else
 		{
 			dbg_printf("NV_probe: BAR0 map failed\n");
+		}
+	}
+
+	/* No usable MMIO identity (skipped at Device_Init, or the read failed):
+	 * decode the chip from the PCI device id. The G86 family (GeForce 8400/8500
+	 * /8600, Quadro NVS 110M/135M/140M) is device ids 0x0420-0x042F; the NVS
+	 * 140M in this T61 is 0x0429. This is enough for the native backend, which
+	 * only needs chipset==0x86 and bar1_phys (both known without MMIO). */
+	if(!out->mmio_ok)
+	{
+		if((out->device_id & 0xFFF0) == 0x0420)
+		{
+			out->chipset = 0x86;
+			out->family  = 0x05;   /* NV50 / Tesla */
+			out->mmio_ok = 1;      /* identity known; real MMIO deferred */
+			dbg_printf("NV_probe: devid %X -> chipset 86 (MMIO deferred)\n",
+				out->device_id);
 		}
 	}
 

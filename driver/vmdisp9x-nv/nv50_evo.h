@@ -244,4 +244,20 @@ typedef struct nv_evo_flip
 
 int NV_evo_flip(nv_evo_flip_t *out);
 
+/* ---- E4: native backend for the display driver ---- *
+ * NV_native_valid: can the native path drive w x h x bpp (G86 + the fixed
+ * 1024x768 LVDS raster, 16/32 bpp)? NV_native_modeset: perform the takeover
+ * scanning out VRAM offset 0 (the shadow blitter's destination); returns 1
+ * only when the engine confirmed the commit. Both are callable from the
+ * VESA backend's mode-set path (vxd_vesa.c, NV_DETECT builds). */
+int NV_native_valid(unsigned long w, unsigned long h, unsigned long bpp);
+int NV_native_modeset(unsigned long w, unsigned long h, unsigned long bpp);
+/* Copy the last native mode-set diagnostic + counters (valid/set/ok hits and
+ * the last requested w/h/bpp; cnts must hold 6 dwords). For OP_NV_LASTSET. */
+void NV_native_lastdiag(nv_evo_flip_t *out, unsigned long *cnts);
+/* Boot-progress log in VRAM (0x1900000): reset clears it + writes the magic. */
+void NV_blog_reset(void);
+/* Append one progress code to the VRAM boot log (no-op while skip_mmio). */
+void NV_blog(unsigned long code);
+
 #endif /* __NV50_EVO_H__ */

@@ -47,7 +47,7 @@ WORD    wPalettized = 0;    /* Non-zero if palettized. */
 WORD    wFreqMin    = 0;    /* Frame refresh rate (Hz) */
 WORD    wFreqMax    = 0;
 
-WORD    OurVMHandle   = 0;  /* The current VM's ID. */
+WORD    OurVMHandle   = 0;  /* VDD device id (1-N) we registered with; see pm16_calls.c. */
 DWORD   VDDEntryPoint = 0;  /* The VDD entry point. */
 
 /* On Entry:
@@ -109,6 +109,15 @@ void ReadDisplayConfig( void )
     }
 
     dbg_printf( "SYSTEM.INI: %ux%u %ubpp %udpi\n", wX, wY, wBpp, wDpi );
+
+    /* Apply the SYSTEM.INI resolution if one was given. Upstream read
+     * x_resolution/y_resolution but never stored them, so IgnoreRegistry=1 was
+     * stuck at the 640x480 wScrX/wScrY defaults. The registry block below still
+     * overrides these unless IgnoreRegistry is set. Needed on the native G86
+     * backend, whose only mode is 1024x768 - the stored registry mode is often
+     * 640x480, which our backend rejects and Windows then drops to vga.drv. */
+    if( wX ) wScrX = wX;
+    if( wY ) wScrY = wY;
 
     bIgnoreRegistry = GetPrivateProfileInt( "display", "IgnoreRegistry", 0, "system.ini" );
 
@@ -188,7 +197,17 @@ WORD int_2F_GetVMID( unsigned ax );
     parm [ax] value [bx];
 
 /* Dummy pointer to get at the _TEXT segment. Is there any easier way? */
-extern char __based( __segname( "_TEXT" ) ) *pText;
+/* The code segment selector for GlobalSmartPageLock. Upstream declared
+ * `extern char __based(__segname("_TEXT")) *pText;` and locked (__segment)pText,
+ * but current Open Watcom compilers treat "_TEXT" in __segname() as a USER DATA
+ * segment: they emit a separate zero-length FAR_DATA segment "_TEXT", wlink
+ * drops it, and the NE ends up with a SEGMENT relocation to non-existent
+ * segment 3. Win98 KERNEL then fails the module load (LoadFail 0000) before
+ * DriverInit is ever called - that is why nvmini.drv never loaded on the T61.
+ * _TEXT and _INIT are merged into NE segment 1 anyway, so CS is the right
+ * selector. */
+static unsigned short get_cs( void );
+#pragma aux get_cs = "mov ax,cs" value [ax];
 
 /* This is a standard DLL entry point. Note that DS is already set
  * to point to this DLL's data segment on entry.
@@ -198,10 +217,10 @@ extern char __based( __segname( "_TEXT" ) ) *pText;
 
 UINT FAR DriverInit( UINT cbHeap, UINT hModule, LPSTR lpCmdLine )
 {
-    dbg_printf( "DriverInit: ENTER\n" );
+    dbg_printf( "DriverInit: ENTER (nvmini.drv build 3037)\n" );
 
     /* Lock the code segment. */
-    GlobalSmartPageLock( (__segment)pText );
+    GlobalSmartPageLock( get_cs() );
 
     /* Query the entry point of the Virtual Display Device. */
     VDDEntryPoint = (DWORD)int_2F_GetEP( 0x1684, VDD_ID );
