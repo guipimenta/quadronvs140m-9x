@@ -56,6 +56,7 @@ extern DWORD ThisVM;
 #ifdef NV_DETECT
 extern void NV_blog(unsigned long code);   /* VRAM boot-handshake trace */
 extern void NV_blog_reset(void);
+extern int  NV_vram_check(void);   /* M4.3: PFB VRAM size + layout check (vxd_nv.c) */
 #endif
 
 extern DWORD is_qemu;
@@ -214,6 +215,10 @@ VDDPROC(REGISTER_DISPLAY_DRIVER, register_display_driver)
 	state->Client_ESI = (DWORD)hda;
 
 #ifdef NV_DETECT
+	/* M4.3: first live-VM-context entry after boot - read the VRAM size from
+	 * PFB and validate the layout now, so a bad card/layout is logged here and
+	 * the later native mode set refuses cleanly instead of scribbling VRAM. */
+	NV_vram_check();
 	/* 0x301 = returning a valid 16-bit FBHDA alias (DriverInit should pass the
 	 * hda==NULL check); 0x302 = map_pm16 produced a null selector. Then the raw
 	 * selector<<16 value for each of the three maps. */

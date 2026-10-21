@@ -15,7 +15,7 @@
 /* Build stamp. Bump on every rebuild. nvprobe compares the VxD's value against
  * the one it was compiled with, so version skew (stale VxD or stale EXE) is
  * obvious. Scheme: milestone*1000 + revision. */
-#define NV_BUILD            3037UL   /* E4 r27: 16-bit driver linked with explicit FIXED DATA/BSS segment directives and the 2025-08 Open Watcom toolchain (the Oct-2026 wlink left DGROUP moveable -> Win98 KERNEL never called DriverInit: LoadFail 0000 on T61 and in QEMU). 3036 = E4 r26: dbg output also mirrored to I/O port 0xE9 (QEMU -debugcon) from both sides. 3035 = E4 r25: nvmini.drv also appends its dbg lines to C:\\NVMINI.LOG (KERNEL _lopen/_lwrite, capped 600 lines); VxD logs dispatch-table length, first PM16 call, unknown PM16 services, FBHDA_SETUP arrival. 3034 = E4 r24: DBGPRINT on, routed to an in-VxD ring (dbgring.h): VxD lines 'V> ', nvmini.drv lines 'D> ' via OP_NV_DBG_PUTC; read with 'nvprobe log' (OP_NV_DBGLOG). 3033 = E4 r23: Native defaults to 1 (registry Native=0 opts out); INF writes Native=1 and ships nvsetup.reg. 3032 = E4 r22: native setmode arms the blitter (vga_mode/act_mode), register_display_driver tolerates hda==NULL (Native=0), EVO takeover claims nv_owned only after a completed commit; INF adds DEFAULT\DDC=0 (skips the VDD's 173 s V86 EDID probe). 3031 = E4 r21: nvmini.drv probes VDD device ids 1..4 in VDD_REGISTER_DISPLAY_DRIVER_INFO (Win98 VDD keys EBX as a DEVICE id; id 1 = the VGA devnode, served by the global mini-VDD table; a mini-VDD loaded for a non-VGA devnode lives in that device's private table). register_display_driver now logs the id after 0x300. */
+#define NV_BUILD            3038UL   /* M4.3: native memory setup - PFB VRAM size read in live context (NV_vram_check), layout validated against the EVO reservations before any native modeset, scanout window from constants+BAR1 (24 MB max, was a fixed 12 MB), all reported by nvprobe. 3037 = E4 r27: 16-bit driver linked with explicit FIXED DATA/BSS segment directives and the 2025-08 Open Watcom toolchain (the Oct-2026 wlink left DGROUP moveable -> Win98 KERNEL never called DriverInit: LoadFail 0000 on T61 and in QEMU). 3036 = E4 r26: dbg output also mirrored to I/O port 0xE9 (QEMU -debugcon) from both sides. 3035 = E4 r25: nvmini.drv also appends its dbg lines to C:\\NVMINI.LOG (KERNEL _lopen/_lwrite, capped 600 lines); VxD logs dispatch-table length, first PM16 call, unknown PM16 services, FBHDA_SETUP arrival. 3034 = E4 r24: DBGPRINT on, routed to an in-VxD ring (dbgring.h): VxD lines 'V> ', nvmini.drv lines 'D> ' via OP_NV_DBG_PUTC; read with 'nvprobe log' (OP_NV_DBGLOG). 3033 = E4 r23: Native defaults to 1 (registry Native=0 opts out); INF writes Native=1 and ships nvsetup.reg. 3032 = E4 r22: native setmode arms the blitter (vga_mode/act_mode), register_display_driver tolerates hda==NULL (Native=0), EVO takeover claims nv_owned only after a completed commit; INF adds DEFAULT\DDC=0 (skips the VDD's 173 s V86 EDID probe). 3031 = E4 r21: nvmini.drv probes VDD device ids 1..4 in VDD_REGISTER_DISPLAY_DRIVER_INFO (Win98 VDD keys EBX as a DEVICE id; id 1 = the VGA devnode, served by the global mini-VDD table; a mini-VDD loaded for a non-VGA devnode lives in that device's private table). register_display_driver now logs the id after 0x300. */
 
 #define NV_PCI_VENDOR       0x10DEUL  /* NVIDIA */
 #define NV_DEV_NVS140M      0x0429UL  /* Quadro NVS 140M (G86) */
@@ -72,6 +72,15 @@ typedef struct nv_hwinfo
 	unsigned long first_nv_bdf;  /* (bus<<16)|(dev<<8)|fn of that function    */
 	unsigned long host0;         /* config dword at 0:0.0 (sanity: Intel GMCH)*/
 	unsigned long build;         /* NV_BUILD of the VxD that filled this      */
+
+	/* M4.3 native memory setup (filled by NV_vram_check / NV_vram_export) */
+	unsigned long vram_size;     /* bytes of VRAM per PFB 0x10020C (0 = not read yet)   */
+	unsigned long vram_hi;       /* bits 32+ of that size (G86: 0)                      */
+	unsigned long vram_cfg0;     /* raw PFB 0x100200 (partition config, info only)      */
+	unsigned long vram_cfg1;     /* raw PFB 0x100204                                     */
+	unsigned long fb_window;     /* bytes of BAR1 mapped as the scanout window           */
+	unsigned long vram_check;    /* 0 not run, 1 OK, 2 PFB read failed, 3 VRAM too small,
+	                                4 window overlaps the EVO reservation               */
 } nv_hwinfo_t;
 
 /* Probe the PCI bus, fill *out. Returns non-zero if an NVIDIA display
@@ -107,6 +116,22 @@ int NV_wr32(unsigned long offset, unsigned long value);
 /* BAR1 VRAM access (maps BAR1 once, cached). Bounds-checked. Touches video
  * memory only, never the display raster/PLL, so it is safe for the panel. */
 unsigned long NV_vram_rd32(unsigned long offset);
+
+/* M4.3: PFB registers (NV50 family). 0x10020C holds the VRAM size: bits 31:8 =
+ * size in bytes (low part), bits 7:0 = bits 39:32 (nouveau nv50_vram.c). */
+#define NV_PFB_CFG0            0x100200UL
+#define NV_PFB_CFG1            0x100204UL
+#define NV_PFB_VRAM_SIZE       0x10020CUL
+
+/* Read the VRAM size from PFB and validate the layout in nv50_evo.h against it
+ * (window must stay below the EVO reservation, card must hold NVFB_MIN_VRAM).
+ * MUST run in live VM context (BAR0 access inside Device_Init freezes the G86);
+ * idempotent, result cached in nv_hwinfo.vram_check. Returns 1 when OK. */
+int NV_vram_check(void);
+/* Copy the cached VRAM/layout fields into an nv_hwinfo_t (NV_probe zeroes them). */
+void NV_vram_export(nv_hwinfo_t *out);
+/* Window size chosen at Device_Init (bytes), recorded for the report. */
+extern unsigned long nv_fb_window;
 /* Fill `count` dwords at VRAM byte `offset` with `value`. Returns dwords written. */
 unsigned long NV_vram_fill(unsigned long offset, unsigned long count, unsigned long value);
 /* Write one dword to VRAM byte `offset`. Returns 1 on success, 0 if out of range. */

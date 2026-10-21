@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3037  (E4 r27)
+Build: 3038  (M4.3)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
@@ -13,6 +13,26 @@ Registry (HKLM\Software\vmdisp9x\vesa):
   Native      DWORD  1 = native G86 modeset (DEFAULT since 3033), 0 = vga.drv fallback
   InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
   BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3038: M4.3 NATIVE MEMORY SETUP (first M4 item after E4). CONFIRMED ON THE T61
+2026-10-22: PFB reports 128 MB (cfg0 01001800 cfg1 01449000), window 24 MB,
+layout OK, native 1024x768x32 desktop unchanged.
+ - The scanout window handed to the shadow blitter is no longer a fixed 12 MB:
+   it is min(VRAMLimit MB, PCI BAR1 size, NVFB_WINDOW_MAX=24 MB), i.e. 24 MB
+   by default, which leaves room for three 1024x768x32 flip buffers.
+ - NV_vram_check() (vxd_nv.c) reads the real VRAM size from PFB 0x10020C
+   (nouveau nv50_vram.c decode) plus PFB cfg0/cfg1, and validates the layout
+   in nv50_evo.h: window < EVO reservation (24 MB), VRAM >= 32 MB + 32 KiB
+   (RAMIN end). It runs in LIVE VM context only (first call from the
+   mini-VDD register handler, i.e. DriverInit; also lazily before any native
+   mode set) because BAR0 access inside Device_Init freezes the G86.
+ - NV_native_modeset refuses to run if the check failed, so a wrong card or
+   layout logs a reason instead of scribbling EVO structures into VRAM.
+ - nvprobe (no arguments) now prints VRAM size, cfg regs, window and the
+   check result; 'nvprobe log' shows the NV_vram_check lines.
+TEST ON T61: install the three 3038 files, reboot, run  nvprobe  and
+nvprobe log > nvlog.txt. Expect 'NV_vram_check: VRAM 128 MB ... window 24 MB'
+and 'layout OK' right after 'register: ebx = 1', desktop unchanged.
 
 3037: *** ROOT CAUSE OF EVERY 'LoadFail = nvmini.drv 0000' SINCE M1 - FIXED ***
 CONFIRMED ON THE T61 2026-10-22: LoadSuccess = nvmini.drv, native EVO modeset

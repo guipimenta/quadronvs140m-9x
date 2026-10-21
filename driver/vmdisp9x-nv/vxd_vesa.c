@@ -73,6 +73,7 @@ extern unsigned long nv_dbg_init;   /* 0=none, 1=VBE init, 2=native init */
 void NV_blog(unsigned long code);   /* boot progress log (VRAM 25 MB)     */
 void NV_blog_reset(void);
 #include "vxd_nv.h"                 /* nv_hwinfo: BAR1 from the PCI probe */
+#include "nv50_evo.h"               /* M4.3: NVFB_WINDOW_MAX and the EVO layout */
 #else
 static char vesa_vxd_name[] = "vesamini.vxd";
 #endif
@@ -323,11 +324,16 @@ static BOOL NV_init_hw_native(DWORD conf_vram_limit, DWORD wram_size)
 	/* stage 1 done = NV_probe survived at Device_Init */
 	if(conf_init_stop == 1) return FALSE;
 
-	/* The blit destination only ever needs the visible fb + flip buffers.
-	 * Keep the window well below our EVO structures at VRAM 16 MB+. */
+	/* M4.3: the scanout window = visible fb + flip buffers. It is bounded by
+	 * the registry VRAMLimit (MB), by the PCI BAR1 aperture, and by the start
+	 * of our EVO reservation (NVFB_WINDOW_MAX, 24 MB). No MMIO is allowed in
+	 * this context, so the real VRAM size is checked later by NV_vram_check. */
 	vram_size = conf_vram_limit * 1024 * 1024;
-	if(vram_size > 12*1024*1024)
-		vram_size = 12*1024*1024;
+	if(vram_size > NVFB_WINDOW_MAX)
+		vram_size = NVFB_WINDOW_MAX;
+	if(nv_hwinfo.bar1_size != 0 && vram_size > nv_hwinfo.bar1_size)
+		vram_size = nv_hwinfo.bar1_size;
+	nv_fb_window = vram_size;
 
 	vram_lin = (void*)_MapPhysToLinear(nv_hwinfo.bar1_phys, vram_size, 0);
 	if(vram_lin == NULL || vram_lin == (void*)0xFFFFFFFFUL)

@@ -298,3 +298,69 @@ int NV_vram_wr32(unsigned long offset, unsigned long value)
 	nv_bar1[offset >> 2] = value;
 	return 1;
 }
+
+/*
+ * M4.3 native memory setup
+ *
+ * The window handed to the shadow blitter is mapped at Device_Init, where we
+ * must not touch BAR0. So the size of VRAM is read later, in live VM context,
+ * and the fixed layout from nv50_evo.h is checked against it there. Anything
+ * that fails leaves nv_vram_ok == 0 and NV_native_modeset refuses to run.
+ */
+#include "nv50_evo.h"
+
+unsigned long nv_fb_window = 0;
+static unsigned long nv_vram_size = 0, nv_vram_hi = 0, nv_vram_cfg0 = 0, nv_vram_cfg1 = 0;
+static unsigned long nv_vram_check_result = 0;   /* see nv_hwinfo_t.vram_check */
+
+int NV_vram_check(void)
+{
+	unsigned long v;
+
+	if(nv_vram_check_result != 0)
+		return nv_vram_check_result == 1;
+
+	v = NV_rd32(NV_PFB_VRAM_SIZE);
+	if(v == 0 || v == 0xFFFFFFFFUL || (v & 0xFFFF0000UL) == 0xDEAD0000UL)
+	{
+		dbg_printf("NV_vram_check: PFB size read failed (%lX)\n", v);
+		nv_vram_check_result = 2;
+		return 0;
+	}
+	nv_vram_size = v & 0xFFFFFF00UL;
+	nv_vram_hi   = v & 0xFFUL;
+	nv_vram_cfg0 = NV_rd32(NV_PFB_CFG0);
+	nv_vram_cfg1 = NV_rd32(NV_PFB_CFG1);
+
+	dbg_printf("NV_vram_check: VRAM %lu MB (PFB %lX, cfg0 %lX cfg1 %lX), BAR1 %lu MB, window %lu MB\n",
+		nv_vram_size >> 20, v, nv_vram_cfg0, nv_vram_cfg1,
+		nv_hwinfo.bar1_size >> 20, nv_fb_window >> 20);
+
+	if(nv_vram_hi == 0 && nv_vram_size < NVFB_MIN_VRAM)
+	{
+		dbg_printf("NV_vram_check: too small - EVO structures need %lu MB\n", NVFB_MIN_VRAM >> 20);
+		nv_vram_check_result = 3;
+		return 0;
+	}
+	if(nv_fb_window > NVFB_WINDOW_MAX)
+	{
+		dbg_printf("NV_vram_check: window %lX overlaps the EVO reservation at %lX\n",
+			nv_fb_window, NVFB_RESERVED_BASE);
+		nv_vram_check_result = 4;
+		return 0;
+	}
+	dbg_printf("NV_vram_check: layout OK (window 0-%lX, EVO %lX-%lX)\n",
+		nv_fb_window, NVFB_RESERVED_BASE, NVFB_RESERVED_END);
+	nv_vram_check_result = 1;
+	return 1;
+}
+
+void NV_vram_export(nv_hwinfo_t *out)
+{
+	out->vram_size  = nv_vram_size;
+	out->vram_hi    = nv_vram_hi;
+	out->vram_cfg0  = nv_vram_cfg0;
+	out->vram_cfg1  = nv_vram_cfg1;
+	out->fb_window  = nv_fb_window;
+	out->vram_check = nv_vram_check_result;
+}

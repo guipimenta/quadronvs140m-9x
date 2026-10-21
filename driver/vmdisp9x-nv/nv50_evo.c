@@ -585,6 +585,13 @@ int NV_native_modeset(unsigned long w, unsigned long h, unsigned long bpp)
 	int ok;
 	nv_cnt_set++;
 	nv_last_w = w; nv_last_h = h; nv_last_bpp = bpp;
+	/* M4.3: never program EVO structures into VRAM we have not confirmed exists
+	 * (live VM context here, so the PFB read is safe). */
+	if(!NV_vram_check())
+	{
+		dbg_printf("NV_native_modeset: refused, VRAM layout check failed\n");
+		return 0;
+	}
 	ok = NV_evo_takeover(&nv_last_diag, w, h, bpp, 0, nv_boot_pattern ? 1 : 0);
 	if(ok && nv_last_diag.ntfy_post != 0)
 	{

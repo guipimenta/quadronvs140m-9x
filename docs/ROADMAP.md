@@ -56,8 +56,23 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
   (PLLs, CRTC, LVDS/panel) to light the T61 panel at native resolution with a
   linear framebuffer, per nouveau's documented sequence; read panel EDID over
   DDC or hardcode T61 timings. This is the first genuinely native driver.
-- **M4+ — polish.** Native memory setup, hardware cursor, mode list, power.
-  2D/3D acceleration is explicitly out of scope for the foreseeable future.
+- **M3 result (2026-10-19, build 3010): DONE.** EVO core-channel takeover, 8 colour
+  bars on the panel. Recipe in nv50_evo.c / docs/EVO_PLAN.md.
+- **E4 — make nvmini.drv the boot display driver: DONE (2026-10-22, build 3037).**
+  Blocked for days by a toolchain-induced NE relocation to a non-existent
+  segment (see analysis/BOOT_DIAGNOSIS_2026-10-21.md §8). The T61 now boots to
+  the native 1024x768x32 desktop.
+- **M4 — polish, in this order.**
+  - M4.1 mode list / Settings tab: add 8 bpp and the panel-scaled lower modes,
+    retest the control panel against a loaded driver.
+  - M4.2 install from the INF alone (no hand-edited SYSTEM.INI / nvsetup.reg).
+  - M4.3 native memory setup **(build 3038, DONE 2026-10-22):** real VRAM size
+    from PFB (128 MB on the T61), layout validated against the EVO
+    reservations, 24 MB window.
+  - M4.4 hardware cursor via the EVO cursor channel.
+  - M4.5 power / screen switching (VGA<->hires, standby, lid).
+  - M4.6 shadow-blit performance (dirty rectangles, write-combining).
+  2D/3D acceleration remains out of scope for the foreseeable future.
 
 ## Build (verified, this host)
 

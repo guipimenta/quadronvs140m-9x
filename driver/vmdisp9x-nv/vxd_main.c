@@ -1080,6 +1080,7 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 		case OP_NV_PROBE:
 			/* refresh the probe and hand the struct back to user space */
 			NV_probe(&nv_hwinfo);
+			NV_vram_export(&nv_hwinfo);   /* NV_probe zeroes the M4.3 fields */
 			memcpy(outBuf, &nv_hwinfo, sizeof(nv_hwinfo_t));
 			rc = 0;
 			break;

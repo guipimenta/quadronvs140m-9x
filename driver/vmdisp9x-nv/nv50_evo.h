@@ -139,6 +139,19 @@
 #define NVFB_NOTIFY_VRAM_OFFSET      0x01810000UL  /* notifier                  */
 #define NVFB_LUT_VRAM_OFFSET         0x01820000UL  /* 257x8B gamma LUT (identity)*/
 
+/* ---- M4.3 VRAM layout (BAR1 byte offsets) ----
+ * [0, window)                  scanout framebuffer + flip buffers (the blitter's
+ *                              destination; hda->vram_size)
+ * [NVFB_RESERVED_BASE, _END)   our EVO structures: pushbuffer 24 MB, notifier,
+ *                              LUT, VRAM boot log 25 MB, RAMIN/RAMHT/ctxdma 32 MB
+ * The window may never reach NVFB_RESERVED_BASE, and the card must hold at
+ * least NVFB_MIN_VRAM bytes; both are verified against the PFB size register
+ * (NV_vram_check) in live VM context before the first native mode set. */
+#define NVFB_RESERVED_BASE           NVFB_PUSH_VRAM_OFFSET
+#define NVFB_RESERVED_END            (NVFB_RAMIN_VRAM_OFFSET + NVFB_RAMIN_SIZE)
+#define NVFB_WINDOW_MAX              NVFB_RESERVED_BASE   /* 24 MB */
+#define NVFB_MIN_VRAM                NVFB_RESERVED_END    /* 32 MB + 32 KiB */
+
 typedef struct nv_evo_layout
 {
 	unsigned long fb_offset;      /* VRAM byte offset of the framebuffer      */

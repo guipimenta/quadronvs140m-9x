@@ -417,6 +417,17 @@ int main(int argc, char **argv)
 	printf("  chipset   : 0x%02lX   family 0x%02lX   rev 0x%02lX   mmio_ok %lu\n",
 		info.chipset, info.family, info.revision, info.mmio_ok);
 
+	{
+		static const char *chk[] = { "not run yet (needs one live-context entry: boot driver or a native mode set)",
+			"OK", "PFB size read failed", "VRAM too small for the EVO reservation", "window overlaps the EVO reservation" };
+		printf("  VRAM      : ");
+		if(info.vram_size || info.vram_hi)
+			printf("%lu MB (PFB 0x10020C cfg0 %08lX cfg1 %08lX)\n", (info.vram_size >> 20) + (info.vram_hi << 12), info.vram_cfg0, info.vram_cfg1);
+		else
+			printf("unknown\n");
+		printf("  layout    : window 0-%lu MB (blitter/flip), EVO reserved 24-32 MB+32K, check: %s\n",
+			info.fb_window >> 20, info.vram_check < 5 ? chk[info.vram_check] : "?");
+	}
 	if(info.chipset == 0x86)
 		printf("  => G86 confirmed (Quadro NVS 140M family). We can talk to the chip.\n");
 	else if(info.mmio_ok)
