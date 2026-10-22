@@ -333,6 +333,69 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	/* "nvprobe tail <file>" : keep polling the VxD ring and append whatever
+	 * is new to <file>, flushing after every write, so the VxD-side log
+	 * survives a hard crash / reboot (3047). 3049: uses OP_NV_DBGLOG2, which
+	 * prefixes the ring with the running byte total, so the new bytes are
+	 * known exactly and an overflow between two polls is reported instead
+	 * of silently dropped. Leave it running in a DOS box while starting the
+	 * program under test; Ctrl+C stops it. */
+	if(argc >= 3 && strcmp(argv[1], "tail") == 0)
+	{
+		static char cur[DBG_RING_SIZE + 16];
+		DWORD prev_total = 0;
+		int first = 1;
+		DWORD wr;
+		HANDLE f = CreateFileA(argv[2], GENERIC_WRITE, FILE_SHARE_READ, NULL,
+			OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
+		if(f == INVALID_HANDLE_VALUE)
+		{
+			printf("cannot open %s (error %lu)\n", argv[2], GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		SetFilePointer(f, 0, NULL, FILE_END);
+		printf("tailing the VxD log to %s (Ctrl+C to stop)\n", argv[2]);
+		for(;;)
+		{
+			DWORD total, n, delta;
+			const char *ring;
+			if(!DeviceIoControl(vxd, OP_NV_DBGLOG2, NULL, 0, cur, DBG_RING_SIZE + 4, &ret, NULL) || ret < 4)
+			{
+				printf("OP_NV_DBGLOG2 failed (error %lu) - VxD older than build 3049?\n", GetLastError());
+				break;
+			}
+			total = *(DWORD*)cur;
+			ring  = cur + 4;
+			n     = ret - 4;
+			if(first)
+			{
+				delta = n;          /* whole ring the first time */
+				first = 0;
+			}
+			else
+			{
+				delta = total - prev_total;
+				if(delta > n)
+				{
+					char msg[80];
+					int l = sprintf(msg, "\r\n[nvprobe tail: %lu bytes lost]\r\n", delta - n);
+					WriteFile(f, msg, l, &wr, NULL);
+					delta = n;
+				}
+			}
+			if(delta)
+			{
+				WriteFile(f, ring + (n - delta), delta, &wr, NULL);
+				FlushFileBuffers(f);
+			}
+			prev_total = total;
+			Sleep(20);
+		}
+		CloseHandle(f);
+		CloseHandle(vxd);
+		return 0;
+	}
+
 	/* "nvprobe mtrr" : raw variable MTRRs + MTRR.VXD result + shadow-blit
 	 * statistics (M4.6). Run it twice a few seconds apart while moving windows
 	 * to get cycles per blit / per pixel. */

@@ -362,6 +362,11 @@ void __declspec(naked) VXD_control()
 	};
 }
 
+#ifdef NV_DETECT
+static void nv_pm16_trace(DWORD service, PCRS_32 state);
+extern FBHDA_t *hda;
+#endif
+
 /* process V86/PM16 calls */
 WORD __stdcall VXD_API_Proc(PCRS_32 state)
 {
@@ -378,6 +383,9 @@ WORD __stdcall VXD_API_Proc(PCRS_32 state)
 	
 	//dbg_printf("VXD_API_Proc, service: %X\n", service);
 	//Begin_Critical_Section(0);
+#ifdef NV_DETECT
+	nv_pm16_trace(service, state);
+#endif
 	
 	switch(service)
 	{
@@ -854,6 +862,97 @@ BOOL FBHDA_page_modify(DWORD flat_address, DWORD size, const BYTE *new_data)
 	return TRUE;
 }
 
+#ifdef NV_DETECT
+/* 3047 diagnostics: log the first NV_IOCTL_TRACE_N calls of every distinct
+ * ring-3 ioctl op (DirectDraw HAL / Mesa / nvprobe) with their first input
+ * dwords, so that "nvprobe tail" shows which HAL request preceded a crash.
+ * Housekeeping ops (open/close, the log reader itself) are skipped. */
+#define NV_IOCTL_TRACE_SLOTS 48
+#define NV_IOCTL_TRACE_N     6
+static DWORD nv_iot_op[NV_IOCTL_TRACE_SLOTS];
+static DWORD nv_iot_cnt[NV_IOCTL_TRACE_SLOTS];
+static DWORD nv_iot_used = 0;
+DWORD nv_ioctl_total = 0;
+/* 3048: the same for the 16-bit driver's PM16 services */
+static DWORD nv_pmt_op[NV_IOCTL_TRACE_SLOTS];
+static DWORD nv_pmt_cnt[NV_IOCTL_TRACE_SLOTS];
+static DWORD nv_pmt_used = 0;
+static DWORD nv_trace_w = 0, nv_trace_h = 0, nv_trace_bpp = 0;
+
+/* 3048: both traces start over whenever the mode changes, so the calls that
+ * follow a game's mode switch are visible even for ops already seen. */
+static void nv_trace_check_mode(void)
+{
+	if(hda == NULL) return;
+	if(hda->width != nv_trace_w || hda->height != nv_trace_h || hda->bpp != nv_trace_bpp)
+	{
+		nv_trace_w = hda->width; nv_trace_h = hda->height; nv_trace_bpp = hda->bpp;
+		nv_iot_used = 0;
+		nv_pmt_used = 0;
+		dbg_printf("trace reset: mode %lux%lux%lu\n", nv_trace_w, nv_trace_h, nv_trace_bpp);
+	}
+}
+
+static void nv_pm16_trace(DWORD service, PCRS_32 state)
+{
+	DWORD slot;
+	if(service == OP_NV_DBG_PUTC) return;
+	nv_trace_check_mode();
+	for(slot = 0; slot < nv_pmt_used; slot++)
+	{
+		if(nv_pmt_op[slot] == service) break;
+	}
+	if(slot == nv_pmt_used)
+	{
+		if(nv_pmt_used >= NV_IOCTL_TRACE_SLOTS) return;
+		nv_pmt_op[slot]  = service;
+		nv_pmt_cnt[slot] = 0;
+		nv_pmt_used++;
+	}
+	nv_pmt_cnt[slot]++;
+	if(nv_pmt_cnt[slot] > NV_IOCTL_TRACE_N) return;
+	dbg_printf("PM16 %lX #%lu ecx=%lX ebx=%lX esi=%lX edi=%lX\n", service, nv_pmt_cnt[slot],
+		state->Client_ECX, state->Client_EBX, state->Client_ESI, state->Client_EDI);
+}
+
+static void nv_ioctl_trace(struct DIOCParams *params)
+{
+	DWORD op = params->dwIoControlCode;
+	DWORD slot;
+	DWORD i;
+	DWORD n;
+	DWORD a[4];
+	const DWORD *in = (const DWORD*)params->lpInBuffer;
+
+	nv_ioctl_total++;
+	if(op == DIOC_OPEN || op == DIOC_CLOSEHANDLE || op == OP_NV_DBGLOG || op == OP_NV_DBGLOG2) return;
+	nv_trace_check_mode();
+
+	for(slot = 0; slot < nv_iot_used; slot++)
+	{
+		if(nv_iot_op[slot] == op) break;
+	}
+	if(slot == nv_iot_used)
+	{
+		if(nv_iot_used >= NV_IOCTL_TRACE_SLOTS) return;
+		nv_iot_op[slot]  = op;
+		nv_iot_cnt[slot] = 0;
+		nv_iot_used++;
+	}
+	nv_iot_cnt[slot]++;
+	if(nv_iot_cnt[slot] > NV_IOCTL_TRACE_N) return;
+
+	a[0] = a[1] = a[2] = a[3] = 0;
+	n = params->cbInBuffer / 4;
+	if(n > 4) n = 4;
+	if(in == NULL) n = 0;
+	for(i = 0; i < n; i++) a[i] = in[i];
+	dbg_printf("IOCTL %lX #%lu in=%lu [%lX %lX %lX %lX] out=%lu\n",
+		op, nv_iot_cnt[slot], params->cbInBuffer,
+		a[0], a[1], a[2], a[3], params->cbOutBuffer);
+}
+#endif
+
 /* process user space (PM32, RING-3) call */
 DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params)
 {
@@ -864,6 +963,9 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 	//Begin_Critical_Section(0);
 	
 	//dbg_printf("I%x\n", params->dwIoControlCode);
+#ifdef NV_DETECT
+	nv_ioctl_trace(params);
+#endif
 	
 	switch(params->dwIoControlCode)
 	{
@@ -1078,6 +1180,15 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 		{
 			/* "nvprobe log": hand the ring to user space, oldest byte first */
 			DWORD n = dbg_ring_read((char*)outBuf, params->cbOutBuffer);
+			if(params->lpcbBytesReturned)
+				*(DWORD*)params->lpcbBytesReturned = n;
+			rc = 0;
+			break;
+		}
+		case OP_NV_DBGLOG2:
+		{
+			/* "nvprobe tail": total written + ring, see dbg_ring_read2 */
+			DWORD n = dbg_ring_read2((char*)outBuf, params->cbOutBuffer);
 			if(params->lpcbBytesReturned)
 				*(DWORD*)params->lpcbBytesReturned = n;
 			rc = 0;

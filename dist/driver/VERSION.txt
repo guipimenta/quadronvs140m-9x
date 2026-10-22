@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3046  (OpenGL ICD DONE: Mesa9x rebuilt against our FBHDA API, verified on the T61; Direct3D + DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
+Build: 3050  (Half-Life intro crash FIXED, verified on the T61: DCI refused; diagnostics from 3047-3049 kept; OpenGL ICD DONE: Mesa9x rebuilt against our FBHDA API, verified on the T61; Direct3D + DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
@@ -25,6 +25,52 @@ Registry (HKLM\Software\vmdisp9x\vesa):
                      3043), 0 = leave it uncached (MTRR.VXD cannot do it on the T61)
   InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
   BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3050: DCI REFUSED (fixes the Half-Life intro crash; VERIFIED on the T61
+2026-10-23: both intros play from the 1024x768x32 desktop, log shows
+"DCI(1) refused" at every video open). Root cause
+found by bisection on the T61 + disassembly of Win98 SE DIBENG.DLL: the
+crash needs (a) a video played by Video for Windows before the game's own
+DirectDraw mode switch and (b) one played after it; removing the intro
+videos, or starting from a desktop already in the game's mode, avoids it.
+nvmini.drv forwarded DCICOMMAND requests with DCI_VERSION to DIBENG, whose
+DCICREATEPRIMARYSURFACE fills ONE static, reference-counted DCISURFACEINFO
+(width/height/stride/bpp/deBitsOffset/deBitsSelector of the PDevice at
+creation) and never refreshes it on a mode change, so DrawDib kept a
+1024x768x32 description of a 640x480x16 screen. 3050 answers DCI_VERSION
+requests with DCI_FAIL_UNSUPPORTED ("DCI(n) refused" in the log); DrawDib
+then falls back to GDI. DirectDraw (DD_VERSION requests) is unaffected.
+Cost: Video for Windows playback goes through GDI instead of a direct
+framebuffer pointer (slower, but always consistent with the current mode).
+
+3049: LOSSLESS TAIL. Findings so far: Half-Life works when the desktop is
+already 640x480x16, and crashes (ring 0) only when it switches there from
+1024x768x32 itself; DXDIAG's own 640x480x16 full-screen cycles from the
+1024x768x32 desktop work. The 3048 DXDIAG capture lost chunks silently
+because the per-blit FBHDA_DD_surface_modify/notify lines (185k of them)
+defeated the tail's overlap check. 3049: OP_NV_DBGLOG2 returns the running
+byte total ahead of the ring, nvprobe tail appends exactly the new bytes
+and writes "[nvprobe tail: N bytes lost]" on overflow; the two per-blit
+surface lines are silenced.
+
+3048: MORE DIAGNOSTICS. Both 3047 logs (VxD tail and C:\NVMINI.LOG) end right
+after Half-Life's DirectDraw switch to 640x480x16 (ReEnable -> native modeset
+OK -> QUERYDIBSUPPORT x3), with no VxD activity visible afterwards. 3048
+restarts the per-op traces at every mode change (first 6 calls of each
+ring-3 ioctl AND of each PM16 service from the 16-bit driver) and the async
+blit timer logs a heartbeat line about once a second (tick, blit count,
+pixels, lock count, mode, flags), so the next capture shows whether ring 0
+was still running after the switch. nvprobe tail polls every 20 ms.
+
+3047: DIAGNOSTICS. Half-Life (WON) reboots the T61 from "hl.exe -sw -window
+-nosound" = a ring-0 failure. The VxD now logs the first 3 calls of every
+distinct ring-3 ioctl op (DirectDraw HAL / Mesa requests: op code, input
+dwords) and "nvprobe tail <file>" streams the VxD log to a file with
+write-through so it survives a reboot. Usage: in a DOS box run
+  nvprobe tail c:\nvtail.txt
+leave it running, start the program under test, and after the reboot send
+c:\nvtail.txt together with c:\nvmini.log (the 16-bit driver's own
+on-disk log, appended across boots - the tail is the latest boot).
 
 3046: OPENGL ICD (VERIFIED ON THE T61 2026-10-22: icdtest, wgltest, D3D still
 passes). Mesa9x rebuilt from its main branch (commit 8b5428c,

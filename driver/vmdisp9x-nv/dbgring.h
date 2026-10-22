@@ -15,5 +15,6 @@
 
 #define OP_NV_DBGLOG       0x500A  /* W32 DeviceIoControl: copy ring (oldest first) to outBuf */
 #define OP_NV_DBG_PUTC     0x500B  /* PM16 API: ECX = one character from the 16-bit driver     */
+#define OP_NV_DBGLOG2      0x500D  /* 3049: outBuf = DWORD total_bytes_ever_written, then the ring (oldest first) */
 
 #endif

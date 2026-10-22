@@ -91,6 +91,22 @@ void __stdcall async_timeout(DWORD tardiness, DWORD refdata)
 		}
 		//FBHDA_unlock();
 	}
+
+#ifdef DBGRING
+	/* 3048 diagnostics: one heartbeat line per ~64 ticks (~1 s) so a
+	 * captured log shows whether ring 0 was still alive and blitting. */
+	{
+		static DWORD hb_ticks = 0;
+		if((++hb_ticks & 63) == 0)
+		{
+			DWORD st[8];
+			wram_stats(st);
+			dbg_printf("HB %lu t=%lu blits=%lu px=%lu lock=%ld mode=%lux%lux%lu flags=%lX\n",
+				hb_ticks >> 6, act, st[0], st[2], fb_lock_cnt,
+				hda->width, hda->height, hda->bpp, hda->flags);
+		}
+	}
+#endif
 	
 	burned = *curtime - act;
 	

@@ -319,6 +319,20 @@ LONG WINAPI __loadds Control(LPVOID lpDevice, UINT function,
           rc = 1;
         }
 #else
+				else if(lpDCICMD->dwVersion == DCI_VERSION)
+				{
+					/* 3050: refuse DCI (direct frame-buffer surfaces for Video for
+					 * Windows / DrawDib). DIBENG would answer DCICREATEPRIMARYSURFACE
+					 * from ONE static, reference-counted DCISURFACEINFO built from the
+					 * PDevice geometry at creation time and never refreshed on a mode
+					 * change: a process that opened it on the 1024x768x32 desktop and
+					 * keeps it across its own DirectDraw mode switch (Half-Life's
+					 * intro videos) then writes through a stale description of the
+					 * screen, which took the T61 down (ring 0). GDI playback is the
+					 * safe fall-back DrawDib uses when DCI is unavailable. */
+					dbg_printf("DCI(%ld) refused\n", lpDCICMD->dwCommand);
+					rc = -4; /* DCI_FAIL_UNSUPPORTED */
+				}
 				else
 				{
 					/* JH: this come from S3 driver, we need to do this or DDRAW not work on emulators*

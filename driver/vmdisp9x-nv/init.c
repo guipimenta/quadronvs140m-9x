@@ -217,7 +217,7 @@ static unsigned short get_cs( void );
 
 UINT FAR DriverInit( UINT cbHeap, UINT hModule, LPSTR lpCmdLine )
 {
-    dbg_printf( "DriverInit: ENTER (nvmini.drv build 3046)\n" );
+    dbg_printf( "DriverInit: ENTER (nvmini.drv build 3050)\n" );
 
     /* Lock the code segment. */
     GlobalSmartPageLock( get_cs() );

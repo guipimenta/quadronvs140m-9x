@@ -456,7 +456,7 @@ void FBHDA_DD_surface_delete(void *flat)
 BOOL FBHDA_DD_surface_modify(void *flat)
 {
 	surface_t *s;
-	dbg_printf("FBHDA_DD_surface_modify(%lX)\n", flat);
+	//dbg_printf("FBHDA_DD_surface_modify(%lX)\n", flat); /* 3049: per-blit spam flooded the 16 KB ring */
 
 	if(surf_off_valid(flat))
 	{
@@ -473,7 +473,7 @@ BOOL FBHDA_DD_surface_modify(void *flat)
 void FBHDA_DD_surface_notify(void *flat)
 {
 	surface_t *s;
-	dbg_printf("FBHDA_DD_surface_notify(%lX)\n", flat);
+	//dbg_printf("FBHDA_DD_surface_notify(%lX)\n", flat); /* 3049: see above */
 	
 	if(surf_off_valid(flat))
 	{

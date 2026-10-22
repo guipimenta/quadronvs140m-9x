@@ -95,6 +95,18 @@ uint32_t dbg_ring_read( char *out, uint32_t max )
 	return n;
 }
 
+/* 3049: same as dbg_ring_read, preceded by the running total of characters
+ * ever written, so a reader can tell exactly how many bytes are new (and
+ * how many were lost) between two polls even when the text repeats. */
+uint32_t dbg_ring_read2( char *out, uint32_t max )
+{
+	uint32_t n;
+	if(max < 4) return 0;
+	*(uint32_t*)out = dbg_ring_total;
+	n = dbg_ring_read(out + 4, max - 4);
+	return n + 4;
+}
+
 static void prt_ch( char c )
 {
 	static int bol = 1;

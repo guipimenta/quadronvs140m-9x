@@ -103,6 +103,18 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
   Direct3D pass on the T61 with the rebuilt DLL (79 MB, O3 LLVM). Recipe in
   driver/mesa9x-bin/PROVENANCE.txt.
   Hardware 2D/3D acceleration on the G86 itself remains out of scope.
+- **App compatibility — Half-Life intro crash (build 3050, FIXED 2026-10-23).**
+  Half-Life (GOTY, build 929) froze or rebooted the T61 between the Sierra and
+  Valve intro videos when started from any desktop mode other than the game's
+  own 640x480x16. Root cause (bisection + Win98 SE DIBENG.DLL disassembly):
+  DIBENG's DCICREATEPRIMARYSURFACE fills one static DCISURFACEINFO from the
+  PDevice at first use and never refreshes it on a mode change, so DrawDib
+  played the second video through a stale 1024x768x32 description of a
+  640x480x16 screen. nvmini.drv now refuses DCI_VERSION DCICOMMAND requests
+  (DCI_FAIL_UNSUPPORTED), so Video for Windows falls back to GDI; DirectDraw
+  (DD_VERSION on the same escape) is unaffected. Builds 3047-3049 added the
+  diagnostics used to find it: per-mode ioctl/PM16 traces, a 1 s heartbeat in
+  the blit timer, and a lossless `nvprobe tail <file>` log capture.
 
 ## Build (verified, this host)
 
