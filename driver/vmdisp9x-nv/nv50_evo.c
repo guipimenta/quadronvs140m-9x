@@ -197,6 +197,81 @@ int NV_evo_stage(nv_evo_layout_t *out)
 static unsigned long nv_owned    = 0;
 static unsigned long nv_ring_pos = 0;
 
+/* Service the supervisor handshake stages the engine raises mid-UPDATE
+ * (nouveau nv50_display_bh + unk10/20/40 handlers). Our clock and SOR link
+ * never change, so each stage reduces to its ack. `out` (may be NULL) counts
+ * the stages seen. */
+static void evo_service_sv(nv_evo_flip_t *out)
+{
+	unsigned long sv = NV_rd32(NV50_PDISP_INTR_1);
+	if(sv & 0x00000010UL)            /* UNK10 */
+	{
+		NV_wr32(0x00619494UL, NV_rd32(0x00619494UL) & ~8UL);
+		NV_wr32(NV50_PDISP_INTR_1, 0x00000010UL);
+		NV_wr32(NV50_PDISP_UNK30, 0x80000000UL);
+		if(out) out->sv10++;
+	}
+	else if(sv & 0x00000020UL)       /* UNK20 (clock/encoder: unchanged) */
+	{
+		NV_wr32(NV50_PDISP_INTR_1, 0x00000020UL);
+		NV_wr32(NV50_PDISP_UNK30, 0x80000000UL);
+		if(out) out->sv20++;
+	}
+	else if(sv & 0x00000040UL)       /* UNK40 */
+	{
+		NV_wr32(NV50_PDISP_INTR_1, 0x00000040UL);
+		NV_wr32(NV50_PDISP_UNK30, 0x80000000UL);
+		NV_wr32(0x00619494UL, NV_rd32(0x00619494UL) | 8UL);
+		if(out) out->sv40++;
+	}
+}
+
+/* Reserve `nd` dwords in the live core ring (nouveau evo_wait): when the 4 KiB
+ * ring would overflow, write a JUMP-to-0 at the current position, reset PUT to
+ * 0 and wait for GET to follow. Returns the dword index to write at, or -1. */
+static long evo_ring_begin(unsigned long nd)
+{
+	unsigned long g;
+	if(!nv_owned)
+		return -1;
+	if(nv_ring_pos + nd + 1 > 1000)
+	{
+		NV_vram_wr32(NVFB_PUSH_VRAM_OFFSET + nv_ring_pos * 4, NV50_EVO_JUMP0);
+		NV_wr32(NV50_PDISP_USER_PUT(0), 0);
+		for(g = 0; g < 200000UL; g++)
+		{
+			evo_service_sv(NULL);
+			if(NV_rd32(NV50_PDISP_USER_GET(0)) == 0)
+				break;
+		}
+		if(g == 200000UL)
+		{
+			dbg_printf("evo_ring_begin: wrap timeout, GET=%lX\n", NV_rd32(NV50_PDISP_USER_GET(0)));
+			return -1;
+		}
+		nv_ring_pos = 0;
+	}
+	return (long)nv_ring_pos;
+}
+
+/* Submit everything up to dword index `i` and wait for the engine to fetch it
+ * (GET == PUT). Returns 1 on success, 0 on timeout (ring position is kept
+ * either way, PUT was advanced). */
+static int evo_ring_fire(unsigned long i)
+{
+	unsigned long put = i * 4, g;
+	NV_wr32(NV50_PDISP_USER_PUT(0), put);
+	nv_ring_pos = i;
+	for(g = 0; g < 200000UL; g++)
+	{
+		evo_service_sv(NULL);
+		if(NV_rd32(NV50_PDISP_USER_GET(0)) == put)
+			return 1;
+	}
+	dbg_printf("evo_ring_fire: timeout, PUT=%lX GET=%lX\n", put, NV_rd32(NV50_PDISP_USER_GET(0)));
+	return 0;
+}
+
 /*
  * NV_evo_takeover --
  *
@@ -236,6 +311,8 @@ unsigned long NV_hw_pitch(unsigned long w, unsigned long bpp)
 	unsigned long pitch = w * (NV_hw_bpp(bpp) / 8);
 	return (pitch + 255UL) & ~255UL;
 }
+
+static unsigned long nv_cur_mode_w = 1024, nv_cur_mode_h = 768; /* live mode (cursor scaling) */
 
 static int NV_evo_takeover(nv_evo_flip_t *out, unsigned long w, unsigned long h,
                            unsigned long bpp, unsigned long fb, int pattern)
@@ -282,11 +359,11 @@ static int NV_evo_takeover(nv_evo_flip_t *out, unsigned long w, unsigned long h,
 	if(nv_owned)
 	{
 		/* Engine already ours: just append the new head state to the live
-		 * ring. If the 4 KiB ring is nearly full, refuse (rare: a handful of
-		 * mode sets per boot at ~50 dwords each). */
-		if(nv_ring_pos + 96 > 1000)
+		 * ring (wrapping it with a jump when the 4 KiB are used up). */
+		long ri = evo_ring_begin(96);
+		if(ri < 0)
 			return 0;
-		i = nv_ring_pos;
+		i = (unsigned long)ri;
 		goto build_ring;
 	}
 
@@ -482,27 +559,7 @@ build_ring:
 	 * their acks. Service them while waiting for the completion notifier. */
 	for(guard = 0; guard < 2000000UL; guard++)
 	{
-		unsigned long sv = NV_rd32(NV50_PDISP_INTR_1);
-		if(sv & 0x00000010UL)            /* UNK10 */
-		{
-			NV_wr32(0x00619494UL, NV_rd32(0x00619494UL) & ~8UL);
-			NV_wr32(NV50_PDISP_INTR_1, 0x00000010UL);
-			NV_wr32(NV50_PDISP_UNK30, 0x80000000UL);
-			out->sv10++;
-		}
-		else if(sv & 0x00000020UL)       /* UNK20 (clock/encoder: unchanged) */
-		{
-			NV_wr32(NV50_PDISP_INTR_1, 0x00000020UL);
-			NV_wr32(NV50_PDISP_UNK30, 0x80000000UL);
-			out->sv20++;
-		}
-		else if(sv & 0x00000040UL)       /* UNK40 */
-		{
-			NV_wr32(NV50_PDISP_INTR_1, 0x00000040UL);
-			NV_wr32(NV50_PDISP_UNK30, 0x80000000UL);
-			NV_wr32(0x00619494UL, NV_rd32(0x00619494UL) | 8UL);
-			out->sv40++;
-		}
+		evo_service_sv(out);
 		if(NV_vram_rd32(notify) != 0)
 			break;
 		if(NV_rd32(NV50_PDISP_INTR_0) & (0x00010000UL << ch))
@@ -537,6 +594,11 @@ build_ring:
 	{
 		nv_owned    = 1;
 		nv_ring_pos = i;
+	}
+	if(nv_owned && out->ntfy_post != 0)
+	{
+		nv_cur_mode_w = w;
+		nv_cur_mode_h = h;
 	}
 
 	dbg_printf("NV_evo_takeover: %lux%lux%lu fb=%lX ntfy=%lX get=%lX put=%lX\n",
@@ -637,4 +699,148 @@ int NV_native_modeset(unsigned long w, unsigned long h, unsigned long bpp)
 	dbg_printf("NV_native_modeset %lux%lux%lu FAILED stage=%lu ntfy=%lX\n",
 		w, h, bpp, nv_last_diag.stage, nv_last_diag.ntfy_post);
 	return 0;
+}
+
+/* ====================================================================== *
+ *  M4.4 - hardware cursor (head0), nouveau nv50_cursor.c / nv50_crtc.c   *
+ * ====================================================================== */
+unsigned long nv_hw_cursor       = 1;
+unsigned long nv_hw_cursor_scale = 0;
+static unsigned long nv_cur_valid   = 0;   /* image in VRAM                 */
+static unsigned long nv_cur_visible = 0;   /* CURSOR_CTRL = SHOW committed  */
+static long          nv_cur_x = 0, nv_cur_y = 0;
+static unsigned long nv_cur_dbg = 0;       /* log the first few operations  */
+
+int NV_cursor_hw(void)
+{
+	return (nv_hw_cursor && nv_owned && nv_hwinfo.found && nv_hwinfo.mmio_ok) ? 1 : 0;
+}
+
+/* SHOW/HIDE through the core channel + UPDATE (nouveau nv50_cursor_show/hide,
+ * chipset != 0x50 flavour: CURSOR_DMA handle before SHOW, none after HIDE). */
+static int cursor_ctrl(int show)
+{
+	unsigned long push = NVFB_PUSH_VRAM_OFFSET;
+	unsigned long i;
+	long ri = evo_ring_begin(12);
+	if(ri < 0)
+		return 0;
+	i = (unsigned long)ri;
+	if(show)
+	{
+		i = push1(push, i, NV50_EVO_H_DMA_CURSOR(0), NVFB_ISO_HANDLE);
+		NV_vram_wr32(push + i*4, NV50_EVO_MTHD(NV50_EVO_H_CTRL_CURSOR(0), 2)); i++;
+		NV_vram_wr32(push + i*4, NV50_EVO_CURSOR_CTRL_SHOW);                  i++;
+		NV_vram_wr32(push + i*4, NVFB_CURSOR_VRAM_OFFSET >> 8);               i++;
+	}
+	else
+	{
+		NV_vram_wr32(push + i*4, NV50_EVO_MTHD(NV50_EVO_H_CTRL_CURSOR(0), 2)); i++;
+		NV_vram_wr32(push + i*4, NV50_EVO_CURSOR_CTRL_HIDE);                  i++;
+		NV_vram_wr32(push + i*4, 0);                                          i++;
+		i = push1(push, i, NV50_EVO_H_DMA_CURSOR(0), 0);
+	}
+	i = push1(push, i, NV50_EVO_UPDATE, 0);
+	return evo_ring_fire(i);
+}
+
+void NV_cursor_move(long x, long y)
+{
+	long px = x, py = y;
+	nv_cur_x = x;
+	nv_cur_y = y;
+	if(!NV_cursor_hw())
+		return;
+	if(nv_hw_cursor_scale && (nv_cur_mode_w != 1024 || nv_cur_mode_h != 768))
+	{
+		px = (x * 1024L) / (long)nv_cur_mode_w;
+		py = (y * 768L)  / (long)nv_cur_mode_h;
+	}
+	NV_wr32(NV50_PDISP_CURSOR_POS(0), ((unsigned long)(py & 0xFFFF) << 16) | (unsigned long)(px & 0xFFFF));
+	NV_wr32(NV50_PDISP_CURSOR_POS_CTRL(0), 0);   /* "needed to make the cursor move" */
+}
+
+int NV_cursor_load(const unsigned long *andmask, const unsigned long *xormask,
+                   unsigned long w, unsigned long h, unsigned long stride,
+                   long x, long y)
+{
+	unsigned long cx, cy, opaque = 0;
+	int r;
+	if(!NV_cursor_hw())
+		return 0;
+	if(w > 64) w = 64;
+	if(h > 64) h = 64;
+	for(cy = 0; cy < 64; cy++)
+	{
+		for(cx = 0; cx < 64; cx++)
+		{
+			unsigned long px = 0;                      /* transparent */
+			if(cx < w && cy < h)
+			{
+				unsigned long a = andmask[cy * stride + cx];
+				unsigned long o = xormask[cy * stride + cx];
+				if(a == 0)
+				{
+					px = 0xFF000000UL | (o & 0x00FFFFFFUL);   /* opaque colour */
+					opaque++;
+				}
+				else if(o != 0)
+				{
+					px = 0xFF000000UL;                        /* invert -> black */
+					opaque++;
+				}
+			}
+			NV_vram_wr32(NVFB_CURSOR_VRAM_OFFSET + (cy * 64 + cx) * 4, px);
+		}
+	}
+	nv_cur_valid = (opaque != 0) ? 1 : 0;
+	NV_cursor_move(x, y);
+	if(nv_cur_valid)
+	{
+		r = cursor_ctrl(1);
+		nv_cur_visible = r ? 1 : 0;
+	}
+	else
+	{
+		r = nv_cur_visible ? cursor_ctrl(0) : 1;
+		nv_cur_visible = 0;
+	}
+	if(nv_cur_dbg < 8)
+	{
+		nv_cur_dbg++;
+		dbg_printf("NV_cursor_load: %lux%lu opaque=%lu at %ld,%ld -> %s\n",
+			w, h, opaque, x, y, r ? "OK" : "FAILED");
+	}
+	return r;
+}
+
+/* Returns 1 when a hardware cursor is (now) shown, 0 when the caller should
+ * fall back to the software cursor. */
+int NV_cursor_show(void)
+{
+	if(!NV_cursor_hw() || !nv_cur_valid)
+		return 0;
+	if(nv_cur_visible)
+		return 1;
+	NV_cursor_move(nv_cur_x, nv_cur_y);
+	if(cursor_ctrl(1))
+	{
+		nv_cur_visible = 1;
+		return 1;
+	}
+	return 0;
+}
+
+void NV_cursor_hide(int invalidate)
+{
+	if(NV_cursor_hw() && nv_cur_visible)
+	{
+		cursor_ctrl(0);
+		nv_cur_visible = 0;
+	}
+	if(invalidate)
+	{
+		nv_cur_valid   = 0;
+		nv_cur_visible = 0;
+	}
 }

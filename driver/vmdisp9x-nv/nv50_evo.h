@@ -100,6 +100,15 @@
 #define NV50_PDISP_DAC_CLK_CTRL1(i)  (0x0061A010UL + (i)*0x800)
 #define NV50_PDISP_INTR_EN_1_CLK     0x00000070UL   /* CLK_UNK10|20|40         */
 #define NV50_EVO_NOTIFY_SYNC         0xCAFE0000UL   /* NvEvoSync ctxdma handle */
+/* M4.4 hardware cursor (nouveau nv50_cursor.c): head method 0x880 CURSOR_CTRL
+ * (SHOW = enable | 64x64 A8R8G8B8, HIDE), 0x884 = VRAM offset >> 8, 0x89C =
+ * ctxdma handle (G84+). Position goes through the head's cursor PIO channel
+ * user area (channel 7+head at 0x647000): POS then a 0 to POS_CTRL. */
+#define NV50_EVO_CURSOR_CTRL_SHOW    0x85000000UL
+#define NV50_EVO_CURSOR_CTRL_HIDE    0x05000000UL
+#define NV50_PDISP_CURSOR_POS_CTRL(h) (0x00647080UL + (h)*0x1000UL)
+#define NV50_PDISP_CURSOR_POS(h)      (0x00647084UL + (h)*0x1000UL)
+#define NV50_EVO_JUMP0               0x20000000UL   /* ring: jump to offset 0  */
 #define NV50_EVO_UNK84               0x0084UL       /* notifier-ctrl method    */
 #define NVFB_CTXDMA2_OFFSET          0x00001020UL   /* 2nd ctxdma (NvEvoSync)  */
 #define NV50_PDISP_CHAN_HASH_TAG(i)  (0x0061020CUL + (i)*0x10)
@@ -138,6 +147,7 @@
 #define NVFB_PUSH_VRAM_OFFSET        0x01800000UL  /* 24 MB: EVO pushbuffer     */
 #define NVFB_NOTIFY_VRAM_OFFSET      0x01810000UL  /* notifier                  */
 #define NVFB_LUT_VRAM_OFFSET         0x01820000UL  /* 257x8B gamma LUT (identity)*/
+#define NVFB_CURSOR_VRAM_OFFSET      0x01830000UL  /* M4.4: 64x64 A8R8G8B8 cursor (16 KiB) */
 
 /* ---- M4.3 VRAM layout (BAR1 byte offsets) ----
  * [0, window)                  scanout framebuffer + flip buffers (the blitter's
@@ -273,6 +283,25 @@ int NV_native_modeset(unsigned long w, unsigned long h, unsigned long bpp);
 /* Copy the last native mode-set diagnostic + counters (valid/set/ok hits and
  * the last requested w/h/bpp; cnts must hold 6 dwords). For OP_NV_LASTSET. */
 void NV_native_lastdiag(nv_evo_flip_t *out, unsigned long *cnts);
+/* ---- M4.4: hardware cursor on head0 ----
+ * Only active once the native path owns the engine (NV_cursor_hw). The image
+ * is built from the already-expanded 32-bit AND/XOR masks of vmdisp9x's
+ * software cursor (wram->cursor): AND=0 -> opaque XOR colour, AND=1/XOR=0 ->
+ * transparent, AND=1/XOR!=0 (screen invert) -> opaque black. Positions are
+ * the image's top-left corner (hotspot already subtracted). Registry (HKLM\
+ * Software\vmdisp9x\vesa): HwCursor=0 falls back to the software cursor;
+ * HwCursorScale=1 scales positions to the panel in the scaled (800x600 /
+ * 640x480) modes, for the case where the hardware composites the cursor in
+ * output space. */
+extern unsigned long nv_hw_cursor;        /* default 1 */
+extern unsigned long nv_hw_cursor_scale;  /* default 0 */
+int  NV_cursor_hw(void);
+int  NV_cursor_load(const unsigned long *andmask, const unsigned long *xormask,
+                    unsigned long w, unsigned long h, unsigned long stride,
+                    long x, long y);
+void NV_cursor_move(long x, long y);
+int  NV_cursor_show(void);
+void NV_cursor_hide(int invalidate);
 /* Boot-progress log in VRAM (0x1900000): reset clears it + writes the magic. */
 void NV_blog_reset(void);
 /* Append one progress code to the VRAM boot log (no-op while skip_mmio). */

@@ -36,6 +36,9 @@ THE SOFTWARE.
 #endif
 
 #include "wram.h"
+#ifdef NV_DETECT
+#include "nv50_evo.h"   /* M4.4: G86 hardware cursor (nvmini.vxd only) */
+#endif
 #include "code32.h"
 
 extern FBHDA_t *hda;
@@ -126,6 +129,22 @@ BOOL mouse_load()
 		expandmask(cur, cbw, xormask_ptr, wram->cursor.xormask, cur->BitsPixel);
 	}
 	
+#ifdef NV_DETECT
+	if(NV_cursor_hw())
+	{
+		/* Hardware cursor: hand the expanded masks to the G86 and keep the
+		 * software cursor out of the blitter (empty + hidden), so the dirty
+		 * rect taken above only erases a previously software-drawn cursor. */
+		BOOL r = NV_cursor_load(wram->cursor.andmask, wram->cursor.xormask,
+			cur->cx, cur->cy, CURSOR_DMAX,
+			wram->regs.s.cursor_x, wram->regs.s.cursor_y);
+		wram->regs.s.cursor_empty   = 1;
+		wram->regs.s.cursor_visible = 0;
+		FBHDA_access_end(FBHDA_ACCESS_MOUSE_MOVE);
+		mouse_notify_accel();
+		return r;
+	}
+#endif
 	wram->regs.s.cursor_empty = cursor_is_empty();
 	wram->regs.s.cursor_visible  = !wram->regs.s.cursor_empty;
 	
@@ -149,6 +168,15 @@ void mouse_move(int x, int y)
 	if(SVGA_mouse_hw())
 	{
 		SVGA_mouse_move(x, y);
+		return;
+	}
+#endif
+#ifdef NV_DETECT
+	if(NV_cursor_hw() && !wram->regs.s.cursor_visible)
+	{
+		wram->regs.s.cursor_x = x - wram->regs.s.cursor_spotx;
+		wram->regs.s.cursor_y = y - wram->regs.s.cursor_spoty;
+		NV_cursor_move(wram->regs.s.cursor_x, wram->regs.s.cursor_y);
 		return;
 	}
 #endif
@@ -178,6 +206,13 @@ void mouse_show()
 		return;
 	}
 #endif
+#ifdef NV_DETECT
+	if(NV_cursor_show())
+	{
+		mouse_notify_accel();
+		return;
+	}
+#endif
 	FBHDA_access_begin(FBHDA_ACCESS_MOUSE_MOVE);
 	wram->regs.s.cursor_visible = !wram->regs.s.cursor_empty;
 	FBHDA_access_end(FBHDA_ACCESS_MOUSE_MOVE);
@@ -195,6 +230,9 @@ void mouse_hide()
 		SVGA_mouse_hide(FALSE);
 		return;
 	}
+#endif
+#ifdef NV_DETECT
+	NV_cursor_hide(0);
 #endif
 	
 	FBHDA_access_begin(FBHDA_ACCESS_MOUSE_MOVE);
@@ -214,6 +252,9 @@ void mouse_invalidate()
 		SVGA_mouse_hide(TRUE);
 		return;
 	}
+#endif
+#ifdef NV_DETECT
+	NV_cursor_hide(1);
 #endif
 	
 	wram->regs.s.cursor_empty   = 0;

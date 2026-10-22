@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3040  (M4.1 DONE on the T61; M4.2 INF-only install awaiting a fresh install)
+Build: 3041  (M4.4 hardware cursor DONE on the T61; M4.2 INF-only install awaiting a fresh install)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
@@ -11,8 +11,28 @@ Files:
 
 Registry (HKLM\Software\vmdisp9x\vesa):
   Native      DWORD  1 = native G86 modeset (DEFAULT since 3033), 0 = vga.drv fallback
+  HwCursor    DWORD  1 = G86 hardware cursor (DEFAULT since 3041), 0 = software cursor
+  HwCursorScale DWORD 1 = scale cursor positions to the panel in 800x600/640x480
+                     (try if the cursor lands in the wrong place in those modes)
   InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
   BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3041: M4.4 HARDWARE CURSOR (T61 RESULT 2026-10-22: works). The mouse pointer is now the G86's own 64x64
+A8R8G8B8 cursor (nouveau nv50_cursor.c recipe): the image is built from the
+Windows AND/XOR masks into VRAM at 0x1830000, shown/hidden through the core
+channel (head0 methods 0x89C=ctxdma, 0x880=0x85000000/0x05000000, 0x884=
+offset>>8, then UPDATE), moved through the cursor PIO channel (0x647084 /
+0x647080). Screen-invert pixels (AND=1, XOR=1 - the I-beam) draw as black.
+The software cursor is no longer composited by the shadow blitter, so moving
+the mouse no longer costs a blit. The core ring now wraps with a JUMP-to-0
+(nouveau evo_wait) instead of refusing after ~20 mode sets.
+Fallbacks: HwCursor=0 restores the software cursor; HwCursorScale=1 scales
+the position in the scaled modes if the pointer is offset there.
+TEST ON T61: pointer visible at 1024x768 and tracks the mouse; shape changes
+(arrow / I-beam over text / hourglass / resize arrows); pointer still right
+after switching to 800x600 and back; 'nvprobe log' shows 'NV_cursor_load:
+... -> OK'. If the pointer is invisible or garbage, report whether Windows
+still responds to clicks (the cursor is then at the right place but unseen).
 
 3040: M4.1 FIX - 800x600 True Color came up as garbage (Windows reverted after
 15 s). Cause: NV50 linear scanout surfaces need a 256-byte-aligned pitch

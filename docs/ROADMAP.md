@@ -72,7 +72,10 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
   - M4.3 native memory setup **(build 3038, DONE 2026-10-22):** real VRAM size
     from PFB (128 MB on the T61), layout validated against the EVO
     reservations, 24 MB window.
-  - M4.4 hardware cursor via the EVO cursor channel.
+  - M4.4 hardware cursor **(build 3041, DONE 2026-10-22):** 64x64 ARGB image
+    in VRAM, head0 CURSOR_CTRL/OFFSET/DMA methods + UPDATE on the core ring,
+    position via the cursor PIO channel; HwCursor=0 restores the software
+    cursor.
   - M4.5 power / screen switching (VGA<->hires, standby, lid).
   - M4.6 shadow-blit performance (dirty rectangles, write-combining).
   2D/3D acceleration remains out of scope for the foreseeable future.

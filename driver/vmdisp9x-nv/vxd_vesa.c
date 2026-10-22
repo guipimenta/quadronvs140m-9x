@@ -430,6 +430,9 @@ BOOL VESA_init_hw()
 	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "Native",           &conf_native);
 	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "InitStop",         &conf_init_stop);
 	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "BootPattern",      &nv_boot_pattern);
+	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "HwCursor",         &nv_hw_cursor);
+	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "HwCursorScale",    &nv_hw_cursor_scale);
+	dbg_printf("NV HwCursor = %lu, HwCursorScale = %lu\n", nv_hw_cursor, nv_hw_cursor_scale);
 	dbg_printf("NV native modeset = %lu, InitStop = %lu, BootPattern = %lu\n",
 		conf_native, conf_init_stop, nv_boot_pattern);
 #endif
