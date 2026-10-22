@@ -1784,6 +1784,30 @@ extern BOOL mode_changing;
 
 BOOL FBHDA_mode_query(DWORD index, FBHDA_mode_t *mode)
 {
+#ifdef NV_DETECT
+	/* DD/M4.1: the native backend has no VBE table; its mode list is the fixed
+	 * native set (NV_mode_ok), all at the panel's 60 Hz. */
+	if(nv_backend_native)
+	{
+		static const DWORD nv_w[3]   = {640, 800, 1024};
+		static const DWORD nv_h[3]   = {480, 600, 768};
+		static const DWORD nv_bpp[3] = {8, 16, 32};
+		if(index >= 9)
+			return FALSE;
+		if(mode)
+		{
+			int i;
+			mode->cb     = sizeof(FBHDA_mode_t);
+			mode->width  = nv_w[index / 3];
+			mode->height = nv_h[index / 3];
+			mode->bpp    = nv_bpp[index % 3];
+			mode->refresh[0] = 60;
+			for(i = 1; i < FBHDA_MODE_MAX_REFRESH; i++)
+				mode->refresh[i] = 0;
+		}
+		return TRUE;
+	}
+#endif
 	if(index >= vesa_modes_cnt)
 	{
 		return FALSE;

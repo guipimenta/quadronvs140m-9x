@@ -1,0 +1,15 @@
+vmhal9x.dll / vmdisp9x.dll / vmhal3d.dll - DirectDraw (and Direct3D DDI 8) HAL
+for vmdisp9x-based display drivers. Ring-3 DLLs loaded by DDRAW through the
+16-bit driver's DCICOMMAND escape (dddrv.c / control.c); they talk to the VxD
+through the FBHDA API (3d_accel.h, API_3DACCEL_VER 20260213 - must match the
+VxD exactly, vmhal9x refuses otherwise).
+
+Upstream: https://github.com/JHRobotics/vmhal9x  (MIT, Copyright (c) 2022 JHRobotics)
+Commit:   8bc480e4d7a93bbf208526aa3b9c64079092487b  (2026-09-30)
+Built:    2026-10-17 on this host, i686-w64-mingw32-gcc, config.mk: D3DHAL=1
+          RELEASE=1 CODENUKED=1, -march=pentium2 -mtune=core2; fixlink -shared
+          applied (sections marked shared, required for a DDraw HAL).
+Source checkout: /home/guilherme/projects/audio_reverse/vmhal9x-src
+
+Direct3D additionally needs mesa3d.dll from https://github.com/JHRobotics/mesa9x
+(not shipped here; ~44 MB).

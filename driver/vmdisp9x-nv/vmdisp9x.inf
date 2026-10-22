@@ -41,6 +41,9 @@ vesamini.drv=1
 vesamini.vxd=1
 nvmini.drv=1
 nvmini.vxd=1
+vmhal9x.dll=1
+vmdisp9x.dll=1
+vmhal3d.dll=1
 ;mesa:mesa3d.dll=1
 ;mesa:mesasmp.dll=1
 ;mesa:vmwsgl32.dll=1
@@ -122,6 +125,10 @@ AddReg=VM.AddReg,NV.AddReg,DX.addReg,VM.regextra
 [NV.Copy]
 nvmini.drv,,,0x00000004
 nvmini.vxd,,,0x00000004
+; DirectDraw HAL (JHRobotics/vmhal9x, MIT; built from commit 8bc480e, API 20260213)
+vmhal9x.dll,,,0x00000004
+vmdisp9x.dll,,,0x00000004
+vmhal3d.dll,,,0x00000004
 
 [NV.AddReg]
 HKR,DEFAULT,drv,,nvmini.drv

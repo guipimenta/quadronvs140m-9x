@@ -84,7 +84,15 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
     hole), so 3043 does it through the PAT (entry 1 = WC, PWT on the
     aperture PTEs). `nvprobe mtrr` shows MTRRs, PAT state and blit cycle
     counters. Dirty rects were already in place.
-  2D/3D acceleration remains out of scope for the foreseeable future.
+- **DD — DirectDraw (build 3044, DONE 2026-10-22).** The HAL is JHRobotics'
+  ring-3 vmhal9x (MIT), loaded by DDRAW through the 16-bit driver's DCICOMMAND
+  escape and driving surfaces through the VxD's FBHDA API; nvmini already had
+  all the plumbing, only the DLLs were missing. Shipped vmhal9x.dll /
+  vmdisp9x.dll / vmhal3d.dll built from the vmhal9x commit matching our FBHDA
+  API (driver/vmhal9x-bin/PROVENANCE.txt). DXDIAG DirectDraw tests pass on
+  the T61. Direct3D (DDI 8 via vmhal3d + Mesa9x software rasterizer) is the
+  natural next step; it needs mesa3d.dll (~44 MB), not shipped yet.
+  Hardware 2D/3D acceleration on the G86 itself remains out of scope.
 
 ## Build (verified, this host)
 

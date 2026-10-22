@@ -1,8 +1,11 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3043  (M4.6 DONE on the T61: PAT write-combining, 110 -> 6 cycles/pixel; M4.2 INF-only install awaiting a fresh install)
+Build: 3044  (DirectDraw DONE on the T61: vmhal9x HAL shipped, DXDIAG tests pass; M4.2 INF-only install awaiting a fresh install)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
+  vmhal9x.dll  - DirectDraw HAL, ring 3 (JHRobotics/vmhal9x, see below) - 3044
+  vmdisp9x.dll - its helper DLL (always install both together)
+  vmhal3d.dll  - Direct3D DDI 8 part of the HAL (needs mesa3d.dll, not shipped)
   nvmini.drv   - 16-bit DIBENG display driver (3031: VDD device-id probe)
   nvprobe.exe  - Win32 diagnostic/control tool (3034: 'nvprobe log' dumps the ring)
   vmdisp9x.inf - installer (3032: HKR,DEFAULT,DDC,,0; 3033: vesa\Native=1)
@@ -18,6 +21,25 @@ Registry (HKLM\Software\vmdisp9x\vesa):
                      3043), 0 = leave it uncached (MTRR.VXD cannot do it on the T61)
   InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
   BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3044: DIRECTDRAW (T61 RESULT 2026-10-22: all DXDIAG DirectDraw tests pass).
+vmdisp9x's DirectDraw design: DDRAW asks the 16-bit driver
+(DCICOMMAND escape) for a 32-bit HAL DLL name; the driver answers vmhal9x.dll,
+which DDRAW loads into the application and which drives surfaces through the
+VxD's FBHDA API (surfaces live in the shadow, the blitter shows them). All
+the VxD and .drv plumbing was already in nvmini; what was missing is the
+HAL itself. This package now ships vmhal9x.dll + vmdisp9x.dll (+ vmhal3d.dll)
+built from the vmhal9x commit that matches our FBHDA API (20260213; the
+August-2025 upstream release DLLs do NOT match and would be refused). The
+INF copies them to C:\WINDOWS\SYSTEM; on an existing install just copy the
+three DLLs there yourself (no reboot needed, DDRAW loads them per app).
+Also: FBHDA_mode_query returns the native mode table (9 modes @60 Hz)
+instead of an empty list.
+TEST ON T61: copy the DLLs to C:\WINDOWS\SYSTEM, run DXDIAG -> Display tab:
+DirectDraw Acceleration should read 'Enabled' and 'Test DirectDraw' should
+pass (bouncing white box, then full screen). Then any DirectDraw game.
+'nvprobe log' / C:\NVMINI.LOG will show 'DDGET32BITDRIVERNAME: success' and
+'DDCREATEDRIVEROBJECT: success' (or where it failed).
 
 3043: M4.6b WRITE-COMBINING THROUGH THE PAT (T61 RESULT 2026-10-22: 110 -> 6-7
 cycles/pixel, full-screen blit ~2 ms, window dragging smooth; IA32_PAT entry 1

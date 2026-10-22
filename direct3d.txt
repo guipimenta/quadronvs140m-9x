@@ -1,0 +1,4 @@
+DirectDraw test results: All tests were successful.
+Direct3D 7 test results: Failure at step 8 (Creating 3D Device): HRESULT = 0x80004005 (Generic failure)
+Direct3D 8 test results: Failure at step 8 (Creating 3D Device): HRESULT = 0x8876086c (error code)
+Direct3D 9 test results: Failure at step 8 (Creating 3D Device): HRESULT = 0x8876086c (error code)

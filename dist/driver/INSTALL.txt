@@ -61,3 +61,19 @@ INSTALL FROM THE INF ALONE (build 3039+, M4.2)
 4. Only if something is off: nvsetup.reg re-applies the registry values,
    SYSTEM.INI (this folder) is a known-good reference, and
    "nvprobe log > nvlog.txt" shows what the driver did.
+
+
+DIRECTDRAW (build 3044+)
+------------------------
+DirectDraw needs the ring-3 HAL from JHRobotics/vmhal9x, shipped here as
+vmhal9x.dll, vmdisp9x.dll and vmhal3d.dll (built against this driver's FBHDA
+API version; do NOT mix with the DLLs from an upstream vmdisp9x release).
+  - Fresh INF install: copied to C:\WINDOWS\SYSTEM automatically.
+  - Existing install: copy the three DLLs to C:\WINDOWS\SYSTEM. No reboot
+    needed - DirectDraw loads the HAL when an application starts.
+Check: DXDIAG -> Display tab -> "DirectDraw Acceleration: Enabled", then
+"Test DirectDraw". Diagnostics: C:\NVMINI.LOG or 'nvprobe log' shows
+"DDGET32BITDRIVERNAME: success" and "DDCREATEDRIVEROBJECT: success".
+Direct3D (vmhal3d.dll) additionally needs mesa3d.dll from the Mesa9x project
+(software rasterizer, ~44 MB) and is not expected to work from this package
+alone; the "Test Direct3D" button will fail until it is added.
