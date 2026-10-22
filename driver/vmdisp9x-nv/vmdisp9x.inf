@@ -146,11 +146,13 @@ HKR,DEFAULT,DDC,,0
 ; vga.drv fallback boot). Same string convention as VRAMLimit below.
 HKLM,Software\vmdisp9x\vesa,Native,,1
 ; Mesa9x runtime settings (read by mesa3d.dll): 128-bit vectors = SSE, the
-; right choice for the T61's Core 2 (no AVX). The OpenGL ICD key
-; (OpenGLdrivers\SOFTWARE) is deliberately NOT written: the shipped mesa3d.dll
-; was built against FBHDA API 20250702 and would misread this driver's FBHDA
-; block on the on-screen (ICD) path; Direct3D uses the OSMesa path only.
+; right choice for the T61's Core 2 (no AVX).
 HKLM,Software\vmdisp9x\apps\global\mesa,LP_NATIVE_VECTOR_WIDTH,,128
+; OpenGL ICD (3046+): opengl32.dll asks the display driver (OPENGL_GETINFO
+; escape) for an ICD name, nvmini.drv answers "SOFTWARE", and this key maps it
+; to mesa3d.dll. Only valid with the mesa3d.dll built against this driver's
+; FBHDA API (20260213) - see driver/mesa9x-bin/PROVENANCE.txt.
+HKLM,Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers,SOFTWARE,2,"mesa3d.dll"
 
 [VBox.Copy]
 boxvmini.drv,,,0x00000004

@@ -9,6 +9,7 @@ mkdir -p "$D"
 cp "$S/nvmini.vxd" "$S/nvmini.drv" "$S/tools/nvprobe.exe" "$S/vmdisp9x.inf" "$S/VERSION.txt" "$S/nvsetup.reg" "$S/d3dsetup.reg" "$D/"
 cp "$R/driver/vmhal9x-bin/vmhal9x.dll" "$R/driver/vmhal9x-bin/vmdisp9x.dll" "$R/driver/vmhal9x-bin/vmhal3d.dll" "$D/"
 [ -f "$R/driver/mesa9x-bin/mesa3d.dll" ] && cp "$R/driver/mesa9x-bin/mesa3d.dll" "$D/" || echo "WARNING: driver/mesa9x-bin/mesa3d.dll missing (Direct3D will not work)"
+cp "$R/driver/mesa9x-bin/wgltest.exe" "$R/driver/mesa9x-bin/icdtest.exe" "$D/"
 for f in INSTALL.txt nvdump.bat nvdump2.bat nvdump3.bat; do
   [ -f "$D/$f" ] || git -C "$R" checkout -- "dist/driver/$f" 2>/dev/null || true
 done

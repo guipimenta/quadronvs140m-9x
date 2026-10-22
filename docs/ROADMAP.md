@@ -93,10 +93,15 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
   the T61.
 - **D3D — Direct3D (build 3045, DONE 2026-10-22).** DDI 8 through vmhal3d.dll,
   rasterized in software by Mesa9x 25.1.6 (llvmpipe) via the OSMesa path;
-  mesa3d.dll (44 MB, driver/mesa9x-bin, not in git) ships in the release zip.
-  DXDIAG Direct3D tests pass on the T61 under DirectX 9. The OpenGL ICD is
-  not registered: that Mesa build predates our FBHDA layout and its on-screen
-  path would misread it; a Mesa9x built against our 3d_accel.h would fix it.
+  mesa3d.dll (driver/mesa9x-bin, not in git) ships in the release zip.
+  DXDIAG Direct3D tests pass on the T61 under DirectX 9.
+- **GL — OpenGL ICD (build 3046, DONE 2026-10-22).** Mesa9x rebuilt from
+  main (commit 8b5428c, FBHDA API 20260213) on the Linux host: LLVM 18.1.8
+  cross-compiled for mingw32 with the Win9x patch, then Mesa 25.1.6
+  llvmpipe. mesa3d.dll is now registered as the "SOFTWARE" OpenGL ICD
+  (nvmini.drv's OPENGL_GETINFO answer). icdtest/wgltest and DXDIAG
+  Direct3D pass on the T61 with the rebuilt DLL (79 MB, O3 LLVM). Recipe in
+  driver/mesa9x-bin/PROVENANCE.txt.
   Hardware 2D/3D acceleration on the G86 itself remains out of scope.
 
 ## Build (verified, this host)

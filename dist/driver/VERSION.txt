@@ -1,13 +1,15 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3045  (Direct3D DONE on the T61 with DirectX 9: DXDIAG D3D tests pass; DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
+Build: 3046  (OpenGL ICD DONE: Mesa9x rebuilt against our FBHDA API, verified on the T61; Direct3D + DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
   vmhal9x.dll  - DirectDraw HAL, ring 3 (JHRobotics/vmhal9x, see below) - 3044
   vmdisp9x.dll - its helper DLL (always install both together)
   vmhal3d.dll  - Direct3D DDI 8 part of the HAL (renders through mesa3d.dll)
-  mesa3d.dll   - Mesa9x 25.1.6 software OpenGL (llvmpipe), 44 MB - 3045
-  d3dsetup.reg - Mesa runtime setting for existing installs (SSE vector width)
+  mesa3d.dll   - Mesa9x 25.1.6 software OpenGL (llvmpipe), OpenGL ICD + D3D
+                 rasterizer; 3046: built here against FBHDA API 20260213
+  wgltest.exe, icdtest.exe - Mesa9x test programs (3046)
+  d3dsetup.reg - Mesa vector width + OpenGL ICD key for existing installs
   nvmini.drv   - 16-bit DIBENG display driver (3031: VDD device-id probe)
   nvprobe.exe  - Win32 diagnostic/control tool (3034: 'nvprobe log' dumps the ring)
   vmdisp9x.inf - installer (3032: HKR,DEFAULT,DDC,,0; 3033: vesa\Native=1)
@@ -23,6 +25,26 @@ Registry (HKLM\Software\vmdisp9x\vesa):
                      3043), 0 = leave it uncached (MTRR.VXD cannot do it on the T61)
   InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
   BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3046: OPENGL ICD (VERIFIED ON THE T61 2026-10-22: icdtest, wgltest, D3D still
+passes). Mesa9x rebuilt from its main branch (commit 8b5428c,
+2026-10-04, whose win9x/3d_accel.h is byte-identical to ours) on this Linux
+host: LLVM 18.1.8 cross-compiled for mingw32 with Mesa9x's Win9x patch
+(file-system/random stubs), then Mesa 25.1.6 llvmpipe (-march=core2,
+SSE vectors), with the posix-thread mingw-w64 GCC 13 and Mesa9x's own
+winpthreads. The resulting mesa3d.dll replaces the 2025 upstream one, so
+its on-screen path reads our FBHDA block correctly and it can serve as the
+OpenGL ICD: nvmini.drv reports "SOFTWARE" (OPENGL_GETINFO escape) and
+HKLM\Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers\SOFTWARE
+= mesa3d.dll (INF + d3dsetup.reg). Direct3D keeps using the same DLL via
+OSMesa. Build recipe: /home/guilherme/projects/mesa9x-build (see
+driver/mesa9x-bin/PROVENANCE.txt).
+INSTALL: copy mesa3d.dll (replace the 3045 one), wgltest.exe,
+icdtest.exe to C:\WINDOWS\SYSTEM; import d3dsetup.reg; run icdtest.exe
+(reports which ICD opengl32 loaded), wgltest.exe (renders through the
+ICD), then a 3D screen saver or an OpenGL game. Re-run DXDIAG Test Direct3D to confirm D3D still passes with the new
+DLL. If an OpenGL app shows garbage or crashes, report which program and
+whether DXDIAG D3D still works (isolates ICD path vs Mesa itself).
 
 3045: DIRECT3D (T61 RESULT 2026-10-22: DirectX 9 runtime, all DXDIAG Direct3D
 tests pass; DXDIAG shows 64 MB = the 64 MB shadow buffer (WRAMSize), not the

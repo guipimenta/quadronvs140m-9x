@@ -82,5 +82,15 @@ in software through Mesa9x. Needed in C:\WINDOWS\SYSTEM: vmhal3d.dll (from
 3044) and mesa3d.dll (44 MB, from 3045). The INF copies both; on an existing
 install copy mesa3d.dll there and import d3dsetup.reg. Check: DXDIAG ->
 Display -> "Direct3D Acceleration: Enabled", then "Test Direct3D".
-Note: the OpenGL ICD is not registered on purpose (see VERSION.txt 3045);
-OpenGL programs keep Microsoft's software OpenGL.
+
+OPENGL (build 3046+)
+--------------------
+OpenGL programs get Mesa9x (llvmpipe, OpenGL 3.x/4.x software rendering)
+through the ICD mechanism: opengl32.dll asks nvmini.drv for an ICD name
+("SOFTWARE"), the registry maps it to mesa3d.dll. The INF writes the key; on
+an existing install import d3dsetup.reg and make sure the mesa3d.dll in
+C:\WINDOWS\SYSTEM is the one from this package (3046+, built against this
+driver's FBHDA API - the 2025 upstream one must not be used as an ICD).
+Check: run wgltest.exe / icdtest.exe from the package (Mesa9x's test
+programs); the renderer string should say llvmpipe / Mesa 25.1. Screen
+savers "3D ..." and games using OpenGL should render.

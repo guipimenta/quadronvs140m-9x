@@ -1,8 +1,13 @@
 REGEDIT4
 
-; Direct3D helper settings for the Quadro NVS 140M Win98 driver (build 3045).
+; Direct3D / OpenGL helper settings for the Quadro NVS 140M Win98 driver (3046).
 ; Import on an EXISTING install (fresh INF installs write the same keys).
 ; LP_NATIVE_VECTOR_WIDTH=128: Mesa9x llvmpipe uses SSE vectors (Core 2 has no AVX).
+; OpenGLdrivers\SOFTWARE: the OpenGL ICD name nvmini.drv reports -> mesa3d.dll
+; (needs the mesa3d.dll from build 3046 or later; older ones misread FBHDA).
 
 [HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\global\mesa]
 "LP_NATIVE_VECTOR_WIDTH"="128"
+
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers]
+"SOFTWARE"="mesa3d.dll"
