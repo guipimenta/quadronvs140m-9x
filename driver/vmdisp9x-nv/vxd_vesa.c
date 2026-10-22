@@ -973,7 +973,12 @@ BOOL VESA_setmode_phy(DWORD w, DWORD h, DWORD bpp, DWORD rr_min, DWORD rr_max)
 		NV_blog(0x211);
 		if(NV_native_modeset(w, h, bpp))
 		{
-			DWORD pitch = w * ((bpp + 7) / 8);
+			/* M4.1: the shadow (what GDI draws into) is at the desktop depth,
+			 * the scanout surface in VRAM is at the hardware depth (8 bpp
+			 * desktops are expanded to 32 bpp by the blitter via the palette). */
+			DWORD pitch    = w * ((bpp + 7) / 8);
+			DWORD hwbpp    = NV_hw_bpp(bpp);
+			DWORD hw_pitch = NV_hw_pitch(w, bpp);   /* 256-byte aligned, matches the EVO surface */
 			NV_blog(0x212);
 
 			hda->width  = w;
@@ -985,8 +990,8 @@ BOOL VESA_setmode_phy(DWORD w, DWORD h, DWORD bpp, DWORD rr_min, DWORD rr_max)
 			hda->system_surface = 0;
 			hda->flags &= ~FB_SUPPORT_VSYNC;
 
-			video_bpp   = bpp;
-			video_pitch = pitch;
+			video_bpp   = hwbpp;
+			video_pitch = hw_pitch;
 
 			wblit.base.ptr        = hda->vram_phylin;
 			wblit.dst[0].flat.ptr = hda->vram_phylin;
@@ -994,15 +999,15 @@ BOOL VESA_setmode_phy(DWORD w, DWORD h, DWORD bpp, DWORD rr_min, DWORD rr_max)
 			wblit.dst[2].flat.ptr = NULL;
 			wblit.dst_w     = w;
 			wblit.dst_h     = h;
-			wblit.dst_pitch = pitch;
-			wblit.dst_mode  = (bpp == 32) ? MODE_32 : MODE_16;
+			wblit.dst_pitch = hw_pitch;
+			wblit.dst_mode  = (hwbpp == 32) ? MODE_32 : MODE_16;
 			wblit.dst_scans = 1;
 			wblit.dst_padx  = 0;
 			wblit.dst_pady  = 0;
 
 			wram->regs.s.width  = w;
 			wram->regs.s.height = h;
-			wram->regs.s.mode   = (bpp == 32) ? MODE_32 : MODE_16;
+			wram->regs.s.mode   = (bpp == 8) ? MODE_8 : ((bpp == 32) ? MODE_32 : MODE_16);
 			wram->regs.s.pitch  = pitch;
 
 			async_blit_settime(ASYNC_DEFAULT);
@@ -1027,7 +1032,8 @@ BOOL VESA_setmode_phy(DWORD w, DWORD h, DWORD bpp, DWORD rr_min, DWORD rr_max)
 			vga_mode = FALSE;
 			act_mode = 0;
 
-			dbg_printf("native mode set: %lux%lux%lu pitch=%lu\n", w, h, bpp, pitch);
+			dbg_printf("native mode set: %lux%lux%lu shadow pitch=%lu, scanout %lu bpp pitch=%lu%s\n",
+				w, h, bpp, pitch, hwbpp, hw_pitch, (w == 1024 && h == 768) ? "" : " (scaled to 1024x768)");
 			return TRUE;
 		}
 		dbg_printf("native mode set FAILED\n");

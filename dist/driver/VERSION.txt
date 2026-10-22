@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3038  (M4.3)
+Build: 3040  (M4.1 DONE on the T61; M4.2 INF-only install awaiting a fresh install)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
@@ -13,6 +13,37 @@ Registry (HKLM\Software\vmdisp9x\vesa):
   Native      DWORD  1 = native G86 modeset (DEFAULT since 3033), 0 = vga.drv fallback
   InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
   BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3040: M4.1 FIX - 800x600 True Color came up as garbage (Windows reverted after
+15 s). Cause: NV50 linear scanout surfaces need a 256-byte-aligned pitch
+(nouveau_fbcon rounds up to 256); 800x4=3200 and 800x2=1600 are not, while
+1024- and 640-pixel rows happen to be. NV_hw_pitch() now rounds the scanout
+pitch up (800x600x32 -> 3328); the shadow keeps its exact pitch and the
+blitter's dst_pitch carries the padding.
+T61 RESULT 2026-10-22: all modes tested, all fine (640x480, 800x600, 1024x768
+at 256/High/True color). M4.1 DONE.
+
+3039: M4.1 MODE LIST + M4.2 INF-ONLY INSTALL.
+ M4.1 - native modes are now 640x480, 800x600, 1024x768 at 8, 16 and 32 bpp
+   (NV_mode_ok). The panel raster stays the fixed 1024x768@60 LVDS timing;
+   800x600/640x480 framebuffers are stretched to it by the head scaler
+   (nouveau nv50_crtc_set_scale: SCALE_CTRL 0x8A4=9, SCALE_RES1/2 = 1024x768,
+   0x8C8 = input size). 8 bpp desktops scan out as 32 bpp: the shadow (wram)
+   is 8 bpp and the blitter expands it through the palette (readpx8), so no
+   hardware CLUT is involved. 24 bpp stays rejected by ValidateMode.
+ M4.2 - the INF now also binds the root VGA devnode (*PNP0900), which is where
+   the T61 runs the adapter, so a plain Have Disk install needs no tricks.
+   Everything nvsetup.reg sets is already written by the INF (drv, minivdd,
+   Mode 16,1024,768, DDC=0, Native=1); nvsetup.reg is now a repair tool, and
+   SYSTEM.INI can stay at display.drv=pnpdrvr.drv (KERNEL resolves it through
+   the VDD once the devnode is bound - verified in the QEMU harness).
+TEST ON T61: install the three 3039 files, reboot, then in Display Properties
+check the list (should offer 640x480/800x600/1024x768 at 256/High/True color),
+try 800x600 True Color (expect a stretched desktop) and 1024x768 256 colors
+(expect a normal-looking desktop; icons may show palette artifacts in 256).
+Collect nvprobe log after each switch: 'native mode set: WxHxB ... (scaled)'.
+If a mode comes up black, the panel still has the native timing: press OK /
+wait 15 s for the Windows revert, or switch back in Safe Mode.
 
 3038: M4.3 NATIVE MEMORY SETUP (first M4 item after E4). CONFIRMED ON THE T61
 2026-10-22: PFB reports 128 MB (cfg0 01001800 cfg1 01449000), window 24 MB,

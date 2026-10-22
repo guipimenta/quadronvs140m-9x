@@ -264,6 +264,11 @@ int NV_evo_flip(nv_evo_flip_t *out);
  * only when the engine confirmed the commit. Both are callable from the
  * VESA backend's mode-set path (vxd_vesa.c, NV_DETECT builds). */
 int NV_native_valid(unsigned long w, unsigned long h, unsigned long bpp);
+/* M4.1: mode table (640x480/800x600/1024x768 x 8/16/32) and the scanout depth
+ * used for a desktop depth (8 bpp desktops scan out as 32 bpp). */
+int NV_mode_ok(unsigned long w, unsigned long h, unsigned long bpp);
+unsigned long NV_hw_bpp(unsigned long bpp);
+unsigned long NV_hw_pitch(unsigned long w, unsigned long bpp);   /* 256-byte aligned scanout pitch */
 int NV_native_modeset(unsigned long w, unsigned long h, unsigned long bpp);
 /* Copy the last native mode-set diagnostic + counters (valid/set/ok hits and
  * the last requested w/h/bpp; cnts must hold 6 dwords). For OP_NV_LASTSET. */

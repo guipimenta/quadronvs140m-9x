@@ -74,6 +74,9 @@ nvmini.vxd=1
 ;qxl;%QemuQXL.DeviceDesc%=QXL, PCI\VEN_1B36&DEV_0100
 %NVG86T61.DeviceDesc%=NV, PCI\VEN_10DE&DEV_0429&SUBSYS_20D817AA
 %NVS140M.DeviceDesc%=NV, PCI\VEN_10DE&DEV_0429
+; M4.2: the T61 runs the adapter on the root VGA devnode (ROOT\*PNP0900); let
+; the INF bind there too so a plain Have Disk install needs no tricks.
+%NVG86ROOT.DeviceDesc%=NV, *PNP0900
 %VESAPCI.DeviceDesc%=VESA, PCI\CC_0300
 %VESAISA.DeviceDesc%=VESA, *PNP0900
 
@@ -470,6 +473,7 @@ VESAPCI.DeviceDesc="VESA PCI Adapter"
 VESAISA.DeviceDesc="VESA ISA Adapter"
 NVG86T61.DeviceDesc="NVIDIA Quadro NVS 140M (G86) [native, T61]"
 NVS140M.DeviceDesc="NVIDIA Quadro NVS 140M (G86) [native]"
+NVG86ROOT.DeviceDesc="NVIDIA Quadro NVS 140M (G86) [native, T61 root VGA node]"
 
 [VM.regextra]
 ;swvoodoo:HKLM,Software\vmdisp9x\driver,OVERLAY_1_SIZE,,8

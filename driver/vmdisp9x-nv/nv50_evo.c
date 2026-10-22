@@ -207,6 +207,36 @@ static unsigned long nv_ring_pos = 0;
  *   test image is drawn into the surface first (the nvprobe test path); the
  *   display-driver path leaves the surface contents alone.
  */
+/* M4.1: the desktop modes the native path offers. The panel raster is always
+ * the fixed 1024x768@60 LVDS timing; smaller framebuffers are stretched to it
+ * by the head's scaler (nouveau nv50_crtc_set_scale: SCALE_CTRL=9, SCALE_RES =
+ * output size, 0x8C8 = input size). 8 bpp is a 32 bpp scanout surface fed by
+ * the shadow blitter's palette expansion (readpx8), so the hardware never sees
+ * an indexed surface and no CLUT programming is needed. */
+int NV_mode_ok(unsigned long w, unsigned long h, unsigned long bpp)
+{
+	if(bpp != 8 && bpp != 16 && bpp != 32)
+		return 0;
+	if((w == 1024 && h == 768) || (w == 800 && h == 600) || (w == 640 && h == 480))
+		return 1;
+	return 0;
+}
+
+/* Hardware depth used for a desktop depth: 8 bpp desktops scan out as 32 bpp. */
+unsigned long NV_hw_bpp(unsigned long bpp)
+{
+	return (bpp == 8) ? 32UL : bpp;
+}
+
+/* Scanout pitch for w pixels at the hardware depth. NV50 linear surfaces need
+ * a 256-byte multiple (nouveau_fbcon: roundup(pitch, 256)); 800x600 at 16/32
+ * bpp (1600/3200 bytes) is not, and showed as a sheared, garbage screen. */
+unsigned long NV_hw_pitch(unsigned long w, unsigned long bpp)
+{
+	unsigned long pitch = w * (NV_hw_bpp(bpp) / 8);
+	return (pitch + 255UL) & ~255UL;
+}
+
 static int NV_evo_takeover(nv_evo_flip_t *out, unsigned long w, unsigned long h,
                            unsigned long bpp, unsigned long fb, int pattern)
 {
@@ -214,9 +244,12 @@ static int NV_evo_takeover(nv_evo_flip_t *out, unsigned long w, unsigned long h,
 	unsigned long ramin  = NVFB_RAMIN_VRAM_OFFSET;
 	unsigned long push   = NVFB_PUSH_VRAM_OFFSET;
 	unsigned long notify = NVFB_NOTIFY_VRAM_OFFSET;
-	unsigned long pitch  = w * (bpp / 8);
-	unsigned long wh     = NV50_EVO_WH(w, h);
-	unsigned long depth  = (bpp == 32) ? 0x0000CF00UL : 0x0000E800UL;
+	unsigned long hwbpp  = NV_hw_bpp(bpp);
+	unsigned long pitch  = NV_hw_pitch(w, bpp);               /* 256-byte aligned     */
+	unsigned long wh     = NV50_EVO_WH(w, h);                 /* framebuffer / input  */
+	unsigned long owh    = NV50_EVO_WH(1024UL, 768UL);        /* panel output         */
+	unsigned long scale  = (w == 1024 && h == 768) ? 0UL : 9UL; /* SCALE_CTRL        */
+	unsigned long depth  = (hwbpp == 32) ? 0x0000CF00UL : 0x0000E800UL;
 	unsigned long i, guard, tmp, dmacb, put;
 
 	memset(out, 0, sizeof(nv_evo_flip_t));
@@ -228,7 +261,7 @@ static int NV_evo_takeover(nv_evo_flip_t *out, unsigned long w, unsigned long h,
 	out->iso_handle = NVFB_ISO_HANDLE;
 	out->stage      = NV_FLIP_STAGE_ENTER;
 
-	if(w != 1024 || h != 768 || (bpp != 16 && bpp != 32))
+	if(!NV_mode_ok(w, h, bpp))
 		return 0;
 	if((NV_rd32(0) & 0xFFFF0000UL) == 0xDEAD0000UL)
 		return 0;
@@ -415,12 +448,14 @@ build_ring:
 	NV_vram_wr32(push + i*4, depth);                    i++;  /* pixel format */
 	i = push1(push, i, 0x08C0, 0);                            /* FB_POS 0,0   */
 
-	/* Dither off; scaler inactive at native res (output size = w x h). */
+	/* Dither off. Scaler: inactive at the panel's native 1024x768, otherwise
+	 * ACTIVE (9) stretching the w x h framebuffer to the 1024x768 output
+	 * (nouveau nv50_crtc_set_scale; 0x8C8 above carries the input size). */
 	i = push1(push, i, 0x08A0, 0);
-	i = push1(push, i, 0x08A4, 0);
+	i = push1(push, i, 0x08A4, scale);
 	NV_vram_wr32(push + i*4, NV50_EVO_MTHD(0x08D8, 2)); i++;
-	NV_vram_wr32(push + i*4, wh);                       i++;  /* SCALE_RES1   */
-	NV_vram_wr32(push + i*4, wh);                       i++;  /* SCALE_RES2   */
+	NV_vram_wr32(push + i*4, owh);                      i++;  /* SCALE_RES1   */
+	NV_vram_wr32(push + i*4, owh);                      i++;  /* SCALE_RES2   */
 
 	/* Commit with completion notify (nouveau nv50_display_sync). */
 	i = push1(push, i, 0x0084, 0x80000000UL);                 /* NOTIFY en    */
@@ -531,7 +566,7 @@ int NV_native_valid(unsigned long w, unsigned long h, unsigned long bpp)
 {
 	if(!nv_hwinfo.found || !nv_hwinfo.mmio_ok || nv_hwinfo.chipset != 0x86)
 		return 0;
-	if(w == 1024 && h == 768 && (bpp == 16 || bpp == 32))
+	if(NV_mode_ok(w, h, bpp))
 	{
 		nv_cnt_valid++;
 		return 1;

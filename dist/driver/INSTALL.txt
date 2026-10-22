@@ -45,3 +45,19 @@ UPDATE 2026-10-22 (build 3037): the reason nvmini.drv NEVER loaded (LoadFail
 declaration in init.c; fixed. Install the three 3037 files, keep SYSTEM.INI
 display.drv=nvmini.drv and the nvsetup.reg values, reboot. Expect
 'LoadSuccess = nvmini.drv' in a logged BOOTLOG.TXT and a 1024x768 desktop.
+
+=====================================================================
+INSTALL FROM THE INF ALONE (build 3039+, M4.2)
+=====================================================================
+1. Copy the whole package folder to the T61 (e.g. C:\NVMINI).
+2. Device Manager > the display adapter (on the T61 it is the root
+   "Standard Display Adapter (VGA)" node, *PNP0900; the PCI NVIDIA node also
+   matches) > Properties > Driver > Update Driver > Have Disk > C:\NVMINI >
+   pick "NVIDIA Quadro NVS 140M (G86) [native, T61 root VGA node]" (or the
+   [native, T61] entry on the PCI node). Finish, reboot.
+   The INF writes drv/minivdd, Mode=16,1024,768, DDC=0 (no 3-minute EDID
+   probe) and Native=1. SYSTEM.INI stays at display.drv=pnpdrvr.drv.
+3. After the reboot pick resolution/colour in Display Properties.
+4. Only if something is off: nvsetup.reg re-applies the registry values,
+   SYSTEM.INI (this folder) is a known-good reference, and
+   "nvprobe log > nvlog.txt" shows what the driver did.

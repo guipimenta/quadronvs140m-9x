@@ -63,9 +63,12 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
   segment (see analysis/BOOT_DIAGNOSIS_2026-10-21.md §8). The T61 now boots to
   the native 1024x768x32 desktop.
 - **M4 — polish, in this order.**
-  - M4.1 mode list / Settings tab: add 8 bpp and the panel-scaled lower modes,
-    retest the control panel against a loaded driver.
-  - M4.2 install from the INF alone (no hand-edited SYSTEM.INI / nvsetup.reg).
+  - M4.1 mode list / Settings tab **(build 3040, DONE 2026-10-22):** 640x480,
+    800x600, 1024x768 at 8/16/32 bpp; lower modes via the EVO scaler, 8 bpp as
+    palette-expanded 32 bpp scanout. Scanout pitch is 256-byte aligned
+    (3040 fix for 800x600 True Color). All nine modes verified on the T61.
+  - M4.2 install from the INF alone **(build 3039, code done; fresh-install test on the T61 pending):** INF binds
+    the root VGA devnode too; nvsetup.reg demoted to a repair tool.
   - M4.3 native memory setup **(build 3038, DONE 2026-10-22):** real VRAM size
     from PFB (128 MB on the T61), layout validated against the EVO
     reservations, 24 MB window.
