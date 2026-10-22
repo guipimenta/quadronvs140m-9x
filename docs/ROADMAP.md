@@ -77,7 +77,13 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
     position via the cursor PIO channel; HwCursor=0 restores the software
     cursor.
   - M4.5 power / screen switching (VGA<->hires, standby, lid).
-  - M4.6 shadow-blit performance (dirty rectangles, write-combining).
+  - M4.6 shadow-blit performance **(build 3043, DONE 2026-10-22, 110 -> 6 cycles/pixel):** row-wise
+    rep movsd / tight conversion loops instead of per-pixel indirect calls
+    (3042: no gain, the bus was the limit at ~110 cycles/pixel); MTRR.VXD
+    cannot write-combine the aperture on the T61 (BIOS UC MTRR over the PCI
+    hole), so 3043 does it through the PAT (entry 1 = WC, PWT on the
+    aperture PTEs). `nvprobe mtrr` shows MTRRs, PAT state and blit cycle
+    counters. Dirty rects were already in place.
   2D/3D acceleration remains out of scope for the foreseeable future.
 
 ## Build (verified, this host)

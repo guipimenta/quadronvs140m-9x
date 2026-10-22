@@ -140,7 +140,143 @@ static void writepx24(blit_t *blit, DWORD x, DWORD y, DWORD px32)
 typedef DWORD (*readfn_h)(DWORD x, DWORD y);
 typedef void (*writefn_h)(blit_t *blit, DWORD x, DWORD y, DWORD px32);
 
+/* ---- M4.6: fast row-wise paths ------------------------------------------
+ * The generic blit below reads and writes every pixel through two indirect
+ * calls. When nothing per-pixel is needed (no gamma ramp, no software cursor
+ * - the G86 path has a hardware cursor since 3041 - and no integer scaling),
+ * whole rows go through rep movsd or a tight conversion loop instead. The
+ * destination is write-combined VRAM, so sequential dword stores matter. */
+static void copy_dw(void *dst, const void *src, DWORD dwords);
+#pragma aux copy_dw = "rep movsd" parm [edi] [esi] [ecx] modify exact [ecx esi edi];
+
+static DWORD rdtsc_lo(void);
+#pragma aux rdtsc_lo = "rdtsc" value [eax] modify exact [eax edx];
+/* Drain the write-combining buffers once the blit is done (the aperture is
+ * WC through the PAT since 3043; the EVO code reads VRAM through a separate,
+ * uncached alias). sfence = 0F AE F8. */
+static void wc_sfence(void);
+#pragma aux wc_sfence = 0x0F 0xAE 0xF8 modify exact [];
+
+static DWORD st_blits = 0, st_fast = 0, st_px_lo = 0, st_px_hi = 0;
+static DWORD st_cyc_lo = 0, st_cyc_hi = 0, st_last_px = 0, st_last_cyc = 0;
+
+void wram_stats(DWORD *out)
+{
+	out[0] = st_blits;  out[1] = st_fast;
+	out[2] = st_px_lo;  out[3] = st_px_hi;
+	out[4] = st_cyc_lo; out[5] = st_cyc_hi;
+	out[6] = st_last_px; out[7] = st_last_cyc;
+}
+
+static BOOL wram_blit_fast(blit_t *blit)
+{
+	DWORD sx = blit->src_sx, ex = blit->src_ex;
+	DWORD sy = blit->src_sy, ey = blit->src_ey;
+	DWORD smode = wram->regs.s.mode, dmode = blit->dst_mode;
+	DWORD spitch = wram->regs.s.pitch, dpitch = blit->dst_pitch;
+	BYTE *src = ((BYTE*)wram) + wram->regs.s.fbstart;
+	BYTE *dst = blit->dst[0].px8;
+	DWORD w = ex - sx, x, y;
+
+	if(ex <= sx || ey <= sy)
+		return TRUE;
+
+	/* same layout both sides: straight dword copies */
+	if(smode == dmode && (smode == MODE_32 || smode == MODE_16 || smode == MODE_15))
+	{
+		DWORD bpp = (smode == MODE_32) ? 4 : 2;
+		DWORD bsx = sx * bpp, bex = ex * bpp, lim = wram->regs.s.width * bpp;
+		bsx &= ~3UL;
+		bex  = (bex + 3) & ~3UL;
+		if(bex > lim) bex = lim & ~3UL;
+		if(bex <= bsx) return TRUE;
+		for(y = sy; y < ey; y++)
+			copy_dw(dst + y*dpitch + bsx, src + y*spitch + bsx, (bex - bsx) >> 2);
+		return TRUE;
+	}
+	if(smode == MODE_8 && dmode == MODE_32)       /* palette expansion */
+	{
+		for(y = sy; y < ey; y++)
+		{
+			BYTE  *s = src + y*spitch + sx;
+			DWORD *d = ((DWORD*)(dst + y*dpitch)) + sx;
+			for(x = 0; x < w; x++)
+				d[x] = wram->palette[s[x]].dw;
+		}
+		return TRUE;
+	}
+	if(smode == MODE_8 && dmode == MODE_16)
+	{
+		for(y = sy; y < ey; y++)
+		{
+			BYTE *s = src + y*spitch + sx;
+			WORD *d = ((WORD*)(dst + y*dpitch)) + sx;
+			for(x = 0; x < w; x++)
+			{
+				DWORD p = wram->palette[s[x]].dw;
+				d[x] = (WORD)(((p & 0xF80000) >> 8) | ((p & 0xFC00) >> 5) | ((p & 0xF8) >> 3));
+			}
+		}
+		return TRUE;
+	}
+	if(smode == MODE_16 && dmode == MODE_32)
+	{
+		for(y = sy; y < ey; y++)
+		{
+			WORD  *s = ((WORD*)(src + y*spitch)) + sx;
+			DWORD *d = ((DWORD*)(dst + y*dpitch)) + sx;
+			for(x = 0; x < w; x++)
+			{
+				DWORD p = s[x];
+				d[x] = ((p & 0xF800) << 8) | ((p & 0x07E0) << 5) | ((p & 0x001F) << 3);
+			}
+		}
+		return TRUE;
+	}
+	if(smode == MODE_32 && dmode == MODE_16)
+	{
+		for(y = sy; y < ey; y++)
+		{
+			DWORD *s = ((DWORD*)(src + y*spitch)) + sx;
+			WORD  *d = ((WORD*)(dst + y*dpitch)) + sx;
+			for(x = 0; x < w; x++)
+			{
+				DWORD p = s[x];
+				d[x] = (WORD)(((p & 0xF80000) >> 8) | ((p & 0xFC00) >> 5) | ((p & 0xF8) >> 3));
+			}
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
+
+static void wram_blit_generic(blit_t *blit);
+
 void wram_blit(blit_t *blit)
+{
+	DWORD t0 = rdtsc_lo(), dt, px;
+	BOOL fast = FALSE;
+
+	if(!wram->regs.s.gamma_enable && !wram->regs.s.cursor_visible &&
+	   blit->dst_scans == 1 && blit->dst_padx == 0 && blit->dst_pady == 0)
+	{
+		fast = wram_blit_fast(blit);
+	}
+	if(!fast)
+		wram_blit_generic(blit);
+	wc_sfence();
+
+	dt = rdtsc_lo() - t0;
+	px = (blit->src_ex > blit->src_sx && blit->src_ey > blit->src_sy) ?
+		(blit->src_ex - blit->src_sx) * (blit->src_ey - blit->src_sy) : 0;
+	st_blits++;
+	if(fast) st_fast++;
+	st_px_lo += px;  if(st_px_lo < px) st_px_hi++;
+	st_cyc_lo += dt; if(st_cyc_lo < dt) st_cyc_hi++;
+	st_last_px = px; st_last_cyc = dt;
+}
+
+static void wram_blit_generic(blit_t *blit)
 {
 	readfn_h readfn = NULL;
 	writefn_h writefn = NULL;

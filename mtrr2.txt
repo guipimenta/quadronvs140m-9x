@@ -1,0 +1,16 @@
+nvprobe build (exe): 3043
+IA32_MTRRCAP     = 0000000000000508  (vcnt=8, WC supported=yes)
+IA32_MTRR_DEF    = 0000000000000C00  (enable=1, default=UC)
+  MTRR0: base 00000000C0000000 size 1023 MB type UC
+  MTRR1: base 000000013C000000 size 63 MB type UC
+  MTRR2: base 0000000000000000 size 4095 MB type WB
+  MTRR3: base 0000000100000000 size 1023 MB type WB
+  MTRR4: base 00000000BFF00000 size 0 MB type UC
+  MTRR5: (disabled)
+  MTRR6: (disabled)
+  MTRR7: (disabled)
+MTRR.VXD request : base E0000000 size 24 MB -> rc C0000001 (FAILED)
+PAT              : already set; 6144 pages marked, 0 bad; IA32_PAT=0007010600070106 (entry1=WC)
+blits: 1315 (fast path 1315), pixels 364069461, cycles 2275719336
+  avg 1730585 cycles/blit, 6 cycles/pixel
+  last blit: 736695 pixels, 4005378 cycles

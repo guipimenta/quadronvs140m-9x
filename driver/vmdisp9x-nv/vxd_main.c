@@ -62,6 +62,14 @@ BOOL VESA_check_int10h(DWORD vm, PCRS_32 regs);
 #ifdef NV_DETECT
 #include "vxd_nv.h"
 #include "nv50_evo.h"
+#include "wram.h"
+extern DWORD nv_mtrr_rc, nv_mtrr_base, nv_mtrr_size;   /* vxd_vesa.c */
+extern DWORD nv_pat_state, nv_pat_pages, nv_pat_bad;    /* vxd_vesa.c */
+static DWORD nv_cpuid1_edx(void);
+#pragma aux nv_cpuid1_edx = "mov eax, 1" "cpuid" "mov eax, edx" value [eax] modify exact [eax ebx ecx edx];
+static void nv_rdmsr(DWORD msr, DWORD *lo, DWORD *hi);
+#pragma aux nv_rdmsr = "rdmsr" "mov [esi], eax" "mov [edi], edx" \
+	parm [ecx] [esi] [edi] modify exact [eax edx];
 extern unsigned long nv_dbg_fbhda;  /* OP_FBHDA_SETUP count = nvmini.drv loaded */
 #endif
 
@@ -1077,6 +1085,41 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 		}
 #endif
 #ifdef NV_DETECT
+		case OP_NV_MTRR:
+		{
+			/* M4.6: dump the variable-range MTRRs (rdmsr, ring 0) so the user can
+			 * verify the aperture really is write-combined, plus blit counters. */
+			DWORD *o = (DWORD*)outBuf;
+			DWORD n, i;
+			if(params->cbOutBuffer < NV_MTRR_OUT_DWORDS * 4)
+			{
+				rc = 1;
+				break;
+			}
+			memset(o, 0, NV_MTRR_OUT_DWORDS * 4);
+			nv_rdmsr(0xFEUL,  &o[0], &o[1]);     /* IA32_MTRRCAP      */
+			nv_rdmsr(0x2FFUL, &o[2], &o[3]);     /* IA32_MTRR_DEF_TYPE */
+			n = o[0] & 0xFFUL;
+			if(n > 8) n = 8;
+			for(i = 0; i < n; i++)
+			{
+				nv_rdmsr(0x200UL + i*2,     &o[4 + i*4 + 0], &o[4 + i*4 + 1]);
+				nv_rdmsr(0x200UL + i*2 + 1, &o[4 + i*4 + 2], &o[4 + i*4 + 3]);
+			}
+			o[36] = nv_mtrr_rc;
+			o[37] = nv_mtrr_base;
+			o[38] = nv_mtrr_size;
+			wram_stats(&o[40]);
+			o[48] = nv_pat_state;
+			o[49] = nv_pat_pages;
+			o[50] = nv_pat_bad;
+			if(nv_cpuid1_edx() & 0x10000UL)
+				nv_rdmsr(0x277UL, &o[51], &o[52]);   /* IA32_PAT */
+			if(params->lpcbBytesReturned)
+				*(DWORD*)params->lpcbBytesReturned = NV_MTRR_OUT_DWORDS * 4;
+			rc = 0;
+			break;
+		}
 		case OP_NV_PROBE:
 			/* refresh the probe and hand the struct back to user space */
 			NV_probe(&nv_hwinfo);

@@ -174,6 +174,9 @@ void wram_clear_target(blit_t *blit);
 void wram_clear();
 BOOL wram_swap(void *virtptr, blit_t *blit);
 void wram_changes(blit_t *blit, DWORD sx, DWORD sy, DWORD ex, DWORD ey);
+/* M4.6: blit statistics (8 dwords): blits, fast-path blits, pixels lo/hi,
+ * TSC cycles lo/hi, last blit pixels, last blit cycles. */
+void wram_stats(DWORD *out);
 
 #define WRAM_MIN_MB 4
 

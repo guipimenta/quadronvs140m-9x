@@ -197,6 +197,7 @@ static BOOL vesa_valid = FALSE;
 static DWORD conf_dos_window = 0;
 static DWORD conf_hw_double_buf = 1; /* much better performance on real HW */
 static DWORD conf_mtrr = 1;
+static DWORD conf_pat = 1;   /* M4.6b: WC through the PAT (NV_DETECT) */
 #ifdef NV_DETECT
 /* E4 kill switch: 0 = boot on the plain VBE path (safe bring-up), 1 = use the
  * native G86 modeset. Read from HKLM\Software\vmdisp9x\vesa "Native". Default 0
@@ -432,6 +433,7 @@ BOOL VESA_init_hw()
 	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "BootPattern",      &nv_boot_pattern);
 	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "HwCursor",         &nv_hw_cursor);
 	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "HwCursorScale",    &nv_hw_cursor_scale);
+	RegReadConf(HKEY_LOCAL_MACHINE, VESA_conf_path, "PAT",              &conf_pat);
 	dbg_printf("NV HwCursor = %lu, HwCursorScale = %lu\n", nv_hw_cursor, nv_hw_cursor_scale);
 	dbg_printf("NV native modeset = %lu, InitStop = %lu, BootPattern = %lu\n",
 		conf_native, conf_init_stop, nv_boot_pattern);
@@ -1298,6 +1300,152 @@ BOOL VESA_setmode_phy(DWORD w, DWORD h, DWORD bpp, DWORD rr_min, DWORD rr_max)
 	return FALSE;
 }
 
+/* M4.6: result of the write-combining request, reported by 'nvprobe mtrr'. */
+DWORD nv_mtrr_rc = 0xFFFFFFFFUL, nv_mtrr_base = 0, nv_mtrr_size = 0;
+
+#ifdef NV_DETECT
+/* ---- M4.6b: write-combining through the PAT -----------------------------
+ * On the T61 the BIOS marks C0000000-FFFFFFFF UC in a variable MTRR (it is
+ * the PCI hole inside the 0-4 GB WB range) and UC wins over any overlapping
+ * WC MTRR, so MTRR.VXD refuses (rc C0000001) and every scanout store is an
+ * uncached PCIe write (~110 cycles/pixel measured in 3042). The Page
+ * Attribute Table beats that: MTRR UC + PAT WC = WC (SDM vol.3 11.12).
+ * We set IA32_PAT entry 1 (PWT=1, PCD=0, PAT=0; WT by default, unused by
+ * Win98) to WC and flip PWT in the page-table entries of OUR aperture
+ * mapping only, after verifying each entry's frame is the expected BAR1
+ * page. Registry "PAT"=0 disables it. */
+DWORD nv_pat_state = 0;   /* 0 n/a, 1 applied, 2 no PAT (cpuid), 3 PTE walk failed, 4 disabled, 5 no PAT change needed */
+DWORD nv_pat_pages = 0, nv_pat_bad = 0;
+
+static DWORD nv_cpuid1_edx(void);
+#pragma aux nv_cpuid1_edx = "mov eax, 1" "cpuid" "mov eax, edx" value [eax] modify exact [eax ebx ecx edx];
+static void nv_rdmsr(DWORD msr, DWORD *lo, DWORD *hi);
+#pragma aux nv_rdmsr = "rdmsr" "mov [esi], eax" "mov [edi], edx" parm [ecx] [esi] [edi] modify exact [eax edx];
+static void nv_wrmsr(DWORD msr, DWORD lo, DWORD hi);
+#pragma aux nv_wrmsr = "wrmsr" parm [ecx] [eax] [edx] modify exact [];
+static DWORD nv_read_cr3(void);
+#pragma aux nv_read_cr3 = "mov eax, cr3" value [eax] modify exact [eax];
+static void nv_flush_tlb(void);
+#pragma aux nv_flush_tlb = "mov eax, cr3" "mov cr3, eax" modify exact [eax];
+static void nv_invlpg(DWORD lin);
+#pragma aux nv_invlpg = "invlpg [eax]" parm [eax] modify exact [];
+static DWORD nv_read_cr0(void);
+#pragma aux nv_read_cr0 = "mov eax, cr0" value [eax] modify exact [eax];
+static void nv_write_cr0(DWORD v);
+#pragma aux nv_write_cr0 = "mov cr0, eax" parm [eax] modify exact [];
+static void nv_wbinvd(void);
+#pragma aux nv_wbinvd = "wbinvd" modify exact [];
+static void nv_cli(void);
+#pragma aux nv_cli = "cli" modify exact [];
+static void nv_sti(void);
+#pragma aux nv_sti = "sti" modify exact [];
+
+#define NV_PAT_MSR     0x277UL
+#define NV_PAT_WC      0x01UL
+#define NV_PTE_PWT     0x08UL
+#define NV_PTE_PCD     0x10UL
+#define NV_PTE_PAT     0x80UL
+#define NV_PDE_PS      0x80UL
+
+/* Program IA32_PAT entry 1 = WC with the SDM cache-disable sequence. */
+static void nv_pat_set_entry1_wc(void)
+{
+	DWORD lo, hi, cr0;
+	nv_rdmsr(NV_PAT_MSR, &lo, &hi);
+	if(((lo >> 8) & 0xFFUL) == NV_PAT_WC)
+	{
+		nv_pat_state = 5;
+		return;
+	}
+	lo = (lo & ~0xFF00UL) | (NV_PAT_WC << 8);
+	nv_cli();
+	nv_wbinvd();
+	cr0 = nv_read_cr0();
+	nv_write_cr0((cr0 | 0x40000000UL) & ~0x20000000UL);   /* CD=1, NW=0 */
+	nv_wbinvd();
+	nv_flush_tlb();
+	nv_wrmsr(NV_PAT_MSR, lo, hi);
+	nv_wbinvd();
+	nv_flush_tlb();
+	nv_write_cr0(cr0);
+	nv_sti();
+}
+
+/* Set PWT (clear PCD/PAT) in the PTEs of [lin, lin+bytes), which must map
+ * [phys, phys+bytes) 1:1 - verified per page before touching anything. The
+ * page tables are reached through the current page directory (CR3) mapped
+ * with _MapPhysToLinear; the system arena's page tables are shared by all
+ * memory contexts, so the change is global. 4 MB pages are not modified
+ * (their PDE is per-context) and count as bad. */
+static BOOL nv_pat_mark_wc(DWORD lin, DWORD bytes, DWORD phys)
+{
+	DWORD cr3 = nv_read_cr3() & 0xFFFFF000UL;
+	DWORD *pd = (DWORD*)_MapPhysToLinear(cr3, 4096, 0);
+	DWORD *pt = NULL;
+	DWORD pt_phys = 0, off;
+
+	nv_pat_pages = 0;
+	nv_pat_bad   = 0;
+	if(pd == NULL || pd == (DWORD*)0xFFFFFFFFUL)
+		return FALSE;
+	for(off = 0; off < bytes; off += 4096)
+	{
+		DWORD l = lin + off, p = phys + off;
+		DWORD pde = pd[l >> 22], pte, idx;
+		if(!(pde & 1) || (pde & NV_PDE_PS))
+		{
+			nv_pat_bad++;
+			continue;
+		}
+		if(pt == NULL || (pde & 0xFFFFF000UL) != pt_phys)
+		{
+			pt_phys = pde & 0xFFFFF000UL;
+			pt = (DWORD*)_MapPhysToLinear(pt_phys, 4096, 0);
+			if(pt == NULL || pt == (DWORD*)0xFFFFFFFFUL)
+				return FALSE;
+		}
+		idx = (l >> 12) & 0x3FFUL;
+		pte = pt[idx];
+		if(!(pte & 1) || (pte & 0xFFFFF000UL) != (p & 0xFFFFF000UL))
+		{
+			nv_pat_bad++;
+			continue;
+		}
+		pt[idx] = (pte | NV_PTE_PWT) & ~(NV_PTE_PCD | NV_PTE_PAT);
+		nv_invlpg(l);
+		nv_pat_pages++;
+	}
+	return nv_pat_bad == 0;
+}
+
+static void nv_pat_setup(void)
+{
+	if(!conf_pat)
+	{
+		nv_pat_state = 4;
+		return;
+	}
+	if(!(nv_cpuid1_edx() & 0x10000UL))   /* CPUID.1:EDX[16] = PAT */
+	{
+		nv_pat_state = 2;
+		dbg_printf("PAT: not supported by this CPU\n");
+		return;
+	}
+	if(!nv_pat_mark_wc((DWORD)hda->vram_phylin, hda->vram_size, vram_phy))
+	{
+		dbg_printf("PAT: PTE walk failed (ok=%lu bad=%lu), aperture left uncached\n",
+			nv_pat_pages, nv_pat_bad);
+		nv_pat_state = 3;
+		return;
+	}
+	nv_pat_set_entry1_wc();
+	if(nv_pat_state != 5)
+		nv_pat_state = 1;
+	dbg_printf("PAT: entry1=WC, %lu aperture pages marked PWT (state %lu)\n",
+		nv_pat_pages, nv_pat_state);
+}
+#endif /* NV_DETECT */
+
 static void mtrr_setup()
 {
 	if(conf_mtrr && !mttr_was_set)
@@ -1308,8 +1456,15 @@ static void mtrr_setup()
 			{
 				dbg_printf("MTRR supported\n");
 				dbg_printf("MTRR_SetPhysicalCacheTypeRange(%lX, 0, %ld, %ld)\n", vram_phy, hda->vram_size, MTRR_FRAMEBUFFERCACHED);
-				MTRR_SetPhysicalCacheTypeRange(vram_phy, 0, hda->vram_size, MTRR_FRAMEBUFFERCACHED);
+				nv_mtrr_rc   = MTRR_SetPhysicalCacheTypeRange(vram_phy, 0, hda->vram_size, MTRR_FRAMEBUFFERCACHED);
+				nv_mtrr_base = vram_phy;
+				nv_mtrr_size = hda->vram_size;
+				dbg_printf("MTRR_SetPhysicalCacheTypeRange rc=%lX (0 = success)\n", nv_mtrr_rc);
 				mttr_was_set = TRUE;
+#ifdef NV_DETECT
+				if(nv_mtrr_rc != 0)
+					nv_pat_setup();
+#endif
 			}
 			else
 			{

@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3041  (M4.4 hardware cursor DONE on the T61; M4.2 INF-only install awaiting a fresh install)
+Build: 3043  (M4.6 DONE on the T61: PAT write-combining, 110 -> 6 cycles/pixel; M4.2 INF-only install awaiting a fresh install)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
@@ -14,8 +14,47 @@ Registry (HKLM\Software\vmdisp9x\vesa):
   HwCursor    DWORD  1 = G86 hardware cursor (DEFAULT since 3041), 0 = software cursor
   HwCursorScale DWORD 1 = scale cursor positions to the panel in 800x600/640x480
                      (try if the cursor lands in the wrong place in those modes)
+  PAT         DWORD  1 = write-combine the aperture through the PAT (DEFAULT since
+                     3043), 0 = leave it uncached (MTRR.VXD cannot do it on the T61)
   InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
   BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3043: M4.6b WRITE-COMBINING THROUGH THE PAT (T61 RESULT 2026-10-22: 110 -> 6-7
+cycles/pixel, full-screen blit ~2 ms, window dragging smooth; IA32_PAT entry 1
+was already WC - MTRR.VXD had set it but never marked the pages). 3042's counters on the T61:
+MTRR.VXD refuses the WC request (rc C0000001) because the BIOS marks the
+whole PCI hole C0000000-FFFFFFFF UC in MTRR0, and UC beats any overlapping
+WC MTRR. Result: ~110 cycles per pixel, ~40 ms for a full-screen blit (the
+blit timer runs every 16 ms). The fast path alone changed nothing - the bus
+was the bottleneck. Fix: MTRR UC + PAT WC = WC (Intel SDM 11.12). The VxD
+now sets IA32_PAT entry 1 (PWT=1: 'write-through', unused by Win98) to WC
+with the SDM cache-disable sequence and sets PWT in the page-table entries
+of OUR 24 MB aperture mapping only, after verifying every entry's frame is
+the expected BAR1 page (PTE walk via CR3 + _MapPhysToLinear). The blitter
+issues sfence after each blit so the EVO code's uncached VRAM alias never
+sees stale data. Registry PAT=0 disables it. 'nvprobe mtrr' now prints the
+PAT state, IA32_PAT and correct MTRR sizes (3042 ignored the valid bit and
+the 36-bit physical address width).
+TEST ON T61: desktop as before; 'nvprobe mtrr' before and after ~10 s of
+dragging a window with 'show contents while dragging'; expect
+'PAT: APPLIED', entry1=WC, and cycles/pixel well below 110 (hope: <10).
+If the screen corrupts or the machine freezes right after the desktop
+appears, boot Safe Mode and add PAT=0 to HKLM\Software\vmdisp9x\vesa.
+
+3042: M4.6 SHADOW-BLIT PERFORMANCE. The shadow blitter (wram -> VRAM) used
+two indirect calls per pixel; it now copies whole rows with rep movsd when
+the shadow and scanout layouts match (16->16, 32->32) and uses tight loops
+for 8->32 (palette), 8->16, 16->32 and 32->16. The generic per-pixel path
+stays for gamma ramps, the software cursor and integer-scaled VESA modes.
+Dirty rectangles were already in place (GDI's BeginAccess rect -> one
+bounding box per 16 ms timer tick). Write-combining on the aperture was
+already requested from MTRR.VXD but never checked; the result is now logged
+and 'nvprobe mtrr' dumps the CPU's variable MTRRs (rdmsr in the VxD) so we
+can see whether E0000000 (24 MB - not a power of two) really got WC, plus
+blit counters (TSC cycles per blit / per pixel).
+TEST ON T61: desktop works as before; run 'nvprobe mtrr' once, drag a window
+around for ~10 s, run it again; copy both outputs + 'nvprobe log'. Expect
+'fast path' == blits and the aperture listed as type WC.
 
 3041: M4.4 HARDWARE CURSOR (T61 RESULT 2026-10-22: works). The mouse pointer is now the G86's own 64x64
 A8R8G8B8 cursor (nouveau nv50_cursor.c recipe): the image is built from the

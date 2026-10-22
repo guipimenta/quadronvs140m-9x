@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <intrin.h>
 
 #include "../vxd_nv.h"
 #include "../dbgring.h"
@@ -329,6 +330,59 @@ int main(int argc, char **argv)
 		buf[ret] = 0;
 		fwrite(buf, 1, ret, stdout);
 		printf("\n[nvprobe log: %lu bytes]\n", ret);
+		return 0;
+	}
+
+	/* "nvprobe mtrr" : raw variable MTRRs + MTRR.VXD result + shadow-blit
+	 * statistics (M4.6). Run it twice a few seconds apart while moving windows
+	 * to get cycles per blit / per pixel. */
+	if(argc >= 2 && strcmp(argv[1], "mtrr") == 0)
+	{
+		static const char *types[] = {"UC","WC","?2","?3","WT","WP","WB","?7"};
+		static const char *pat_states[] = {"not attempted","APPLIED (aperture is WC)","CPU has no PAT",
+			"PTE walk failed (left uncached)","disabled by registry PAT=0","APPLIED (PAT entry 1 was already WC)"};
+		DWORD o[NV_MTRR_OUT_DWORDS];
+		unsigned long long px, cyc, physmask;
+		DWORD n, i, physbits = 36;
+		{
+			int r[4];
+			__cpuid(r, 0x80000000);
+			if((unsigned)r[0] >= 0x80000008) { __cpuid(r, 0x80000008); physbits = r[0] & 0xFF; }
+		}
+		physmask = (physbits >= 64) ? ~0ULL : ((1ULL << physbits) - 1);
+		memset(o, 0, sizeof(o));
+		if(!DeviceIoControl(vxd, OP_NV_MTRR, NULL, 0, o, sizeof(o), &ret, NULL))
+		{
+			printf("OP_NV_MTRR failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("IA32_MTRRCAP     = %08lX%08lX  (vcnt=%lu, WC supported=%s)\n",
+			o[1], o[0], o[0] & 0xFF, (o[0] & 0x400) ? "yes" : "no");
+		printf("IA32_MTRR_DEF    = %08lX%08lX  (enable=%lu, default=%s)\n",
+			o[3], o[2], (o[2] >> 11) & 1, types[o[2] & 7]);
+		n = o[0] & 0xFF; if(n > 8) n = 8;
+		for(i = 0; i < n; i++)
+		{
+			DWORD blo = o[4+i*4], bhi = o[5+i*4], mlo = o[6+i*4], mhi = o[7+i*4];
+			unsigned long long mask = (((unsigned long long)mhi << 32) | mlo) & ~0xFFFULL;
+			unsigned long long size = ((~mask) & physmask & ~0xFFFULL) + 1;
+			if(mlo & 0x800)
+				printf("  MTRR%lu: base %08lX%08lX size %llu MB type %s\n", i,
+					bhi, blo & 0xFFFFF000UL, size >> 20, types[blo & 7]);
+			else
+				printf("  MTRR%lu: (disabled)\n", i);
+		}
+		printf("MTRR.VXD request : base %08lX size %lu MB -> rc %08lX (%s)\n",
+			o[37], o[38] >> 20, o[36],
+			o[36] == 0 ? "success" : (o[36] == 0xFFFFFFFFUL ? "not attempted" : "FAILED"));
+		px  = ((unsigned long long)o[43] << 32) | o[42];
+		cyc = ((unsigned long long)o[45] << 32) | o[44];
+		printf("PAT              : %s; %lu pages marked, %lu bad; IA32_PAT=%08lX%08lX (entry1=%s)\n",
+			o[48] < 6 ? pat_states[o[48]] : "?", o[49], o[50], o[52], o[51], types[(o[51] >> 8) & 7]);
+		printf("blits: %lu (fast path %lu), pixels %llu, cycles %llu\n", o[40], o[41], px, cyc);
+		if(o[40]) printf("  avg %llu cycles/blit, %llu cycles/pixel\n", cyc / o[40], px ? cyc / px : 0);
+		printf("  last blit: %lu pixels, %lu cycles\n", o[46], o[47]);
 		return 0;
 	}
 
