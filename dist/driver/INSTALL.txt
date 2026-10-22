@@ -74,6 +74,13 @@ API version; do NOT mix with the DLLs from an upstream vmdisp9x release).
 Check: DXDIAG -> Display tab -> "DirectDraw Acceleration: Enabled", then
 "Test DirectDraw". Diagnostics: C:\NVMINI.LOG or 'nvprobe log' shows
 "DDGET32BITDRIVERNAME: success" and "DDCREATEDRIVEROBJECT: success".
-Direct3D (vmhal3d.dll) additionally needs mesa3d.dll from the Mesa9x project
-(software rasterizer, ~44 MB) and is not expected to work from this package
-alone; the "Test Direct3D" button will fail until it is added.
+
+DIRECT3D (build 3045+)
+----------------------
+Direct3D (DDI 8: DirectX 6/7/8-era, and DX9 titles without shaders) renders
+in software through Mesa9x. Needed in C:\WINDOWS\SYSTEM: vmhal3d.dll (from
+3044) and mesa3d.dll (44 MB, from 3045). The INF copies both; on an existing
+install copy mesa3d.dll there and import d3dsetup.reg. Check: DXDIAG ->
+Display -> "Direct3D Acceleration: Enabled", then "Test Direct3D".
+Note: the OpenGL ICD is not registered on purpose (see VERSION.txt 3045);
+OpenGL programs keep Microsoft's software OpenGL.

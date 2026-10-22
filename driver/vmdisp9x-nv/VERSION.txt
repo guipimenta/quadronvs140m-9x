@@ -1,11 +1,13 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3044  (DirectDraw DONE on the T61: vmhal9x HAL shipped, DXDIAG tests pass; M4.2 INF-only install awaiting a fresh install)
+Build: 3045  (Direct3D DONE on the T61 with DirectX 9: DXDIAG D3D tests pass; DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
   vmhal9x.dll  - DirectDraw HAL, ring 3 (JHRobotics/vmhal9x, see below) - 3044
   vmdisp9x.dll - its helper DLL (always install both together)
-  vmhal3d.dll  - Direct3D DDI 8 part of the HAL (needs mesa3d.dll, not shipped)
+  vmhal3d.dll  - Direct3D DDI 8 part of the HAL (renders through mesa3d.dll)
+  mesa3d.dll   - Mesa9x 25.1.6 software OpenGL (llvmpipe), 44 MB - 3045
+  d3dsetup.reg - Mesa runtime setting for existing installs (SSE vector width)
   nvmini.drv   - 16-bit DIBENG display driver (3031: VDD device-id probe)
   nvprobe.exe  - Win32 diagnostic/control tool (3034: 'nvprobe log' dumps the ring)
   vmdisp9x.inf - installer (3032: HKR,DEFAULT,DDC,,0; 3033: vesa\Native=1)
@@ -21,6 +23,25 @@ Registry (HKLM\Software\vmdisp9x\vesa):
                      3043), 0 = leave it uncached (MTRR.VXD cannot do it on the T61)
   InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
   BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3045: DIRECT3D (T61 RESULT 2026-10-22: DirectX 9 runtime, all DXDIAG Direct3D
+tests pass; DXDIAG shows 64 MB = the 64 MB shadow buffer (WRAMSize), not the
+card's 128 MB - surfaces live in system RAM in this design).
+vmhal3d.dll (DDI 8, shipped since 3044) rasterizes through
+Mesa9x: it loads mesa3d.dll, prefers the OSMesa API (off-screen rendering,
+then copies the colour buffer into the DirectDraw surface). This package now
+ships mesa3d.dll from Mesa9x v25.1.6.138 (Mesa 25.1.6 / LLVM 18 llvmpipe,
+the newest Mesa9x release; needs SSSE3 = Core 2, which the T61 has).
+CAVEAT: that build predates our FBHDA API (20250702 vs 20260213; FBHDA_t
+grew after `stride`). Direct3D does not touch that path, but the OpenGL ICD
+path inside mesa3d.dll would, so the "SOFTWARE" OpenGL ICD is NOT registered
+(OpenGL apps keep Microsoft's software renderer). An ICD needs a Mesa9x
+built against our 3d_accel.h - a later job.
+TEST ON T61: copy mesa3d.dll to C:\WINDOWS\SYSTEM (44 MB), import
+d3dsetup.reg, run DXDIAG -> Display: Direct3D Acceleration 'Enabled', then
+'Test Direct3D' (DX7 and DX8 spinning cube). Then a Direct3D game (software
+rasterizer: expect playable at 640x480 for DX6/7-era titles). Copy back
+'nvprobe log' and, if vmhal9x wrote one, C:\vmhal9x.log.
 
 3044: DIRECTDRAW (T61 RESULT 2026-10-22: all DXDIAG DirectDraw tests pass).
 vmdisp9x's DirectDraw design: DDRAW asks the 16-bit driver

@@ -1,0 +1,15 @@
+mesa3d.dll - Mesa9x: Mesa3D 25.1.6 software OpenGL (llvmpipe, LLVM 18.1.8) for
+Windows 98/Me, built for Core 2 class CPUs (needs SSE/SSE2/SSE3/SSSE3).
+Used by vmhal3d.dll (Direct3D DDI 8 HAL) through the OSMesa API for
+off-screen rasterization, and installable as the "SOFTWARE" OpenGL ICD.
+
+Upstream: https://github.com/JHRobotics/mesa9x  (MIT / Mesa licenses, see LICENSE_mesa.txt)
+Release:  Mesa9x v25.1.6.138 ("Mesa3D mainline version 25.1.6, updated driver
+          v1.2025.0.119 and HAL build 98"), as bundled in
+          vmdisp9x-1.2025.0.119-driver-3d-win98.zip (2025-08-03).
+Local copy of that zip: ~/Downloads/windows 98 SE/vmdisp9x-1.2025.0.119-driver-3d-win98.zip
+
+The DLL is NOT committed to git (44 MB); tools/make_dist.sh copies it into
+dist/driver when present. It was built against FBHDA API 20250702 while this
+driver speaks API 20260213 (different FBHDA_t layout after `stride`); the
+Direct3D path (OSMesa) does not depend on that layout. See VERSION.txt 3045.

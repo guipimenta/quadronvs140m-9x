@@ -44,6 +44,7 @@ nvmini.vxd=1
 vmhal9x.dll=1
 vmdisp9x.dll=1
 vmhal3d.dll=1
+mesa3d.dll=1
 ;mesa:mesa3d.dll=1
 ;mesa:mesasmp.dll=1
 ;mesa:vmwsgl32.dll=1
@@ -129,6 +130,8 @@ nvmini.vxd,,,0x00000004
 vmhal9x.dll,,,0x00000004
 vmdisp9x.dll,,,0x00000004
 vmhal3d.dll,,,0x00000004
+; Mesa9x software OpenGL (llvmpipe), used by vmhal3d.dll for Direct3D (3045)
+mesa3d.dll,,,0x00000004
 
 [NV.AddReg]
 HKR,DEFAULT,drv,,nvmini.drv
@@ -142,6 +145,12 @@ HKR,DEFAULT,DDC,,0
 ; Native G86 modeset on (the VxD default since 3033 too; set 0 to force the
 ; vga.drv fallback boot). Same string convention as VRAMLimit below.
 HKLM,Software\vmdisp9x\vesa,Native,,1
+; Mesa9x runtime settings (read by mesa3d.dll): 128-bit vectors = SSE, the
+; right choice for the T61's Core 2 (no AVX). The OpenGL ICD key
+; (OpenGLdrivers\SOFTWARE) is deliberately NOT written: the shipped mesa3d.dll
+; was built against FBHDA API 20250702 and would misread this driver's FBHDA
+; block on the on-screen (ICD) path; Direct3D uses the OSMesa path only.
+HKLM,Software\vmdisp9x\apps\global\mesa,LP_NATIVE_VECTOR_WIDTH,,128
 
 [VBox.Copy]
 boxvmini.drv,,,0x00000004
