@@ -103,6 +103,15 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
   Direct3D pass on the T61 with the rebuilt DLL (79 MB, O3 LLVM). Recipe in
   driver/mesa9x-bin/PROVENANCE.txt.
   Hardware 2D/3D acceleration on the G86 itself remains out of scope.
+  **Correction (build 3051, 2026-10-23):** the 3046 mesa3d.dll never actually loaded on
+  Windows 98: it imported five KERNEL32 functions that Win98 lacks (pulled in by
+  libstdc++'s std::filesystem via gallivm's lp_bld_debug.cpp), so opengl32 fell back to
+  "GDI Generic" and Half-Life refused OpenGL. Found with a QEMU Win98 harness and the new
+  pftest/icdload probes; fixed by driver/mesa9x-bin/lp_bld_debug-win9x.patch and checked
+  with tools/impcheck_win98.py. Verified in the VM (576 ICD formats, llvmpipe renderer) and
+  on the T61: Half-Life plays in OpenGL mode (llvmpipe on the CPU, so slow) and in Direct3D
+  mode (slower still, some glitches). A stray opengl32.dll next to hl.exe (from a test) blocks
+  the engine silently: only the ICD path is supported.
 - **App compatibility — Half-Life intro crash (build 3050, FIXED 2026-10-23).**
   Half-Life (GOTY, build 929) froze or rebooted the T61 between the Sierra and
   Valve intro videos when started from any desktop mode other than the game's

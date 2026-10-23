@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3050  (Half-Life intro crash FIXED, verified on the T61: DCI refused; diagnostics from 3047-3049 kept; OpenGL ICD DONE: Mesa9x rebuilt against our FBHDA API, verified on the T61; Direct3D + DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
+Build: 3051  (OpenGL ICD actually working now: mesa3d.dll rebuilt without the KERNEL32 imports Win98 lacks; Half-Life intro crash FIXED in 3050: DCI refused; OpenGL ICD DONE: Mesa9x rebuilt against our FBHDA API, verified on the T61; Direct3D + DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
@@ -25,6 +25,30 @@ Registry (HKLM\Software\vmdisp9x\vesa):
                      3043), 0 = leave it uncached (MTRR.VXD cannot do it on the T61)
   InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
   BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3051: OPENGL ICD FIXED FOR REAL (verified 2026-10-23: Half-Life plays in OpenGL
+mode on the T61; Direct3D mode plays too, slower with some glitches). Half-Life's "The selected OpenGL mode is not
+supported by your video card" (and the same for D3D) was traced with pftest.exe:
+the engine asks ChoosePixelFormat() for 24-bit colour / 32-bit depth and refuses
+any format flagged PFD_GENERIC_FORMAT without PFD_GENERIC_ACCELERATED, i.e. the
+Microsoft "GDI Generic" software OpenGL. That is all Windows offered, because
+LoadLibrary(mesa3d.dll) failed (error 31): the 3046 DLL imported CreateHardLinkW,
+FindFirstVolumeW, FindNextVolumeW, FindVolumeClose and GetFileSizeEx from KERNEL32,
+which do not exist on Windows 98 (pulled in by libstdc++'s std::filesystem via
+gallivm/lp_bld_debug.cpp). Reproduced and fixed in a QEMU Win98 SE VM: with the
+rebuilt mesa3d.dll the ICD reports 576 pixel formats, Half-Life's request lands
+on an accepted one and GL_RENDERER is "llvmpipe (LLVM 18.18, 128 bits)".
+Driver binaries unchanged apart from the build stamp. New diagnostics shipped:
+  pftest.exe  [W H BPP]  - lists all pixel formats, repeats Half-Life's request
+                           and says whether the game would accept it; appends
+                           to pftest.txt in the current directory
+  icdload.exe [dll]      - does by hand what opengl32.dll does to find/load the
+                           ICD (escape, registry, LoadLibrary, DrvValidateVersion,
+                           DrvDescribePixelFormat) and prints each step's result
+  vmmap.exe              - dumps the process address map (loader debugging)
+INSTALL: copy mesa3d.dll (79 MB) over C:\WINDOWS\SYSTEM\mesa3d.dll, no reboot
+needed; `pftest` should then print GL_RENDERER: llvmpipe. Half-Life: Options ->
+Video modes -> OpenGL, Default driver, 640x480.
 
 3050: DCI REFUSED (fixes the Half-Life intro crash; VERIFIED on the T61
 2026-10-23: both intros play from the 1024x768x32 desktop, log shows

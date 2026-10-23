@@ -148,6 +148,7 @@ HKLM,Software\vmdisp9x\vesa,Native,,1
 ; Mesa9x runtime settings (read by mesa3d.dll): 128-bit vectors = SSE, the
 ; right choice for the T61's Core 2 (no AVX).
 HKLM,Software\vmdisp9x\apps\global\mesa,LP_NATIVE_VECTOR_WIDTH,,128
+HKLM,Software\vmdisp9x\apps\hl.exe\mesa,MESA_EXTENSION_MAX_YEAR,,2000
 ; OpenGL ICD (3046+): opengl32.dll asks the display driver (OPENGL_GETINFO
 ; escape) for an ICD name, nvmini.drv answers "SOFTWARE", and this key maps it
 ; to mesa3d.dll. Only valid with the mesa3d.dll built against this driver's

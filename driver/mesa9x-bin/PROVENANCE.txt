@@ -28,3 +28,17 @@ Built:    2026-10-22 on this Linux host, build tree /home/guilherme/projects/mes
 The DLL is NOT committed to git (size); tools/make_dist.sh copies it into
 dist/driver when present. Previous (3045) copy: Mesa9x v25.1.6.138 release DLL
 built against API 20250702 - usable for Direct3D only, never as the ICD.
+
+2026-10-23 (build 3051) - REBUILT after the DLL turned out NOT to load on Windows 98.
+  LoadLibrary(mesa3d.dll) failed with error 31 (ERROR_GEN_FAILURE) on the T61 and in a
+  QEMU Win98 SE VM, so opengl32.dll silently fell back to "GDI Generic" (Half-Life then
+  refused OpenGL: "The selected OpenGL mode is not supported by your video card").
+  Cause: Mesa's gallivm/lp_bld_debug.cpp uses std::filesystem::create_directory, which
+  pulls libstdc++'s fs_ops.o (GCC 13 mingw-w64) into the link; that object imports
+  CreateHardLinkW, FindFirstVolumeW, FindNextVolumeW, FindVolumeClose and GetFileSizeEx
+  from KERNEL32 - none exist on Win98, and the Win9x loader rejects the whole DLL.
+  Fix: lp_bld_debug-win9x.patch (use _mkdir on _WIN32), relink mesa3d.w98me.dll.
+  Rule: after any rebuild run `python3 -I tools/impcheck_win98.py <dir with Win98 system
+  DLLs> mesa3d.dll` (the Win98 KERNEL32/USER32/GDI32/ADVAPI32/MSVCRT/WS2_32 exports are
+  taken from a Win98 SE install) and require "missing on Win98: none" for every DLL.
+  Verified in the VM: 576 ICD pixel formats, GL_RENDERER "llvmpipe (LLVM 18.18, 128 bits)".

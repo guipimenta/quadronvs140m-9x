@@ -9,5 +9,9 @@ REGEDIT4
 [HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\global\mesa]
 "LP_NATIVE_VECTOR_WIDTH"="128"
 
+; Half-Life (GoldSrc 1.0.x) copies GL_EXTENSIONS into a fixed buffer; keep Mesa's list short (3051)
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\hl.exe\mesa]
+"MESA_EXTENSION_MAX_YEAR"="2000"
+
 [HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers]
 "SOFTWARE"="mesa3d.dll"
