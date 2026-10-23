@@ -156,12 +156,31 @@ the 2D object via a BIND (0x0000 = SET_OBJECT, data = handle 0xbeef502d).
   0x0608 DRAW_POINT32_X(1) = x1 ; 0x060c DRAW_POINT32_Y(1) = y1
 Then DMA_PUT = stream_bytes; poll DMA_GET==DMA_PUT; read back VRAM.
 
-### Open items to confirm before coding (from the fetched sources)
+### RESOLVED: PGRAPH needs the chip-specific context microcode (the big one)
+
+On NV50 every data-moving/rendering engine - 2D (0x502d), M2MF (0x5039) and
+3D (0x8297) - is a PGRAPH object, and PGRAPH executes NOTHING until:
+  (a) nv50_graph_init_ctxctl uploads a "ctxprog" context-switch microcode to
+      PGRAPH_CTXCTL (NV40_PGRAPH_CTXCTL_UCODE_INDEX/_DATA), and
+  (b) each channel has a per-channel graphics context (ramin_grctx) seeded with
+      chip-specific "ctxvals", referenced from the channel RAMIN header.
+Both come from nouveau's nv50_grctx.c (nv50_grctx_init) - 2383 lines,
+table-driven, and it explicitly handles chipset 0x86 (`case 0x84: case 0x86:`).
+No shortcut: even a 2D fill or an M2MF copy needs it, because the engine's
+thousands of state registers are set up by loading the initial context. So:
+
+  **M5.1a - port nv50_grctx.c for the G86 (chipset 0x86).** Reimplement the
+  ctxprog + ctxvals generator in the VxD (or precompute both on the host from
+  the ported generator and ship them as blobs). ~2.4k lines of portable C with
+  little kernel dependency; cross-check the generated G86 context against what
+  the XP nv4_mini.sys loads. This is the crux of nv50 bring-up.
+  **M5.1b** - then the PFIFO channel + 2D fill recipe above.
+
+### Other open items (smaller)
 - Exact RAMHT ctx-dword format for an nv50 ENGINE object (nouveau_object.c).
-- Whether the 2D/PGRAPH engine needs the ctxctl microcode (nv50_graph.c /
-  the external nv50 grctx) just to run 2D - if yes, M5.1 must upload it.
-- nv50_fifo_playlist_update exact registers.
+- nv50_fifo_playlist_update exact registers (0x32f4 / 0x32ec area).
 - DST_FORMAT/DRAW_COLOR_FORMAT enum values (g80_defs.xml.h).
 
-If 2D needs the full grctx microcode, fall back to M2MF (0x5039) for the first
-"does PGRAPH execute our methods" test - M2MF is a simpler copy engine.
+The single biggest unknown is now de-risked: the context generator exists as
+portable C in nouveau and covers the G86, so M5.1a is a porting job, not a
+research dead-end.
