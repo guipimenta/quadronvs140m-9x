@@ -626,13 +626,13 @@ VDDPROC(PRE_INT_10_MODE_SET, pre_int_10_mode_set)
 
 VDDPROC(SAVE_REGISTERS, save_registers)
 {
-	//dbg_printf("SAVE_REGISTERS\n");
+	dbg_printf("SAVE_REGISTERS\n");   /* M4.5: trace the suspend/resume sequence */
 	// NOP
 }
 
 VDDPROC(RESTORE_REGISTERS, restore_registers)
 {
-	//dbg_printf("RESTORE_REGISTERS\n");
+	dbg_printf("RESTORE_REGISTERS\n");
 	// NOP
 }
 

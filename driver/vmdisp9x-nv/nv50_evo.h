@@ -302,6 +302,13 @@ int  NV_cursor_load(const unsigned long *andmask, const unsigned long *xormask,
 void NV_cursor_move(long x, long y);
 int  NV_cursor_show(void);
 void NV_cursor_hide(int invalidate);
+void NV_cursor_restore(void);                 /* M4.5 */
+
+/* M4.5 power / screen switching (nv50_evo.c unless noted) */
+int  NV_hw_lost(void);                        /* 1 = engine reprogrammed behind us; claim dropped */
+void NV_power_notify(unsigned long state);    /* CM power state from the VDD (1=D0 .. 8=D3) */
+int  NV_resume_tick(void);                    /* blit timer: 1 when the post-resume check is due */
+void NV_display_resume_check(void);           /* vxd_vesa.c: re-init + redraw if the engine was lost */
 /* Boot-progress log in VRAM (0x1900000): reset clears it + writes the magic. */
 void NV_blog_reset(void);
 /* Append one progress code to the VRAM boot log (no-op while skip_mmio). */

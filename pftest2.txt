@@ -1,0 +1,46 @@
+
+==== pftest 2026-10-23 02:46:31 ====
+ChangeDisplaySettings(640x480x16) -> 0
+screen: 640x480, 16 bpp, planes 1
+DescribePixelFormat: 24 pixel formats
+  # 1 flags=0000007C GENERIC WIN GL GDI type=RGBA color=16(5/6/5/0) depth=32 stencil=8 accum=32 aux=0
+  # 2 flags=0000007C GENERIC WIN GL GDI type=RGBA color=16(5/6/5/0) depth=16 stencil=8 accum=32 aux=0
+  # 3 flags=00000465 GENERIC DBL WIN GL type=RGBA color=16(5/6/5/0) depth=32 stencil=8 accum=32 aux=0
+  # 4 flags=00000465 GENERIC DBL WIN GL type=RGBA color=16(5/6/5/0) depth=16 stencil=8 accum=32 aux=0
+  # 5 flags=0000007C GENERIC WIN GL GDI type=INDEX color=16(5/6/5/0) depth=32 stencil=8 accum=0 aux=0
+  # 6 flags=0000007C GENERIC WIN GL GDI type=INDEX color=16(5/6/5/0) depth=16 stencil=8 accum=0 aux=0
+  # 7 flags=00000465 GENERIC DBL WIN GL type=INDEX color=16(5/6/5/0) depth=32 stencil=8 accum=0 aux=0
+  # 8 flags=00000465 GENERIC DBL WIN GL type=INDEX color=16(5/6/5/0) depth=16 stencil=8 accum=0 aux=0
+  # 9 flags=00000078 GENERIC GL GDI type=RGBA color=24(8/8/8/0) depth=32 stencil=8 accum=64 aux=0
+  #10 flags=00000078 GENERIC GL GDI type=RGBA color=24(8/8/8/0) depth=16 stencil=8 accum=64 aux=0
+  #11 flags=00000078 GENERIC GL GDI type=INDEX color=24(8/8/8/0) depth=32 stencil=8 accum=0 aux=0
+  #12 flags=00000078 GENERIC GL GDI type=INDEX color=24(8/8/8/0) depth=16 stencil=8 accum=0 aux=0
+  #13 flags=00000078 GENERIC GL GDI type=RGBA color=32(8/8/8/0) depth=32 stencil=8 accum=64 aux=0
+  #14 flags=00000078 GENERIC GL GDI type=RGBA color=32(8/8/8/0) depth=16 stencil=8 accum=64 aux=0
+  #15 flags=00000078 GENERIC GL GDI type=INDEX color=32(8/8/8/0) depth=32 stencil=8 accum=0 aux=0
+  #16 flags=00000078 GENERIC GL GDI type=INDEX color=32(8/8/8/0) depth=16 stencil=8 accum=0 aux=0
+  #17 flags=00000078 GENERIC GL GDI type=RGBA color=8(3/3/2/0) depth=32 stencil=8 accum=32 aux=0
+  #18 flags=00000078 GENERIC GL GDI type=RGBA color=8(3/3/2/0) depth=16 stencil=8 accum=32 aux=0
+  #19 flags=00000078 GENERIC GL GDI type=INDEX color=8(3/3/2/0) depth=32 stencil=8 accum=0 aux=0
+  #20 flags=00000078 GENERIC GL GDI type=INDEX color=8(3/3/2/0) depth=16 stencil=8 accum=0 aux=0
+  #21 flags=00000078 GENERIC GL GDI type=RGBA color=4(1/1/1/0) depth=32 stencil=8 accum=16 aux=0
+  #22 flags=00000078 GENERIC GL GDI type=RGBA color=4(1/1/1/0) depth=16 stencil=8 accum=16 aux=0
+  #23 flags=00000078 GENERIC GL GDI type=INDEX color=4(1/1/1/0) depth=32 stencil=8 accum=0 aux=0
+  #24 flags=00000078 GENERIC GL GDI type=INDEX color=4(1/1/1/0) depth=16 stencil=8 accum=0 aux=0
+ChoosePixelFormat(Half-Life: flags=25 color=24 depth=32 stencil=0) -> 3 (err 0)
+  # 3 flags=00000465 GENERIC DBL WIN GL type=RGBA color=16(5/6/5/0) depth=32 stencil=8 accum=32 aux=0
+  => Half-Life would REFUSE this format (generic, not accelerated)
+ChoosePixelFormat(16/16: flags=25 color=16 depth=16 stencil=0) -> 4 (err 0)
+  # 4 flags=00000465 GENERIC DBL WIN GL type=RGBA color=16(5/6/5/0) depth=16 stencil=8 accum=32 aux=0
+  => Half-Life would REFUSE this format (generic, not accelerated)
+ChoosePixelFormat(32/24/8: flags=25 color=32 depth=24 stencil=8) -> 3 (err 0)
+  # 3 flags=00000465 GENERIC DBL WIN GL type=RGBA color=16(5/6/5/0) depth=32 stencil=8 accum=32 aux=0
+  => Half-Life would REFUSE this format (generic, not accelerated)
+ChoosePixelFormat(24/24: flags=25 color=24 depth=24 stencil=0) -> 3 (err 0)
+  # 3 flags=00000465 GENERIC DBL WIN GL type=RGBA color=16(5/6/5/0) depth=32 stencil=8 accum=32 aux=0
+  => Half-Life would REFUSE this format (generic, not accelerated)
+SetPixelFormat(3) ok
+GL_VENDOR:   Microsoft Corporation
+GL_RENDERER: GDI Generic
+GL_VERSION:  1.1.0
+done

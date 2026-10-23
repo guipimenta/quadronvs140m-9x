@@ -239,6 +239,32 @@ void __declspec(naked) Device_IO_Control_entry()
 
 void VESA_check_state();
 
+/* M4.5: VPOWERD/APM system control message. EBX = PWR_* event
+ * (1 SUSPENDREQUEST, 2 SUSPENDRESUME, 3 CRITICALRESUME; Win98 adds standby
+ * variants) - logged, and a resume arms the post-resume engine check. */
+void __stdcall Power_Event_proc(DWORD event, DWORD flags)
+{
+	dbg_printf("Power_Event: %lX flags=%lX\n", event, flags);
+#ifdef NV_DETECT
+	if(event == 2 || event == 3 || event == 5 || event == 6)
+		NV_power_notify(1);
+#endif
+}
+
+/* M4.5: mini-VDD SET_ADAPTER_POWER_STATE (index 52), called by the VDD's
+ * _CallPowerStateFunc as a C function: (DEVNODE, DWORD state), state is the
+ * CM power state (1 D0, 2 D1, 4 D2, 8 D3). Return 1 so the VDD continues with
+ * its default handling (it re-POSTs the VGA ROM on D3 -> D0, after which the
+ * display driver restores the desktop through our modeset path). */
+DWORD __cdecl set_adapter_power_state_proc(DWORD devnode, DWORD state)
+{
+	dbg_printf("SET_ADAPTER_POWER_STATE: devnode=%lX state=%lX\n", devnode, state);
+#ifdef NV_DETECT
+	NV_power_notify(state);
+#endif
+	return 1;
+}
+
 void __stdcall Set_Device_Focus_proc(DWORD VMHandle, DWORD VID, DWORD Flags, DWORD AssocVMHandle)
 {
 #ifdef VESA
@@ -353,6 +379,16 @@ void __declspec(naked) VXD_control()
 			clc
 			ret
 		control_8:
+		cmp eax, Power_Event
+		jnz control_9
+			pushad
+			push esi ; flags
+			push ebx ; event
+			call Power_Event_proc
+			popad
+			clc
+			ret
+		control_9:
 ;			pushad
 ;			push eax
 ;			call print_ctrl
@@ -830,6 +866,12 @@ void Device_Init_proc(DWORD VM)
 	if(DispatchTableLength >= 0x31)
 	{
 		#include "vxd_vdd_list.h"
+	}
+	if(DispatchTableLength > SET_ADAPTER_POWER_STATE)
+	{
+		/* M4.5: C-callable entry, no register stub (see set_adapter_power_state_proc) */
+		DispatchTable[SET_ADAPTER_POWER_STATE] = (DWORD)set_adapter_power_state_proc;
+		dbg_printf("VDD: SET_ADAPTER_POWER_STATE hook installed\n");
 	}
 
 	configure_FBHDA();

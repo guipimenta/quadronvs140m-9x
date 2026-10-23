@@ -1,0 +1,1223 @@
+90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8EFA000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> FBHDA_DD_surface_modify(C8F90000)
+V> IOCTL 0000110C #1 in=4 [00000000 00000000 00000000 00000000] out=0
+V> FBHDA_DD_surface_modify(C8F90000)
+V> IOCTL 0000110D #1 in=4 [00000000 00000000 00000000 00000000] out=0
+V> PM16 00001F01 #1 ecx=00000000 ebx=00FA0000 esi=14AF0000 edi=00000000
+V> IOCTL 0000110C #2 in=4 [00000010 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #2 in=4 [00000000 00000000 00000000 00000000] out=0
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+V> PM16 00001F04 #2 ecx=00000000 ebx=172F0000 esi=00000000 edi=0000018F
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+V> PM16 00004002 #1 ecx=00000020 ebx=00000300 esi=00000400 edi=00000300
+D> SetDisplayMode: wXRes=1024 wYRes=768
+V> PM16 00004001 #2 ecx=00000020 ebx=00000300 esi=04000300 edi=00000000
+V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=22DD0001 get=000000CC put=000000CC
+V> NV_native_modeset 1024x768x32 OK
+V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+V> Clear success
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+V> trace reset: mode 1024x768x32
+V> PM16 00004001 #1 ecx=00000020 ebx=00000300 esi=04000300 edi=00000000
+V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=240D0001 get=00000198 put=00000198
+V> NV_native_modeset 1024x768x32 OK
+V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+V> Clear success
+V> PM16 0000110F #1 ecx=00300000 ebx=00000300 esi=00000000 edi=00000488
+V> FBHDA_clean
+V> FBHDA_clean done
+V> HB 157 t=169395 blits=1736 px=721624670 lock=0 mode=1024x768x32 flags=00000081
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+V> PM16 00001F04 #1 ecx=00210000 ebx=00020000 esi=00000000 edi=00000001
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+V> PM16 00001F01 #1 ecx=00210000 ebx=00020000 esi=14AF0000 edi=00000000
+V> PM16 00001F02 #1 ecx=000200F0 ebx=000100F0 esi=00000140 edi=000000F0
+V> PM16 00001F01 #2 ecx=00010000 ebx=00020000 esi=14AF0000 edi=00000000
+V> PM16 00001F01 #3 ecx=00010000 ebx=172F0000 esi=14AF0000 edi=00000000
+V> PM16 00001112 #1 ecx=000002E4 ebx=00000000 esi=00000401 edi=000002E6
+V> PM16 0000110D #1 ecx=00000000 ebx=FFFF0400 esi=00000000 edi=002E5000
+V> PM16 00001112 #2 ecx=000002E5 ebx=00000000 esi=00000401 edi=000002E7
+V> PM16 0000110D #2 ecx=00000000 ebx=FFFF0400 esi=00000000 edi=002E6000
+V> PM16 00001112 #3 ecx=000002E6 ebx=00000000 esi=00000002 edi=00000300
+V> PM16 0000110D #3 ecx=00000000 ebx=FFFF0001 esi=00000000 edi=002FF000
+V> PM16 00001112 #4 ecx=000002E6 ebx=00000001 esi=00000401 edi=000002E8
+V> PM16 0000110D #4 ecx=00000000 ebx=FFFF03FF esi=00000000 edi=002E7004
+V> PM16 00001112 #5 ecx=000002FF ebx=00000000 esi=00000400 edi=00000301
+V> PM16 0000110D #5 ecx=00000000 ebx=FFFF03FF esi=00000000 edi=00300000
+V> PM16 00001112 #6 ecx=000002E7 ebx=000003FF esi=00000401 edi=00000301
+V> PM16 0000110D #6 ecx=00000000 ebx=FFFF0001 esi=00000000 edi=00300FFC
+D> Control (16bit): 3075 (0x0c03)
+V> PM16 00001117 #1 ecx=00000600 ebx=00FA0000 esi=00000000 edi=0040D1D8
+D> get the ramp
+V> PM16 00001F02 #2 ecx=000001A4 ebx=00FA01A4 esi=000001F4 edi=000001A4
+V> DIOC_OPEN
+V> HB 158 t=170416 blits=1740 px=724260689 lock=0 mode=1024x768x32 flags=00000081
+V> HB 159 t=171441 blits=1741 px=724502053 lock=0 mode=1024x768x32 flags=00000081
+V> HB 160 t=172464 blits=1743 px=724875523 lock=0 mode=1024x768x32 flags=00000081
+V> PM16 00001F02 #3 ecx=000001A5 ebx=000001A5 esi=000001FA edi=000001A5
+V> PM16 00001F02 #4 ecx=000001A7 ebx=000001A7 esi=00000204 edi=000001A7
+V> PM16 00001F02 #5 ecx=000001AD ebx=000001AD esi=00000210 edi=000001AD
+V> PM16 00001F02 #6 ecx=000001AF ebx=000001AF esi=00000222 edi=000001AF
+V> PM16 00001F01 #4 ecx=00000000 ebx=00FA0000 esi=14A70000 edi=000014AE
+V> PM16 00001F01 #5 ecx=00010000 ebx=16E70000 esi=14AF0000 edi=000214A6
+V> HB 161 t=173488 blits=1745 px=725881352 lock=0 mode=1024x768x32 flags=00000081
+V> HB 162 t=174512 blits=1747 px=725881404 lock=0 mode=1024x768x32 flags=00000081
+V> DESTROY_PROCESS: FFFC8F01
+V> HB 163 t=175536 blits=1749 px=726450950 lock=0 mode=1024x768x32 flags=00000081
+V> HB 164 t=176560 blits=1751 px=726451002 lock=0 mode=1024x768x32 flags=00000081
+V> HB 165 t=177584 blits=1753 px=726451054 lock=0 mode=1024x768x32 flags=00000081
+V> HB 166 t=178608 blits=1755 px=726451106 lock=0 mode=1024x768x32 flags=00000081
+V> HB 167 t=179632 blits=1758 px=726452182 lock=0 mode=1024x768x32 flags=00000081
+V> HB 168 t=180656 blits=1764 px=726454857 lock=0 mode=1024x768x32 flags=00000081
+V> HB 169 t=181680 blits=1771 px=726458057 lock=0 mode=1024x768x32 flags=00000081
+V> HB 170 t=182704 blits=1775 px=726459658 lock=0 mode=1024x768x32 flags=00000081
+V> HB 171 t=183728 blits=1780 px=726462283 lock=0 mode=1024x768x32 flags=00000081
+V> HB 172 t=184752 blits=1783 px=726463359 lock=0 mode=1024x768x32 flags=00000081
+V> HB 173 t=185776 blits=1787 px=726465459 lock=0 mode=1024x768x32 flags=00000081
+V> DIOC_OPEN
+V> HB 174 t=186800 blits=1791 px=727079041 lock=0 mode=1024x768x32 flags=00000081
+V> HB 175 t=187824 blits=1793 px=727079093 lock=0 mode=1024x768x32 flags=00000081
+V> HB 176 t=188848 blits=1795 px=727079145 lock=0 mode=1024x768x32 flags=00000081
+V> Device_Init_proc
+V> VESA init begin...
+V> NV HwCursor = 1, HwCursorScale = 0
+V> NV native modeset = 1, InitStop = 0, BootPattern = 0
+V> NV_probe: 000010DE:00000429 subsys=20D817AA at 1:0.0
+V> NV_probe: BAR0=DE000000 (01000000) BAR1=E0000000 (10000000)
+V> NV_probe: devid 00000429 -> chipset 86 (MMIO deferred)
+V> WRAM init SUCCESS (regs.s.size=67108864)
+V> NV_init_hw_native OK: vram_phy=E0000000 lin=C76D7000 size=25165824
+V> NV_probe: 000010DE:00000429 subsys=20D817AA at 1:0.0
+V> NV_probe: BAR0=DE000000 (01000000) BAR1=E0000000 (10000000)
+V> NV_probe: devid 00000429 -> chipset 86 (MMIO deferred)
+V> VDD mini dispatch table: ptr=C0076404 len=0000003E (handlers installed)
+V> FBHDA_setup()
+V> sizeof(FBHDA_t) = 280
+V> Overlay #1: 0
+V> Overlay #2: 0
+V> Overlay #3: 0
+V> Overlay #4: 0
+V> Overlay #5: 0
+V> Overlay #6: 0
+V> Overlay #7: 0
+V> Overlay #8: 0
+V> Overlay #9: 0
+V> Overlay #10: 0
+V> Overlay #11: 0
+V> Overlay #12: 0
+V> Overlay #13: 0
+V> Overlay #14: 0
+V> Overlay #15: 0
+V> Device_Init_proc DONE
+V> Address=0xC18322E0
+D> DriverInit: ENTER (nvmini.drv build 3048)
+D> DriverInit: VDDEntryPoint=003B:03DE, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+V> register: ebx = 1, ecx = 0, VM = C2920074
+V> map_pm16: vm = 1, linear = C8EFA000, size = 67096576
+V> map_pm16: high=C880F2EF, low=A0003FFD
+V> map_pm16: selector 00000153
+V> map_pm16: vm = 1, linear = C8EF7800, size = 280
+V> map_pm16: high=C880F2EF, low=78000001
+V> map_pm16: selector 0000015B
+V> map_pm16: vm = 1, linear = DEC40000, size = 65535
+V> map_pm16: high=DE80F2C4, low=00000010
+V> map_pm16: selector 00000163
+V> NV_vram_check: VRAM 128 MB (PFB 08000000, cfg0 01001800 cfg1 01449000), BAR1 256 MB, window 24 MB
+V> NV_vram_check: layout OK (window 0-01800000, EVO 01800000-02008000)
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=015B0000, ecx=01630000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+V> PM16 API: first call from 16-bit side, service 00004002
+V> PM16 00004002 #1 ecx=00000020 ebx=00000300 esi=00000400 edi=00000300
+D> SetDisplayMode: wXRes=1024 wYRes=768
+V> PM16 00004001 #1 ecx=00000020 ebx=00000300 esi=04000300 edi=00000000
+V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=39300001 get=0000014C put=0000014C
+V> NV_native_modeset 1024x768x32 OK
+V> Get_System_Time_Address...
+V> curtime = C001141C
+V> native: async blit timer started = 1
+V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+V> MTRR supported
+V> MTRR_SetPhysicalCacheTypeRange(E0000000, 0, 25165824, 2)
+V> MTRR_SetPhysicalCacheTypeRange rc=C0000001 (0 = success)
+V> PAT: entry1=WC, 6144 aperture pages marked PWT (state 5)
+V> Clear success
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+V> trace reset: mode 1024x768x32
+V> PM16 00004001 #1 ecx=00000020 ebx=00000300 esi=04000300 edi=00000000
+V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=3A600001 get=00000218 put=00000218
+V> NV_native_modeset 1024x768x32 OK
+V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+V> Clear success
+V> PM16 0000110F #1 ecx=00300000 ebx=00000300 esi=00000000 edi=00000488
+V> FBHDA_clean
+V> FBHDA_clean done
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17CF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+V> PM16 00001F04 #1 ecx=00210000 ebx=00000000 esi=00000000 edi=00000001
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+V> PM16 00001F02 #1 ecx=00000180 ebx=01670180 esi=00000200 edi=00000180
+V> PM16 00001F01 #1 ecx=00000000 ebx=00000000 esi=149F0000 edi=00000000
+V> NV_cursor_load: 32x32 opaque=230 at 496,368 -> OK
+V> PM16 00001112 #1 ecx=00000000 ebx=00000000 esi=00000401 edi=00000301
+V> PM16 0000110D #1 ecx=00000000 ebx=FFFF0400 esi=00000000 edi=00300000
+V> PM16 00001F01 #2 ecx=00000000 ebx=00000000 esi=14AF0000 edi=1EFF149E
+V> NV_cursor_load: 32x32 opaque=105 at 512,384 -> OK
+V> PM16 00001F01 #3 ecx=00000000 ebx=17570000 esi=14570000 edi=000014AE
+V> NV_cursor_load: 32x32 opaque=245 at 512,384 -> OK
+V> PM16 00001F01 #4 ecx=00000000 ebx=00720000 esi=14AF0000 edi=00001456
+V> NV_cursor_load: 32x32 opaque=105 at 512,384 -> OK
+V> PM16 00001F01 #5 ecx=00000000 ebx=17570000 esi=14570000 edi=000014AE
+V> NV_cursor_load: 32x32 opaque=245 at 512,384 -> OK
+V> PM16 00001F01 #6 ecx=00020000 ebx=00010000 esi=149F0000 edi=00001456
+V> NV_cursor_load: 32x32 opaque=230 at 496,368 -> OK
+V> PM16 00001112 #2 ecx=00000000 ebx=00000000 esi=00000401 edi=00000301
+V> PM16 0000110D #2 ecx=00000000 ebx=FFFF0400 esi=00000000 edi=00300000
+V> NV_cursor_load: 32x32 opaque=245 at 512,384 -> OK
+V> NV_cursor_load: 32x32 opaque=230 at 496,368 -> OK
+V> HB 1 t=9360 blits=3 px=2359296 lock=0 mode=1024x768x32 flags=00000081
+V> PM16 00001112 #3 ecx=00000000 ebx=00000000 esi=00000401 edi=00000301
+V> PM16 0000110D #3 ecx=00000000 ebx=FFFF0400 esi=00000000 edi=00300000
+V> DESTROY_PROCESS: FFFE4DC1
+V> HB 2 t=10384 blits=4 px=3145728 lock=0 mode=1024x768x32 flags=00000081
+V> DESTROY_PROCESS: FFFE42B5
+V> DESTROY_PROCESS: FFFE1EB1
+V> PM16 00001112 #4 ecx=00000000 ebx=00000000 esi=00000401 edi=00000301
+V> PM16 0000110D #4 ecx=00000000 ebx=FFFF0400 esi=00000000 edi=00300000
+V> HB 3 t=11408 blits=5 px=3932160 lock=0 mode=1024x768x32 flags=00000081
+V> PM16 00001112 #5 ecx=000002E4 ebx=00000000 esi=00000401 edi=000002E6
+V> PM16 0000110D #5 ecx=00000000 ebx=FFFF0400 esi=00000000 edi=002E5000
+V> PM16 00001112 #6 ecx=000002E5 ebx=00000000 esi=00000401 edi=000002E7
+V> PM16 0000110D #6 ecx=00000000 ebx=FFFF0400 esi=00000000 edi=002E6000
+V> DESTROY_PROCESS: FFFEE2F5
+V> HB 4 t=12435 blits=12 px=5724238 lock=0 mode=1024x768x32 flags=00000081
+V> PM16 00001F02 #2 ecx=FFFF0178 ebx=FFFF0178 esi=000001FA edi=00000178
+V> PM16 00001F02 #3 ecx=FFFF016E ebx=FFFF016E esi=000001F8 edi=0000016E
+V> PM16 00001F02 #4 ecx=FFFF0168 ebx=FFFF0168 esi=000001F6 edi=00000168
+V> PM16 00001F02 #5 ecx=FFFF0160 ebx=FFFF0160 esi=000001F5 edi=00000160
+V> PM16 00001F02 #6 ecx=FFFF0158 ebx=FFFF0158 esi=000001F3 edi=00000158
+V> HB 5 t=13507 blits=14 px=5731206 lock=0 mode=1024x768x32 flags=00000081
+V> DESTROY_PROCESS: FFFE9425
+V> HB 6 t=14529 blits=35 px=5893464 lock=0 mode=1024x768x32 flags=00000081
+V> HB 7 t=15554 blits=42 px=6309453 lock=0 mode=1024x768x32 flags=00000081
+V> PM16 00004000 #1 ecx=00000000 ebx=0000845C esi=00002C6F edi=00000001
+V> PM16 00004002 #1 ecx=00000008 ebx=000001E0 esi=00000280 edi=000001E0
+V> PM16 00004000 #2 ecx=00000000 ebx=0000845C esi=00002C6F edi=000045C8
+V> PM16 00004002 #2 ecx=00000008 ebx=00000258 esi=00000320 edi=00000258
+V> PM16 00004000 #3 ecx=00000000 ebx=0000845C esi=00002C6F edi=000045CE
+V> PM16 00004002 #3 ecx=00000008 ebx=00000300 esi=00000400 edi=00000300
+V> PM16 00004000 #4 ecx=00000000 ebx=0000845C esi=00002C6F edi=000045D4
+V> PM16 00004002 #4 ecx=00000008 ebx=00000360 esi=00000480 edi=00000360
+V> PM16 00004000 #5 ecx=00000000 ebx=0000845C esi=00002C6F edi=000045D4
+V> PM16 00004002 #5 ecx=00000008 ebx=000002D0 esi=00000500 edi=000002D0
+V> PM16 00004000 #6 ecx=00000000 ebx=0000845C esi=00002C6F edi=000045D4
+V> PM16 00004002 #6 ecx=00000008 ebx=00000320 esi=00000500 edi=00000320
+V> HB 8 t=16576 blits=44 px=6452324 lock=0 mode=1024x768x32 flags=00000081
+V> HB 9 t=17600 blits=46 px=6580748 lock=0 mode=1024x768x32 flags=00000081
+V> HB 10 t=18624 blits=49 px=6673460 lock=0 mode=1024x768x32 flags=00000081
+V> HB 11 t=19649 blits=64 px=6773730 lock=0 mode=1024x768x32 flags=00000081
+V> HB 12 t=20674 blits=67 px=6803898 lock=0 mode=1024x768x32 flags=00000081
+V> HB 13 t=21699 blits=68 px=6846857 lock=0 mode=1024x768x32 flags=00000081
+V> HB 14 t=22724 blits=70 px=7117433 lock=0 mode=1024x768x32 flags=00000081
+V> HB 15 t=23744 blits=73 px=7666613 lock=0 mode=1024x768x32 flags=00000081
+V> HB 16 t=24769 blits=73 px=7666613 lock=0 mode=1024x768x32 flags=00000081
+V> PM16 00001F04 #2 ecx=00000000 ebx=172F0000 esi=00000000 edi=0000018F
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+V> PM16 00004001 #2 ecx=00000010 ebx=000001E0 esi=028001E0 edi=00000000
+V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=22AD0001 get=00000728 put=00000728
+V> NV_native_modeset 640x480x16 OK
+V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+V> Clear success
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+V> trace reset: mode 640x480x16
+V> PM16 00004001 #1 ecx=00000010 ebx=000001E0 esi=028001E0 edi=00000000
+V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=23B20001 get=000007F4 put=000007F4
+V> NV_native_modeset 640x480x16 OK
+V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+V> Clear success
+V> PM16 0000110F #1 ecx=00090000 ebx=000001E0 esi=00000000 edi=00000488
+V> FBHDA_clean
+V> FBHDA_clean done
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+V> PM16 00001F04 #1 ecx=00210000 ebx=00020000 esi=00000000 edi=00000001
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+V> PM16 00001F01 #1 ecx=00210000 ebx=00020000 esi=149F0000 edi=00000000
+V> PM16 00001F02 #1 ecx=000201A4 ebx=000101A4 esi=000001D6 edi=000001A4
+V> PM16 00001F01 #2 ecx=00010000 ebx=00020000 esi=149F0000 edi=00000000
+V> PM16 00001F01 #3 ecx=00010000 ebx=172F0000 esi=149F0000 edi=00000000
+V> PM16 00001112 #1 ecx=00000004 ebx=00000202 esi=00000204 edi=000001C5
+V> PM16 0000110D #1 ecx=00000000 ebx=FFFF0000 esi=00000000 edi=0008D804
+V> PM16 00001112 #2 ecx=000001C3 ebx=0000006F esi=00000203 edi=000001C5
+V> PM16 0000110D #2 ecx=00000000 ebx=FFFF00C9 esi=00000002 edi=0008D4DE
+V> PM16 00001112 #3 ecx=00000004 ebx=0000006F esi=00000071 edi=000001C4
+V> PM16 0000110D #3 ecx=00000000 ebx=FFFF0000 esi=00000002 edi=0008CFDE
+V> PM16 00001112 #4 ecx=00000004 ebx=00000070 esi=00000203 edi=00000006
+V> PM16 0000110D #4 ecx=00000000 ebx=FFFF00C9 esi=00000000 edi=000019E0
+V> PM16 00001112 #5 ecx=00000005 ebx=00000201 esi=00000203 edi=000001C4
+V> PM16 0000110D #5 ecx=00000000 ebx=FFFF0000 esi=00000002 edi=0008D302
+V> PM16 00001112 #6 ecx=000001C2 ebx=00000070 esi=00000202 edi=000001C4
+V> PM16 0000110D #6 ecx=00000000 ebx=FFFF00C8 esi=00000000 edi=0008CFE0
+V> PM16 00001F01 #4 ecx=00010000 ebx=16E70000 esi=14570000 edi=0002149E
+V> HB 17 t=25809 blits=78 px=8740730 lock=0 mode=640x480x16 flags=00000081
+V> PM16 00001F02 #2 ecx=FFFF0194 ebx=00000194 esi=000001DC edi=00000194
+V> PM16 00001F02 #3 ecx=FFFF017E ebx=0000017E esi=000001E6 edi=0000017E
+V> PM16 00001F02 #4 ecx=FFFF015E ebx=0000015E esi=000001F2 edi=0000015E
+V> PM16 00001F02 #5 ecx=FFFF0138 ebx=00000138 esi=00000202 edi=00000138
+V> PM16 00001F02 #6 ecx=FFFF0112 ebx=00000112 esi=00000214 edi=00000112
+V> HB 18 t=26834 blits=78 px=8740730 lock=0 mode=640x480x16 flags=00000081
+V> HB 19 t=27859 blits=78 px=8740730 lock=0 mode=640x480x16 flags=00000081
+V> PM16 00001F01 #5 ecx=00000000 ebx=00630000 esi=149F0000 edi=00001456
+V> PM16 00004000 #1 ecx=00000000 ebx=00008B18 esi=00002C6F edi=00000001
+V> PM16 00004002 #1 ecx=00000008 ebx=000001E0 esi=00000280 edi=000001E0
+V> PM16 00004000 #2 ecx=00000000 ebx=00008B18 esi=00002C6F edi=00004694
+V> PM16 00004002 #2 ecx=00000008 ebx=00000258 esi=00000320 edi=00000258
+V> PM16 00004000 #3 ecx=00000000 ebx=00008B18 esi=00002C6F edi=0000469A
+V> PM16 00004002 #3 ecx=00000008 ebx=00000300 esi=00000400 edi=00000300
+V> PM16 00004000 #4 ecx=00000000 ebx=00008B18 esi=00002C6F edi=000046A0
+V> PM16 00004002 #4 ecx=00000008 ebx=00000360 esi=00000480 edi=00000360
+V> PM16 00004000 #5 ecx=00000000 ebx=00008B18 esi=00002C6F edi=000046A0
+V> PM16 00004002 #5 ecx=00000008 ebx=000002D0 esi=00000500 edi=000002D0
+V> PM16 00004000 #6 ecx=00000000 ebx=00008B18 esi=00002C6F edi=000046A0
+V> PM16 00004002 #6 ecx=00000008 ebx=00000320 esi=00000500 edi=00000320
+V> PM16 00001F01 #6 ecx=00000000 ebx=00630000 esi=14570000 edi=0000149E
+V> HB 20 t=28884 blits=81 px=9065470 lock=0 mode=640x480x16 flags=00000081
+V> HB 21 t=29904 blits=84 px=9274480 lock=0 mode=640x480x16 flags=00000081
+V> HB 22 t=30929 blits=109 px=10175566 lock=0 mode=640x480x16 flags=00000081
+V> DESTROY_PROCESS: FFFC099D
+V> HB 23 t=31954 blits=121 px=10570040 lock=0 mode=640x480x16 flags=00000081
+V> HB 24 t=32979 blits=129 px=10789964 lock=0 mode=640x480x16 flags=00000081
+V> HB 25 t=34004 blits=130 px=10958698 lock=0 mode=640x480x16 flags=00000081
+V> HB 26 t=35029 blits=139 px=11420881 lock=0 mode=640x480x16 flags=00000081
+V> HB 27 t=36049 blits=150 px=11955698 lock=0 mode=640x480x16 flags=00000081
+V> HB 28 t=37074 blits=168 px=12561764 lock=0 mode=640x480x16 flags=00000081
+V> HB 29 t=38099 blits=181 px=12829070 lock=0 mode=640x480x16 flags=00000081
+V> INT 10h ignored for EAX=00000003
+V> INT 10h ignored for EAX=00000003
+V> HB 30 t=39124 blits=186 px=13386062 lock=0 mode=640x480x16 flags=00000081
+V> HB 31 t=40160 blits=192 px=13584671 lock=0 mode=640x480x16 flags=00000081
+V> HB 32 t=41184 blits=200 px=13591467 lock=0 mode=640x480x16 flags=00000081
+V> HB 33 t=42209 blits=205 px=13592742 lock=0 mode=640x480x16 flags=00000081
+V> HB 34 t=43234 blits=213 px=13594374 lock=0 mode=640x480x16 flags=00000081
+V> HB 35 t=44259 blits=218 px=13595421 lock=0 mode=640x480x16 flags=00000081
+V> HB 36 t=45284 blits=223 px=13596696 lock=0 mode=640x480x16 flags=00000081
+V> HB 37 t=46304 blits=227 px=13597716 lock=0 mode=640x480x16 flags=00000081
+V> HB 38 t=47328 blits=231 px=13599636 lock=0 mode=640x480x16 flags=00000081
+V> DIOC_OPEN
+V> HB 39 t=48354 blits=238 px=13977355 lock=0 mode=640x480x16 flags=00000081
+V> HB 40 t=49377 blits=256 px=15167061 lock=0 mode=640x480x16 flags=00000081
+V> HB 41 t=50404 blits=269 px=15708528 lock=0 mode=640x480x16 flags=00000081
+V> HB 42 t=51424 blits=283 px=16100696 lock=0 mode=640x480x16 flags=00000081
+V> HB 43 t=52449 blits=298 px=16176940 lock=0 mode=640x480x16 flags=00000081
+V> HB 44 t=53474 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+V> HB 45 t=54497 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+V> HB 46 t=55524 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+V> HB 47 t=56544 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF7800
+V> DIOC_OPEN
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF7800
+V> DIOC_OPEN
+D> Control (16bit): 3075 (0x0c03)
+V> PM16 00001117 #1 ecx=00000600 ebx=007E0000 esi=00000000 edi=006C08AC
+D> get the ramp
+V> DIOC_OPEN
+V> IOCTL 10000002 #1 in=4 [BFF88DC4 00000000 00000000 00000000] out=64
+V> DeviceIOControl: Unknown: 2
+V> DIOC_OPEN
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> success
+D> Control (16bit): 3075 (0x0c03)
+V> PM16 00001117 #2 ecx=00000600 ebx=007E0000 esi=00000000 edi=006C08AC
+D> get the ramp
+V> DIOC_OPEN
+V> IOCTL 10000002 #2 in=4 [BFF88DC4 00000000 00000000 00000000] out=64
+V> DeviceIOControl: Unknown: 2
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+V> HB 48 t=57568 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF7800
+V> DIOC_OPEN
+V> IOCTL 0000110C #1 in=4 [00000008 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #1 in=4 [00000000 00000000 00000000 00000000] out=0
+V> IOCTL 0000110C #2 in=4 [00000010 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #2 in=4 [00000000 00000000 00000000 00000000] out=0
+V> IOCTL 0000110C #3 in=4 [00000008 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #3 in=4 [00000000 00000000 00000000 00000000] out=0
+V> HB 49 t=58594 blits=305 px=16793451 lock=0 mode=640x480x16 flags=00000081
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF7800
+V> DIOC_OPEN
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF7800
+V> DIOC_OPEN
+D> Control (16bit): 3075 (0x0c03)
+V> PM16 00001117 #1 ecx=00000600 ebx=007E0000 esi=00000000 edi=006C08AC
+D> get the ramp
+V> DIOC_OPEN
+V> IOCTL 10000002 #1 in=4 [BFF88DC4 00000000 00000000 00000000] out=64
+V> DeviceIOControl: Unknown: 2
+V> DIOC_OPEN
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> success
+D> Control (16bit): 3075 (0x0c03)
+V> PM16 00001117 #2 ecx=00000600 ebx=007E0000 esi=00000000 edi=006C08AC
+D> get the ramp
+V> DIOC_OPEN
+V> IOCTL 10000002 #2 in=4 [BFF88DC4 00000000 00000000 00000000] out=64
+V> DeviceIOControl: Unknown: 2
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+V> HB 48 t=57568 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF7800
+V> DIOC_OPEN
+V> IOCTL 0000110C #1 in=4 [00000008 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #1 in=4 [00000000 00000000 00000000 00000000] out=0
+V> IOCTL 0000110C #2 in=4 [00000010 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #2 in=4 [00000000 00000000 00000000 00000000] out=0
+V> IOCTL 0000110C #3 in=4 [00000008 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #3 in=4 [00000000 00000000 00000000 00000000] out=0
+V> HB 49 t=58594 blits=305 px=16793451 lock=0 mode=640x480x16 flags=00000081
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+V> PM16 00001F04 #2 ecx=00020000 ebx=00000000 esi=00000000 edi=000014AE
+V> HB 50 t=59616 blits=311 px=18529771 lock=0 mode=640x480x16 flags=00000081
+V> PM16 00001F04 #3 ecx=00020000 ebx=00000000 esi=00000000 edi=81D414AE
+V> HB 51 t=60641 blits=326 px=22868971 lock=0 mode=640x480x16 flags=00000081
+V> HB 52 t=61669 blits=342 px=27497451 lock=0 mode=640x480x16 flags=00000081
+V> HB 53 t=62721 blits=358 px=32125931 lock=0 mode=640x480x16 flags=00000081
+V> HB 54 t=63744 blits=373 px=36465131 lock=0 mode=640x480x16 flags=00000081
+V> HB 55 t=64774 blits=389 px=41093611 lock=0 mode=640x480x16 flags=00000081
+V> HB 56 t=65793 blits=404 px=45432811 lock=0 mode=640x480x16 flags=00000081
+V> HB 57 t=66834 blits=420 px=50061291 lock=0 mode=640x480x16 flags=00000081
+V> HB 58 t=67872 blits=436 px=54689771 lock=0 mode=640x480x16 flags=00000081
+V> HB 59 t=68899 blits=451 px=59028971 lock=0 mode=640x480x16 flags=00000081
+V> HB 60 t=69921 blits=467 px=63657451 lock=0 mode=640x480x16 flags=00000081
+V> HB 61 t=70944 blits=482 px=67996651 lock=0 mode=640x480x16 flags=00000081
+V> HB 62 t=71968 blits=498 px=72625131 lock=0 mode=640x480x16 flags=00000081
+V> HB 63 t=73024 blits=513 px=76964331 lock=0 mode=640x480x16 flags=00000081
+V> HB 64 t=74050 blits=529 px=81592811 lock=0 mode=640x480x16 flags=00000081
+V> HB 65 t=75074 blits=544 px=85932011 lock=0 mode=640x480x16 flags=00000081
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+V> HB 66 t=76099 blits=557 px=89693291 lock=0 mode=640x480x16 flags=00000081
+V> HB 67 t=77136 blits=573 px=94321771 lock=0 mode=640x480x16 flags=00000081
+V> HB 68 t=78160 blits=596 px=97340726 lock=0 mode=640x480x16 flags=00000081
+V> HB 69 t=79184 blits=619 px=98459184 lock=0 mode=640x480x16 flags=00000081
+V> HB 70 t=80209 blits=645 px=100263848 lock=0 mode=640x480x16 flags=00000081
+V> HB 71 t=81264 blits=677 px=101798710 lock=0 mode=640x480x16 flags=00000081
+V> HB 72 t=82289 blits=696 px=101999827 lock=0 mode=640x480x16 flags=00000081
+V> HB 73 t=83313 blits=736 px=104313104 lock=0 mode=640x480x16 flags=00000081
+V> HB 74 t=84339 blits=770 px=106452836 lock=0 mode=640x480x16 flags=00000081
+V> HB 75 t=85360 blits=803 px=108111143 lock=0 mode=640x480x16 flags=00000081
+V> HB 76 t=86389 blits=830 px=110176078 lock=0 mode=640x480x16 flags=00000081
+V> HB 77 t=87409 blits=860 px=112007345 lock=0 mode=640x480x16 flags=00000081
+V> HB 78 t=88434 blits=892 px=115334088 lock=0 mode=640x480x16 flags=00000081
+V> IOCTL 0000110C #4 in=4 [00000010 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #4 in=4 [00000000 00000000 00000000 00000000] out=0
+V> PM16 00001F04 #4 ecx=00000000 ebx=172F0000 esi=00000000 edi=0000018F
+D> Control (16bit): 8 (0x0008)
+V> PM16 00001F04 #5 ecx=00210000 ebx=00020000 esi=00000000 edi=00000001
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+V> PM16 00001F01 #1 ecx=00210000 ebx=00020000 esi=149F0000 edi=00000000
+V> PM16 00001F02 #1 ecx=000201A4 ebx=000101A4 esi=000001D6 edi=000001A4
+V> PM16 00001F01 #2 ecx=00010000 ebx=00020000 esi=149F0000 edi=00000000
+V> PM16 00001F01 #3 ecx=00010000 ebx=172F0000 esi=149F0000 edi=00000000
+V> PM16 00001112 #1 ecx=00000004 ebx=00000202 esi=00000204 edi=000001C5
+V> PM16 0000110D #1 ecx=00000000 ebx=FFFF0000 esi=00000000 edi=0008D804
+V> PM16 00001112 #2 ecx=000001C3 ebx=0000006F esi=00000203 edi=000001C5
+V> PM16 0000110D #2 ecx=00000000 ebx=FFFF00C9 esi=00000002 edi=0008D4DE
+V> PM16 00001112 #3 ecx=00000004 ebx=0000006F esi=00000071 edi=000001C4
+V> PM16 0000110D #3 ecx=00000000 ebx=FFFF0000 esi=00000002 edi=0008CFDE
+V> PM16 00001112 #4 ecx=00000004 ebx=00000070 esi=00000203 edi=00000006
+V> PM16 0000110D #4 ecx=00000000 ebx=FFFF00C9 esi=00000000 edi=000019E0
+V> PM16 00001112 #5 ecx=00000005 ebx=00000201 esi=00000203 edi=000001C4
+V> PM16 0000110D #5 ecx=00000000 ebx=FFFF0000 esi=00000002 edi=0008D302
+V> PM16 00001112 #6 ecx=000001C2 ebx=00000070 esi=00000202 edi=000001C4
+V> PM16 0000110D #6 ecx=00000000 ebx=FFFF00C8 esi=00000000 edi=0008CFE0
+V> PM16 00001F01 #4 ecx=00010000 ebx=16E70000 esi=14570000 edi=0002149E
+V> HB 17 t=25809 blits=78 px=8740730 lock=0 mode=640x480x16 flags=00000081
+V> PM16 00001F02 #2 ecx=FFFF0194 ebx=00000194 esi=000001DC edi=00000194
+V> PM16 00001F02 #3 ecx=FFFF017E ebx=0000017E esi=000001E6 edi=0000017E
+V> PM16 00001F02 #4 ecx=FFFF015E ebx=0000015E esi=000001F2 edi=0000015E
+V> PM16 00001F02 #5 ecx=FFFF0138 ebx=00000138 esi=00000202 edi=00000138
+V> PM16 00001F02 #6 ecx=FFFF0112 ebx=00000112 esi=00000214 edi=00000112
+V> HB 18 t=26834 blits=78 px=8740730 lock=0 mode=640x480x16 flags=00000081
+V> HB 19 t=27859 blits=78 px=8740730 lock=0 mode=640x480x16 flags=00000081
+V> PM16 00001F01 #5 ecx=00000000 ebx=00630000 esi=149F0000 edi=00001456
+V> PM16 00004000 #1 ecx=00000000 ebx=00008B18 esi=00002C6F edi=00000001
+V> PM16 00004002 #1 ecx=00000008 ebx=000001E0 esi=00000280 edi=000001E0
+V> PM16 00004000 #2 ecx=00000000 ebx=00008B18 esi=00002C6F edi=00004694
+V> PM16 00004002 #2 ecx=00000008 ebx=00000258 esi=00000320 edi=00000258
+V> PM16 00004000 #3 ecx=00000000 ebx=00008B18 esi=00002C6F edi=0000469A
+V> PM16 00004002 #3 ecx=00000008 ebx=00000300 esi=00000400 edi=00000300
+V> PM16 00004000 #4 ecx=00000000 ebx=00008B18 esi=00002C6F edi=000046A0
+V> PM16 00004002 #4 ecx=00000008 ebx=00000360 esi=00000480 edi=00000360
+V> PM16 00004000 #5 ecx=00000000 ebx=00008B18 esi=00002C6F edi=000046A0
+V> PM16 00004002 #5 ecx=00000008 ebx=000002D0 esi=00000500 edi=000002D0
+V> PM16 00004000 #6 ecx=00000000 ebx=00008B18 esi=00002C6F edi=000046A0
+V> PM16 00004002 #6 ecx=00000008 ebx=00000320 esi=00000500 edi=00000320
+V> PM16 00001F01 #6 ecx=00000000 ebx=00630000 esi=14570000 edi=0000149E
+V> HB 20 t=28884 blits=81 px=9065470 lock=0 mode=640x480x16 flags=00000081
+V> HB 21 t=29904 blits=84 px=9274480 lock=0 mode=640x480x16 flags=00000081
+V> HB 22 t=30929 blits=109 px=10175566 lock=0 mode=640x480x16 flags=00000081
+V> DESTROY_PROCESS: FFFC099D
+V> HB 23 t=31954 blits=121 px=10570040 lock=0 mode=640x480x16 flags=00000081
+V> HB 24 t=32979 blits=129 px=10789964 lock=0 mode=640x480x16 flags=00000081
+V> HB 25 t=34004 blits=130 px=10958698 lock=0 mode=640x480x16 flags=00000081
+V> HB 26 t=35029 blits=139 px=11420881 lock=0 mode=640x480x16 flags=00000081
+V> HB 27 t=36049 blits=150 px=11955698 lock=0 mode=640x480x16 flags=00000081
+V> HB 28 t=37074 blits=168 px=12561764 lock=0 mode=640x480x16 flags=00000081
+V> HB 29 t=38099 blits=181 px=12829070 lock=0 mode=640x480x16 flags=00000081
+V> INT 10h ignored for EAX=00000003
+V> INT 10h ignored for EAX=00000003
+V> HB 30 t=39124 blits=186 px=13386062 lock=0 mode=640x480x16 flags=00000081
+V> HB 31 t=40160 blits=192 px=13584671 lock=0 mode=640x480x16 flags=00000081
+V> HB 32 t=41184 blits=200 px=13591467 lock=0 mode=640x480x16 flags=00000081
+V> HB 33 t=42209 blits=205 px=13592742 lock=0 mode=640x480x16 flags=00000081
+V> HB 34 t=43234 blits=213 px=13594374 lock=0 mode=640x480x16 flags=00000081
+V> HB 35 t=44259 blits=218 px=13595421 lock=0 mode=640x480x16 flags=00000081
+V> HB 36 t=45284 blits=223 px=13596696 lock=0 mode=640x480x16 flags=00000081
+V> HB 37 t=46304 blits=227 px=13597716 lock=0 mode=640x480x16 flags=00000081
+V> HB 38 t=47328 blits=231 px=13599636 lock=0 mode=640x480x16 flags=00000081
+V> DIOC_OPEN
+V> HB 39 t=48354 blits=238 px=13977355 lock=0 mode=640x480x16 flags=00000081
+V> HB 40 t=49377 blits=256 px=15167061 lock=0 mode=640x480x16 flags=00000081
+V> HB 41 t=50404 blits=269 px=15708528 lock=0 mode=640x480x16 flags=00000081
+V> HB 42 t=51424 blits=283 px=16100696 lock=0 mode=640x480x16 flags=00000081
+V> HB 43 t=52449 blits=298 px=16176940 lock=0 mode=640x480x16 flags=00000081
+V> HB 44 t=53474 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+V> HB 45 t=54497 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+V> HB 46 t=55524 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+V> HB 47 t=56544 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF7800
+V> DIOC_OPEN
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF7800
+V> DIOC_OPEN
+D> Control (16bit): 3075 (0x0c03)
+V> PM16 00001117 #1 ecx=00000600 ebx=007E0000 esi=00000000 edi=006C08AC
+D> get the ramp
+V> DIOC_OPEN
+V> IOCTL 10000002 #1 in=4 [BFF88DC4 00000000 00000000 00000000] out=64
+V> DeviceIOControl: Unknown: 2
+V> DIOC_OPEN
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> success
+D> Control (16bit): 3075 (0x0c03)
+V> PM16 00001117 #2 ecx=00000600 ebx=007E0000 esi=00000000 edi=006C08AC
+D> get the ramp
+V> DIOC_OPEN
+V> IOCTL 10000002 #2 in=4 [BFF88DC4 00000000 00000000 00000000] out=64
+V> DeviceIOControl: Unknown: 2
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+V> HB 48 t=57568 blits=304 px=16486251 lock=0 mode=640x480x16 flags=00000081
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF7800
+V> DIOC_OPEN
+V> IOCTL 0000110C #1 in=4 [00000008 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #1 in=4 [00000000 00000000 00000000 00000000] out=0
+V> IOCTL 0000110C #2 in=4 [00000010 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #2 in=4 [00000000 00000000 00000000 00000000] out=0
+V> IOCTL 0000110C #3 in=4 [00000008 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #3 in=4 [00000000 00000000 00000000 00000000] out=0
+V> HB 49 t=58594 blits=305 px=16793451 lock=0 mode=640x480x16 flags=00000081
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+V> PM16 00001F04 #2 ecx=00020000 ebx=00000000 esi=00000000 edi=000014AE
+V> HB 50 t=59616 blits=311 px=18529771 lock=0 mode=640x480x16 flags=00000081
+V> PM16 00001F04 #3 ecx=00020000 ebx=00000000 esi=00000000 edi=81D414AE
+V> HB 51 t=60641 blits=326 px=22868971 lock=0 mode=640x480x16 flags=00000081
+V> HB 52 t=61669 blits=342 px=27497451 lock=0 mode=640x480x16 flags=00000081
+V> HB 53 t=62721 blits=358 px=32125931 lock=0 mode=640x480x16 flags=00000081
+V> HB 54 t=63744 blits=373 px=36465131 lock=0 mode=640x480x16 flags=00000081
+V> HB 55 t=64774 blits=389 px=41093611 lock=0 mode=640x480x16 flags=00000081
+V> HB 56 t=65793 blits=404 px=45432811 lock=0 mode=640x480x16 flags=00000081
+V> HB 57 t=66834 blits=420 px=50061291 lock=0 mode=640x480x16 flags=00000081
+V> HB 58 t=67872 blits=436 px=54689771 lock=0 mode=640x480x16 flags=00000081
+V> HB 59 t=68899 blits=451 px=59028971 lock=0 mode=640x480x16 flags=00000081
+V> HB 60 t=69921 blits=467 px=63657451 lock=0 mode=640x480x16 flags=00000081
+V> HB 61 t=70944 blits=482 px=67996651 lock=0 mode=640x480x16 flags=00000081
+V> HB 62 t=71968 blits=498 px=72625131 lock=0 mode=640x480x16 flags=00000081
+V> HB 63 t=73024 blits=513 px=76964331 lock=0 mode=640x480x16 flags=00000081
+V> HB 64 t=74050 blits=529 px=81592811 lock=0 mode=640x480x16 flags=00000081
+V> HB 65 t=75074 blits=544 px=85932011 lock=0 mode=640x480x16 flags=00000081
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+V> HB 66 t=76099 blits=557 px=89693291 lock=0 mode=640x480x16 flags=00000081
+V> HB 67 t=77136 blits=573 px=94321771 lock=0 mode=640x480x16 flags=00000081
+V> HB 68 t=78160 blits=596 px=97340726 lock=0 mode=640x480x16 flags=00000081
+V> HB 69 t=79184 blits=619 px=98459184 lock=0 mode=640x480x16 flags=00000081
+V> HB 70 t=80209 blits=645 px=100263848 lock=0 mode=640x480x16 flags=00000081
+V> HB 71 t=81264 blits=677 px=101798710 lock=0 mode=640x480x16 flags=00000081
+V> HB 72 t=82289 blits=696 px=101999827 lock=0 mode=640x480x16 flags=00000081
+V> HB 73 t=83313 blits=736 px=104313104 lock=0 mode=640x480x16 flags=00000081
+V> HB 74 t=84339 blits=770 px=106452836 lock=0 mode=640x480x16 flags=00000081
+V> HB 75 t=85360 blits=803 px=108111143 lock=0 mode=640x480x16 flags=00000081
+V> HB 76 t=86389 blits=830 px=110176078 lock=0 mode=640x480x16 flags=00000081
+V> HB 77 t=87409 blits=860 px=112007345 lock=0 mode=640x480x16 flags=00000081
+V> HB 78 t=88434 blits=892 px=115334088 lock=0 mode=640x480x16 flags=00000081
+V> IOCTL 0000110C #4 in=4 [00000010 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #4 in=4 [00000000 00000000 00000000 00000000] out=0
+V> PM16 00001F04 #4 ecx=00000000 ebx=172F0000 esi=00000000 edi=0000018F
+D> Control (16bit): 8 (0x0008)
+V> PM16 00001F04 #5 ecx=00210000 ebx=00020000 esi=00000000 edi=00000001
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF7800
+V> DIOC_OPEN
+V> DIOC_OPEN
+V> DESTROY_PROCESS: FFFC2831
+V> HB 79 t=89459 blits=918 px=118162073 lock=0 mode=640x480x16 flags=00000081
+V> HB 80 t=90480 blits=920 px=118162109 lock=0 mode=640x480x16 flags=00000081
+V> HB 81 t=91504 blits=922 px=118162145 lock=0 mode=640x480x16 flags=00000081

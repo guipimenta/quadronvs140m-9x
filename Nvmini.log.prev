@@ -1,0 +1,3884 @@
+D> DriverInit: ENTER (nvmini.drv build 3037)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 1024x768 16bpp 96dpi
+D> Registry: 640x480 4bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 8 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=1
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=8 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0458
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=1
+D> PhysicalEnable: continue with 640x480
+D> PhysicalEnable: Mode not valid! wScrX=640 wScrY=480 wBpp=8
+D> Enable: PhysicalEnable failed!
+D> DriverInit: ENTER (nvmini.drv build 3037)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 1024x768 16bpp 96dpi
+D> Registry: 1024x768 8bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 8 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=1
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=8 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0458
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=1
+D> PhysicalEnable: continue with 1024x768
+D> PhysicalEnable: Mode not valid! wScrX=1024 wScrY=768 wBpp=8
+D> Enable: PhysicalEnable failed!
+D> DriverInit: ENTER (nvmini.drv build 3037)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 16bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 16 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=16 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> DriverInit: ENTER (nvmini.drv build 3037)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3037)
+D> DriverInit: VDDEntryPoint=003B:03D4, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3037)
+D> DriverInit: VDDEntryPoint=003B:03D4, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> SwitchToBgnd
+D> RestoreDesktopMode: 1024x768, wBpp=32
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> SwitchToFgnd
+D> RepaintScreen: RepaintFunc=17EF:0498, bNoRepaint=0
+D> SwitchToBgnd
+D> DriverInit: ENTER (nvmini.drv build 3037)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3037)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3037)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3038)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> DriverInit: ENTER (nvmini.drv build 3038)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3038)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3039)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 800x600 32bpp 96dpi
+D> Entry: 800x600
+D> After fix: 800x600 32 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 800x600
+D> SetDisplayMode: wXRes=800 wYRes=600
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=800 wScreenY=600 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=800 wScrY=600 wBpp=32 wDpi=96 wScreenX=800 wScreenY=600
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=800 wScreenY=600
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=800 wScreenY=600 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DriverInit: ENTER (nvmini.drv build 3039)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3039)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3040)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 800x600 32bpp 96dpi
+D> Entry: 800x600
+D> After fix: 800x600 32 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 800x600
+D> SetDisplayMode: wXRes=800 wYRes=600
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=800 wScreenY=600 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=800 wScrY=600 wBpp=32 wDpi=96 wScreenX=800 wScreenY=600
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=800 wScreenY=600
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 32bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 32 bpp
+D> ReEnable: wScreenX=800 wScreenY=600 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=32 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 800x600 16bpp 96dpi
+D> Entry: 800x600
+D> After fix: 800x600 16 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 800x600
+D> SetDisplayMode: wXRes=800 wYRes=600
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=800 wScreenY=600 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=800 wScrY=600 wBpp=16 wDpi=96 wScreenX=800 wScreenY=600
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3040)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 8bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 8 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=1
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=8 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0458
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=1
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=8 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3040)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: SetDisplayMode failed! wScrX=1024 wScrY=768 wBpp=32
+D> Enable: PhysicalEnable failed!
+D> DriverInit: ENTER (nvmini.drv build 3040)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 16bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 16 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=16 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3040)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 16bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 16 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=16 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3041)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 16bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 16 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=16 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 800x600 16bpp 96dpi
+D> Entry: 800x600
+D> After fix: 800x600 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 800x600
+D> SetDisplayMode: wXRes=800 wYRes=600
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=800 wScreenY=600 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=800 wScrY=600 wBpp=16 wDpi=96 wScreenX=800 wScreenY=600
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3041)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: SetDisplayMode failed! wScrX=1024 wScrY=768 wBpp=32
+D> Enable: PhysicalEnable failed!
+D> DriverInit: ENTER (nvmini.drv build 3041)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 16bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 16 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=16 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3041)
+D> DriverInit: VDDEntryPoint=003B:03D4, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 32bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=32 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3041)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3042)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3042)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3043)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> DriverInit: ENTER (nvmini.drv build 3043)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3043)
+D> DriverInit: VDDEntryPoint=003B:03D4, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 32bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=32 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: failure
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3043)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3044)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8ED9800
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8ED9800
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8ED9800
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Dump DD32 calls
+D> DriverInit: ENTER (nvmini.drv build 3044)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> DriverInit: ENTER (nvmini.drv build 3044)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3045)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8ED9800
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8ED9800
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8ED9800
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 031F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05AF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 800x600 16bpp 96dpi
+D> Entry: 800x600
+D> After fix: 800x600 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> DriverInit: ENTER (nvmini.drv build 3045)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3046)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3046)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=013B0000, ecx=01430000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05AF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 031F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17EF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3046)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=015B0000, ecx=01630000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17CF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EE6800
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EE6800
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EE6800
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> DriverInit: ENTER (nvmini.drv build 3046)
+D> DriverInit: VDDEntryPoint=003B:03D4, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=015B0000, ecx=01630000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17CF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EA6800
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EA6800
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DriverInit: ENTER (nvmini.drv build 3046)
+D> DriverInit: VDDEntryPoint=003B:03D4, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=015B0000, ecx=01630000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17CF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> SwitchToBgnd
+D> SwitchToFgnd
+D> RestoreDesktopMode: 1024x768, wBpp=32
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> RepaintScreen: RepaintFunc=17CF:0498, bNoRepaint=0
+D> DriverInit: ENTER (nvmini.drv build 3046)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=015B0000, ecx=01630000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17CF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Disable: lpDevice=2056:0000
+D> DriverInit: ENTER (nvmini.drv build 3047)
+D> DriverInit: VDDEntryPoint=003B:03DA, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=015B0000, ecx=01630000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17CF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EE8800
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EE8800
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EE8800
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> DriverInit: ENTER (nvmini.drv build 3047)
+D> DriverInit: VDDEntryPoint=003B:03DE, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=015B0000, ecx=01630000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17CF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF1800
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF1800
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF1800
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF1800
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C8EF1800
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+D> 
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> DriverInit: ENTER (nvmini.drv build 3047)
+D> DriverInit: VDDEntryPoint=003B:03DE, OurVMHandle=0001
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: 1
+D> VDD_REGISTER_DISPLAY_DRIVER_INFO: eax=003B0354, edx=015B0000, ecx=01630000
+D> VXD connect success!
+D> VXD mouse ON
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=0 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=0 wScreenY=0
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=0 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> HookInt2Fh: RepaintFunc=17CF:0498
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)

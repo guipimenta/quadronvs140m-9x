@@ -1,0 +1,86 @@
+
+==== pftest 2026-10-23 15:34:54 ====
+ChangeDisplaySettings(640x480x16) -> 0
+screen: 640x480, 16 bpp, planes 1
+DescribePixelFormat: 600 pixel formats
+  # 1 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=32 stencil=0 accum=0 aux=0
+  # 2 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=32 stencil=0 accum=64 aux=0
+  # 3 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=32 stencil=0 accum=0 aux=0
+  # 4 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=32 stencil=0 accum=64 aux=0
+  # 5 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=32 stencil=0 accum=0 aux=0
+  # 6 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=32 stencil=0 accum=64 aux=0
+  # 7 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=32 stencil=0 accum=0 aux=0
+  # 8 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=32 stencil=0 accum=64 aux=0
+  # 9 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=0 aux=0
+  #10 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=64 aux=0
+  #11 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=0 aux=0
+  #12 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=64 aux=0
+  #13 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=0 aux=0
+  #14 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=64 aux=0
+  #15 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=0 aux=0
+  #16 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=64 aux=0
+  #17 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=0 aux=0
+  #18 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=64 aux=0
+  #19 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=0 aux=0
+  #20 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=64 aux=0
+  #21 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=0 aux=0
+  #22 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=64 aux=0
+  #23 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=0 aux=0
+  #24 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=64 aux=0
+  #25 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=16 stencil=0 accum=0 aux=0
+  #26 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=16 stencil=0 accum=64 aux=0
+  #27 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=16 stencil=0 accum=0 aux=0
+  #28 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=16 stencil=0 accum=64 aux=0
+  #29 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=16 stencil=0 accum=0 aux=0
+  #30 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=16 stencil=0 accum=64 aux=0
+  #31 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=16 stencil=0 accum=0 aux=0
+  #32 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=16 stencil=0 accum=64 aux=0
+  #33 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=0 aux=0
+  #34 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=64 aux=0
+  #35 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=0 aux=0
+  #36 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=64 aux=0
+  #37 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=0 aux=0
+  #38 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=64 aux=0
+  #39 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=0 aux=0
+  #40 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=64 aux=0
+  #41 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=0 aux=0
+  #42 flags=00008024 WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=64 aux=0
+  #43 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=0 aux=0
+  #44 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=64 aux=0
+  #45 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=0 aux=0
+  #46 flags=00008034 WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=64 aux=0
+  #47 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=0 aux=0
+  #48 flags=00008235 DBL WIN GL GDI type=RGBA color=24(8/8/8/0) depth=24 stencil=8 accum=64 aux=0
+  #49 flags=00008024 WIN GL type=RGBA color=32(8/8/8/8) depth=32 stencil=0 accum=0 aux=0
+  #50 flags=00008024 WIN GL type=RGBA color=32(8/8/8/8) depth=32 stencil=0 accum=64 aux=0
+  #51 flags=00008225 DBL WIN GL type=RGBA color=32(8/8/8/8) depth=32 stencil=0 accum=0 aux=0
+  #52 flags=00008225 DBL WIN GL type=RGBA color=32(8/8/8/8) depth=32 stencil=0 accum=64 aux=0
+  #53 flags=00008034 WIN GL GDI type=RGBA color=32(8/8/8/8) depth=32 stencil=0 accum=0 aux=0
+  #54 flags=00008034 WIN GL GDI type=RGBA color=32(8/8/8/8) depth=32 stencil=0 accum=64 aux=0
+  #55 flags=00008235 DBL WIN GL GDI type=RGBA color=32(8/8/8/8) depth=32 stencil=0 accum=0 aux=0
+  #56 flags=00008235 DBL WIN GL GDI type=RGBA color=32(8/8/8/8) depth=32 stencil=0 accum=64 aux=0
+  #57 flags=00008024 WIN GL type=RGBA color=32(8/8/8/8) depth=24 stencil=0 accum=0 aux=0
+  #58 flags=00008024 WIN GL type=RGBA color=32(8/8/8/8) depth=24 stencil=0 accum=64 aux=0
+  #59 flags=00008225 DBL WIN GL type=RGBA color=32(8/8/8/8) depth=24 stencil=0 accum=0 aux=0
+  #60 flags=00008225 DBL WIN GL type=RGBA color=32(8/8/8/8) depth=24 stencil=0 accum=64 aux=0
+  #61 flags=00008034 WIN GL GDI type=RGBA color=32(8/8/8/8) depth=24 stencil=0 accum=0 aux=0
+  #62 flags=00008034 WIN GL GDI type=RGBA color=32(8/8/8/8) depth=24 stencil=0 accum=64 aux=0
+  #63 flags=00008235 DBL WIN GL GDI type=RGBA color=32(8/8/8/8) depth=24 stencil=0 accum=0 aux=0
+  #64 flags=00008235 DBL WIN GL GDI type=RGBA color=32(8/8/8/8) depth=24 stencil=0 accum=64 aux=0
+ChoosePixelFormat(Half-Life: flags=25 color=24 depth=32 stencil=0) -> 3 (err 0)
+  # 3 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=32 stencil=0 accum=0 aux=0
+  => Half-Life would ACCEPT this format
+ChoosePixelFormat(16/16: flags=25 color=16 depth=16 stencil=0) -> 123 (err 0)
+  #123 flags=00008225 DBL WIN GL type=RGBA color=16(5/6/5/0) depth=16 stencil=0 accum=0 aux=0
+  => Half-Life would ACCEPT this format
+ChoosePixelFormat(32/24/8: flags=25 color=32 depth=24 stencil=8) -> 83 (err 0)
+  #83 flags=00008225 DBL WIN GL type=RGBA color=32(8/8/8/8) depth=24 stencil=8 accum=0 aux=0
+  => Half-Life would ACCEPT this format
+ChoosePixelFormat(24/24: flags=25 color=24 depth=24 stencil=0) -> 11 (err 0)
+  #11 flags=00008225 DBL WIN GL type=RGBA color=24(8/8/8/0) depth=24 stencil=0 accum=0 aux=0
+  => Half-Life would ACCEPT this format
+SetPixelFormat(3) ok
+GL_VENDOR:   Mesa
+GL_RENDERER: llvmpipe (LLVM 18.18, 128 bits)
+GL_VERSION:  4.5 (Compatibility Profile) Mesa 9x 25.1.6.1
+done

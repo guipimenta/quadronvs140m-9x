@@ -34,6 +34,9 @@ THE SOFTWARE.
 
 #include "wram.h"
 #include "async.h"
+#ifdef NV_DETECT
+#include "nv50_evo.h"   /* M4.5: NV_resume_tick / NV_display_resume_check */
+#endif
 
 static DWORD screen_time = ASYNC_DEFAULT; // 60 Hz
 static blit_t *blit = NULL;
@@ -95,6 +98,10 @@ void __stdcall async_timeout(DWORD tardiness, DWORD refdata)
 #ifdef DBGRING
 	/* 3048 diagnostics: one heartbeat line per ~64 ticks (~1 s) so a
 	 * captured log shows whether ring 0 was still alive and blitting. */
+#ifdef NV_DETECT
+	if(NV_resume_tick())
+		NV_display_resume_check();
+#endif
 	{
 		static DWORD hb_ticks = 0;
 		if((++hb_ticks & 63) == 0)

@@ -196,6 +196,43 @@ int NV_evo_stage(nv_evo_layout_t *out)
  * the dword index just past the last drained submission. */
 static unsigned long nv_owned    = 0;
 static unsigned long nv_ring_pos = 0;
+static unsigned long nv_objects_val = 0;   /* PDISP_OBJECTS we programmed */
+static long          nv_resume_ticks = 0;  /* M4.5: countdown to the post-resume check */
+
+/* M4.5: did somebody else (VBIOS POST after a resume, INT 10h after a
+ * full-screen DOS box) reprogram the display engine behind our back? Then our
+ * core channel, RAMHT and ring are gone and the next modeset must run the full
+ * init again instead of appending to a ring nobody executes. */
+int NV_hw_lost(void)
+{
+	unsigned long obj, stat;
+	if(!nv_owned)
+		return 0;
+	obj  = NV_rd32(NV50_PDISP_OBJECTS);
+	stat = NV_rd32(NV50_PDISP_CHAN_STAT(0));
+	dbg_printf("NV_hw_lost? objects %lX (ours %lX) ch0 stat %lX\n", obj, nv_objects_val, stat);
+	if(obj == nv_objects_val && (stat & NV50_CHAN_CTRL_DMA_ENABLED))
+		return 0;
+	dbg_printf("NV: display engine state LOST (objects %lX, ours %lX, ch0 stat %lX) - full re-init on the next modeset\n",
+		obj, nv_objects_val, stat);
+	nv_owned    = 0;
+	nv_ring_pos = 0;
+	return 1;
+}
+
+void NV_power_notify(unsigned long state)
+{
+	dbg_printf("NV_power_notify: adapter power state %lX (1=D0 2=D1 4=D2 8=D3)\n", state);
+	if(state == 1)
+		nv_resume_ticks = 128;   /* ~2 s of blit-timer ticks, then NV_display_resume_check */
+}
+
+int NV_resume_tick(void)
+{
+	if(nv_resume_ticks > 0 && --nv_resume_ticks == 0)
+		return 1;
+	return 0;
+}
 
 /* Service the supervisor handshake stages the engine raises mid-UPDATE
  * (nouveau nv50_display_bh + unk10/20/40 handlers). Our clock and SOR link
@@ -356,11 +393,16 @@ static int NV_evo_takeover(nv_evo_flip_t *out, unsigned long w, unsigned long h,
 		stage_pattern(fb);
 	NV_blog(0x201);
 
+	NV_hw_lost();   /* M4.5: drop a stale claim before deciding append vs. full init */
 	if(nv_owned)
 	{
 		/* Engine already ours: just append the new head state to the live
 		 * ring (wrapping it with a jump when the 4 KiB are used up). */
-		long ri = evo_ring_begin(96);
+		long ri;
+		dbg_printf("NV_evo_takeover: append path, ring_pos=%lu ch0 stat=%lX get=%lX put=%lX\n",
+			nv_ring_pos, NV_rd32(NV50_PDISP_CHAN_STAT(ch)),
+			NV_rd32(NV50_PDISP_USER_GET(ch)), NV_rd32(NV50_PDISP_USER_PUT(ch)));
+		ri = evo_ring_begin(96);
 		if(ri < 0)
 			return 0;
 		i = (unsigned long)ri;
@@ -557,13 +599,19 @@ build_ring:
 	 * link are already running at exactly the committed mode, so the VBIOS
 	 * script / PLL work in each stage is a no-op here and the stages reduce to
 	 * their acks. Service them while waiting for the completion notifier. */
-	for(guard = 0; guard < 2000000UL; guard++)
+	/* M4.5: a normal append drains in a few iterations; cap it so a stalled
+	 * append fails fast and the caller can re-init. The full first takeover
+	 * needs the long count for the real supervisor handshake. */
+	{
+	unsigned long guard_max = nv_owned ? 300000UL : 2000000UL;
+	for(guard = 0; guard < guard_max; guard++)
 	{
 		evo_service_sv(out);
 		if(NV_vram_rd32(notify) != 0)
 			break;
 		if(NV_rd32(NV50_PDISP_INTR_0) & (0x00010000UL << ch))
 			break;
+	}
 	}
 	out->sync_loops = guard;
 	out->ntfy_post  = NV_vram_rd32(notify);
@@ -588,12 +636,27 @@ build_ring:
 	 * instead of appending to a stalled channel. */
 	if(nv_owned)
 	{
-		nv_ring_pos = i;
+		if(out->ntfy_post != 0)
+		{
+			nv_ring_pos = i;
+		}
+		else
+		{
+			/* M4.5: the appended UPDATE never drained -> the engine was reset
+			 * behind us (screen switch / DPMS / resume) into a state that reads
+			 * DMA_ENABLED but will not fetch. Drop the claim so the caller
+			 * re-runs the full init (which re-does the stuck-state recovery). */
+			dbg_printf("NV_evo_takeover: append stalled (get=%lX put=%lX), dropping engine claim\n",
+				out->post_get, out->post_put);
+			nv_owned    = 0;
+			nv_ring_pos = 0;
+		}
 	}
 	else if(out->ntfy_post != 0 && (out->intr0 & (0x00010000UL << ch)) == 0)
 	{
-		nv_owned    = 1;
-		nv_ring_pos = i;
+		nv_owned       = 1;
+		nv_ring_pos    = i;
+		nv_objects_val = out->objects_val;
 	}
 	if(nv_owned && out->ntfy_post != 0)
 	{
@@ -689,12 +752,34 @@ int NV_native_modeset(unsigned long w, unsigned long h, unsigned long bpp)
 		dbg_printf("NV_native_modeset: refused, VRAM layout check failed\n");
 		return 0;
 	}
-	ok = NV_evo_takeover(&nv_last_diag, w, h, bpp, 0, nv_boot_pattern ? 1 : 0);
-	if(ok && nv_last_diag.ntfy_post != 0)
 	{
-		nv_cnt_ok++;
-		dbg_printf("NV_native_modeset %lux%lux%lu OK\n", w, h, bpp);
-		return 1;
+		unsigned long was_owned;
+		NV_hw_lost();
+		was_owned = nv_owned;
+		ok = NV_evo_takeover(&nv_last_diag, w, h, bpp, 0, nv_boot_pattern ? 1 : 0);
+		if(ok && nv_last_diag.ntfy_post != 0)
+		{
+			nv_cnt_ok++;
+			dbg_printf("NV_native_modeset %lux%lux%lu OK%s\n", w, h, bpp,
+				was_owned ? "" : " (full engine init)");
+			if(!was_owned)
+				NV_cursor_restore();   /* image + visibility were lost with the engine */
+			return 1;
+		}
+		/* M4.5: an append that stalled just dropped nv_owned - retry once from
+		 * scratch (full RAMHT/channel/preamble/head rebuild). */
+		if(was_owned && !nv_owned)
+		{
+			dbg_printf("NV_native_modeset: append stalled, retrying with full engine init\n");
+			ok = NV_evo_takeover(&nv_last_diag, w, h, bpp, 0, nv_boot_pattern ? 1 : 0);
+			if(ok && nv_last_diag.ntfy_post != 0)
+			{
+				nv_cnt_ok++;
+				dbg_printf("NV_native_modeset %lux%lux%lu OK (full init after stall)\n", w, h, bpp);
+				NV_cursor_restore();
+				return 1;
+			}
+		}
 	}
 	dbg_printf("NV_native_modeset %lux%lux%lu FAILED stage=%lu ntfy=%lX\n",
 		w, h, bpp, nv_last_diag.stage, nv_last_diag.ntfy_post);
@@ -708,6 +793,8 @@ unsigned long nv_hw_cursor       = 1;
 unsigned long nv_hw_cursor_scale = 0;
 static unsigned long nv_cur_valid   = 0;   /* image in VRAM                 */
 static unsigned long nv_cur_visible = 0;   /* CURSOR_CTRL = SHOW committed  */
+static unsigned long nv_cur_want    = 0;   /* M4.5: GDI wants it shown      */
+static unsigned long nv_cur_img[64*64];    /* M4.5: ARGB copy for re-upload */
 static long          nv_cur_x = 0, nv_cur_y = 0;
 static unsigned long nv_cur_dbg = 0;       /* log the first few operations  */
 
@@ -791,6 +878,7 @@ int NV_cursor_load(const unsigned long *andmask, const unsigned long *xormask,
 				}
 			}
 			NV_vram_wr32(NVFB_CURSOR_VRAM_OFFSET + (cy * 64 + cx) * 4, px);
+			nv_cur_img[cy * 64 + cx] = px;
 		}
 	}
 	nv_cur_valid = (opaque != 0) ? 1 : 0;
@@ -799,11 +887,13 @@ int NV_cursor_load(const unsigned long *andmask, const unsigned long *xormask,
 	{
 		r = cursor_ctrl(1);
 		nv_cur_visible = r ? 1 : 0;
+		nv_cur_want    = 1;
 	}
 	else
 	{
 		r = nv_cur_visible ? cursor_ctrl(0) : 1;
 		nv_cur_visible = 0;
+		nv_cur_want    = 0;
 	}
 	if(nv_cur_dbg < 8)
 	{
@@ -816,10 +906,27 @@ int NV_cursor_load(const unsigned long *andmask, const unsigned long *xormask,
 
 /* Returns 1 when a hardware cursor is (now) shown, 0 when the caller should
  * fall back to the software cursor. */
+/* M4.5: after a full engine re-init the cursor surface in VRAM and the head's
+ * cursor state are gone; put both back from our copies. */
+void NV_cursor_restore(void)
+{
+	unsigned long i;
+	if(!NV_cursor_hw() || !nv_cur_valid)
+		return;
+	for(i = 0; i < 64*64; i++)
+		NV_vram_wr32(NVFB_CURSOR_VRAM_OFFSET + i * 4, nv_cur_img[i]);
+	nv_cur_visible = 0;
+	NV_cursor_move(nv_cur_x, nv_cur_y);
+	if(nv_cur_want)
+		nv_cur_visible = cursor_ctrl(1) ? 1 : 0;
+	dbg_printf("NV_cursor_restore: image re-uploaded, %s\n", nv_cur_visible ? "shown" : "hidden");
+}
+
 int NV_cursor_show(void)
 {
 	if(!NV_cursor_hw() || !nv_cur_valid)
 		return 0;
+	nv_cur_want = 1;
 	if(nv_cur_visible)
 		return 1;
 	NV_cursor_move(nv_cur_x, nv_cur_y);
@@ -833,6 +940,7 @@ int NV_cursor_show(void)
 
 void NV_cursor_hide(int invalidate)
 {
+	nv_cur_want = 0;
 	if(NV_cursor_hw() && nv_cur_visible)
 	{
 		cursor_ctrl(0);

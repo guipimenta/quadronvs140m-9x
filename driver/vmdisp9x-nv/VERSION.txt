@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3051  (OpenGL ICD actually working now: mesa3d.dll rebuilt without the KERNEL32 imports Win98 lacks; Half-Life intro crash FIXED in 3050: DCI refused; OpenGL ICD DONE: Mesa9x rebuilt against our FBHDA API, verified on the T61; Direct3D + DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
+Build: 3053  (M4.5 r2: standby/resume recovery via full engine re-init - TEST; OpenGL ICD actually working now: mesa3d.dll rebuilt without the KERNEL32 imports Win98 lacks; Half-Life intro crash FIXED in 3050: DCI refused; OpenGL ICD DONE: Mesa9x rebuilt against our FBHDA API, verified on the T61; Direct3D + DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
@@ -25,6 +25,46 @@ Registry (HKLM\Software\vmdisp9x\vesa):
                      3043), 0 = leave it uncached (MTRR.VXD cannot do it on the T61)
   InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
   BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3053: M4.5 r2 - the r1 lost-engine check was not enough. The T61 log of a
+screen-off/on showed the resume DID reach our modeset (RestoreDesktopMode ->
+SetDisplayMode), but it took the APPEND path and the appended UPDATE never
+drained (ntfy=0, get stuck behind put); meanwhile PDISP_OBJECTS and the ch0
+DMA_ENABLED bit still read what we programmed, so NV_hw_lost() wrongly said
+the engine was fine. The engine was in the old "stuck" state (reads enabled
+but will not fetch) - exactly what the full boot init's recovery nudges fix.
+r2: a stalled append now DROPS the engine claim and NV_native_modeset RETRIES
+once with the full init (RAMHT/channel/preamble/head rebuild + stuck-state
+recovery), then restores the cursor. The append wait is capped (fails fast);
+NV_hw_lost and the append entry now log the channel registers.
+Symptom being chased: after the panel powers off and back on, a blinking
+cursor on black then garbage; system stays responsive.
+TEST (same as 3052): `nvprobe tail c:\nvtail.txt`, trigger the panel off/on
+(or Stand by + resume), and send nvtail.txt. Look for
+"append stalled ... dropping engine claim" then
+"NV_native_modeset ... OK (full init after stall)".
+
+3052: M4.5 r1 - POWER / SCREEN-SWITCH RECOVERY (first attempt, needs the T61).
+Symptom: after standby the desktop does not come back. Mechanism: on resume
+the Windows VDD re-POSTs the VGA ROM (_ReInitROM) and the VBIOS reprograms
+the display engine; our VxD still believed it owned the EVO core channel and
+only APPENDED new head state to a ring nobody executed any more.
+- NV_hw_lost(): before every native modeset the VxD checks PDISP_OBJECTS and
+  the channel-0 status against what it programmed; a mismatch drops the claim
+  and NV_evo_takeover runs the full boot-time init again (RAMHT, channel,
+  LUT, head state). The cursor image is re-uploaded from a RAM copy and its
+  visibility restored; IA32_PAT entry 1 is re-armed (the BIOS resets it).
+- Mini-VDD SET_ADAPTER_POWER_STATE (table index 52) is now implemented and
+  logs "SET_ADAPTER_POWER_STATE: devnode=.. state=.." (1 D0 .. 8 D3); the
+  VPOWERD Power_Event system message is logged as "Power_Event: n". A D0 or
+  resume arms a check ~2 s later: if the engine is still lost and nobody
+  restored the desktop, the VxD re-runs the current mode itself and redraws
+  everything from the shadow buffer.
+- SAVE_REGISTERS / RESTORE_REGISTERS are traced in the log again.
+TEST: install nvmini.vxd + nvmini.drv + nvprobe.exe, reboot, start
+`nvprobe tail c:\nvtail.txt`, Start -> Shut Down -> Stand by, wait, resume.
+Send nvtail.txt (and C:\NVMINI.LOG if the tail died). Also try a full-screen
+DOS box (Alt+Enter in a command prompt, then Alt+Enter back) - same mechanism.
 
 3051: OPENGL ICD FIXED FOR REAL (verified 2026-10-23: Half-Life plays in OpenGL
 mode on the T61; Direct3D mode plays too, slower with some glitches). Half-Life's "The selected OpenGL mode is not

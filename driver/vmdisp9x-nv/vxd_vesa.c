@@ -198,6 +198,8 @@ static DWORD conf_dos_window = 0;
 static DWORD conf_hw_double_buf = 1; /* much better performance on real HW */
 static DWORD conf_mtrr = 1;
 static DWORD conf_pat = 1;   /* M4.6b: WC through the PAT (NV_DETECT) */
+extern DWORD nv_pat_state;              /* defined with the PAT code below */
+static void nv_pat_set_entry1_wc(void);
 #ifdef NV_DETECT
 /* E4 kill switch: 0 = boot on the plain VBE path (safe bring-up), 1 = use the
  * native G86 modeset. Read from HKLM\Software\vmdisp9x\vesa "Native". Default 0
@@ -1036,6 +1038,8 @@ BOOL VESA_setmode_phy(DWORD w, DWORD h, DWORD bpp, DWORD rr_min, DWORD rr_max)
 			 * return used to skip - GDI painted the shadow, nothing reached VRAM. */
 			vga_mode = FALSE;
 			act_mode = 0;
+			if(nv_pat_state == 1)
+				nv_pat_set_entry1_wc();   /* M4.5: cheap, and the BIOS resets IA32_PAT on resume */
 
 			dbg_printf("native mode set: %lux%lux%lu shadow pitch=%lu, scanout %lu bpp pitch=%lu%s\n",
 				w, h, bpp, pitch, hwbpp, hw_pitch, (w == 1024 && h == 768) ? "" : " (scaled to 1024x768)");
@@ -1443,6 +1447,32 @@ static void nv_pat_setup(void)
 		nv_pat_state = 1;
 	dbg_printf("PAT: entry1=WC, %lu aperture pages marked PWT (state %lu)\n",
 		nv_pat_pages, nv_pat_state);
+}
+
+/* M4.5: called from the blit timer ~2 s after the VDD reported D0, and usable
+ * from anywhere else that suspects the engine was reset. If the VDD already
+ * had the display driver restore the desktop (RestoreDesktopMode -> setmode ->
+ * NV_evo_takeover with the lost check) there is nothing left to do. */
+void NV_display_resume_check(void)
+{
+	if(!(nv_backend_native || conf_native) || vga_mode || act_mode != 0 || hda == NULL)
+	{
+		dbg_printf("resume check: native desktop not active (vga_mode=%d act_mode=%d), nothing to do\n",
+			(int)vga_mode, act_mode);
+		return;
+	}
+	if(!NV_hw_lost())
+	{
+		dbg_printf("resume check: engine state intact\n");
+		return;
+	}
+	dbg_printf("resume check: engine lost and nobody restored it - re-running %lux%lux%lu\n",
+		hda->width, hda->height, hda->bpp);
+	if(VESA_setmode_phy(hda->width, hda->height, hda->bpp, 0, 0))
+	{
+		wram_changes(&wblit, 0, 0, hda->width, hda->height);   /* full redraw from the shadow */
+		mouse_invalidate();
+	}
 }
 #endif /* NV_DETECT */
 

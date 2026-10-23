@@ -76,7 +76,19 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
     in VRAM, head0 CURSOR_CTRL/OFFSET/DMA methods + UPDATE on the core ring,
     position via the cursor PIO channel; HwCursor=0 restores the software
     cursor.
-  - M4.5 power / screen switching (VGA<->hires, standby, lid).
+  - M4.5 power / screen switching **(builds 3052-3053, DONE 2026-10-23):** after the
+    panel powers off and back on (or standby/resume, or a full-screen VGA switch) the
+    display engine is left in the "stuck" state - it reads DMA_ENABLED but will not
+    fetch, so our live-ring append silently stalls and the desktop never returns
+    (blinking cursor on black, then stale-framebuffer garbage, system still
+    responsive). NV_hw_lost() (objects + channel-status check) was not enough; the
+    authoritative signal is the stalled append itself. Fix (3053): a stalled append
+    drops the engine claim and NV_native_modeset retries once with the full boot-time
+    init (RAMHT/channel/preamble/head rebuild + stuck-state recovery nudges), then
+    re-uploads the hardware cursor and re-arms the write-combining PAT entry. The
+    mini-VDD SET_ADAPTER_POWER_STATE hook and the VPOWERD Power_Event message are also
+    handled (logged; a resume arms a ~2 s fallback re-init check from the blit timer).
+    Verified on the T61: desktop recovers perfectly after a panel off/on.
   - M4.6 shadow-blit performance **(build 3043, DONE 2026-10-22, 110 -> 6 cycles/pixel):** row-wise
     rep movsd / tight conversion loops instead of per-pixel indirect calls
     (3042: no gain, the bus was the limit at ~110 cycles/pixel); MTRR.VXD
