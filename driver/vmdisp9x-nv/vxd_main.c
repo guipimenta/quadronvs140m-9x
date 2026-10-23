@@ -62,6 +62,7 @@ BOOL VESA_check_int10h(DWORD vm, PCRS_32 regs);
 #ifdef NV_DETECT
 #include "vxd_nv.h"
 #include "nv50_evo.h"
+#include "nv50_gpu.h"
 #include "wram.h"
 extern DWORD nv_mtrr_rc, nv_mtrr_base, nv_mtrr_size;   /* vxd_vesa.c */
 extern DWORD nv_pat_state, nv_pat_pages, nv_pat_bad;    /* vxd_vesa.c */
@@ -1318,6 +1319,16 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			nv_evo_layout_t lay;
 			NV_evo_stage(&lay);
 			memcpy(outBuf, &lay, sizeof(lay));
+			rc = 0;
+			break;
+		}
+		case OP_NV_GPU_GRINIT:
+		{
+			/* M5.1b: PGRAPH init + context-microcode upload (opt-in, GPU accel
+			 * bring-up). Touches PGRAPH only; recover a fault with a cold boot. */
+			nv_gpu_grinit_t gi;
+			NV_gpu_grinit(&gi);
+			memcpy(outBuf, &gi, sizeof(gi));
 			rc = 0;
 			break;
 		}

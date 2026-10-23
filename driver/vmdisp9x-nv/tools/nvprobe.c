@@ -17,6 +17,7 @@
 #include "../vxd_nv.h"
 #include "../dbgring.h"
 #include "../nv50_evo.h"
+#include "../nv50_gpu.h"
 
 /* Emit the EVO flip diagnostic to a stream. Called twice: once to nvflip.txt
  * (so the result survives even if the flip black-screens the console) and once
@@ -492,6 +493,35 @@ int main(int argc, char **argv)
 				printf("(also written to nvlast.txt)\n");
 			}
 		}
+		return 0;
+	}
+
+	if(argc >= 2 && strcmp(argv[1], "grinit") == 0)
+	{
+		nv_gpu_grinit_t gi;
+		memset(&gi, 0, sizeof(gi));
+		if(!DeviceIoControl(vxd, OP_NV_GPU_GRINIT, NULL, 0, &gi, sizeof(gi), &ret, NULL))
+		{
+			printf("OP_NV_GPU_GRINIT failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("GPU PGRAPH init (build %lu): %s, reached stage %lu/5\n",
+			gi.build, gi.ok ? "ran" : "ABORTED (no G86 / BAR0)", gi.stage);
+		printf("units now   = %08lX   (context baked for %08lX)%s\n",
+			gi.units, gi.units_built,
+			(gi.units != gi.units_built) ? "  <-- MISMATCH: regenerate the context!" : "");
+		printf("ctxprog_len = %lu dwords   grctx_size = %lu bytes\n", gi.ctxprog_len, gi.grctx_size);
+		printf("PMC_ENABLE  %08lX -> %08lX\n", gi.pre_pmc, gi.post_pmc);
+		printf("CTXCTL_CUR  %08lX -> %08lX  (bit31 LOADED)\n", gi.pre_ctxctl, gi.post_ctxctl);
+		printf("PGRAPH_INTR %08lX -> %08lX  (0 = no fault)\n", gi.pre_intr, gi.post_intr);
+		printf("PGRAPH_STAT %08lX -> %08lX  (0 = idle)  idle_loops=%lu\n",
+			gi.pre_status, gi.post_status, gi.idle_loops);
+		printf("ucode read-back [0..7]: %08lX %08lX %08lX %08lX %08lX %08lX %08lX %08lX\n",
+			gi.ucode_rb[0], gi.ucode_rb[1], gi.ucode_rb[2], gi.ucode_rb[3],
+			gi.ucode_rb[4], gi.ucode_rb[5], gi.ucode_rb[6], gi.ucode_rb[7]);
+		printf("(ucode_rb[0] should match the first baked ctxprog dword; INTR 0 + a sane\n");
+		printf(" status mean PGRAPH accepted the init and microcode.)\n");
 		return 0;
 	}
 
