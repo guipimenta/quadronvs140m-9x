@@ -496,6 +496,31 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	if(argc >= 2 && strcmp(argv[1], "ctxtest") == 0)
+	{
+		nv_gpu_ctxtest_t ct;
+		memset(&ct, 0, sizeof(ct));
+		if(!DeviceIoControl(vxd, OP_NV_GPU_CTXTEST, NULL, 0, &ct, sizeof(ct), &ret, NULL))
+		{
+			printf("OP_NV_GPU_CTXTEST failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("GPU context load test (build %lu): %s, stage %lu/5\n",
+			ct.build, ct.ok ? "ran" : "ABORTED (no G86 / BAR0)", ct.stage);
+		printf("ramin=%08lX  grctx=%08lX (%lu bytes, %lu values)  inst12=%05lX\n",
+			ct.ramin, ct.grctx, ct.grctx_size, ct.ctxvals, ct.inst12);
+		printf("CTXCTL_CUR  %08lX -> %08lX\n", ct.pre_ctxctl, ct.post_ctxctl);
+		printf("CTXCTL_NEXT          -> %08lX\n", ct.post_next);
+		printf("PGRAPH_INTR %08lX -> %08lX  (0 = no fault)\n", ct.pre_intr, ct.post_intr);
+		printf("PGRAPH_STAT          -> %08lX  idle_loops=%lu\n", ct.post_status, ct.idle_loops);
+		if(ct.loaded)
+			printf("*** CONTEXT LOADED (bit31 set, instance matches) - the microcode works! ***\n");
+		else
+			printf("context NOT loaded (CTXCTL_CUR bit31 or instance wrong)\n");
+		return 0;
+	}
+
 	if(argc >= 2 && strcmp(argv[1], "grinit") == 0)
 	{
 		nv_gpu_grinit_t gi;

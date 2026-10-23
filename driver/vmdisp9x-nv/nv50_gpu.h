@@ -22,4 +22,16 @@ typedef struct nv_gpu_grinit
 
 int NV_gpu_grinit(nv_gpu_grinit_t *out);
 
+/* OP_NV_GPU_CTXTEST (0x500F): build a channel + per-channel grctx and load it. */
+typedef struct nv_gpu_ctxtest
+{
+	unsigned long build, ok, stage, loaded;
+	unsigned long ramin, grctx, grctx_size, ctxvals, inst12;
+	unsigned long pre_ctxctl, post_ctxctl, post_next;
+	unsigned long pre_intr,   post_intr,   post_status;
+	unsigned long idle_loops;
+} nv_gpu_ctxtest_t;
+
+int NV_gpu_ctxtest(nv_gpu_ctxtest_t *out);
+
 #endif /* NV50_GPU_H */

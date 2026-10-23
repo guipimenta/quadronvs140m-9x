@@ -1322,6 +1322,14 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			rc = 0;
 			break;
 		}
+		case OP_NV_GPU_CTXTEST:
+		{
+			nv_gpu_ctxtest_t ct;
+			NV_gpu_ctxtest(&ct);
+			memcpy(outBuf, &ct, sizeof(ct));
+			rc = 0;
+			break;
+		}
 		case OP_NV_GPU_GRINIT:
 		{
 			/* M5.1b: PGRAPH init + context-microcode upload (opt-in, GPU accel
