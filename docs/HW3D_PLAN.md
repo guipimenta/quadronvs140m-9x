@@ -184,3 +184,61 @@ thousands of state registers are set up by loading the initial context. So:
 The single biggest unknown is now de-risked: the context generator exists as
 portable C in nouveau and covers the G86, so M5.1a is a porting job, not a
 research dead-end.
+
+## M5.1a DONE + full M5.1b recipe (2026-10-23)
+
+M5.1a (context microcode) is DONE. nouveau v2.6.36 nv50_grctx.c was ported to
+run on the host unmodified (scratchpad tools/grctx_host: drmP.h/nouveau_drv.h
+stubs + main.c; `gcc main.c nv50_grctx.c`). The T61's G86 reports
+0x1540 = 0xF3010001 (read with `nvprobe rd 1540`). Generated for
+chipset 0x86 + that units value: ctxprog = 110 dwords, grctx_size = 378112
+bytes (94528 dwords, 660 non-zero). Baked into driver/vmdisp9x-nv/
+nv50_grctx_g86.h (derived data, like the EVO streams). Regenerate for another
+board by reading its 0x1540 and re-running the host tool.
+
+### M5.1b - PGRAPH init + channel + 2D fill (all registers derived)
+
+PGRAPH init (BAR0), from nv50_graph.c, do once:
+- reset: PMC_ENABLE(0x200) &= ~((1<<12)|(1<<21)); then |= it (toggle PGRAPH).
+- init_regs__nv: 0x400804=0xc0000000, 0x406800=0xc0000000, 0x400c04=.., 0x401800,
+  0x405018, 0x402000 all 0xc0000000; per-unit (chipset<0xa0, i in enabled set)
+  0x408900+(i<<12),0x408e08+(i<<12),0x408314+(i<<12)=0xc0000000 and
+  0x408600+(i<<11),0x408708+(i<<11),0x40831c+(i<<11)=0xc0000000; then
+  0x400108=0xffffffff, 0x400824=0x00004000, 0x400500=0x00010001.
+- init_regs: 0x400be0(NV04_PGRAPH_DEBUG_3)=(1<<2) HW_CONTEXT_SWITCH_ENABLED;
+  0x402ca8=0x800.
+- init_ctxctl: NV40_PGRAPH_CTXCTL_UCODE_INDEX=0; loop NV40_PGRAPH_CTXCTL_UCODE_DATA
+  = nv50_ctxprog[i] (110 of them); 0x400320=4; CTXCTL_CUR=0;
+  CHANNEL_CTX_POINTER=0.  (CTXCTL_UCODE_INDEX/_DATA, CTXCTL_CUR regs from
+  nouveau_reg.h - grab exact addrs.)
+
+Channel (reuse EVO ramht_hash/build_ctxdma/NV_vram_* ; own RAMIN block):
+- pushbuffer ctxdma (class 0x3d) over VRAM (like NvEvoVRAM_LP).
+- RAMFC (dword offsets): 0x48=pushbuf_ctxdma_inst>>4; 0x80=(0<<27)|(4<<24)|
+  (ramht_inst>>4); 0x44=0x2101ffff; 0x60=0x7fffffff; 0x40=0; 0x7c=0x30000001;
+  0x78=0; 0x3c=0x403f6078; 0x50=pushbuf_base(byte off of 1st method); 0x54=0
+  (no IB). G86 also: ramin[0]=chid(0), ramin[1]=ramfc_inst>>8, ramfc 0x88=
+  cache_inst>>10, ramfc 0x98=ramin_inst>>12.
+- grctx: 378112-byte VRAM block, 0x1000-aligned, ZEROED, then apply the 660
+  nv50_ctxvals pairs; grctx[0]=ramin_inst>>12. Channel RAMIN header at byte
+  0x20: +0x00=0x00190002; +0x04=grctx_inst+grctx_size-1; +0x08=grctx_inst;
+  +0x0c=0; +0x10=0; +0x14=0x00010000.
+- 2D object instance (class 0x502d): small block (class_instmem_size; use 6
+  dwords), obj[0]=0x502d, obj[5]=0x00010000, engine=GR(1). RAMHT entry:
+  handle=0xbeef502d, ctx=(obj_inst>>4)|(1<<20)  [NV40_RAMHT_CONTEXT_ENGINE_SHIFT
+  =20, graphics engine=1]. hash = fold(handle, ramht_bits)<<3 (NO channel xor on
+  nv50) - our ramht_hash already does this.
+- enable: CTX_TABLE(0)=(ramfc_inst>>8)|(1<<31); playlist update (write active
+  chids to a VRAM list, poke the playlist regs - get exact from nv50_fifo.c
+  nv50_fifo_playlist_update); CACHES 0x2500=0x101.
+
+2D solid fill into the pushbuffer (header=(count<<18)|(subc<<13)|method,
+subc 0): 0x0000 SET_OBJECT=0xbeef502d; 0x0184 DMA_DST=pushbuf/VRAM ctxdma
+handle; 0x0200 DST_FORMAT; 0x0204 DST_LINEAR=1; 0x0214 PITCH; 0x0218 W; 0x021c
+H; 0x0220/0x0224 DST_ADDR hi/lo; 0x02ac OPERATION=SRCCOPY; 0x0580 DRAW_SHAPE=4;
+0x0584 DRAW_COLOR_FORMAT; 0x0588 DRAW_COLOR; 0x0600/0x0604 POINT32(0)=x0,y0;
+0x0608/0x060c POINT32(1)=x1,y1. Then USER_DMA_PUT(0)(0xc00040)=bytes; poll
+USER_DMA_GET(0)(0xc00044)==PUT; read back the VRAM rect with nvprobe.
+
+Opt-in IOCTL OP_NV_GPU_2DFILL; nvprobe `gpu2d`. Never touches the EVO display
+channel. A fault parks PGRAPH, recover by cold boot (like EVO bring-up).
