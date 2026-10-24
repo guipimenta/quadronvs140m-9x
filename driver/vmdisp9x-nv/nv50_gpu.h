@@ -34,4 +34,18 @@ typedef struct nv_gpu_ctxtest
 
 int NV_gpu_ctxtest(nv_gpu_ctxtest_t *out);
 
+/* OP_NV_GPU_2DFILL (0x5010): PFIFO channel + 2D engine fill a VRAM rectangle. */
+typedef struct nv_gpu_2dfill
+{
+	unsigned long build, ok, stage, filled;
+	unsigned long scratch, color, ctxctl, put_bytes;
+	unsigned long get, put, pfifo_intr, pgraph_intr, pgraph_stat, idle_loops;
+	unsigned long c1_get, c1_put, c1_push1, c1_dmast, caches, ctxtable;
+	unsigned long dma_state, dma_push, dma_fetch, dma_inst, punk1700, ctxdma_rb, push_rb0, push_rb1;
+	unsigned long gr_idle;
+	unsigned long pre_px[1], px[3];
+} nv_gpu_2dfill_t;
+
+int NV_gpu_2dfill(nv_gpu_2dfill_t *out);
+
 #endif /* NV50_GPU_H */

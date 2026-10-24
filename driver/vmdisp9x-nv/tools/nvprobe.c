@@ -496,6 +496,42 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	if(argc >= 2 && strcmp(argv[1], "gpu2d") == 0)
+	{
+		nv_gpu_2dfill_t fl;
+		memset(&fl, 0, sizeof(fl));
+		if(!DeviceIoControl(vxd, OP_NV_GPU_2DFILL, NULL, 0, &fl, sizeof(fl), &ret, NULL))
+		{
+			printf("OP_NV_GPU_2DFILL failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("GPU 2D fill (build %lu): %s, stage %lu/6\n",
+			fl.build, fl.ok ? "ran" : "ABORTED (no G86 / BAR0)", fl.stage);
+		printf("scratch=%08lX  fill color=%08lX  pushbuf bytes=%lu\n",
+			fl.scratch, fl.color, fl.put_bytes);
+		printf("CTXCTL_CUR  = %08lX  (80003000 = our context loaded)\n", fl.ctxctl);
+		printf("DMA GET/PUT = %08lX / %08lX  %s\n", fl.get, fl.put,
+			(fl.get == fl.put) ? "(drained)" : "(STALLED - channel did not run)");
+		printf("PFIFO_INTR  = %08lX   PGRAPH_INTR = %08lX   (0,0 = no fault)\n",
+			fl.pfifo_intr, fl.pgraph_intr);
+		printf("PGRAPH_STAT = %08lX   idle_loops=%lu  gr_idle_loops=%lu\n", fl.pgraph_stat, fl.idle_loops, fl.gr_idle);
+		printf("CACHES=%08lX  CTX_TABLE[chid]=%08lX  CACHE1 PUSH1=%08lX GET/PUT=%08lX/%08lX STATE=%08lX\n",
+			fl.caches, fl.ctxtable, fl.c1_push1, fl.c1_get, fl.c1_put, fl.c1_dmast);
+		printf("pusher: STATE=%08lX err=%lu(6=MEMFAULT) PUSH=%08lX FETCH=%08lX INSTANCE=%08lX PRAMIN1700=%08lX\n",
+			fl.dma_state, (fl.dma_state >> 29) & 7, fl.dma_push, fl.dma_fetch, fl.dma_inst, fl.punk1700);
+		printf("VRAM read-back: ctxdma[0]=%08lX (want 0019003D)  pushbuf[0]=%08lX pushbuf[1]=%08lX\n",
+			fl.ctxdma_rb, fl.push_rb0, fl.push_rb1);
+		printf("scratch before fill = %08lX\n", fl.pre_px[0]);
+		printf("scratch pixels after: TL=%08lX  mid=%08lX  BR=%08lX\n",
+			fl.px[0], fl.px[1], fl.px[2]);
+		if(fl.filled)
+			printf("*** RECTANGLE FILLED BY THE GPU - 2D engine executed our commands! ***\n");
+		else
+			printf("not filled (pixels != color) - see GET/PUT and INTR above\n");
+		return 0;
+	}
+
 	if(argc >= 2 && strcmp(argv[1], "ctxtest") == 0)
 	{
 		nv_gpu_ctxtest_t ct;

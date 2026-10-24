@@ -48,6 +48,69 @@ extern nv_hwinfo_t nv_hwinfo;
  * nouveau_object.c uses im_backing_start). Above the EVO reservations (<=32 MB). */
 #define NVGPU_RAMIN   0x03000000UL   /* channel instance block (graph hdr @0x20) */
 #define NVGPU_GRCTX   0x03100000UL   /* per-channel graphics context (grctx_size) */
+#define NVGPU_RAMHT   0x03001000UL   /* channel RAMHT (4 KiB)  - near RAMIN       */
+#define NVGPU_RAMFC   0x03002000UL   /* channel RAMFC (0x100)                    */
+#define NVGPU_CACHE   0x03003000UL   /* FIFO cache (4 KiB)                       */
+#define NVGPU_VRAMDMA 0x03004000UL   /* ctxdma over all VRAM (pushbuf + DMA_DST) */
+#define NVGPU_OBJ2D   0x03004100UL   /* 2D engine object instance                */
+#define NVGPU_PUSHBUF 0x03200000UL   /* command pushbuffer (data, physical)      */
+#define NVGPU_SCRATCH 0x03400000UL   /* 2D fill destination (read back)          */
+/* NV50 engine/ctxdma instances are CHANNEL-RELATIVE: offset from the channel
+ * RAMIN base (RAMFC 0x98 = ramin>>12), shifted. INST(x) keeps them small. */
+#define NVGPU_INST(x) (((x) - NVGPU_RAMIN) >> 4)
+#define NVGPU_CHID    1UL            /* our channel id (avoid 0/127)             */
+#define NV50_2D_CLASS_ 0x0000502dUL
+
+/* PFIFO registers */
+#define PFIFO_INTR_0        0x00002100UL
+#define PFIFO_INTR_EN_0     0x00002140UL
+#define PFIFO_CACHES        0x00002500UL
+#define PFIFO_250C          0x0000250cUL
+#define PFIFO_CTX_TABLE(c)  (0x00002600UL + (c)*4)
+#define PFIFO_CACHE1_PUSH0  0x00003200UL
+#define PFIFO_CACHE1_PUSH1  0x00003204UL
+#define PFIFO_CACHE1_DMAPUSH 0x00003220UL
+#define PFIFO_CACHE1_PULL0  0x00003250UL
+#define PFIFO_PLAYLIST_32F4 0x000032f4UL
+#define PFIFO_PLAYLIST_32EC 0x000032ecUL
+#define PFIFO_USER(c)       (0x00c00000UL + (c)*0x2000UL)
+#define PFIFO_USER_PUT(c)   (PFIFO_USER(c) + 0x40UL)
+#define PFIFO_USER_GET(c)   (PFIFO_USER(c) + 0x44UL)
+#define NVGPU_PLAYLIST 0x03204000UL  /* PFIFO playlist buffer */
+
+/* append one (header,data...) batch to the pushbuffer; returns new dword index */
+static unsigned long gpu_push(unsigned long i, unsigned long method,
+                              unsigned long count, const unsigned long *data)
+{
+	unsigned long k;
+	NV_vram_wr32(NVGPU_PUSHBUF + i*4, (count << 18) | (0 << 13) | method); i++;
+	for(k = 0; k < count; k++)
+	{ NV_vram_wr32(NVGPU_PUSHBUF + i*4, data[k]); i++; }
+	return i;
+}
+
+/* build a class-0x3d ctxdma (6 dwords) at inst over [base,base+size) in VRAM */
+static void gpu_ctxdma(unsigned long inst, unsigned long base, unsigned long size)
+{
+	NV_vram_wr32(inst + 0x00, 0x0019003dUL);     /* VRAM, R/W, class 0x3d */
+	NV_vram_wr32(inst + 0x04, base + size - 1);
+	NV_vram_wr32(inst + 0x08, base);
+	NV_vram_wr32(inst + 0x0c, 0);
+	NV_vram_wr32(inst + 0x10, 0);
+	NV_vram_wr32(inst + 0x14, 0x00010000UL);
+}
+
+/* add a RAMHT entry: handle -> object at inst, with engine code (GR=1, SW=0). */
+static void gpu_ramht(unsigned long handle, unsigned long inst, unsigned long engine)
+{
+	unsigned long h = handle, hash = 0, mask = (1UL << 9) - 1UL;  /* 4KiB RAMHT */
+	int b;
+	for(b = 32; b > 0; b -= 9) { hash ^= (h & mask); h >>= 9; }
+	hash <<= 3;
+	NV_vram_wr32(NVGPU_RAMHT + hash + 0, handle);
+	NV_vram_wr32(NVGPU_RAMHT + hash + 4, (inst >> 4) | (engine << 20));
+}
+
 
 /* tiny local spin */
 static unsigned long gpu_wait(unsigned long reg, unsigned long mask,
@@ -262,5 +325,185 @@ int NV_gpu_ctxtest(nv_gpu_ctxtest_t *out)
 	dbg_printf("NV_gpu_ctxtest: inst12=%lX ctxctl %lX->%lX intr %lX->%lX idle=%lu loaded=%lu\n",
 		inst12, out->pre_ctxctl, out->post_ctxctl, out->pre_intr, out->post_intr,
 		out->idle_loops, out->loaded);
+	return 1;
+}
+
+/* M5.1b-step2b: full path - PGRAPH + a PFIFO channel + the 2D engine fill a
+ * rectangle in VRAM scratch, read back. The first GPU-executed drawing. */
+int NV_gpu_2dfill(nv_gpu_2dfill_t *out)
+{
+	const unsigned long chid   = NVGPU_CHID;
+	const unsigned long ramin  = NVGPU_RAMIN;
+	const unsigned long grctx  = NVGPU_GRCTX;
+	const unsigned long color  = 0x11223344UL;
+	const unsigned long pitch  = 1024UL;              /* bytes (256 px * 4)    */
+	const unsigned long w = 256UL, h = 256UL;
+	unsigned long inst12, i, pushbytes, d[4], pmc, fifo;
+
+	memset(out, 0, sizeof(*out));
+	out->build   = NV_BUILD;
+	out->scratch = NVGPU_SCRATCH;
+	out->color   = color;
+
+	if(!gpu_pgraph_init())
+		return 0;
+	out->stage = 1;
+
+	/* channel RAMIN: chid, ramfc pointer, graph context header @0x20 */
+	NV_vram_fill(ramin, 0x1000 / 4, 0);
+	NV_vram_wr32(ramin + 0x00, chid);
+	NV_vram_wr32(ramin + 0x04, NVGPU_RAMFC >> 8);
+	NV_vram_wr32(ramin + 0x20 + 0x00, 0x00190002UL);
+	NV_vram_wr32(ramin + 0x20 + 0x04, grctx + NV50_GRCTX_SIZE - 1);
+	NV_vram_wr32(ramin + 0x20 + 0x08, grctx);
+	NV_vram_wr32(ramin + 0x20 + 0x14, 0x00010000UL);
+
+	/* per-channel grctx */
+	NV_vram_fill(grctx, NV50_GRCTX_DWORDS, 0);
+	for(i = 0; i < NV50_CTXVALS_CNT; i++)
+		NV_vram_wr32(grctx + nv50_ctxvals[i][0] * 4, nv50_ctxvals[i][1]);
+	inst12 = ramin >> 12;
+	NV_vram_wr32(grctx + 0, inst12);
+	out->stage = 2;
+
+	/* instance objects: a ctxdma over all VRAM (pushbuf fetch + DMA_DST),
+	 * the FIFO cache, and the 2D engine object. */
+	gpu_ctxdma(NVGPU_VRAMDMA, 0, 0x08000000UL);       /* 128 MiB VRAM          */
+	NV_vram_fill(NVGPU_CACHE, 0x1000 / 4, 0);
+	NV_vram_wr32(NVGPU_OBJ2D + 0,  NV50_2D_CLASS_);   /* 0x502d                */
+	NV_vram_wr32(NVGPU_OBJ2D + 20, 0x00010000UL);     /* dword 5               */
+
+	/* RAMHT: 2D object (graphics engine 1), VRAM ctxdma (SW engine 0) */
+	NV_vram_fill(NVGPU_RAMHT, 0x1000 / 4, 0);
+	gpu_ramht(0xbeef502dUL, NVGPU_OBJ2D   - NVGPU_RAMIN, 1);
+	gpu_ramht(0xbeef0002UL, NVGPU_VRAMDMA - NVGPU_RAMIN, 0);
+
+	/* RAMFC (G84/G86 layout) */
+	NV_vram_fill(NVGPU_RAMFC, 0x100 / 4, 0);
+	NV_vram_wr32(NVGPU_RAMFC + 0x48, (NVGPU_VRAMDMA - NVGPU_RAMIN) >> 4);
+	NV_vram_wr32(NVGPU_RAMFC + 0x80, (0UL << 27) | (4UL << 24) | ((NVGPU_RAMHT - NVGPU_RAMIN) >> 4));
+	NV_vram_wr32(NVGPU_RAMFC + 0x44, 0x2101ffffUL);
+	NV_vram_wr32(NVGPU_RAMFC + 0x60, 0x7fffffffUL);
+	NV_vram_wr32(NVGPU_RAMFC + 0x40, 0);
+	NV_vram_wr32(NVGPU_RAMFC + 0x08, NVGPU_PUSHBUF);   /* DMA_PUT init (->0x3240) */
+	NV_vram_wr32(NVGPU_RAMFC + 0x10, NVGPU_PUSHBUF);   /* DMA_GET init (->0x3244) */
+	NV_vram_wr32(NVGPU_RAMFC + 0x7c, 0x30000001UL);
+	NV_vram_wr32(NVGPU_RAMFC + 0x78, 0);
+	NV_vram_wr32(NVGPU_RAMFC + 0x3c, 0x403f6078UL);
+	NV_vram_wr32(NVGPU_RAMFC + 0x50, NVGPU_PUSHBUF);  /* pushbuf_base          */
+	NV_vram_wr32(NVGPU_RAMFC + 0x54, 0);              /* no indirect buffer    */
+	NV_vram_wr32(NVGPU_RAMFC + 0x88, NVGPU_CACHE >> 10);
+	NV_vram_wr32(NVGPU_RAMFC + 0x98, ramin >> 12);
+	out->stage = 3;
+
+	/* PFIFO init: reset (PMC bit8), interrupts, clear the context table */
+	pmc = NV_rd32(PMC_ENABLE);
+	NV_wr32(PMC_ENABLE, pmc & ~(1UL << 8));
+	(void)NV_rd32(PMC_ENABLE);
+	NV_wr32(PMC_ENABLE, NV_rd32(PMC_ENABLE) | (1UL << 8));
+	NV_wr32(PFIFO_INTR_0,    0xffffffffUL);
+	NV_wr32(PFIFO_INTR_EN_0, 0xffffffffUL);
+	for(i = 0; i < 128; i++)
+		NV_wr32(PFIFO_CTX_TABLE(i), 0);
+	NV_wr32(PFIFO_250C, 0x6f3cfc34UL);
+	NV_wr32(PFIFO_CACHES, 0);
+	NV_wr32(0x3250, 0); NV_wr32(0x3220, 0); NV_wr32(0x3204, 0);
+	NV_wr32(0x3210, 0); NV_wr32(0x3270, 0);
+	out->stage = 4;
+
+	/* load our graph context so PGRAPH holds it */
+	fifo = NV_rd32(0x400500);
+	NV_wr32(0x400500, fifo & ~1UL);
+	NV_wr32(0x400784, inst12);
+	NV_wr32(0x400824, NV_rd32(0x400824) | 0x40UL);
+	NV_wr32(0x400320, NV_rd32(0x400320) | 0x11UL);
+	NV_wr32(0x400040, 0xffffffffUL); (void)NV_rd32(0x400040); NV_wr32(0x400040, 0);
+	NV_wr32(0x400304, NV_rd32(0x400304) | 1UL);
+	(void)gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 2000000UL);
+	NV_wr32(PGRAPH_CTXCTL_CUR, inst12 | (1UL << 31));
+	NV_wr32(0x400500, fifo);
+	out->ctxctl = NV_rd32(PGRAPH_CTXCTL_CUR);
+
+	/* enable the FIFO puller (nv04_fifo_enable), then our channel, then the
+	 * runlist - which ends with CACHES=0x101 (nv50_fifo_playlist_update). The
+	 * nv50 scheduler loads the channel; no manual CACHE1 poking. */
+	NV_wr32(PFIFO_CACHE1_PUSH0, 1);
+	NV_wr32(PFIFO_CACHE1_PULL0, 1);
+	NV_wr32(PFIFO_CTX_TABLE(chid), (NVGPU_RAMFC >> 8) | (1UL << 31));
+	NV_vram_wr32(NVGPU_PLAYLIST + 0, chid);
+	NV_wr32(PFIFO_PLAYLIST_32F4, NVGPU_PLAYLIST >> 12);
+	NV_wr32(PFIFO_PLAYLIST_32EC, 1);
+	NV_wr32(PFIFO_CACHES, 0x101);
+	out->stage = 5;
+
+	/* method stream: bind 2D, set destination surface, fill the rectangle */
+	i = 0;
+	d[0] = 0xbeef502dUL;             i = gpu_push(i, 0x0000, 1, d);  /* SET_OBJECT */
+	d[0] = 0xbeef0002UL;             i = gpu_push(i, 0x0184, 1, d);  /* DMA_DST    */
+	d[0] = 0xcfUL;                   i = gpu_push(i, 0x0200, 1, d);  /* DST_FORMAT */
+	d[0] = 1;                        i = gpu_push(i, 0x0204, 1, d);  /* DST_LINEAR */
+	d[0] = pitch;                    i = gpu_push(i, 0x0214, 1, d);  /* DST_PITCH  */
+	d[0] = w;                        i = gpu_push(i, 0x0218, 1, d);  /* DST_WIDTH  */
+	d[0] = h;                        i = gpu_push(i, 0x021c, 1, d);  /* DST_HEIGHT */
+	d[0] = 0; d[1] = NVGPU_SCRATCH;  i = gpu_push(i, 0x0220, 2, d);  /* DST_ADDR hi,lo */
+	d[0] = 0;                        i = gpu_push(i, 0x0290, 1, d);  /* CLIP_ENABLE=0 */
+	d[0] = 3;                        i = gpu_push(i, 0x02ac, 1, d);  /* OPERATION SRCCOPY */
+	d[0] = 4;                        i = gpu_push(i, 0x0580, 1, d);  /* DRAW_SHAPE RECT */
+	d[0] = 0xcfUL;                   i = gpu_push(i, 0x0584, 1, d);  /* DRAW_COLOR_FORMAT */
+	d[0] = color;                    i = gpu_push(i, 0x0588, 1, d);  /* DRAW_COLOR */
+	d[0] = 0; d[1] = 0; d[2] = w; d[3] = h;
+	                                 i = gpu_push(i, 0x0600, 4, d);  /* POINT32 (0,0)-(w,h) */
+	pushbytes = i * 4;
+	out->put_bytes = pushbytes;
+
+	/* clear scratch to a different value so a successful fill is visible */
+	NV_vram_fill(NVGPU_SCRATCH, (w * h), 0x99999999UL);
+	out->pre_px[0] = NV_vram_rd32(NVGPU_SCRATCH + 0);
+
+	/* kick: GET starts at pushbuf_base, advance PUT past the stream */
+	NV_wr32(PFIFO_INTR_0, 0xffffffffUL);
+	NV_wr32(PFIFO_USER_PUT(chid), NVGPU_PUSHBUF + pushbytes);
+	out->idle_loops = 0;
+	for(i = 0; i < 2000000UL; i++)
+	{
+		out->idle_loops++;
+		if(NV_rd32(PFIFO_USER_GET(chid)) == (NVGPU_PUSHBUF + pushbytes))
+			break;
+		if(NV_rd32(PFIFO_INTR_0) || NV_rd32(PGRAPH_INTR))
+			break;
+	}
+	/* the pusher drained the commands; now wait for the 2D engine itself to
+	 * finish rendering before reading the result (it is asynchronous). */
+	out->gr_idle = gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 4000000UL);
+	out->stage = 6;
+
+	out->get        = NV_rd32(PFIFO_USER_GET(chid));
+	out->put        = NV_rd32(PFIFO_USER_PUT(chid));
+	out->c1_get     = NV_rd32(0x3244);      /* live CACHE1 DMA GET  */
+	out->c1_put     = NV_rd32(0x3240);      /* live CACHE1 DMA PUT  */
+	out->c1_push1   = NV_rd32(0x3204);      /* current channel id   */
+	out->c1_dmast   = NV_rd32(0x3228);      /* CACHE1 DMA STATE     */
+	out->caches     = NV_rd32(PFIFO_CACHES);
+	out->ctxtable   = NV_rd32(PFIFO_CTX_TABLE(chid));
+	out->dma_state  = NV_rd32(0x3228);   /* pusher state; (>>29)&7 = err: 6=MEM_FAULT */
+	out->dma_push   = NV_rd32(0x3220);
+	out->dma_fetch  = NV_rd32(0x3224);
+	out->dma_inst   = NV_rd32(0x322c);
+	out->punk1700   = NV_rd32(0x1700);   /* PRAMIN window */
+	out->ctxdma_rb  = NV_vram_rd32(NVGPU_VRAMDMA + 0);   /* ctxdma dword0 as written */
+	out->push_rb0   = NV_vram_rd32(NVGPU_PUSHBUF + 0);   /* 1st method header       */
+	out->push_rb1   = NV_vram_rd32(NVGPU_PUSHBUF + 4);   /* 1st data (handle)       */
+	out->pfifo_intr = NV_rd32(PFIFO_INTR_0);
+	out->pgraph_intr= NV_rd32(PGRAPH_INTR);
+	out->pgraph_stat= NV_rd32(PGRAPH_STATUS);
+	/* read back the fill */
+	out->px[0] = NV_vram_rd32(NVGPU_SCRATCH + 0);
+	out->px[1] = NV_vram_rd32(NVGPU_SCRATCH + (w/2)*4 + (h/2)*pitch);
+	out->px[2] = NV_vram_rd32(NVGPU_SCRATCH + (w-1)*4 + (h-1)*pitch);
+	out->filled = (out->px[0] == color && out->px[1] == color && out->px[2] == color) ? 1 : 0;
+	out->ok    = 1;
+	dbg_printf("NV_gpu_2dfill: ctxctl=%lX get=%lX put=%lX pfi=%lX pgi=%lX px=%lX,%lX,%lX filled=%lu\n",
+		out->ctxctl, out->get, out->put, out->pfifo_intr, out->pgraph_intr,
+		out->px[0], out->px[1], out->px[2], out->filled);
 	return 1;
 }
