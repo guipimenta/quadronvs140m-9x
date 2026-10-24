@@ -73,20 +73,40 @@ FIRST on the include path. Host check command:
     -I src/nouveau/drm -I src/gallium/include -I src/include -I include -I src \
     -I src/util <drv>/nvshim.c
 
-### NEXT: M5.3c step 2 - build the nv50 driver into mesa3d.dll (the long pole)
-The mesa9x Makefile (/home/guilherme/projects/mesa9x-build/mesa9x/Makefile) builds
-ONLY llvmpipe/SVGA/softpipe - nouveau is NOT in the build. Add it:
-- A new static lib (e.g. MesaGalliumNouveau) from src/gallium/drivers/nouveau/*.c +
-  nv50/*.c (~35 files, ~20k LOC) + the nv50_ir SHADER CODEGEN in src/nouveau/codegen
-  (C++); plus the winsys glue src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c.
-  REPLACE nouveau.c (real libdrm) with OUR nvshim.c as the winsys backend.
-- Include paths: mesa-compat FIRST, then our driver dir (for vxd_nv.h/nv50_gpu.h),
-  then the usual mesa gallium includes. Expect portability fallout under mingw:
-  POSIX headers (os_mman/simple_mtx are mesa-util, likely OK), any remaining
-  xf86drm.h use (only in nouveau.c, which we drop), and C++ codegen quirks.
-- WGL frontend: the pipe-screen is currently hard-wired to llvmpipe. Make it select
-  the nouveau pipe_screen (nouveau_drm_screen_create) when our VxD is present (gate
-  on OP_NV_PROBE). nvshim's nouveau_drm_new ignores fd and opens \\.\nvmini.vxd.
+### M5.3c step 2a DONE (host-verified): the WHOLE nv50 stack compiles under mingw
+*** The active mesa tree is mesa-25.1.x (config.mk MESA_VER), NOT 24.1.x. *** Its
+nouveau.h contract differs from 24.1 only by a `struct nv_device_info info` field in
+nouveau_device + a nouveau_device_set_classes_for_debug() hook - both handled in
+nvshim.c (the latter under #ifndef NVSHIM_STANDALONE). Confirmed with -fsyntax-only
+against mesa-25.1.x (i686-w64-mingw32-gcc-posix / g++-posix, -std=gnu99 / gnu++17):
+- 31/31 CORE driver C files compile (drivers/nouveau/*.c + nv50/*.c MINUS the 4
+  video-decode files nouveau_vp3_video.c / nv84_video.c / nv98_video.c /
+  nv98_video_vp.c - GL does not need VP3/VP2; EXCLUDE them from the lib).
+- 26/26 codegen C++ files (src/nouveau/codegen/*.cpp) compile.
+- nouveau_drm_winsys.c + nvshim.c compile.
+So step 2 is a Makefile-integration + link task, NOT a source port. Requirements found:
+- Compat shims in driver/vmdisp9x-nv/mesa-compat/ (put FIRST on -I): drm-uapi/
+  nouveau_drm.h (GETPARAM + FIFO_ENGINE_* + SVM), xf86drm.h (drmCommandWrite stub),
+  sys/ioccom.h (_IO* macros), util/os_mman.h (os_mmap/os_munmap stubs + MAP_*/PROT_*).
+- Include path MUST include src/gallium/winsys/nouveau/drm, src/nouveau/headers (for
+  nv_device_info.h), src/nouveau/codegen, src/nouveau/drm (for nvif/*), and
+  src/gallium/drivers/nouveau; and MUST NOT include src/nouveau/winsys (its
+  nouveau_context.h/etc shadow the classic gallium headers). The real build gets
+  git_sha1.h from mesa9x/include and -DMESA_GIT_SHA1 from DEFS.
+- nvshim.c compiles in TWO modes: -DNVSHIM_STANDALONE (nvprobe) or, without it,
+  against Mesa's own nouveau.h; for the mesa build it needs -I<drv> and -I<drv>/
+  mesa-compat added (for vxd_nv.h/nv50_gpu.h), but driver files must NOT get -I<drv>
+  (our io.h collides).
+
+### NEXT: M5.3c step 2b - add MesaNouveauLib to the Makefile and link mesa3d.dll
+- Define MesaNouveauLib_SRC in mesa-25.1.x.mk: the 31 core C + 26 codegen cpp +
+  nouveau_drm_winsys.c + driver/vmdisp9x-nv/nvshim.c (REPLACING nouveau.c). Add the
+  lib rule + objs to Makefile (follow MesaSVGALib), with the include/compat flags
+  above, and link it into mesa3d.w98me.dll.
+- WGL frontend: the pipe-screen is hard-wired to llvmpipe. Make it select the nouveau
+  pipe_screen (nouveau_drm_screen_create) when our VxD is present (gate on OP_NV_PROBE);
+  nvshim's nouveau_drm_new ignores fd and opens \\.\nvmini.vxd. Resolve link-time
+  undefined symbols. Run impcheck_win98.py on the result.
 Then M5.3c step 3 - make it INITIALISE on the T61:
 - The VxD channel must bind MESA's RAMHT handle set (nv04_fifo.vram=0xbeef0201 /
   .gart=0xbeef0202 from nouveau_screen.c, plus engine objs 0xbeef0301 notifier /

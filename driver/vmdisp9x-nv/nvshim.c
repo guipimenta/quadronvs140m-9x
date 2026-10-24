@@ -206,6 +206,18 @@ void nouveau_device_del(struct nouveau_device **pdev)
 	if(pdev && *pdev) { free(*pdev); *pdev = NULL; }
 }
 
+#ifndef NVSHIM_STANDALONE
+/* 25.1.x-only: a debug hook that records the engine class ids on the device.
+ * Purely informational; our channel binds classes itself, so this is a no-op
+ * beyond noting them (the fields live in dev->info in Mesa's struct). */
+void nouveau_device_set_classes_for_debug(struct nouveau_device *dev,
+                                          uint32_t cls_eng3d, uint32_t cls_compute,
+                                          uint32_t cls_m2mf,  uint32_t cls_copy)
+{
+	(void)dev; (void)cls_eng3d; (void)cls_compute; (void)cls_m2mf; (void)cls_copy;
+}
+#endif
+
 int nouveau_device_info(struct nouveau_device *dev, struct nv_device_info_v0 *info)
 {
 #ifndef NVSHIM_STANDALONE

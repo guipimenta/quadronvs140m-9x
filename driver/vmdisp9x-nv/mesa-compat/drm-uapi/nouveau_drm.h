@@ -41,6 +41,12 @@ typedef uint64_t __u64;
 #define NOUVEAU_GETPARAM_VRAM_USED        19
 #define NOUVEAU_GETPARAM_HAS_VMA_TILEMODE 20
 
+#define NOUVEAU_FIFO_ENGINE_GR            0x01
+#define NOUVEAU_FIFO_ENGINE_VP            0x02
+#define NOUVEAU_FIFO_ENGINE_PPP           0x04
+#define NOUVEAU_FIFO_ENGINE_BSP           0x08
+#define NOUVEAU_FIFO_ENGINE_CE            0x30
+
 #define DRM_NOUVEAU_SVM_INIT              0x08
 #define DRM_NOUVEAU_SVM_BIND              0x09
 
