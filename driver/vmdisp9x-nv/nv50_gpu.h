@@ -44,9 +44,11 @@ typedef struct nv_gpu_2dfill
 	unsigned long dma_state, dma_push, dma_fetch, dma_inst, punk1700, ctxdma_rb, push_rb0, push_rb1;
 	unsigned long gr_idle;
 	unsigned long pre_px[1], px[3];
+	unsigned long heap_addr, notified, notify[4];  /* M5.2b fence */
 } nv_gpu_2dfill_t;
 
 int NV_gpu_2dfill(nv_gpu_2dfill_t *out);
 int NV_gpu_vmtest(nv_gpu_2dfill_t *out);  /* M5.2a: fill via a GPU VIRTUAL address */
+int NV_gpu_fence (nv_gpu_2dfill_t *out);  /* M5.2b: VRAM heap + notifier-based fence */
 
 #endif /* NV50_GPU_H */

@@ -59,11 +59,16 @@ extern nv_hwinfo_t nv_hwinfo;
 #define NVGPU_VRAMPT  0x03010000UL   /* M5.2 VRAM page table (64 KiB)            */
 #define NVGPU_PUSHBUF 0x03200000UL   /* command pushbuffer (data, physical)      */
 #define NVGPU_SCRATCH 0x03400000UL   /* 2D fill destination (read back)          */
+#define NVGPU_HEAP_BASE 0x03500000UL /* M5.2b VRAM heap (bump allocator) base     */
+#define NVGPU_HEAP_END  0x03700000UL /* M5.2b VRAM heap end (2 MiB)               */
 #define NVGPU_VM_VRAM_BASE 0x40000000UL  /* VRAM maps into the VM at +1 GiB      */
 #define NVGPU_VM_SCRATCH   (NVGPU_VM_VRAM_BASE + NVGPU_SCRATCH)  /* VM addr of scratch */
 /* NV50 engine/ctxdma instances are CHANNEL-RELATIVE: offset from the channel
  * RAMIN base (RAMFC 0x98 = ramin>>12), shifted. INST(x) keeps them small. */
 #define NVGPU_INST(x) (((x) - NVGPU_RAMIN) >> 4)
+/* gpu_2dfill_core flags */
+#define NVF_VM     0x1   /* address the fill through the GPU VM (M5.2a)      */
+#define NVF_FENCE  0x2   /* 3D-class QUERY fence: GPU writes a sequence (M5.2b) */
 #define NVGPU_CHID    1UL            /* our channel id (avoid 0/127)             */
 #define NV50_2D_CLASS_ 0x0000502dUL
 
@@ -96,6 +101,21 @@ static unsigned long gpu_push(unsigned long i, unsigned long method,
 }
 
 /* build a class-0x3d ctxdma (6 dwords) at inst over [base,base+size) in VRAM */
+/* M5.2b: a minimal VRAM heap. A bump allocator over NVGPU_HEAP_[BASE..END];
+ * enough to hand the winsys buffer objects. (Free-list reuse is a later step.) */
+static unsigned long nv_heap_ptr = 0;
+void nv_heap_reset(void) { nv_heap_ptr = NVGPU_HEAP_BASE; }
+unsigned long nv_heap_alloc(unsigned long size, unsigned long align)
+{
+	unsigned long a;
+	if(nv_heap_ptr < NVGPU_HEAP_BASE) nv_heap_ptr = NVGPU_HEAP_BASE;
+	if(align < 16) align = 16;
+	a = (nv_heap_ptr + (align - 1)) & ~(align - 1);
+	if(a + size > NVGPU_HEAP_END) return 0;          /* out of VRAM heap */
+	nv_heap_ptr = a + size;
+	return a;                                        /* physical VRAM offset */
+}
+
 static void gpu_ctxdma(unsigned long inst, unsigned long base, unsigned long size)
 {
 	NV_vram_wr32(inst + 0x00, 0x0019003dUL);     /* VRAM, R/W, class 0x3d */
@@ -336,8 +356,13 @@ int NV_gpu_ctxtest(nv_gpu_ctxtest_t *out)
 
 /* M5.1b-step2b: full path - PGRAPH + a PFIFO channel + the 2D engine fill a
  * rectangle in VRAM scratch, read back. The first GPU-executed drawing. */
-static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int use_vm)
+static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 {
+	const int do_fence = (flags & NVF_FENCE)  ? 1 : 0;
+	/* the 3D query writes through the channel VM, so a fence implies use_vm */
+	const int use_vm   = (flags & (NVF_VM | NVF_FENCE)) ? 1 : 0;
+	unsigned long fence_addr = 0, fence_vm = 0;
+	const unsigned long fence_seq = 0xcafe0001UL;
 	const unsigned long chid   = NVGPU_CHID;
 	const unsigned long ramin  = NVGPU_RAMIN;
 	const unsigned long grctx  = NVGPU_GRCTX;
@@ -345,6 +370,7 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int use_vm)
 	const unsigned long pitch  = 1024UL;              /* bytes (256 px * 4)    */
 	const unsigned long w = 256UL, h = 256UL;
 	unsigned long inst12, i, pushbytes, d[4], pmc, fifo;
+	unsigned long ecolor, epitch, ew, eh, edst;
 
 	memset(out, 0, sizeof(*out));
 	out->build   = NV_BUILD;
@@ -400,6 +426,21 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int use_vm)
 		 * the PD lives in the already-zeroed first 4 KiB (invalid PDEs). */
 		NV_vram_wr32(NVGPU_VMPD + 0x10, NVGPU_VRAMPT | 0x61UL);
 		NV_vram_wr32(NVGPU_VMPD + 0x14, 0);
+	}
+	if(do_fence)
+	{
+		/* allocate a fence BO from the VRAM heap, map its page into the VM
+		 * (so the 3D engine can reach it), and pre-fill it with 0. The 3D
+		 * QUERY_GET will write fence_seq there through the channel VM. */
+		unsigned long fidx;
+		nv_heap_reset();
+		fence_addr = nv_heap_alloc(0x1000, 0x1000);       /* physical VRAM     */
+		fence_vm   = NVGPU_VM_VRAM_BASE + fence_addr;      /* its VM address    */
+		out->heap_addr = fence_addr;
+		fidx = ((fence_vm - NVGPU_VM_VRAM_BASE) >> 16) << 1;
+		NV_vram_wr32(NVGPU_VRAMPT + fidx * 4 + 0, fence_addr | 1UL);
+		NV_vram_wr32(NVGPU_VRAMPT + fidx * 4 + 4, 0);
+		NV_vram_wr32(fence_addr, 0);
 	}
 	NV_vram_fill(NVGPU_CACHE, 0x1000 / 4, 0);
 	NV_vram_wr32(NVGPU_OBJ2D + 0,  NV50_2D_CLASS_);   /* 0x502d                */
@@ -470,29 +511,43 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int use_vm)
 	NV_wr32(PFIFO_CACHES, 0x101);
 	out->stage = 5;
 
+	/* The "fence" is a 2D write of a sequence value to the heap BO through the
+	 * VM. 2D and 3D share the unified PGRAPH and the FIFO is in-order, so a 2D
+	 * write ordered after a batch signals that batch's completion - a valid
+	 * fence. (nouveau's native 3D QUERY fence needs full 3D-engine setup, which
+	 * TRAPs until M5.4; this 2D fence works on the path we have proven.) */
+	ecolor = do_fence ? fence_seq : color;
+	epitch = do_fence ? 64UL      : pitch;        /* fits the 64 KiB fence page */
+	ew     = do_fence ? 4UL       : w;
+	eh     = do_fence ? 1UL       : h;
+	edst   = do_fence ? fence_vm  : (use_vm ? NVGPU_VM_SCRATCH : NVGPU_SCRATCH);
+
 	/* method stream: bind 2D, set destination surface, fill the rectangle */
 	i = 0;
 	d[0] = 0xbeef502dUL;             i = gpu_push(i, 0x0000, 1, d);  /* SET_OBJECT */
 	d[0] = use_vm ? 0xbeef0003UL : 0xbeef0002UL; i = gpu_push(i, 0x0184, 1, d); /* DMA_DST */
 	d[0] = 0xcfUL;                   i = gpu_push(i, 0x0200, 1, d);  /* DST_FORMAT */
 	d[0] = 1;                        i = gpu_push(i, 0x0204, 1, d);  /* DST_LINEAR */
-	d[0] = pitch;                    i = gpu_push(i, 0x0214, 1, d);  /* DST_PITCH  */
-	d[0] = w;                        i = gpu_push(i, 0x0218, 1, d);  /* DST_WIDTH  */
-	d[0] = h;                        i = gpu_push(i, 0x021c, 1, d);  /* DST_HEIGHT */
-	d[0] = 0; d[1] = use_vm ? NVGPU_VM_SCRATCH : NVGPU_SCRATCH; i = gpu_push(i, 0x0220, 2, d); /* DST_ADDR hi,lo */
+	d[0] = epitch;                   i = gpu_push(i, 0x0214, 1, d);  /* DST_PITCH  */
+	d[0] = ew;                       i = gpu_push(i, 0x0218, 1, d);  /* DST_WIDTH  */
+	d[0] = eh;                       i = gpu_push(i, 0x021c, 1, d);  /* DST_HEIGHT */
+	d[0] = 0; d[1] = edst;           i = gpu_push(i, 0x0220, 2, d);  /* DST_ADDR hi,lo */
 	d[0] = 0;                        i = gpu_push(i, 0x0290, 1, d);  /* CLIP_ENABLE=0 */
 	d[0] = 3;                        i = gpu_push(i, 0x02ac, 1, d);  /* OPERATION SRCCOPY */
 	d[0] = 4;                        i = gpu_push(i, 0x0580, 1, d);  /* DRAW_SHAPE RECT */
 	d[0] = 0xcfUL;                   i = gpu_push(i, 0x0584, 1, d);  /* DRAW_COLOR_FORMAT */
-	d[0] = color;                    i = gpu_push(i, 0x0588, 1, d);  /* DRAW_COLOR */
-	d[0] = 0; d[1] = 0; d[2] = w; d[3] = h;
+	d[0] = ecolor;                   i = gpu_push(i, 0x0588, 1, d);  /* DRAW_COLOR */
+	d[0] = 0; d[1] = 0; d[2] = ew; d[3] = eh;
 	                                 i = gpu_push(i, 0x0600, 4, d);  /* POINT32 (0,0)-(w,h) */
 	pushbytes = i * 4;
 	out->put_bytes = pushbytes;
 
 	/* clear scratch to a different value so a successful fill is visible */
-	NV_vram_fill(NVGPU_SCRATCH, (w * h), 0x99999999UL);
-	out->pre_px[0] = NV_vram_rd32(NVGPU_SCRATCH + 0);
+	if(!do_fence)
+	{
+		NV_vram_fill(NVGPU_SCRATCH, (w * h), 0x99999999UL);
+		out->pre_px[0] = NV_vram_rd32(NVGPU_SCRATCH + 0);
+	}
 
 	/* kick: GET starts at pushbuf_base, advance PUT past the stream */
 	NV_wr32(PFIFO_INTR_0, 0xffffffffUL);
@@ -535,6 +590,14 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int use_vm)
 	out->px[1] = NV_vram_rd32(NVGPU_SCRATCH + (w/2)*4 + (h/2)*pitch);
 	out->px[2] = NV_vram_rd32(NVGPU_SCRATCH + (w-1)*4 + (h-1)*pitch);
 	out->filled = (out->px[0] == color && out->px[1] == color && out->px[2] == color) ? 1 : 0;
+	if(do_fence)
+	{
+		out->notify[0] = NV_vram_rd32(fence_addr + 0);  /* the value the GPU wrote */
+		out->notify[1] = fence_seq;                     /* the value we asked for  */
+		out->notify[2] = (unsigned long)fence_vm;       /* VM address used         */
+		out->notify[3] = 0;
+		out->notified  = (out->notify[0] == fence_seq) ? 1 : 0;
+	}
 	out->ok    = 1;
 	dbg_printf("NV_gpu_2dfill: ctxctl=%lX get=%lX put=%lX pfi=%lX pgi=%lX px=%lX,%lX,%lX filled=%lu\n",
 		out->ctxctl, out->get, out->put, out->pfifo_intr, out->pgraph_intr,
@@ -543,4 +606,5 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int use_vm)
 }
 
 int NV_gpu_2dfill(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, 0); }
-int NV_gpu_vmtest(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, 1); }
+int NV_gpu_vmtest(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, NVF_VM); }
+int NV_gpu_fence (nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, NVF_FENCE); }

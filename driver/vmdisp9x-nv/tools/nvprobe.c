@@ -496,6 +496,29 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	if(argc >= 2 && strcmp(argv[1], "fence") == 0)
+	{
+		nv_gpu_2dfill_t fl;
+		memset(&fl, 0, sizeof(fl));
+		if(!DeviceIoControl(vxd, OP_NV_GPU_FENCE, NULL, 0, &fl, sizeof(fl), &ret, NULL))
+		{
+			printf("OP_NV_GPU_FENCE failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("GPU HEAP + FENCE (build %lu): stage %lu/6\n", fl.build, fl.stage);
+		printf("heap-allocated fence BO @ VRAM %08lX (VM %08lX)\n", fl.heap_addr, fl.notify[2]);
+		printf("DMA GET/PUT = %08lX / %08lX %s  PGRAPH_INTR=%08lX err=%lu\n",
+			fl.get, fl.put, (fl.get==fl.put)?"(drained)":"(STALLED)", fl.pgraph_intr, (fl.dma_state>>29)&7);
+		printf("GPU wrote fence value: got %08lX, expected %08lX (was 0)\n",
+			fl.notify[0], fl.notify[1]);
+		if(fl.notified)
+			printf("*** FENCE WORKS - the GPU wrote the sequence to a heap BO via the VM! (M5.2b) ***\n");
+		else
+			printf("fence not written - see PGRAPH_INTR/err.\n");
+		return 0;
+	}
+
 	if(argc >= 2 && strcmp(argv[1], "vmtest") == 0)
 	{
 		nv_gpu_2dfill_t fl;
