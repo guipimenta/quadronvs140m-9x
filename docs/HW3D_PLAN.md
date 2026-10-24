@@ -242,3 +242,54 @@ USER_DMA_GET(0)(0xc00044)==PUT; read back the VRAM rect with nvprobe.
 
 Opt-in IOCTL OP_NV_GPU_2DFILL; nvprobe `gpu2d`. Never touches the EVO display
 channel. A fault parks PGRAPH, recover by cold boot (like EVO bring-up).
+
+## M5.2 recipe - the NV50 GPU virtual memory (derived 2026-10-24)
+
+M5.1 proved the 2D engine with a PHYSICAL ctxdma (no VM). Mesa's nv50 3D driver
+addresses all buffers by GPU VIRTUAL address, so M5.2 brings up the channel VM.
+Derived from nouveau v2.6.36 (nv50_instmem.c, nouveau_object.c
+nouveau_gpuobj_channel_init, nouveau_mem.c nv50_mem_vm_bind_linear,
+nouveau_drv.h). Constants: NV50_VM_BLOCK = 512 MiB (coverage per PDE),
+NV50_VM_MAX_VRAM = 2 GiB, 64 KiB pages, 8-byte PTEs.
+
+VM address layout (one PDE = 512 MiB):
+  PDE 0  (VM 0)        = PRAMIN/instance   (nouveau "cheat": instance at VM 0)
+  PDE 2  (VM 512 MiB)  = GART   (vm_gart_base)      [skip for M5.2a]
+  PDE 4  (VM 1 GiB)    = VRAM PT[0] (vm_vram_base); PDE 6/8/10 = PT[1..3] for 2 GiB
+  So a VRAM BO at physical P maps 1:1 to VM address (1 GiB + P).
+
+Page directory (per channel): 0x4000 bytes (2048 PDEs x 8). Lives INSIDE the
+channel RAMIN at offset 0x200 (G84/G86; 0x1400 on G80). Init every PDE to
+{0, 0xdeadcafe}. Then:
+  PDE dword (vm_vram_base/512MiB)*2 = 4  ->  nv_wo32(pd, 4, vram_pt_inst | 0x61)
+                                             nv_wo32(pd, 5, 0)
+  (GART PDE dword 2 = gart_pt | 0x03, when GART is added.)
+
+VRAM page table: covers 512 MiB => 512MiB/64KiB = 8192 PTEs x 8 = 64 KiB.
+Map VM page -> physical VRAM page P (nv50_mem_vm_bind_linear, VRAM case):
+  pte_index (dword) = ((VM_addr - vm_vram_base) >> 16) << 1
+  pte_lo = (P & 0xffffffff) | 1          (bit0 = present; flags 0 for linear)
+  pte_hi = upper_32_bits(P)              (0 for our <4 GiB VRAM)
+  (GART/system pages instead OR in 0x30 and add vram_sys_base.)
+
+ctxdma that targets the VM (for engine DMA_DST/SRC etc. to use VM addresses),
+vs the physical VIDMEM ctxdma M5.1 used:
+  VM/AGP target:  dword0 = 0x7fc00000 | class(0x3d),  dword5 = 0x00080000
+  VIDMEM target:  dword0 = 0x00190000 | 0x3d,         dword5 = 0x00010000  (M5.1)
+The engine translates a VM ctxdma's offset through the channel's PD at RAMIN+0x200.
+
+VM config / BAR regs (nouveau_reg.h): NV50_PUNK_BAR0_PRAMIN 0x1700 (CPU PRAMIN
+window, =pramin_phys>>16), NV50_PUNK_BAR_CFG_BASE 0x1704 (=ramin>>12 |VALID<<30),
+NV50_PUNK_BAR1_CTXDMA 0x1708, NV50_PUNK_UNK1710 0x1710. These set up BAR1/PRAMIN
+instance access for the dummy channel; a graphics channel's own VM is found via
+its RAMIN PD at +0x200.
+
+### M5.2a - first test: a VM-addressed 2D fill
+Reuse the M5.1 channel. Add: a VRAM page table; the channel PD at RAMIN+0x200
+with PDE 4 -> the PT; map the scratch region into the VM at (1 GiB + scratch);
+a VM-target ctxdma; redo the 2D fill with DST_ADDR = the VM address and
+DMA_DST = the VM ctxdma. Read back the scratch PHYSICALLY: if it holds the fill
+colour, the VM translated our virtual write correctly. OPEN: whether PDE->PT and
+the PD itself are referenced physically or PRAMIN-relative (M5.1 showed PGRAPH
+ctx = physical, PFIFO objects = channel-relative; the hardware test decides).
+Then M5.2b: a VRAM heap allocator + semaphore fences; M5.3: the Mesa winsys.
