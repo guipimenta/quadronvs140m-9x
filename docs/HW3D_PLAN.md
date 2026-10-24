@@ -56,25 +56,54 @@ including ../nvshim.h). `nvprobe shim` runs the whole contract end to end: a 2D 
 into a heap BO addressed by its VM offset, read back through the shim map. Expect
 "*** THE libdrm_nouveau SHIM DRIVES THE GPU - M5.3b works! ***".
 
-### NEXT: M5.3c - wire Mesa's nv50 screen to the shim
-Compile nvshim.c into mesa3d.dll in place of libdrm_nouveau's nouveau.c: switch
-nvshim.c's include from the standalone nvshim.h to Mesa's own nouveau.h (drop
--DNVSHIM_STANDALONE; the struct layouts are identical by construction), and fill
-the two stubbed-for-standalone bits against the real headers: nouveau_device_info
-(nv_device_info_v0 fields) and nouveau_object_mclass's class pick (tesla_class).
-Then make the VxD channel bind MESA's RAMHT handle set (nv04_fifo.vram=0xbeef0201 /
-.gart=0xbeef0202 from nouveau_screen.c, plus 0xbeef5039/502d/5097/0301) instead of
-the current fixed 0xbeef502d/0002/0003 - add an object-bind path (extend nv_chan_init
-or a new OP_NV_BIND ioctl driven from nouveau_object_new). Get nouveau_screen_init +
-nv50_screen_create to run. NOTE: screen init emits a fence (3D QUERY) which TRAPs
-until M5.4, so expect to need M5.4 close behind.
+### M5.3c step 1 DONE (host-verified): the shim builds against Mesa's real headers
+nvshim.c now compiles BOTH standalone (nvprobe, -DNVSHIM_STANDALONE) and against
+Mesa's own headers (no define -> includes nouveau.h + nvif/cl0080.h). Verified on
+the host with a -fsyntax-only build (exit 0, no warnings), which proves the struct
+ABI matches (the container-of casts compile) and the two formerly-stubbed functions
+are right: nouveau_device_info fills a real nv_device_info_v0 (platform=PCIE so
+nouveau_check_for_uma()=false, chipset 0x86, family TESLA), and object_mclass needs
+no change (nv50_screen picks tesla_class = NV84_3D by chipset, not via mclass).
+Mesa's uapi headers drag in <drm-uapi/drm.h> -> <sys/ioccom.h> (Linux only), so a
+minimal Win9x shim lives at driver/vmdisp9x-nv/mesa-compat/drm-uapi/nouveau_drm.h
+(just the NOUVEAU_GETPARAM_* + SVM symbols the driver references); put mesa-compat
+FIRST on the include path. Host check command:
+  cd <mesa-24.1.x>; i686-w64-mingw32-gcc -fsyntax-only -Wall \
+    -I <drv>/mesa-compat -I <drv> -I src/gallium/winsys/nouveau/drm \
+    -I src/nouveau/drm -I src/gallium/include -I src/include -I include -I src \
+    -I src/util <drv>/nvshim.c
+
+### NEXT: M5.3c step 2 - build the nv50 driver into mesa3d.dll (the long pole)
+The mesa9x Makefile (/home/guilherme/projects/mesa9x-build/mesa9x/Makefile) builds
+ONLY llvmpipe/SVGA/softpipe - nouveau is NOT in the build. Add it:
+- A new static lib (e.g. MesaGalliumNouveau) from src/gallium/drivers/nouveau/*.c +
+  nv50/*.c (~35 files, ~20k LOC) + the nv50_ir SHADER CODEGEN in src/nouveau/codegen
+  (C++); plus the winsys glue src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c.
+  REPLACE nouveau.c (real libdrm) with OUR nvshim.c as the winsys backend.
+- Include paths: mesa-compat FIRST, then our driver dir (for vxd_nv.h/nv50_gpu.h),
+  then the usual mesa gallium includes. Expect portability fallout under mingw:
+  POSIX headers (os_mman/simple_mtx are mesa-util, likely OK), any remaining
+  xf86drm.h use (only in nouveau.c, which we drop), and C++ codegen quirks.
+- WGL frontend: the pipe-screen is currently hard-wired to llvmpipe. Make it select
+  the nouveau pipe_screen (nouveau_drm_screen_create) when our VxD is present (gate
+  on OP_NV_PROBE). nvshim's nouveau_drm_new ignores fd and opens \\.\nvmini.vxd.
+Then M5.3c step 3 - make it INITIALISE on the T61:
+- The VxD channel must bind MESA's RAMHT handle set (nv04_fifo.vram=0xbeef0201 /
+  .gart=0xbeef0202 from nouveau_screen.c, plus engine objs 0xbeef0301 notifier /
+  5039 M2MF / 502d 2D / 5097 3D) instead of the current fixed 0xbeef502d/0002/0003.
+  Add an object-bind path (extend nv_chan_init or a new OP_NV_BIND ioctl driven from
+  nouveau_object_new). Get nouveau_screen_init + nv50_screen_create to run.
+- NOTE: screen init emits a fence (3D QUERY) which TRAPs until M5.4 - expect M5.4
+  (the 3D class) to follow immediately.
 Then M5.4: full NV84_3D (0x8297) bring-up (the 3D QUERY fence TRAPs today, needs the
 ~15 DMA-object + register setup nv50_screen does) and wire Mesa as the GL ICD ->
 Half-Life on the GPU.
 
 Build/test loop: edit under driver/vmdisp9x-nv; build VxD with /home/guilherme/watcom,
-DRV with /home/guilherme/watcom-2025-08, nvprobe with i686-w64-mingw32-gcc into
-tools/; run tools/nerelocs.py on the DRV; sh tools/make_dist.sh; bump NV_BUILD in
+DRV with /home/guilherme/watcom-2025-08, nvprobe with `i686-w64-mingw32-gcc -O2 -s
+-DNVSHIM_STANDALONE tools/nvprobe.c nvshim.c -I. -o tools/nvprobe.exe` (the -D is
+REQUIRED since M5.3c - nvshim.c defaults to Mesa-header mode without it);
+run tools/nerelocs.py on the DRV; sh tools/make_dist.sh; bump NV_BUILD in
 vxd_nv.h + init.c. User flashes dist/driver to the T61, runs nvprobe, confirms;
 then commit + push + `gh release create vNNNN <zip> --title ... --notes-file ...
 --target main`. Commit attribution: Co-Authored-By: Claude Opus 4.8.

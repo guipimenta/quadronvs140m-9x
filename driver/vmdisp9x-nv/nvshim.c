@@ -25,8 +25,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NVSHIM_STANDALONE
+#ifdef NVSHIM_STANDALONE
 #include "nvshim.h"
+#else
+#include "nouveau.h"       /* Mesa's own copy - ABI identical to nvshim.h */
+#include "nvif/cl0080.h"   /* struct nv_device_info_v0 (device_info fields) */
+#endif
 #include "vxd_nv.h"   /* OP_NV_SUBMIT / OP_NV_VRAM_READ / OP_NV_VRAM_WRITE */
 #include "nv50_gpu.h" /* nv_gpu_submit_t / nv_gpu_vread_t ioctl result structs */
 
@@ -36,6 +40,9 @@
  * channel's 1:1 VM page table (first 2048 x 64 KiB pages) can translate them. */
 #define NVSHIM_HEAP_BASE  0x04000000UL   /* 64 MiB */
 #define NVSHIM_HEAP_END   0x08000000UL   /* 128 MiB (end of the VM 1:1 window) */
+#ifndef NVSHIM_VM_BASE
+#define NVSHIM_VM_BASE    0x40000000UL   /* BO GPU addr = physical offset + 1 GiB */
+#endif
 
 /* ========================= VxD transport ============================== */
 static HANDLE g_vxd = INVALID_HANDLE_VALUE;
@@ -201,13 +208,19 @@ void nouveau_device_del(struct nouveau_device **pdev)
 
 int nouveau_device_info(struct nouveau_device *dev, struct nv_device_info_v0 *info)
 {
-	(void)dev;
 #ifndef NVSHIM_STANDALONE
-	/* Mesa's nouveau_check_for_uma() inspects this; zero it (discrete GPU).
-	 * The chipset field is filled in M5.3c against the real struct layout. */
+	/* The G86 is a discrete PCIe Tesla part. nouveau_check_for_uma() only reads
+	 * .platform (IGP/SOC => unified memory); PCIE keeps us on the discrete path. */
 	memset(info, 0, sizeof(*info));
+	info->version  = 0;
+	info->platform = NV_DEVICE_INFO_V0_PCIE;
+	info->chipset  = (uint16_t)dev->chipset;   /* 0x86 */
+	info->revision = 0;
+	info->family   = NV_DEVICE_INFO_V0_TESLA;
+	info->ram_size = dev->vram_size;
+	info->ram_user = dev->vram_limit;
 #else
-	(void)info;
+	(void)dev; (void)info;
 #endif
 	return 0;
 }

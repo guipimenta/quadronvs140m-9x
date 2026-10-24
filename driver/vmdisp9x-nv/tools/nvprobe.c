@@ -18,7 +18,9 @@
 #include "../dbgring.h"
 #include "../nv50_evo.h"
 #include "../nv50_gpu.h"
-#define NVSHIM_STANDALONE
+#ifndef NVSHIM_STANDALONE
+#define NVSHIM_STANDALONE   /* nvprobe always uses the self-contained shim header */
+#endif
 #include "../nvshim.h"   /* M5.3b: libdrm_nouveau shim self-test */
 
 /* Emit the EVO flip diagnostic to a stream. Called twice: once to nvflip.txt
