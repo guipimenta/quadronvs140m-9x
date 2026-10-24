@@ -5,6 +5,51 @@ instead of on the CPU (Mesa llvmpipe). This is the largest piece of the whole
 project and a multi-stage hardware bring-up on the real T61, in the same style
 as the EVO display bring-up (docs/EVO_PLAN.md, builds 3001-3010).
 
+## CURRENT STATUS - RESUME HERE (as of build 3074, 2026-10-24)
+
+The GPU bring-up and the winsys foundation are DONE and verified on the T61.
+What is built, in order, each released and tested:
+
+- M5.1  (v3061): the 2D engine (0x502d) executes commands and fills VRAM.
+- M5.2a (v3064): channel VIRTUAL MEMORY - page directory @RAMIN+0x200 + a VRAM
+  page table translate a GPU virtual address to physical VRAM.
+- M5.2b (v3067): a VRAM HEAP allocator + a GPU FENCE (a 2D write of a sequence
+  value to a heap BO via the VM; CPU polls it).
+- M5.3a (v3074): a PERSISTENT CHANNEL that RING-3 submits command streams to,
+  using nv50 INDIRECT-BUFFER (IB) mode. `nvprobe submit` proves user space drives
+  the GPU (two fills, different colors, both land).
+
+All the mechanism facts (register values, instance layout, IB entry format, the
+DMA-pusher dead end, VM/PTE/PDE formats, the grctx) are in the auto-memory file
+hw3d-gpu-accel.md - READ IT before continuing.
+
+Test commands on the T61 (opt-in, touch only PGRAPH/PFIFO):
+  nvprobe gpu2d | vmtest | fence | submit
+
+### NEXT: M5.3b - the libdrm_nouveau shim (the task to start)
+Implement the ~25-function libdrm_nouveau contract in a NEW ring-3 source compiled
+into mesa3d.dll, built on the VxD ioctls we now have (OP_NV_SUBMIT 0x5013,
+OP_NV_VRAM_READ 0x5014) plus new ones to add (BO alloc from the heap + CPU map via
+BAR1, VM-map, fence emit/wait). Functions Mesa's nv50 winsys calls:
+  nouveau_device_*, nouveau_object_new/del, nouveau_bo_new/ref/map/unmap/wait,
+  nouveau_pushbuf_new/space/data/refn/kick/validate, nouveau_bufctx_*,
+  nouveau_fence_new/ref/signalled/wait, nouveau_client_new.
+Reference contracts: /home/guilherme/projects/mesa9x-build/mesa9x/mesa-24.1.x/src/
+gallium/{winsys,drivers}/nouveau (nouveau_fence.c, nv50_screen.c fence.emit uses the
+3D QUERY method - see M5.4 note). The persistent channel's command encoding is
+header=(count<<18)|(subc<<13)|method; submit via OP_NV_SUBMIT.
+Then M5.3c: wire Mesa's nv50 screen create to the shim and get it to initialise.
+Then M5.4: full NV84_3D (0x8297) bring-up (the 3D QUERY fence TRAPs today, needs the
+~15 DMA-object + register setup nv50_screen does) and wire Mesa as the GL ICD ->
+Half-Life on the GPU.
+
+Build/test loop: edit under driver/vmdisp9x-nv; build VxD with /home/guilherme/watcom,
+DRV with /home/guilherme/watcom-2025-08, nvprobe with i686-w64-mingw32-gcc into
+tools/; run tools/nerelocs.py on the DRV; sh tools/make_dist.sh; bump NV_BUILD in
+vxd_nv.h + init.c. User flashes dist/driver to the T61, runs nvprobe, confirms;
+then commit + push + `gh release create vNNNN <zip> --title ... --notes-file ...
+--target main`. Commit attribution: Co-Authored-By: Claude Opus 4.8.
+
 ## Why it is big, and why it is feasible
 
 The G86 is an NV50-family (Tesla) GPU. Its 3D engine is class 0x8297
