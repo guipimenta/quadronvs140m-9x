@@ -60,3 +60,4 @@ __pycache__/
 # Mesa9x software OpenGL (44 MB; fetched from the upstream release, see PROVENANCE)
 /driver/mesa9x-bin/mesa3d.dll
 /dist/driver/mesa3d.dll
+nvmini-*.zip
