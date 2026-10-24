@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index 12b3e391..1a7d1456 100644
+index 12b3e391..638cda2c 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -526,7 +526,29 @@ else
@@ -47,6 +47,22 @@ index 12b3e391..1a7d1456 100644
  MesaVirGLLib_OBJS := $(MesaVirGLLib_SRC:.c=.c_gen$(OBJ))
  MesaVirGLLib_OBJS := $(MesaVirGLLib_OBJS:.cpp=.cpp_gen$(OBJ))
  $(LIBPREFIX)MesaVirGL$(LIBSUFFIX): $(MesaVirGL_OBJS)
+@@ -740,8 +769,13 @@ mesa3d.w95.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaOS_OBJS) mesa3d.res $(LD_DEPS) fi
+ 	$(LD) $(LDFLAGS) $(MesaWglLib_OBJS) $(MesaGdiLibICD_OBJS) $(MesaOS_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) mesa3d.res $(DLLFLAGS) $(MESA3D_DEF)
+ 	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+ 
+-mesa3d.w98me.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaOSSimd_OBJS) mesa3d.res $(LD_DEPS) fixlink.exe
+-	$(LD) $(SIMD_LDFLAGS) $(MesaWglLibSimd_OBJS) $(MesaGdiLibICDSimd_OBJS) $(MesaOSSimd_OBJS) $(opengl_simd_LIBS) $(MESA_SIMD_LIBS) mesa3d.res $(DLLFLAGS) $(MESA3D_DEF) 
++# M5.3c: wgl_icd.c (the ICD's screen-create) gets -DGALLIUM_NOUVEAU so it offers
++# the nouveau driver (GALLIUM_DRIVER=nouveau); only this object, so the opengl32
++# and SVGA DLLs that share wgl.c stay software and need not link MesaNouveauLib.
++$(MESA_VER)/src/gallium/targets/wgl/wgl_icd.c_simd$(OBJ): SIMD_CFLAGS += -DGALLIUM_NOUVEAU
++
++mesa3d.w98me.dll: $(DEPS) $(LIBS_TO_BUILD) $(LIBPREFIX)MesaNouveauLib$(LIBSUFFIX) $(MesaOSSimd_OBJS) mesa3d.res $(LD_DEPS) fixlink.exe
++	$(LD) $(SIMD_LDFLAGS) $(MesaWglLibSimd_OBJS) $(MesaGdiLibICDSimd_OBJS) $(MesaOSSimd_OBJS) -Wl,--start-group $(LIBPREFIX)MesaNouveauLib$(LIBSUFFIX) $(opengl_simd_LIBS) -Wl,--end-group $(MESA_SIMD_LIBS) mesa3d.res $(DLLFLAGS) $(MESA3D_DEF)
+ 	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+ 
+ # accelerated ICD driver (SVGA3D) fixlink.exe
 diff --git a/mesa-25.1.x.mk b/mesa-25.1.x.mk
 index 46cccbb9..48500104 100644
 --- a/mesa-25.1.x.mk
@@ -73,3 +89,50 @@ index 46cccbb9..48500104 100644
  MesaGdiLib_SRC = \
    $(MESA_VER)/src/gallium/winsys/sw/gdi/gdi_sw_winsys.c \
    $(MESA_VER)/src/gallium/winsys/sw/wrapper/wrapper_sw_winsys.c \
+diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
+index 8017cd00..30f83e96 100644
+--- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
++++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
+@@ -73,6 +73,12 @@ static bool use_d3d12 = false;
+ #ifdef GALLIUM_ZINK
+ static bool use_zink = false;
+ #endif
++#ifdef GALLIUM_NOUVEAU
++/* M5.3c: native nouveau (G86) hardware screen, selected by GALLIUM_DRIVER=nouveau.
++ * nouveau_drm_screen_create ignores the fd and opens the nvmini VxD (nvshim.c). */
++static bool use_nouveau = false;
++extern struct pipe_screen *nouveau_drm_screen_create(int fd);
++#endif
+ 
+ #ifdef WIN9X
+ #include "3d_accel.h"
+@@ -99,6 +105,13 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
+ 
+    debug_printf("tried driver: %s\n", driver);
+ 
++#ifdef GALLIUM_NOUVEAU
++   if (strcmp(driver, "nouveau") == 0) {
++      screen = nouveau_drm_screen_create(0);   /* fd ignored; opens the VxD */
++      if (screen)
++         use_nouveau = true;
++   }
++#endif
+ #ifdef GALLIUM_LLVMPIPE
+    if (strcmp(driver, "llvmpipe") == 0) {
+ # ifdef HAVE_CRTEX
+@@ -237,6 +250,15 @@ wgl_present(struct pipe_screen *screen,
+    }
+ #endif
+ 
++#ifdef GALLIUM_NOUVEAU
++   if (use_nouveau) {
++      /* M5.3c: a hardware nouveau screen has no sw-winsys displaytarget to
++       * gdi_sw_display/vramcpy. Real present (blit the rendered BO to the HDC)
++       * is M5.4; for now do nothing so we neither crash nor mis-cast. */
++      return;
++   }
++#endif
++
+ #ifdef GALLIUM_SOFTPIPE
+    winsys = softpipe_screen(screen)->winsys;
+    dt = softpipe_resource(res)->dt;

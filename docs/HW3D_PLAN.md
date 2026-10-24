@@ -122,20 +122,26 @@ link set. So linking MesaNouveauLib into mesa3d.dll will resolve. Needed fixes f
   nouveau_screen_init_vdec/_context_init_vdec, nv84/nv98/vp3 video query+codec hooks.
 - Link with g++ (libstdc++ for the C++ codegen) and --start-group (circular lib deps).
 
-### NEXT: M5.3c step 2b-iii - build the actual nouveau mesa3d.dll + select nouveau
-- Add $(LIBPREFIX)MesaNouveauLib$(LIBSUFFIX) to the mesa3d.w98me.dll link line
-  (opengl_simd_LIBS / MESA_SIMD_LIBS) and to LIBS_TO_BUILD.
-- WGL frontend: wgl_screen_create() in src/gallium/targets/wgl/wgl.c (compiled into
-  MesaGdiLibICD) builds a gdi sw_winsys and tries llvmpipe/softpipe. Add a branch at
-  the TOP that calls nouveau_drm_screen_create(0) (our nouveau_drm_new ignores fd and
-  opens \\.\nvmini.vxd) and returns it if non-NULL, else falls through to sw. Guard
-  with GALLIUM_NOUVEAU (add -D to the mesa3d build only, to avoid forcing opengl32/svga
-  DLLs to link nouveau). Keep the patch in driver/mesa9x-bin/nouveau-build-win9x.patch.
-- PRESENT path: a hw nouveau screen needs wgl_present to blit the rendered BO to the
-  HDC (the sw path uses gdi_sw_display/vramcpy on the sw winsys displaytarget - a hw
-  screen has none). Minimal first cut can copy via the fb; real present is step 3/M5.4.
-- Run impcheck_win98.py on the DLL.
-Then M5.3c step 3 - make it INITIALISE on the T61:
+### M5.3c step 2b-iii DONE (host-verified): the nouveau mesa3d.dll BUILDS + loads
+`make mesa3d.w98me.dll` -> 80 MB, exit 0, no undefined refs, fixlink checksum applied,
+and impcheck_win98.py reports "missing on Win98: none" for every imported DLL. The
+first hardware-nouveau OpenGL ICD for Win9x exists and is Win98-loadable. How:
+- Makefile: MesaNouveauLib added to the mesa3d.w98me.dll prereqs + link line, wrapped
+  -Wl,--start-group ... $(opengl_simd_LIBS) -Wl,--end-group (circular lib deps). A
+  TARGET-SPECIFIC `wgl_icd.c_simd.o: SIMD_CFLAGS += -DGALLIUM_NOUVEAU` sets the define
+  on ONLY the ICD's wgl object, so opengl32/SVGA (which share wgl.c) stay software and
+  need not link nouveau.
+- wgl.c: added a `nouveau` case to wgl_screen_create_by_name (GALLIUM_DRIVER=nouveau ->
+  nouveau_drm_screen_create(0); our nouveau_drm_new opens \\.\nvmini.vxd), a use_nouveau
+  flag, and a wgl_present guard that early-returns for a nouveau screen (real present is
+  M5.4; a hw screen has no sw displaytarget to gdi_sw_display). nouveau is OPT-IN - the
+  default DLL stays llvmpipe/software, so it is safe to ship before hw init works.
+All mesa-tree edits are in driver/mesa9x-bin/nouveau-build-win9x.patch (3 files).
+
+### NEXT: M5.3c step 3 - make the nouveau screen INITIALISE on the T61
+Set GALLIUM_DRIVER=nouveau (HKLM\Software\vmdisp9x\apps\<exe>\mesa, like
+MESA_EXTENSION_MAX_YEAR) so the ICD picks nouveau. Then nouveau_drm_screen_create ->
+nouveau_screen_create -> nv50_screen_create must run against the VxD. For that:
 - The VxD channel must bind MESA's RAMHT handle set (nv04_fifo.vram=0xbeef0201 /
   .gart=0xbeef0202 from nouveau_screen.c, plus engine objs 0xbeef0301 notifier /
   5039 M2MF / 502d 2D / 5097 3D) instead of the current fixed 0xbeef502d/0002/0003.
