@@ -98,15 +98,26 @@ So step 2 is a Makefile-integration + link task, NOT a source port. Requirements
   mesa-compat added (for vxd_nv.h/nv50_gpu.h), but driver files must NOT get -I<drv>
   (our io.h collides).
 
-### NEXT: M5.3c step 2b - add MesaNouveauLib to the Makefile and link mesa3d.dll
-- Define MesaNouveauLib_SRC in mesa-25.1.x.mk: the 31 core C + 26 codegen cpp +
-  nouveau_drm_winsys.c + driver/vmdisp9x-nv/nvshim.c (REPLACING nouveau.c). Add the
-  lib rule + objs to Makefile (follow MesaSVGALib), with the include/compat flags
-  above, and link it into mesa3d.w98me.dll.
-- WGL frontend: the pipe-screen is hard-wired to llvmpipe. Make it select the nouveau
-  pipe_screen (nouveau_drm_screen_create) when our VxD is present (gate on OP_NV_PROBE);
-  nvshim's nouveau_drm_new ignores fd and opens \\.\nvmini.vxd. Resolve link-time
-  undefined symbols. Run impcheck_win98.py on the result.
+### M5.3c step 2b-i DONE (host-verified): MesaNouveauLib.a builds
+The nouveau driver lib is wired into the mesa9x build and archives cleanly:
+- mesa-25.1.x.mk: MesaNouveauLib_SRC (NVDRV var + wildcard of drivers/nouveau/*.c +
+  nv50/*.c with the 4 bad video files filtered out, + codegen/*.cpp + winsys
+  nouveau_drm_winsys.c + $(NVDRV)/nvshim.c). Makefile: NV_INCLUDE/NV_CFLAGS/
+  NV_CXXFLAGS (mesa-compat FIRST, + NV_DEFS=-DMESA_GIT_SHA1=\"\" since nouveau_screen.c
+  lacks svga's fallback), a dedicated `_nv` object suffix + rules, and the
+  MesaNouveauLib lib rule. `make libMesaNouveauLib.a` -> 2 MB archive, 58 objects,
+  exit 0. The mesa9x-tree diff is saved in driver/mesa9x-bin/nouveau-build-win9x.patch
+  (that tree is outside this repo).
+
+### NEXT: M5.3c step 2b-ii - link MesaNouveauLib into mesa3d.dll + select nouveau
+- Add $(LIBPREFIX)MesaNouveauLib$(LIBSUFFIX) to LIBS_TO_BUILD and to the
+  mesa3d.w98me.dll link line (opengl_simd_LIBS / MESA_SIMD_LIBS). Resolve link-time
+  undefined symbols (the nv50 driver pulls nir/tgsi/the disk cache - mostly already
+  in MesaLibSimd/AuxLibSimd; the video files may drag the vl_* layer, drop them if so).
+- WGL frontend: the pipe-screen is hard-wired to llvmpipe. Make the win9x target
+  (MesaOS_SRC / the stw_winsys create_screen) call nouveau_drm_screen_create when our
+  VxD is present (gate on OP_NV_PROBE); nvshim's nouveau_drm_new ignores fd and opens
+  \\.\nvmini.vxd. Run impcheck_win98.py on the result.
 Then M5.3c step 3 - make it INITIALISE on the T61:
 - The VxD channel must bind MESA's RAMHT handle set (nv04_fifo.vram=0xbeef0201 /
   .gart=0xbeef0202 from nouveau_screen.c, plus engine objs 0xbeef0301 notifier /

@@ -27,12 +27,13 @@
 
 #ifdef NVSHIM_STANDALONE
 #include "nvshim.h"
+#include "vxd_nv.h"      /* OP_NV_SUBMIT / OP_NV_VRAM_READ / OP_NV_VRAM_WRITE */
+#include "nv50_gpu.h"    /* nv_gpu_submit_t / nv_gpu_vread_t result structs    */
 #else
 #include "nouveau.h"       /* Mesa's own copy - ABI identical to nvshim.h */
 #include "nvif/cl0080.h"   /* struct nv_device_info_v0 (device_info fields) */
+#include "nvshim_ioctl.h"  /* self-contained VxD opcodes + result structs   */
 #endif
-#include "vxd_nv.h"   /* OP_NV_SUBMIT / OP_NV_VRAM_READ / OP_NV_VRAM_WRITE */
-#include "nv50_gpu.h" /* nv_gpu_submit_t / nv_gpu_vread_t ioctl result structs */
 
 /* ---- VRAM layout (must match nv50_gpu.c's persistent channel) --------- *
  * The channel reserves 0x03000000..0x03700000 for its instance structures,
