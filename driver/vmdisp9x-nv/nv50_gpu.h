@@ -69,4 +69,12 @@ typedef struct nv_gpu_vread
 int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out);
 int NV_gpu_vram_read(unsigned long offset, unsigned long count, nv_gpu_vread_t *out);
 
+/* M5.3c: bind an object at a caller-chosen handle (Mesa's RAMHT handle set) */
+typedef struct nv_gpu_bind
+{
+	unsigned long build, ok, handle, oclass, inst, engine, ctxctl;
+} nv_gpu_bind_t;
+
+int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out);
+
 #endif /* NV50_GPU_H */

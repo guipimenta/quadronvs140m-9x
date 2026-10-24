@@ -1349,6 +1349,15 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			rc = 0;
 			break;
 		}
+		case OP_NV_BIND:
+		{
+			/* inBuf[0] = handle, inBuf[1] = object class */
+			nv_gpu_bind_t bd;
+			NV_gpu_bind(inBuf[0], inBuf[1], &bd);
+			memcpy(outBuf, &bd, sizeof(bd));
+			rc = 0;
+			break;
+		}
 		case OP_NV_GPU_FENCE:
 		{
 			nv_gpu_2dfill_t fl;

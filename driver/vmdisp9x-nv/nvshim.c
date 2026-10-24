@@ -107,6 +107,23 @@ static void vxd_vram_read(uint32_t off, uint32_t *dst, uint32_t dwords)
 	}
 }
 
+#ifndef NVSHIM_STANDALONE
+/* Bind an object at `handle`/`oclass` into the persistent channel's RAMHT so a
+ * method stream can reference it by handle (M5.3c). Used for Mesa's engine and
+ * ctxdma objects via nouveau_object_new. */
+static void vxd_bind(uint32_t handle, uint32_t oclass)
+{
+	nv_gpu_bind_t bd;
+	DWORD ret = 0;
+	uint32_t in[2];
+	if(!nvshim_open())
+		return;
+	in[0] = handle; in[1] = oclass;
+	memset(&bd, 0, sizeof(bd));
+	DeviceIoControl(g_vxd, OP_NV_BIND, in, sizeof(in), &bd, sizeof(bd), &ret, NULL);
+}
+#endif
+
 /* Copy `dwords` dwords from `src` into VRAM byte `off` (shadow flush). */
 static void vxd_vram_write(uint32_t off, const uint32_t *src, uint32_t dwords)
 {
@@ -275,10 +292,31 @@ int nouveau_object_new(struct nouveau_object *parent, uint64_t handle, uint32_t 
 		obj->data = malloc(length);
 		if(obj->data) memcpy(obj->data, data, length);
 	}
-	/* The FIFO channel and the engine objects (M2MF/2D/3D/notifier) are brought
-	 * up inside the VxD's persistent channel (nv_chan_init), triggered lazily by
-	 * the first OP_NV_SUBMIT. Binding Mesa's handle set into that channel's
-	 * RAMHT is M5.3c; here object_new only records the node. */
+	/* Bind the object into the persistent channel's RAMHT at Mesa's handle so
+	 * method streams resolve it (M5.3c). The channel itself contributes its VRAM
+	 * and GART ctxdmas (from nv04_fifo); engine (M2MF/2D/3D) and notifier objects
+	 * are bound by class. Unknown/software-only classes are just recorded. */
+#ifndef NVSHIM_STANDALONE
+	if(oclass == NOUVEAU_FIFO_CHANNEL_CLASS)
+	{
+		if(data && length >= sizeof(struct nv04_fifo))
+		{
+			struct nv04_fifo *f = (struct nv04_fifo *)data;
+			vxd_bind(f->vram, 0x3d);   /* VRAM ctxdma (VM window) */
+			vxd_bind(f->gart, 0x3d);   /* GART ctxdma (no GART -> VM window) */
+		}
+	}
+	else switch(oclass)
+	{
+	case 0x502d: case 0x5039: case 0x5097:              /* 2D / M2MF / NV50_3D */
+	case 0x8297: case 0x8597: case 0x8697:              /* NV84/94/96 3D       */
+	case NOUVEAU_NOTIFIER_CLASS:
+		vxd_bind((uint32_t)handle, oclass);
+		break;
+	default:
+		break;
+	}
+#endif
 	*pobj = obj;
 	return 0;
 }

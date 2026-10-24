@@ -56,6 +56,8 @@ extern nv_hwinfo_t nv_hwinfo;
 #define NVGPU_VRAMDMA 0x03004000UL   /* physical VRAM ctxdma (pushbuf + M5.1 DST)*/
 #define NVGPU_OBJ2D   0x03004100UL   /* 2D engine object instance                */
 #define NVGPU_VMDMA   0x03006000UL   /* M5.2 VM-target ctxdma (DMA_DST via VM)   */
+#define NVGPU_OBJAREA 0x03008000UL   /* M5.3c: instances for Mesa-bound objects  */
+#define NVGPU_OBJAREA_END 0x03010000UL /* (32 KiB, channel-relative <1MB)        */
 #define NVGPU_VRAMPT  0x03010000UL   /* M5.2 VRAM page table (64 KiB)            */
 #define NVGPU_PUSHBUF 0x03200000UL   /* command pushbuffer (data, physical)      */
 #define NVGPU_SCRATCH 0x03400000UL   /* 2D fill destination (read back)          */
@@ -816,3 +818,76 @@ int NV_gpu_vram_read(unsigned long offset, unsigned long count, nv_gpu_vread_t *
 int NV_gpu_2dfill(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, 0); }
 int NV_gpu_vmtest(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, NVF_VM); }
 int NV_gpu_fence (nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, NVF_FENCE); }
+
+/* ===================== M5.3c: bind an object at a caller's handle ============
+ * The Mesa nouveau winsys creates channel objects with ITS OWN handles (vram
+ * 0xbeef0201, gart 0xbeef0202, notifier 0xbeef0301, M2MF 0xbeef5039, 2D
+ * 0xbeef502d, 3D 0xbeef5097). The shim's nouveau_object_new routes each here so
+ * the persistent channel's RAMHT gains an entry for that handle. Graphics engine
+ * classes (2D/M2MF/3D) get a small gfx-object instance (engine GR=1); everything
+ * else (DMA/notifier) gets a VM-target ctxdma (engine 0). Instances come from a
+ * bump area inside the channel's 1 MiB window. Additive - the fixed nv_chan_init
+ * bindings (used by nvprobe gpu2d/submit) are untouched. */
+static unsigned long g_obj_next = 0;
+
+static int nv_class_is_gfx(unsigned long oclass)
+{
+	switch(oclass)
+	{
+	case 0x502dUL: case 0x5039UL: case 0x5097UL:
+	case 0x8297UL: case 0x8597UL: case 0x8697UL:
+		return 1;
+	}
+	return 0;
+}
+
+int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out)
+{
+	unsigned long inst;
+
+	memset(out, 0, sizeof(*out));
+	out->build  = NV_BUILD;
+	out->handle = handle;
+	out->oclass = oclass;
+
+	if(!g_chan_ready)
+	{
+		out->ctxctl = nv_chan_init();
+		if(!out->ctxctl) return 0;
+		g_chan_ready = 1;
+		g_chan_put   = 0;
+		g_ib_put     = 0;
+	}
+	if(g_obj_next < NVGPU_OBJAREA) g_obj_next = NVGPU_OBJAREA;
+
+	inst = (g_obj_next + 0xffUL) & ~0xffUL;        /* 256-byte aligned instance */
+	if(inst + 0x100UL > NVGPU_OBJAREA_END) return 0;   /* object area full */
+	g_obj_next = inst + 0x100UL;
+	out->inst  = inst;
+
+	NV_vram_fill(inst, 0x100 / 4, 0);
+	if(nv_class_is_gfx(oclass))
+	{
+		/* nv50 graphics object: obj[0]=class, obj[5]=0x00010000; engine GR=1 */
+		NV_vram_wr32(inst + 0,  oclass);
+		NV_vram_wr32(inst + 20, 0x00010000UL);
+		gpu_ramht(handle, inst - NVGPU_RAMIN, 1);
+		out->engine = 1;
+	}
+	else
+	{
+		/* VM-target ctxdma (covers the whole 1:1 VM window), engine 0 */
+		NV_vram_wr32(inst + 0x00, 0x7fc00000UL | 0x3dUL);
+		NV_vram_wr32(inst + 0x04, 0xffffffffUL);
+		NV_vram_wr32(inst + 0x08, 0);
+		NV_vram_wr32(inst + 0x0c, 0);
+		NV_vram_wr32(inst + 0x10, 0);
+		NV_vram_wr32(inst + 0x14, 0x00080000UL);
+		gpu_ramht(handle, inst - NVGPU_RAMIN, 0);
+		out->engine = 0;
+	}
+	out->ok = 1;
+	dbg_printf("NV_gpu_bind: handle=%lX class=%lX -> inst=%lX engine=%lu\n",
+		handle, oclass, inst, out->engine);
+	return 1;
+}

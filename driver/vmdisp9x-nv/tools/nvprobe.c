@@ -570,6 +570,59 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	if(argc >= 2 && strcmp(argv[1], "bind") == 0)
+	{
+		/* M5.3c: bind objects at MESA's RAMHT handles (vram ctxdma 0xbeef0201,
+		 * 2D 0xbeef502d) via OP_NV_BIND, then submit a 2D fill that references
+		 * those handles and read it back. Proves the object-bind path the Mesa
+		 * nouveau winsys needs (nouveau_object_new) works on hardware. */
+		nv_gpu_bind_t bd; nv_gpu_submit_t sb; nv_gpu_vread_t vr;
+		unsigned long in[2], m[64], n = 0, col = 0xb14dc0deUL;
+		unsigned long scratch = 0x03400000UL, scratch_vm = 0x43400000UL;
+		int okv, oko;
+
+		in[0] = 0xbeef0201UL; in[1] = 0x3dUL;   /* vram ctxdma (DMA class) */
+		memset(&bd, 0, sizeof(bd));
+		DeviceIoControl(vxd, OP_NV_BIND, in, 8, &bd, sizeof(bd), &ret, NULL);
+		okv = bd.ok;
+		printf("BIND vram  0xbeef0201 -> inst=%08lX engine=%lu %s (build %lu, ctxctl=%08lX)\n",
+			bd.inst, bd.engine, bd.ok?"OK":"FAIL", bd.build, bd.ctxctl);
+		in[0] = 0xbeef502dUL; in[1] = 0x502dUL;  /* 2D engine object */
+		memset(&bd, 0, sizeof(bd));
+		DeviceIoControl(vxd, OP_NV_BIND, in, 8, &bd, sizeof(bd), &ret, NULL);
+		oko = bd.ok;
+		printf("BIND 2D    0xbeef502d -> inst=%08lX engine=%lu %s\n",
+			bd.inst, bd.engine, bd.ok?"OK":"FAIL");
+
+		m[n++] = (1UL<<18)|0x0000; m[n++] = 0xbeef502dUL;  /* SET_OBJECT 2D (Mesa handle) */
+		m[n++] = (1UL<<18)|0x0184; m[n++] = 0xbeef0201UL;  /* DMA_DST (Mesa vram handle)  */
+		m[n++] = (1UL<<18)|0x0200; m[n++] = 0xcfUL;
+		m[n++] = (1UL<<18)|0x0204; m[n++] = 1;
+		m[n++] = (1UL<<18)|0x0214; m[n++] = 256;
+		m[n++] = (1UL<<18)|0x0218; m[n++] = 64;
+		m[n++] = (1UL<<18)|0x021c; m[n++] = 64;
+		m[n++] = (2UL<<18)|0x0220; m[n++] = 0; m[n++] = scratch_vm;
+		m[n++] = (1UL<<18)|0x0290; m[n++] = 0;
+		m[n++] = (1UL<<18)|0x02ac; m[n++] = 3;
+		m[n++] = (1UL<<18)|0x0580; m[n++] = 4;
+		m[n++] = (1UL<<18)|0x0584; m[n++] = 0xcfUL;
+		m[n++] = (1UL<<18)|0x0588; m[n++] = col;
+		m[n++] = (4UL<<18)|0x0600; m[n++]=0; m[n++]=0; m[n++]=64; m[n++]=64;
+		memset(&sb, 0, sizeof(sb));
+		DeviceIoControl(vxd, OP_NV_SUBMIT, m, n*4, &sb, sizeof(sb), &ret, NULL);
+		memset(&vr, 0, sizeof(vr));
+		in[0] = scratch; in[1] = 1;
+		DeviceIoControl(vxd, OP_NV_VRAM_READ, in, 8, &vr, sizeof(vr), &ret, NULL);
+		printf("fill via Mesa handles: pgi=%08lX scratch=%08lX (want %08lX) %s\n",
+			sb.pgraph_intr, vr.data[0], col, (vr.data[0]==col)?"OK":"MISMATCH");
+		CloseHandle(vxd);
+		if(okv && oko && vr.data[0]==col)
+			printf("*** OBJECT-BIND WORKS - Mesa's RAMHT handles drive the GPU! (M5.3c) ***\n");
+		else
+			printf("bind path incomplete - see FAIL/MISMATCH/pgi above.\n");
+		return (okv && oko && vr.data[0]==col) ? 0 : 1;
+	}
+
 	if(argc >= 2 && strcmp(argv[1], "shim") == 0)
 	{
 		/* M5.3b: drive the GPU through the libdrm_nouveau SHIM (nvshim.c), the

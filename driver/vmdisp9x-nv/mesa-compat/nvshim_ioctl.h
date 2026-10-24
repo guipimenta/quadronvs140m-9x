@@ -15,6 +15,7 @@
 #define OP_NV_SUBMIT      0x5013  /* submit a ring-3 method stream to the channel */
 #define OP_NV_VRAM_READ   0x5014  /* read back VRAM dwords                        */
 #define OP_NV_VRAM_WRITE  0x5015  /* write a block of dwords into VRAM (BO flush) */
+#define OP_NV_BIND        0x5016  /* bind an object at a caller handle (RAMHT)   */
 
 /* OP_NV_SUBMIT result (nv50_gpu.h: nv_gpu_submit_t). nvshim.c reads .ok only;
  * the rest keeps the layout identical to the VxD's so the ioctl memcpy fits. */
@@ -32,5 +33,11 @@ typedef struct nv_gpu_vread
 	unsigned long build, ok, offset, count;
 	unsigned long data[64];
 } nv_gpu_vread_t;
+
+/* OP_NV_BIND result (nv50_gpu.h: nv_gpu_bind_t). */
+typedef struct nv_gpu_bind
+{
+	unsigned long build, ok, handle, oclass, inst, engine, ctxctl;
+} nv_gpu_bind_t;
 
 #endif /* NVSHIM_IOCTL_H */
