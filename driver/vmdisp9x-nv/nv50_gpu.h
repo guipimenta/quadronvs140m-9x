@@ -47,5 +47,6 @@ typedef struct nv_gpu_2dfill
 } nv_gpu_2dfill_t;
 
 int NV_gpu_2dfill(nv_gpu_2dfill_t *out);
+int NV_gpu_vmtest(nv_gpu_2dfill_t *out);  /* M5.2a: fill via a GPU VIRTUAL address */
 
 #endif /* NV50_GPU_H */

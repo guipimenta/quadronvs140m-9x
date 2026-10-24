@@ -1322,6 +1322,14 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			rc = 0;
 			break;
 		}
+		case OP_NV_GPU_VMTEST:
+		{
+			nv_gpu_2dfill_t fl;
+			NV_gpu_vmtest(&fl);
+			memcpy(outBuf, &fl, sizeof(fl));
+			rc = 0;
+			break;
+		}
 		case OP_NV_GPU_2DFILL:
 		{
 			nv_gpu_2dfill_t fl;

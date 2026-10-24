@@ -496,6 +496,29 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	if(argc >= 2 && strcmp(argv[1], "vmtest") == 0)
+	{
+		nv_gpu_2dfill_t fl;
+		memset(&fl, 0, sizeof(fl));
+		if(!DeviceIoControl(vxd, OP_NV_GPU_VMTEST, NULL, 0, &fl, sizeof(fl), &ret, NULL))
+		{
+			printf("OP_NV_GPU_VMTEST failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("GPU 2D fill VIA VIRTUAL MEMORY (build %lu): stage %lu/6\n", fl.build, fl.stage);
+		printf("DMA GET/PUT = %08lX / %08lX %s\n", fl.get, fl.put, (fl.get==fl.put)?"(drained)":"(STALLED)");
+		printf("PFIFO_INTR=%08lX PGRAPH_INTR=%08lX STATE=%08lX err=%lu(6=MEMFAULT)\n",
+			fl.pfifo_intr, fl.pgraph_intr, fl.dma_state, (fl.dma_state>>29)&7);
+		printf("scratch (physical) after a fill addressed by GPU VIRTUAL 0x43400000:\n");
+		printf("  TL=%08lX  mid=%08lX  BR=%08lX\n", fl.px[0], fl.px[1], fl.px[2]);
+		if(fl.filled)
+			printf("*** GPU VIRTUAL MEMORY WORKS - the VM translated our write! (M5.2a) ***\n");
+		else
+			printf("not filled - the VM did not translate (see err/INTR); M5.2 needs more.\n");
+		return 0;
+	}
+
 	if(argc >= 2 && strcmp(argv[1], "gpu2d") == 0)
 	{
 		nv_gpu_2dfill_t fl;

@@ -48,13 +48,19 @@ extern nv_hwinfo_t nv_hwinfo;
  * nouveau_object.c uses im_backing_start). Above the EVO reservations (<=32 MB). */
 #define NVGPU_RAMIN   0x03000000UL   /* channel instance block (graph hdr @0x20) */
 #define NVGPU_GRCTX   0x03100000UL   /* per-channel graphics context (grctx_size) */
-#define NVGPU_RAMHT   0x03001000UL   /* channel RAMHT (4 KiB)  - near RAMIN       */
+#define NVGPU_VMPD    0x03000200UL   /* page directory @RAMIN+0x200 (only PDE 2   */
+                                     /* used, inside the zeroed first 4 KiB)     */
+#define NVGPU_RAMHT   0x03001000UL   /* channel RAMHT (4 KiB)  - 3061 layout     */
 #define NVGPU_RAMFC   0x03002000UL   /* channel RAMFC (0x100)                    */
 #define NVGPU_CACHE   0x03003000UL   /* FIFO cache (4 KiB)                       */
-#define NVGPU_VRAMDMA 0x03004000UL   /* ctxdma over all VRAM (pushbuf + DMA_DST) */
+#define NVGPU_VRAMDMA 0x03004000UL   /* physical VRAM ctxdma (pushbuf + M5.1 DST)*/
 #define NVGPU_OBJ2D   0x03004100UL   /* 2D engine object instance                */
+#define NVGPU_VMDMA   0x03006000UL   /* M5.2 VM-target ctxdma (DMA_DST via VM)   */
+#define NVGPU_VRAMPT  0x03010000UL   /* M5.2 VRAM page table (64 KiB)            */
 #define NVGPU_PUSHBUF 0x03200000UL   /* command pushbuffer (data, physical)      */
 #define NVGPU_SCRATCH 0x03400000UL   /* 2D fill destination (read back)          */
+#define NVGPU_VM_VRAM_BASE 0x40000000UL  /* VRAM maps into the VM at +1 GiB      */
+#define NVGPU_VM_SCRATCH   (NVGPU_VM_VRAM_BASE + NVGPU_SCRATCH)  /* VM addr of scratch */
 /* NV50 engine/ctxdma instances are CHANNEL-RELATIVE: offset from the channel
  * RAMIN base (RAMFC 0x98 = ramin>>12), shifted. INST(x) keeps them small. */
 #define NVGPU_INST(x) (((x) - NVGPU_RAMIN) >> 4)
@@ -330,7 +336,7 @@ int NV_gpu_ctxtest(nv_gpu_ctxtest_t *out)
 
 /* M5.1b-step2b: full path - PGRAPH + a PFIFO channel + the 2D engine fill a
  * rectangle in VRAM scratch, read back. The first GPU-executed drawing. */
-int NV_gpu_2dfill(nv_gpu_2dfill_t *out)
+static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int use_vm)
 {
 	const unsigned long chid   = NVGPU_CHID;
 	const unsigned long ramin  = NVGPU_RAMIN;
@@ -368,7 +374,33 @@ int NV_gpu_2dfill(nv_gpu_2dfill_t *out)
 
 	/* instance objects: a ctxdma over all VRAM (pushbuf fetch + DMA_DST),
 	 * the FIFO cache, and the 2D engine object. */
-	gpu_ctxdma(NVGPU_VRAMDMA, 0, 0x08000000UL);       /* 128 MiB VRAM          */
+	gpu_ctxdma(NVGPU_VRAMDMA, 0, 0x08000000UL);       /* 128 MiB VRAM (phys)   */
+	if(use_vm)
+	{
+		unsigned long pg;
+		/* VM-target ctxdma spanning the whole VM address space */
+		NV_vram_wr32(NVGPU_VMDMA + 0x00, 0x7fc00000UL | 0x3dUL);
+		NV_vram_wr32(NVGPU_VMDMA + 0x04, 0xffffffffUL);   /* limit low  */
+		NV_vram_wr32(NVGPU_VMDMA + 0x08, 0);              /* base  low  */
+		NV_vram_wr32(NVGPU_VMDMA + 0x0c, 0);
+		NV_vram_wr32(NVGPU_VMDMA + 0x10, 0);
+		NV_vram_wr32(NVGPU_VMDMA + 0x14, 0x00080000UL);   /* flags5 (VM) */
+		/* VRAM page table: zero it, then map the 4 scratch pages 1:1 into
+		 * the VM at (1 GiB + physical). PTE_lo = phys|present, PTE_hi = 0. */
+		NV_vram_fill(NVGPU_VRAMPT, 0x10000 / 4, 0);
+		for(pg = 0; pg < 4; pg++)
+		{
+			unsigned long phys = NVGPU_SCRATCH + pg * 0x10000UL;
+			unsigned long idx  = ((NVGPU_VM_SCRATCH + pg * 0x10000UL - NVGPU_VM_VRAM_BASE) >> 16) << 1;
+			NV_vram_wr32(NVGPU_VRAMPT + idx * 4 + 0, phys | 1UL);
+			NV_vram_wr32(NVGPU_VRAMPT + idx * 4 + 4, 0);
+		}
+		/* channel page directory at RAMIN+0x200. Only PDE 2 (byte 0x10,
+		 * VM 1 GiB) is needed; it maps to our VRAM page table. The rest of
+		 * the PD lives in the already-zeroed first 4 KiB (invalid PDEs). */
+		NV_vram_wr32(NVGPU_VMPD + 0x10, NVGPU_VRAMPT | 0x61UL);
+		NV_vram_wr32(NVGPU_VMPD + 0x14, 0);
+	}
 	NV_vram_fill(NVGPU_CACHE, 0x1000 / 4, 0);
 	NV_vram_wr32(NVGPU_OBJ2D + 0,  NV50_2D_CLASS_);   /* 0x502d                */
 	NV_vram_wr32(NVGPU_OBJ2D + 20, 0x00010000UL);     /* dword 5               */
@@ -377,6 +409,8 @@ int NV_gpu_2dfill(nv_gpu_2dfill_t *out)
 	NV_vram_fill(NVGPU_RAMHT, 0x1000 / 4, 0);
 	gpu_ramht(0xbeef502dUL, NVGPU_OBJ2D   - NVGPU_RAMIN, 1);
 	gpu_ramht(0xbeef0002UL, NVGPU_VRAMDMA - NVGPU_RAMIN, 0);
+	if(use_vm)
+		gpu_ramht(0xbeef0003UL, NVGPU_VMDMA - NVGPU_RAMIN, 0);
 
 	/* RAMFC (G84/G86 layout) */
 	NV_vram_fill(NVGPU_RAMFC, 0x100 / 4, 0);
@@ -439,13 +473,13 @@ int NV_gpu_2dfill(nv_gpu_2dfill_t *out)
 	/* method stream: bind 2D, set destination surface, fill the rectangle */
 	i = 0;
 	d[0] = 0xbeef502dUL;             i = gpu_push(i, 0x0000, 1, d);  /* SET_OBJECT */
-	d[0] = 0xbeef0002UL;             i = gpu_push(i, 0x0184, 1, d);  /* DMA_DST    */
+	d[0] = use_vm ? 0xbeef0003UL : 0xbeef0002UL; i = gpu_push(i, 0x0184, 1, d); /* DMA_DST */
 	d[0] = 0xcfUL;                   i = gpu_push(i, 0x0200, 1, d);  /* DST_FORMAT */
 	d[0] = 1;                        i = gpu_push(i, 0x0204, 1, d);  /* DST_LINEAR */
 	d[0] = pitch;                    i = gpu_push(i, 0x0214, 1, d);  /* DST_PITCH  */
 	d[0] = w;                        i = gpu_push(i, 0x0218, 1, d);  /* DST_WIDTH  */
 	d[0] = h;                        i = gpu_push(i, 0x021c, 1, d);  /* DST_HEIGHT */
-	d[0] = 0; d[1] = NVGPU_SCRATCH;  i = gpu_push(i, 0x0220, 2, d);  /* DST_ADDR hi,lo */
+	d[0] = 0; d[1] = use_vm ? NVGPU_VM_SCRATCH : NVGPU_SCRATCH; i = gpu_push(i, 0x0220, 2, d); /* DST_ADDR hi,lo */
 	d[0] = 0;                        i = gpu_push(i, 0x0290, 1, d);  /* CLIP_ENABLE=0 */
 	d[0] = 3;                        i = gpu_push(i, 0x02ac, 1, d);  /* OPERATION SRCCOPY */
 	d[0] = 4;                        i = gpu_push(i, 0x0580, 1, d);  /* DRAW_SHAPE RECT */
@@ -507,3 +541,6 @@ int NV_gpu_2dfill(nv_gpu_2dfill_t *out)
 		out->px[0], out->px[1], out->px[2], out->filled);
 	return 1;
 }
+
+int NV_gpu_2dfill(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, 0); }
+int NV_gpu_vmtest(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, 1); }
