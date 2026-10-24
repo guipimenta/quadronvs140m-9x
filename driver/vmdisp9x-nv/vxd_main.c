@@ -1322,6 +1322,22 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			rc = 0;
 			break;
 		}
+		case OP_NV_SUBMIT:
+		{
+			nv_gpu_submit_t sb;
+			NV_gpu_submit(inBuf, params->cbInBuffer / 4, &sb);
+			memcpy(outBuf, &sb, sizeof(sb));
+			rc = 0;
+			break;
+		}
+		case OP_NV_VRAM_READ:
+		{
+			nv_gpu_vread_t vr;
+			NV_gpu_vram_read(inBuf[0], inBuf[1], &vr);
+			memcpy(outBuf, &vr, sizeof(vr));
+			rc = 0;
+			break;
+		}
 		case OP_NV_GPU_FENCE:
 		{
 			nv_gpu_2dfill_t fl;

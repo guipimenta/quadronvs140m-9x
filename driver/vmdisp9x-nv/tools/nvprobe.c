@@ -496,6 +496,76 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	if(argc >= 2 && strcmp(argv[1], "submit") == 0)
+	{
+		/* M5.3: build a 2D fill method stream HERE in ring-3, hand it to the
+		 * VxD's persistent channel, then read the result back. Proves user
+		 * space can drive the GPU - the foundation the Mesa winsys needs.
+		 * Two submits with different colors prove the channel persists. */
+		static const unsigned long colors[2] = { 0x11223344UL, 0xaabbccddUL };
+		unsigned long m[64], scratch = 0x03400000UL, scratch_vm = 0x43400000UL, in[2];
+		nv_gpu_submit_t sb;
+		nv_gpu_vread_t  vr;
+		int pass;
+		for(pass = 0; pass < 2; pass++)
+		{
+			unsigned long n = 0, col = colors[pass];
+			m[n++] = (1UL<<18)|0x0000; m[n++] = 0xbeef502dUL;   /* SET_OBJECT 2D   */
+			m[n++] = (1UL<<18)|0x0184; m[n++] = 0xbeef0003UL;   /* DMA_DST (VM)    */
+			m[n++] = (1UL<<18)|0x0200; m[n++] = 0xcfUL;         /* DST_FORMAT      */
+			m[n++] = (1UL<<18)|0x0204; m[n++] = 1;              /* DST_LINEAR      */
+			m[n++] = (1UL<<18)|0x0214; m[n++] = 1024;           /* DST_PITCH       */
+			m[n++] = (1UL<<18)|0x0218; m[n++] = 256;            /* DST_WIDTH       */
+			m[n++] = (1UL<<18)|0x021c; m[n++] = 256;            /* DST_HEIGHT      */
+			m[n++] = (2UL<<18)|0x0220; m[n++] = 0; m[n++] = scratch_vm; /* DST_ADDR (VM) */
+			m[n++] = (1UL<<18)|0x0290; m[n++] = 0;              /* CLIP_ENABLE=0   */
+			m[n++] = (1UL<<18)|0x02ac; m[n++] = 3;              /* OPERATION       */
+			m[n++] = (1UL<<18)|0x0580; m[n++] = 4;              /* DRAW_SHAPE RECT */
+			m[n++] = (1UL<<18)|0x0584; m[n++] = 0xcfUL;         /* DRAW_COLOR_FMT  */
+			m[n++] = (1UL<<18)|0x0588; m[n++] = col;            /* DRAW_COLOR      */
+			m[n++] = (4UL<<18)|0x0600; m[n++]=0; m[n++]=0; m[n++]=256; m[n++]=256; /* POINT32 */
+
+			memset(&sb, 0, sizeof(sb));
+			if(!DeviceIoControl(vxd, OP_NV_SUBMIT, m, n*4, &sb, sizeof(sb), &ret, NULL))
+			{
+				printf("OP_NV_SUBMIT failed (error %lu)\n", GetLastError());
+				CloseHandle(vxd); return 1;
+			}
+			memset(&vr, 0, sizeof(vr));
+			in[0] = scratch; in[1] = 1;
+			DeviceIoControl(vxd, OP_NV_VRAM_READ, in, 8, &vr, sizeof(vr), &ret, NULL);
+			if(pass == 0)
+				printf("RING-3 submit (build %lu): ctxctl=%08lX\n", sb.build, sb.ctxctl);
+			printf("submit %d: color %08lX -> IBget/put %lu/%lu %s pgi=%08lX scr=%08lX %s\n",
+				pass+1, col, sb.get, sb.put, (sb.get==sb.put)?"consumed":"STALL",
+				sb.pgraph_intr, vr.data[0], (vr.data[0]==col)?"OK":"MISMATCH");
+			printf("   chan: cur=%08lX caches=%08lX c1GET/PUT=%08lX/%08lX dmast=%08lX\n",
+				sb.c1_push1, sb.caches, sb.c1_get, sb.c1_put, sb.dma_state);
+			printf("   push: DMA_PUSH=%08lX PUSH0=%08lX PULL0=%08lX\n",
+				sb.dma_push, sb.push0, sb.pull0);
+		}
+		/* final readback of three corners from the last fill */
+		{
+			unsigned long off[3]; int k; unsigned long last = colors[1]; int allok = 1;
+			off[0] = scratch; off[1] = scratch + 128*4 + 128*1024; off[2] = scratch + 255*4 + 255*1024;
+			printf("last-fill corners: ");
+			for(k = 0; k < 3; k++)
+			{
+				in[0] = off[k]; in[1] = 1;
+				DeviceIoControl(vxd, OP_NV_VRAM_READ, in, 8, &vr, sizeof(vr), &ret, NULL);
+				printf("%08lX ", vr.data[0]);
+				if(vr.data[0] != last) allok = 0;
+			}
+			printf("\n");
+			if(allok)
+				printf("*** RING-3 DRIVES THE GPU - persistent channel + submit work! (M5.3) ***\n");
+			else
+				printf("corners mismatch - see GET/PUT and pgi above.\n");
+		}
+		CloseHandle(vxd);
+		return 0;
+	}
+
 	if(argc >= 2 && strcmp(argv[1], "fence") == 0)
 	{
 		nv_gpu_2dfill_t fl;

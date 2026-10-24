@@ -605,6 +605,214 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 	return 1;
 }
 
+
+/* ===================== M5.3: persistent channel + ring-3 submit ===============
+ * The winsys needs ONE long-lived channel that ring-3 (Mesa) submits command
+ * streams to, repeatedly. nv_chan_init() brings the channel up once (VM enabled,
+ * a 1:1 map of the first 128 MiB of VRAM into the VM at +1 GiB, both ctxdmas and
+ * the 2D object bound). NV_gpu_submit() appends a ring-3-built method stream to
+ * the pushbuffer and kicks the scheduler. This is the same proven bring-up as
+ * gpu_2dfill_core, kept separate so the verified gpu2d/vmtest/fence tests are
+ * untouched. */
+static int           g_chan_ready = 0;
+static unsigned long g_chan_put   = 0;    /* next free byte offset in the command region */
+static unsigned long g_ib_put     = 0;    /* next free IB ring entry index */
+#define NVGPU_PUSHBUF_SIZE 0x00100000UL   /* 1 MiB command data region            */
+#define NVGPU_IB          0x03300000UL    /* IB ring (indirect-buffer entries)     */
+#define NVGPU_IB_ENTRIES  256UL           /* must be a power of two                 */
+#define NVGPU_IB_ORDER    8UL             /* log2(NVGPU_IB_ENTRIES)                 */
+#define PFIFO_USER_IBPUT(c) (PFIFO_USER(c) + 0x8cUL)  /* nv50 IB put index         */
+#define PFIFO_USER_IBGET(c) (PFIFO_USER(c) + 0x88UL)  /* nv50 IB get index         */
+
+static unsigned long nv_chan_init(void)
+{
+	const unsigned long chid = NVGPU_CHID, ramin = NVGPU_RAMIN, grctx = NVGPU_GRCTX;
+	unsigned long inst12, i, pmc, fifo, ctxctl;
+
+	if(!gpu_pgraph_init())
+		return 0;
+
+	/* channel RAMIN: chid, ramfc pointer, graph context header @0x20 */
+	NV_vram_fill(ramin, 0x1000 / 4, 0);
+	NV_vram_wr32(ramin + 0x00, chid);
+	NV_vram_wr32(ramin + 0x04, NVGPU_RAMFC >> 8);
+	NV_vram_wr32(ramin + 0x20 + 0x00, 0x00190002UL);
+	NV_vram_wr32(ramin + 0x20 + 0x04, grctx + NV50_GRCTX_SIZE - 1);
+	NV_vram_wr32(ramin + 0x20 + 0x08, grctx);
+	NV_vram_wr32(ramin + 0x20 + 0x14, 0x00010000UL);
+
+	/* per-channel grctx */
+	NV_vram_fill(grctx, NV50_GRCTX_DWORDS, 0);
+	for(i = 0; i < NV50_CTXVALS_CNT; i++)
+		NV_vram_wr32(grctx + nv50_ctxvals[i][0] * 4, nv50_ctxvals[i][1]);
+	inst12 = ramin >> 12;
+	NV_vram_wr32(grctx + 0, inst12);
+
+	/* ctxdmas: physical VRAM (pushbuf fetch + physical DST) and VM-target */
+	gpu_ctxdma(NVGPU_VRAMDMA, 0, 0x08000000UL);
+	NV_vram_wr32(NVGPU_VMDMA + 0x00, 0x7fc00000UL | 0x3dUL);
+	NV_vram_wr32(NVGPU_VMDMA + 0x04, 0xffffffffUL);
+	NV_vram_wr32(NVGPU_VMDMA + 0x08, 0);
+	NV_vram_wr32(NVGPU_VMDMA + 0x0c, 0);
+	NV_vram_wr32(NVGPU_VMDMA + 0x10, 0);
+	NV_vram_wr32(NVGPU_VMDMA + 0x14, 0x00080000UL);
+
+	/* VRAM page table: 1:1 map the first 128 MiB of VRAM into the VM at +1 GiB
+	 * (2048 x 64 KiB pages), so any physical offset P has VM address 1GiB+P. */
+	NV_vram_fill(NVGPU_VRAMPT, 0x10000 / 4, 0);
+	for(i = 0; i < 2048; i++)
+	{
+		NV_vram_wr32(NVGPU_VRAMPT + i * 8 + 0, (i * 0x10000UL) | 1UL);
+		NV_vram_wr32(NVGPU_VRAMPT + i * 8 + 4, 0);
+	}
+	NV_vram_wr32(NVGPU_VMPD + 0x10, NVGPU_VRAMPT | 0x61UL);   /* PDE 2 -> the PT */
+	NV_vram_wr32(NVGPU_VMPD + 0x14, 0);
+
+	NV_vram_fill(NVGPU_CACHE, 0x1000 / 4, 0);
+	NV_vram_wr32(NVGPU_OBJ2D + 0,  NV50_2D_CLASS_);
+	NV_vram_wr32(NVGPU_OBJ2D + 20, 0x00010000UL);
+
+	NV_vram_fill(NVGPU_RAMHT, 0x1000 / 4, 0);
+	gpu_ramht(0xbeef502dUL, NVGPU_OBJ2D   - NVGPU_RAMIN, 1);
+	gpu_ramht(0xbeef0002UL, NVGPU_VRAMDMA - NVGPU_RAMIN, 0);
+	gpu_ramht(0xbeef0003UL, NVGPU_VMDMA   - NVGPU_RAMIN, 0);
+
+	NV_vram_fill(NVGPU_RAMFC, 0x100 / 4, 0);
+	NV_vram_wr32(NVGPU_RAMFC + 0x48, (NVGPU_VRAMDMA - NVGPU_RAMIN) >> 4);
+	NV_vram_wr32(NVGPU_RAMFC + 0x80, (0UL << 27) | (4UL << 24) | ((NVGPU_RAMHT - NVGPU_RAMIN) >> 4));
+	NV_vram_wr32(NVGPU_RAMFC + 0x44, 0x2101ffffUL);
+	NV_vram_wr32(NVGPU_RAMFC + 0x60, 0x7fffffffUL);
+	NV_vram_wr32(NVGPU_RAMFC + 0x40, 0);
+	NV_vram_wr32(NVGPU_RAMFC + 0x08, NVGPU_PUSHBUF);
+	NV_vram_wr32(NVGPU_RAMFC + 0x10, NVGPU_PUSHBUF);
+	NV_vram_wr32(NVGPU_RAMFC + 0x7c, 0x30000001UL);
+	NV_vram_wr32(NVGPU_RAMFC + 0x78, 0);
+	NV_vram_wr32(NVGPU_RAMFC + 0x3c, 0x403f6078UL);
+	/* IB (indirect buffer) mode: 0x50 = IB ring base, 0x54 = log2(entries)<<16. */
+	NV_vram_wr32(NVGPU_RAMFC + 0x50, NVGPU_IB);
+	NV_vram_wr32(NVGPU_RAMFC + 0x54, NVGPU_IB_ORDER << 16);
+	NV_vram_wr32(NVGPU_RAMFC + 0x88, NVGPU_CACHE >> 10);
+	NV_vram_wr32(NVGPU_RAMFC + 0x98, ramin >> 12);
+
+	pmc = NV_rd32(PMC_ENABLE);
+	NV_wr32(PMC_ENABLE, pmc & ~(1UL << 8));
+	(void)NV_rd32(PMC_ENABLE);
+	NV_wr32(PMC_ENABLE, NV_rd32(PMC_ENABLE) | (1UL << 8));
+	NV_wr32(PFIFO_INTR_0,    0xffffffffUL);
+	NV_wr32(PFIFO_INTR_EN_0, 0xffffffffUL);
+	for(i = 0; i < 128; i++)
+		NV_wr32(PFIFO_CTX_TABLE(i), 0);
+	NV_wr32(PFIFO_250C, 0x6f3cfc34UL);
+	NV_wr32(PFIFO_CACHES, 0);
+	NV_wr32(0x3250, 0); NV_wr32(0x3220, 0); NV_wr32(0x3204, 0);
+	NV_wr32(0x3210, 0); NV_wr32(0x3270, 0);
+
+	fifo = NV_rd32(0x400500);
+	NV_wr32(0x400500, fifo & ~1UL);
+	NV_wr32(0x400784, inst12);
+	NV_wr32(0x400824, NV_rd32(0x400824) | 0x40UL);
+	NV_wr32(0x400320, NV_rd32(0x400320) | 0x11UL);
+	NV_wr32(0x400040, 0xffffffffUL); (void)NV_rd32(0x400040); NV_wr32(0x400040, 0);
+	NV_wr32(0x400304, NV_rd32(0x400304) | 1UL);
+	(void)gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 2000000UL);
+	NV_wr32(PGRAPH_CTXCTL_CUR, inst12 | (1UL << 31));
+	NV_wr32(0x400500, fifo);
+	ctxctl = NV_rd32(PGRAPH_CTXCTL_CUR);
+
+	NV_wr32(PFIFO_CACHE1_PUSH0, 1);
+	NV_wr32(PFIFO_CACHE1_PULL0, 1);
+	NV_wr32(PFIFO_CTX_TABLE(chid), (NVGPU_RAMFC >> 8) | (1UL << 31));
+	NV_vram_wr32(NVGPU_PLAYLIST + 0, chid);
+	NV_wr32(PFIFO_PLAYLIST_32F4, NVGPU_PLAYLIST >> 12);
+	NV_wr32(PFIFO_PLAYLIST_32EC, 1);
+	NV_wr32(PFIFO_CACHES, 0x101);
+	return ctxctl;
+}
+
+/* Submit a ring-3-built method stream (count dwords). On the first call the
+ * channel is brought up. Appends to the pushbuf, advances PUT, waits for the
+ * engine to drain and go idle, and fills diagnostics. */
+int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out)
+{
+	const unsigned long chid = NVGPU_CHID;
+	unsigned long i, bytes = count * 4;
+
+	memset(out, 0, sizeof(*out));
+	out->build = NV_BUILD;
+	if(count == 0 || bytes > NVGPU_PUSHBUF_SIZE)
+		return 0;
+
+	if(!g_chan_ready)
+	{
+		out->ctxctl = nv_chan_init();
+		if(!out->ctxctl) return 0;
+		g_chan_ready = 1;
+		g_chan_put   = 0;
+		g_ib_put     = 0;
+	}
+	else
+		out->ctxctl = NV_rd32(PGRAPH_CTXCTL_CUR);
+
+	/* IB mode: place the command stream in the data region (wrap if needed),
+	 * then post an indirect-buffer entry pointing at it and advance IB_PUT. */
+	if(g_chan_put + bytes > NVGPU_PUSHBUF_SIZE)
+		g_chan_put = 0;
+	for(i = 0; i < count; i++)
+		NV_vram_wr32(NVGPU_PUSHBUF + g_chan_put + i * 4, methods[i]);
+	out->put_off = NVGPU_PUSHBUF + g_chan_put;
+
+	/* IB entry (2 dwords): dw0 = command address (low), dw1 = (addr_high & 0xff)
+	 * | (byte-length << 8) - which equals dwords<<10, the hw size field. */
+	NV_vram_wr32(NVGPU_IB + g_ib_put * 8 + 0, NVGPU_PUSHBUF + g_chan_put);
+	NV_vram_wr32(NVGPU_IB + g_ib_put * 8 + 4, (bytes << 8));
+	g_chan_put += bytes;
+	g_ib_put = (g_ib_put + 1) & (NVGPU_IB_ENTRIES - 1);
+
+	NV_wr32(PFIFO_INTR_0, 0xffffffffUL);
+	(void)NV_vram_rd32(NVGPU_IB);              /* flush the IB write to VRAM */
+	NV_wr32(PFIFO_USER_IBPUT(chid), g_ib_put); /* kick: advance the IB put index */
+	for(i = 0; i < 2000000UL; i++)
+	{
+		if(NV_rd32(PFIFO_USER_IBGET(chid)) == g_ib_put)
+			break;
+		if(NV_rd32(PFIFO_INTR_0) || NV_rd32(PGRAPH_INTR))
+			break;
+	}
+	out->gr_idle = gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 4000000UL);
+
+	out->get         = NV_rd32(PFIFO_USER_IBGET(chid));  /* IB get index */
+	out->put         = g_ib_put;                          /* IB put index */
+	out->pfifo_intr  = NV_rd32(PFIFO_INTR_0);
+	out->pgraph_intr = NV_rd32(PGRAPH_INTR);
+	out->dma_state   = NV_rd32(0x3228);
+	out->c1_push1    = NV_rd32(0x3204);   /* current channel id (loaded chan) */
+	out->caches      = NV_rd32(PFIFO_CACHES);
+	out->c1_get      = NV_rd32(0x3244);   /* live CACHE1 DMA GET */
+	out->c1_put      = NV_rd32(0x3240);   /* live CACHE1 DMA PUT */
+	out->ctxtable    = NV_rd32(PFIFO_CTX_TABLE(chid));
+	out->dma_push    = NV_rd32(0x3220);   /* CACHE1_DMA_PUSH (bit0 ACCESS, bit4 STATE) */
+	out->push0       = NV_rd32(0x3200);   /* CACHE1_PUSH0 */
+	out->pull0       = NV_rd32(0x3250);   /* CACHE1_PULL0 */
+	out->dma_get_rb  = NV_rd32(0x3244);
+	out->ok          = 1;
+	return 1;
+}
+
+/* Read up to 64 dwords of VRAM back to ring-3 (result readback for tests). */
+int NV_gpu_vram_read(unsigned long offset, unsigned long count, nv_gpu_vread_t *out)
+{
+	unsigned long i;
+	memset(out, 0, sizeof(*out));
+	out->build = NV_BUILD;
+	if(count > 64) count = 64;
+	out->offset = offset;
+	out->count  = count;
+	for(i = 0; i < count; i++)
+		out->data[i] = NV_vram_rd32(offset + i * 4);
+	out->ok = 1;
+	return 1;
+}
+
 int NV_gpu_2dfill(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, 0); }
 int NV_gpu_vmtest(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, NVF_VM); }
 int NV_gpu_fence (nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, NVF_FENCE); }

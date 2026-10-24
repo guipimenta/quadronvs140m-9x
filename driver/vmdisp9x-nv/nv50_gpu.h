@@ -51,4 +51,22 @@ int NV_gpu_2dfill(nv_gpu_2dfill_t *out);
 int NV_gpu_vmtest(nv_gpu_2dfill_t *out);  /* M5.2a: fill via a GPU VIRTUAL address */
 int NV_gpu_fence (nv_gpu_2dfill_t *out);  /* M5.2b: VRAM heap + notifier-based fence */
 
+/* M5.3: persistent channel + ring-3 command submission */
+typedef struct nv_gpu_submit
+{
+	unsigned long build, ok, ctxctl, put_off, gr_idle;
+	unsigned long get, put, pfifo_intr, pgraph_intr, dma_state;
+	unsigned long c1_push1, caches, c1_get, c1_put, ctxtable;
+	unsigned long dma_push, push0, pull0, dma_get_rb;
+} nv_gpu_submit_t;
+
+typedef struct nv_gpu_vread
+{
+	unsigned long build, ok, offset, count;
+	unsigned long data[64];
+} nv_gpu_vread_t;
+
+int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out);
+int NV_gpu_vram_read(unsigned long offset, unsigned long count, nv_gpu_vread_t *out);
+
 #endif /* NV50_GPU_H */
