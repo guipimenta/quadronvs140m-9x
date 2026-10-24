@@ -18,27 +18,56 @@ What is built, in order, each released and tested:
 - M5.3a (v3074): a PERSISTENT CHANNEL that RING-3 submits command streams to,
   using nv50 INDIRECT-BUFFER (IB) mode. `nvprobe submit` proves user space drives
   the GPU (two fills, different colors, both land).
+- M5.3b (v3075): the libdrm_nouveau SHIM - the ~30-function nouveau winsys
+  contract implemented in ring-3 (driver/vmdisp9x-nv/nvshim.c + nvshim.h) over
+  the VxD, so Mesa's nv50 driver can be wired to it UNCHANGED (M5.3c). VERIFIED
+  on the T61: `nvprobe shim` fills a heap BO through the contract and reads it
+  back (all corners = fill color).
 
 All the mechanism facts (register values, instance layout, IB entry format, the
 DMA-pusher dead end, VM/PTE/PDE formats, the grctx) are in the auto-memory file
 hw3d-gpu-accel.md - READ IT before continuing.
 
 Test commands on the T61 (opt-in, touch only PGRAPH/PFIFO):
-  nvprobe gpu2d | vmtest | fence | submit
+  nvprobe gpu2d | vmtest | fence | submit | shim
 
-### NEXT: M5.3b - the libdrm_nouveau shim (the task to start)
-Implement the ~25-function libdrm_nouveau contract in a NEW ring-3 source compiled
-into mesa3d.dll, built on the VxD ioctls we now have (OP_NV_SUBMIT 0x5013,
-OP_NV_VRAM_READ 0x5014) plus new ones to add (BO alloc from the heap + CPU map via
-BAR1, VM-map, fence emit/wait). Functions Mesa's nv50 winsys calls:
-  nouveau_device_*, nouveau_object_new/del, nouveau_bo_new/ref/map/unmap/wait,
-  nouveau_pushbuf_new/space/data/refn/kick/validate, nouveau_bufctx_*,
-  nouveau_fence_new/ref/signalled/wait, nouveau_client_new.
-Reference contracts: /home/guilherme/projects/mesa9x-build/mesa9x/mesa-24.1.x/src/
-gallium/{winsys,drivers}/nouveau (nouveau_fence.c, nv50_screen.c fence.emit uses the
-3D QUERY method - see M5.4 note). The persistent channel's command encoding is
-header=(count<<18)|(subc<<13)|method; submit via OP_NV_SUBMIT.
-Then M5.3c: wire Mesa's nv50 screen create to the shim and get it to initialise.
+### M5.3b DONE (v3075, VERIFIED on T61) - the libdrm_nouveau shim
+nvshim.c implements the exact nouveau.h contract (copied verbatim from mesa-24.1.x
+src/gallium/winsys/nouveau/drm/nouveau.h into nvshim.h so the struct ABI matches
+and M5.3c is a mechanical include-swap). Design decisions made:
+- SCOPE: fences are NOT in the contract - they live in the driver's nouveau_fence.c
+  (3D QUERY method), so they are M5.4, not the shim. The shim is device/client/
+  object/bo/bufctx/pushbuf only.
+- BO MAP = BOUNCE BUFFER. Mesa runs in RING-3; the VxD's BAR1 linear map is a
+  ring-0 system-arena address, not writable from ring-3. So nouveau_bo_map returns
+  a malloc'd CPU SHADOW; pushbuf_kick flushes referenced shadows to VRAM (new ioctl
+  OP_NV_VRAM_WRITE 0x5015) before submitting, and a read-map refreshes the shadow
+  from VRAM (OP_NV_VRAM_READ). Submits are synchronous in the VxD, so this is
+  coherent + in-order. (Later optimization: a true ring-3 BAR1 mapping to drop the
+  copies - needs _PageCommitPhys into the process arena; noted, not done.)
+- VRAM is a ring-3 BUMP heap over 0x04000000..0x08000000 (64 MiB), inside the
+  channel's 1:1 VM window (first 128 MiB). bo->offset = phys + 1 GiB. No free yet.
+- object_new only records the node; the channel/engine objects are still brought up
+  by the VxD's nv_chan_init (lazily on first OP_NV_SUBMIT). Addresses are fixed, so
+  pushbuf_reloc/validate are no-ops.
+Build it into nvprobe: `i686-w64-mingw32-gcc -O2 -s tools/nvprobe.c nvshim.c -I. -o
+tools/nvprobe.exe` (nvshim.c defines NVSHIM_STANDALONE; nvprobe.c does too before
+including ../nvshim.h). `nvprobe shim` runs the whole contract end to end: a 2D fill
+into a heap BO addressed by its VM offset, read back through the shim map. Expect
+"*** THE libdrm_nouveau SHIM DRIVES THE GPU - M5.3b works! ***".
+
+### NEXT: M5.3c - wire Mesa's nv50 screen to the shim
+Compile nvshim.c into mesa3d.dll in place of libdrm_nouveau's nouveau.c: switch
+nvshim.c's include from the standalone nvshim.h to Mesa's own nouveau.h (drop
+-DNVSHIM_STANDALONE; the struct layouts are identical by construction), and fill
+the two stubbed-for-standalone bits against the real headers: nouveau_device_info
+(nv_device_info_v0 fields) and nouveau_object_mclass's class pick (tesla_class).
+Then make the VxD channel bind MESA's RAMHT handle set (nv04_fifo.vram=0xbeef0201 /
+.gart=0xbeef0202 from nouveau_screen.c, plus 0xbeef5039/502d/5097/0301) instead of
+the current fixed 0xbeef502d/0002/0003 - add an object-bind path (extend nv_chan_init
+or a new OP_NV_BIND ioctl driven from nouveau_object_new). Get nouveau_screen_init +
+nv50_screen_create to run. NOTE: screen init emits a fence (3D QUERY) which TRAPs
+until M5.4, so expect to need M5.4 close behind.
 Then M5.4: full NV84_3D (0x8297) bring-up (the 3D QUERY fence TRAPs today, needs the
 ~15 DMA-object + register setup nv50_screen does) and wire Mesa as the GL ICD ->
 Half-Life on the GPU.

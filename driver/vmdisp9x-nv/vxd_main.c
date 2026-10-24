@@ -1313,6 +1313,17 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			outBuf[0] = NV_vram_fill(inBuf[0], inBuf[1], inBuf[2]);
 			rc = 0;
 			break;
+		case OP_NV_VRAM_WRITE:
+		{
+			/* inBuf[0]=VRAM byte offset, inBuf[1]=dword count, inBuf[2..]=data.
+			 * M5.3b: ring-3 flushes a BO's CPU shadow into VRAM. */
+			DWORD count = inBuf[1];
+			DWORD avail = (params->cbInBuffer >= 8) ? (params->cbInBuffer - 8) / 4 : 0;
+			if(count > avail) count = avail;
+			outBuf[0] = NV_vram_write(inBuf[0], count, (const unsigned long *)&inBuf[2]);
+			rc = 0;
+			break;
+		}
 		case OP_NV_EVO_STAGE:
 		{
 			/* E2: build fb + pushbuffer + test pattern in VRAM (safe). */

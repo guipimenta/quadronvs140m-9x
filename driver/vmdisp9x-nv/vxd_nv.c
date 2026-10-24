@@ -299,6 +299,25 @@ int NV_vram_wr32(unsigned long offset, unsigned long value)
 	return 1;
 }
 
+/* Write `count` dwords from `src` into VRAM at byte `offset`. Memory-only
+ * (BAR1 aperture), bounds-checked. Returns the number of dwords written.
+ * M5.3b: the ring-3 libdrm_nouveau shim uses this to flush a buffer object's
+ * CPU shadow into VRAM before a submit (the bounce-buffer map model). */
+unsigned long NV_vram_write(unsigned long offset, unsigned long count, const unsigned long *src)
+{
+	unsigned long i;
+	if(!NV_map_bar1() || src == 0)
+		return 0;
+	offset &= ~3UL;
+	if(offset >= nv_bar1_bytes)
+		return 0;
+	if(offset + count * 4 > nv_bar1_bytes)
+		count = (nv_bar1_bytes - offset) >> 2;
+	for(i = 0; i < count; i++)
+		nv_bar1[(offset >> 2) + i] = src[i];
+	return count;
+}
+
 /*
  * M4.3 native memory setup
  *

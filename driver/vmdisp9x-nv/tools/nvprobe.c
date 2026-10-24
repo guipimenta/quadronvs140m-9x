@@ -18,6 +18,8 @@
 #include "../dbgring.h"
 #include "../nv50_evo.h"
 #include "../nv50_gpu.h"
+#define NVSHIM_STANDALONE
+#include "../nvshim.h"   /* M5.3b: libdrm_nouveau shim self-test */
 
 /* Emit the EVO flip diagnostic to a stream. Called twice: once to nvflip.txt
  * (so the result survives even if the flip black-screens the console) and once
@@ -564,6 +566,100 @@ int main(int argc, char **argv)
 		}
 		CloseHandle(vxd);
 		return 0;
+	}
+
+	if(argc >= 2 && strcmp(argv[1], "shim") == 0)
+	{
+		/* M5.3b: drive the GPU through the libdrm_nouveau SHIM (nvshim.c), the
+		 * same contract Mesa's nv50 winsys calls. Exercises the whole chain:
+		 * drm/device/client/object_new(channel)/bo_new/bo_map/pushbuf/bufctx/
+		 * kick -> a 2D fill into a heap-allocated BO addressed by its VM offset,
+		 * then reads it back via the shim's bounce map. If this works, the ring-3
+		 * kernel contract is real on hardware and M5.3c can wire Mesa to it. */
+		struct nouveau_drm     *drm    = NULL;
+		struct nouveau_device  *dev    = NULL;
+		struct nouveau_client  *client = NULL;
+		struct nouveau_object  *chan   = NULL;
+		struct nouveau_pushbuf *push   = NULL;
+		struct nouveau_bufctx  *bc     = NULL;
+		struct nouveau_bo      *bo     = NULL;
+		struct nv04_fifo fifo_data;
+		unsigned long color = 0x1337c0deUL, vm;
+		uint32_t *p; const uint32_t *m;
+		int rc, ok;
+
+		memset(&fifo_data, 0, sizeof(fifo_data));
+		fifo_data.vram = 0xbeef0003UL;   /* VM ctxdma handle the channel binds */
+		fifo_data.gart = 0xbeef0003UL;
+
+		nvshim_bind((void*)vxd);   /* reuse the handle we already opened */
+		rc = nouveau_drm_new(0, &drm);
+		rc |= nouveau_device_new(&drm->client, &dev);
+		rc |= nouveau_client_new(dev, &client);
+		rc |= nouveau_object_new(&dev->object, 0, NOUVEAU_FIFO_CHANNEL_CLASS,
+		                         &fifo_data, sizeof(fifo_data), &chan);
+		rc |= nouveau_pushbuf_new(client, chan, 1, 0x1000, &push);
+		rc |= nouveau_bufctx_new(client, 1, &bc);
+		if(rc) { printf("shim: setup failed (rc=%d)\n", rc); CloseHandle(vxd); return 1; }
+		nouveau_pushbuf_bufctx(push, bc);
+
+		/* a 16 KiB BO = a 64x64 BGRA8 surface at 256-byte pitch */
+		if(nouveau_bo_new(dev, NOUVEAU_BO_VRAM | NOUVEAU_BO_MAP, 0x1000, 0x4000, NULL, &bo))
+		{ printf("shim: bo_new failed (VRAM heap full?)\n"); CloseHandle(vxd); return 1; }
+		vm = (unsigned long)bo->offset;
+
+		nouveau_pushbuf_space(push, 64, 0, 0);
+		p = push->cur;
+		*p++ = (1UL<<18)|0x0000; *p++ = 0xbeef502dUL;  /* SET_OBJECT 2D       */
+		*p++ = (1UL<<18)|0x0184; *p++ = 0xbeef0003UL;  /* DMA_DST (VM ctxdma) */
+		*p++ = (1UL<<18)|0x0200; *p++ = 0xcfUL;        /* DST_FORMAT BGRA8    */
+		*p++ = (1UL<<18)|0x0204; *p++ = 1;             /* DST_LINEAR          */
+		*p++ = (1UL<<18)|0x0214; *p++ = 256;           /* DST_PITCH (bytes)   */
+		*p++ = (1UL<<18)|0x0218; *p++ = 64;            /* DST_WIDTH  (px)     */
+		*p++ = (1UL<<18)|0x021c; *p++ = 64;            /* DST_HEIGHT (px)     */
+		*p++ = (2UL<<18)|0x0220; *p++ = 0; *p++ = vm;  /* DST_ADDR hi/lo (VM) */
+		*p++ = (1UL<<18)|0x0290; *p++ = 0;             /* CLIP_ENABLE=0       */
+		*p++ = (1UL<<18)|0x02ac; *p++ = 3;             /* OPERATION SRCCOPY   */
+		*p++ = (1UL<<18)|0x0580; *p++ = 4;             /* DRAW_SHAPE RECT     */
+		*p++ = (1UL<<18)|0x0584; *p++ = 0xcfUL;        /* DRAW_COLOR_FORMAT   */
+		*p++ = (1UL<<18)|0x0588; *p++ = (uint32_t)color; /* DRAW_COLOR        */
+		*p++ = (4UL<<18)|0x0600; *p++=0; *p++=0; *p++=64; *p++=64; /* POINT32 */
+		push->cur = p;
+
+		nouveau_bufctx_refn(bc, 0, bo, NOUVEAU_BO_WR);
+		rc = nouveau_pushbuf_kick(push);
+
+		/* read the BO back through the shim's map (bounce from VRAM) */
+		nouveau_bo_map(bo, NOUVEAU_BO_RD, client);
+		m = (const uint32_t *)bo->map;
+
+		printf("SHIM self-test (M5.3b) - libdrm_nouveau over the VxD\n");
+		printf("  device chipset=0x%02lX vram=%lu MiB   BO phys=%08lX VM=%08lX\n",
+			(unsigned long)dev->chipset, (unsigned long)(dev->vram_size>>20),
+			(unsigned long)bo->handle, vm);
+		printf("  pushbuf kick rc=%d   fill color=%08lX\n", rc, color);
+		if(m)
+		{
+			unsigned long tl = (unsigned long)m[0], mid = (unsigned long)m[32*64 + 32], br = (unsigned long)m[63*64 + 63];
+			ok = (tl==color && mid==color && br==color);
+			printf("  BO corners TL=%08lX mid=%08lX BR=%08lX  %s\n",
+				tl, mid, br, ok ? "OK" : "MISMATCH");
+			if(ok)
+				printf("*** THE libdrm_nouveau SHIM DRIVES THE GPU - M5.3b works! ***\n");
+			else
+				printf("fill not seen - check pgraph INTR via 'nvprobe submit'.\n");
+		}
+		else { printf("  bo->map NULL\n"); ok = 0; }
+
+		nouveau_bo_ref(NULL, &bo);
+		nouveau_bufctx_del(&bc);
+		nouveau_pushbuf_del(&push);
+		nouveau_object_del(&chan);
+		nouveau_client_del(&client);
+		nouveau_device_del(&dev);
+		nouveau_drm_del(&drm);
+		CloseHandle(vxd);
+		return ok ? 0 : 1;
 	}
 
 	if(argc >= 2 && strcmp(argv[1], "fence") == 0)

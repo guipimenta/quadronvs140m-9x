@@ -1,11 +1,424 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3074  (M5.3a - RING-3 DRIVES THE GPU: a persistent GPU channel that user
-space submits command streams to, using nv50 indirect-buffer (IB) mode. Verified
-on the T61. Builds on M5.2 (VM + heap + fence) and M5.1 (2D engine renders).
-Native desktop, OpenGL ICD (software for now), Direct3D + DirectDraw, standby/resume.)
+Build: 3053  (M4.5 r2: standby/resume recovery via full engine re-init - TEST; OpenGL ICD actually working now: mesa3d.dll rebuilt without the KERNEL32 imports Win98 lacks; Half-Life intro crash FIXED in 3050: DCI refused; OpenGL ICD DONE: Mesa9x rebuilt against our FBHDA API, verified on the T61; Direct3D + DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
 
-Test commands (MS-DOS Prompt):
-  nvprobe gpu2d    - 2D engine fills a VRAM rectangle (in-driver, physical)
-  nvprobe vmtest   - fill addressed by a GPU VIRTUAL address (M5.2a)
-  nvprobe fence    - VRAM heap BO + GPU writes a sequence via the VM (M5.2b)
-  nvprobe submit   - RING-3 builds commands, the GPU executes them (M5.3a)
+Files:
+  nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
+  vmhal9x.dll  - DirectDraw HAL, ring 3 (JHRobotics/vmhal9x, see below) - 3044
+  vmdisp9x.dll - its helper DLL (always install both together)
+  vmhal3d.dll  - Direct3D DDI 8 part of the HAL (renders through mesa3d.dll)
+  mesa3d.dll   - Mesa9x 25.1.6 software OpenGL (llvmpipe), OpenGL ICD + D3D
+                 rasterizer; 3046: built here against FBHDA API 20260213
+  wgltest.exe, icdtest.exe - Mesa9x test programs (3046)
+  d3dsetup.reg - Mesa vector width + OpenGL ICD key for existing installs
+  nvmini.drv   - 16-bit DIBENG display driver (3031: VDD device-id probe)
+  nvprobe.exe  - Win32 diagnostic/control tool (3034: 'nvprobe log' dumps the ring)
+  vmdisp9x.inf - installer (3032: HKR,DEFAULT,DDC,,0; 3033: vesa\Native=1)
+  nvsetup.reg  - REGEDIT4 file: Native=1, InitStop=0, BootPattern=0, DDC=0,
+                 Mode=16,1024,768 + Config\0001 Display Settings 1024x768x16
+
+Registry (HKLM\Software\vmdisp9x\vesa):
+  Native      DWORD  1 = native G86 modeset (DEFAULT since 3033), 0 = vga.drv fallback
+  HwCursor    DWORD  1 = G86 hardware cursor (DEFAULT since 3041), 0 = software cursor
+  HwCursorScale DWORD 1 = scale cursor positions to the panel in 800x600/640x480
+                     (try if the cursor lands in the wrong place in those modes)
+  PAT         DWORD  1 = write-combine the aperture through the PAT (DEFAULT since
+                     3043), 0 = leave it uncached (MTRR.VXD cannot do it on the T61)
+  InitStop    DWORD  debug: stop NV_init_hw_native after stage N (0 = full)
+  BootPattern DWORD  1 = draw test bars in the boot modeset (panel diagnostic)
+
+3053: M4.5 r2 - the r1 lost-engine check was not enough. The T61 log of a
+screen-off/on showed the resume DID reach our modeset (RestoreDesktopMode ->
+SetDisplayMode), but it took the APPEND path and the appended UPDATE never
+drained (ntfy=0, get stuck behind put); meanwhile PDISP_OBJECTS and the ch0
+DMA_ENABLED bit still read what we programmed, so NV_hw_lost() wrongly said
+the engine was fine. The engine was in the old "stuck" state (reads enabled
+but will not fetch) - exactly what the full boot init's recovery nudges fix.
+r2: a stalled append now DROPS the engine claim and NV_native_modeset RETRIES
+once with the full init (RAMHT/channel/preamble/head rebuild + stuck-state
+recovery), then restores the cursor. The append wait is capped (fails fast);
+NV_hw_lost and the append entry now log the channel registers.
+Symptom being chased: after the panel powers off and back on, a blinking
+cursor on black then garbage; system stays responsive.
+TEST (same as 3052): `nvprobe tail c:\nvtail.txt`, trigger the panel off/on
+(or Stand by + resume), and send nvtail.txt. Look for
+"append stalled ... dropping engine claim" then
+"NV_native_modeset ... OK (full init after stall)".
+
+3052: M4.5 r1 - POWER / SCREEN-SWITCH RECOVERY (first attempt, needs the T61).
+Symptom: after standby the desktop does not come back. Mechanism: on resume
+the Windows VDD re-POSTs the VGA ROM (_ReInitROM) and the VBIOS reprograms
+the display engine; our VxD still believed it owned the EVO core channel and
+only APPENDED new head state to a ring nobody executed any more.
+- NV_hw_lost(): before every native modeset the VxD checks PDISP_OBJECTS and
+  the channel-0 status against what it programmed; a mismatch drops the claim
+  and NV_evo_takeover runs the full boot-time init again (RAMHT, channel,
+  LUT, head state). The cursor image is re-uploaded from a RAM copy and its
+  visibility restored; IA32_PAT entry 1 is re-armed (the BIOS resets it).
+- Mini-VDD SET_ADAPTER_POWER_STATE (table index 52) is now implemented and
+  logs "SET_ADAPTER_POWER_STATE: devnode=.. state=.." (1 D0 .. 8 D3); the
+  VPOWERD Power_Event system message is logged as "Power_Event: n". A D0 or
+  resume arms a check ~2 s later: if the engine is still lost and nobody
+  restored the desktop, the VxD re-runs the current mode itself and redraws
+  everything from the shadow buffer.
+- SAVE_REGISTERS / RESTORE_REGISTERS are traced in the log again.
+TEST: install nvmini.vxd + nvmini.drv + nvprobe.exe, reboot, start
+`nvprobe tail c:\nvtail.txt`, Start -> Shut Down -> Stand by, wait, resume.
+Send nvtail.txt (and C:\NVMINI.LOG if the tail died). Also try a full-screen
+DOS box (Alt+Enter in a command prompt, then Alt+Enter back) - same mechanism.
+
+3051: OPENGL ICD FIXED FOR REAL (verified 2026-10-23: Half-Life plays in OpenGL
+mode on the T61; Direct3D mode plays too, slower with some glitches). Half-Life's "The selected OpenGL mode is not
+supported by your video card" (and the same for D3D) was traced with pftest.exe:
+the engine asks ChoosePixelFormat() for 24-bit colour / 32-bit depth and refuses
+any format flagged PFD_GENERIC_FORMAT without PFD_GENERIC_ACCELERATED, i.e. the
+Microsoft "GDI Generic" software OpenGL. That is all Windows offered, because
+LoadLibrary(mesa3d.dll) failed (error 31): the 3046 DLL imported CreateHardLinkW,
+FindFirstVolumeW, FindNextVolumeW, FindVolumeClose and GetFileSizeEx from KERNEL32,
+which do not exist on Windows 98 (pulled in by libstdc++'s std::filesystem via
+gallivm/lp_bld_debug.cpp). Reproduced and fixed in a QEMU Win98 SE VM: with the
+rebuilt mesa3d.dll the ICD reports 576 pixel formats, Half-Life's request lands
+on an accepted one and GL_RENDERER is "llvmpipe (LLVM 18.18, 128 bits)".
+Driver binaries unchanged apart from the build stamp. New diagnostics shipped:
+  pftest.exe  [W H BPP]  - lists all pixel formats, repeats Half-Life's request
+                           and says whether the game would accept it; appends
+                           to pftest.txt in the current directory
+  icdload.exe [dll]      - does by hand what opengl32.dll does to find/load the
+                           ICD (escape, registry, LoadLibrary, DrvValidateVersion,
+                           DrvDescribePixelFormat) and prints each step's result
+  vmmap.exe              - dumps the process address map (loader debugging)
+INSTALL: copy mesa3d.dll (79 MB) over C:\WINDOWS\SYSTEM\mesa3d.dll, no reboot
+needed; `pftest` should then print GL_RENDERER: llvmpipe. Half-Life: Options ->
+Video modes -> OpenGL, Default driver, 640x480.
+
+3050: DCI REFUSED (fixes the Half-Life intro crash; VERIFIED on the T61
+2026-10-23: both intros play from the 1024x768x32 desktop, log shows
+"DCI(1) refused" at every video open). Root cause
+found by bisection on the T61 + disassembly of Win98 SE DIBENG.DLL: the
+crash needs (a) a video played by Video for Windows before the game's own
+DirectDraw mode switch and (b) one played after it; removing the intro
+videos, or starting from a desktop already in the game's mode, avoids it.
+nvmini.drv forwarded DCICOMMAND requests with DCI_VERSION to DIBENG, whose
+DCICREATEPRIMARYSURFACE fills ONE static, reference-counted DCISURFACEINFO
+(width/height/stride/bpp/deBitsOffset/deBitsSelector of the PDevice at
+creation) and never refreshes it on a mode change, so DrawDib kept a
+1024x768x32 description of a 640x480x16 screen. 3050 answers DCI_VERSION
+requests with DCI_FAIL_UNSUPPORTED ("DCI(n) refused" in the log); DrawDib
+then falls back to GDI. DirectDraw (DD_VERSION requests) is unaffected.
+Cost: Video for Windows playback goes through GDI instead of a direct
+framebuffer pointer (slower, but always consistent with the current mode).
+
+3049: LOSSLESS TAIL. Findings so far: Half-Life works when the desktop is
+already 640x480x16, and crashes (ring 0) only when it switches there from
+1024x768x32 itself; DXDIAG's own 640x480x16 full-screen cycles from the
+1024x768x32 desktop work. The 3048 DXDIAG capture lost chunks silently
+because the per-blit FBHDA_DD_surface_modify/notify lines (185k of them)
+defeated the tail's overlap check. 3049: OP_NV_DBGLOG2 returns the running
+byte total ahead of the ring, nvprobe tail appends exactly the new bytes
+and writes "[nvprobe tail: N bytes lost]" on overflow; the two per-blit
+surface lines are silenced.
+
+3048: MORE DIAGNOSTICS. Both 3047 logs (VxD tail and C:\NVMINI.LOG) end right
+after Half-Life's DirectDraw switch to 640x480x16 (ReEnable -> native modeset
+OK -> QUERYDIBSUPPORT x3), with no VxD activity visible afterwards. 3048
+restarts the per-op traces at every mode change (first 6 calls of each
+ring-3 ioctl AND of each PM16 service from the 16-bit driver) and the async
+blit timer logs a heartbeat line about once a second (tick, blit count,
+pixels, lock count, mode, flags), so the next capture shows whether ring 0
+was still running after the switch. nvprobe tail polls every 20 ms.
+
+3047: DIAGNOSTICS. Half-Life (WON) reboots the T61 from "hl.exe -sw -window
+-nosound" = a ring-0 failure. The VxD now logs the first 3 calls of every
+distinct ring-3 ioctl op (DirectDraw HAL / Mesa requests: op code, input
+dwords) and "nvprobe tail <file>" streams the VxD log to a file with
+write-through so it survives a reboot. Usage: in a DOS box run
+  nvprobe tail c:\nvtail.txt
+leave it running, start the program under test, and after the reboot send
+c:\nvtail.txt together with c:\nvmini.log (the 16-bit driver's own
+on-disk log, appended across boots - the tail is the latest boot).
+
+3046: OPENGL ICD (VERIFIED ON THE T61 2026-10-22: icdtest, wgltest, D3D still
+passes). Mesa9x rebuilt from its main branch (commit 8b5428c,
+2026-10-04, whose win9x/3d_accel.h is byte-identical to ours) on this Linux
+host: LLVM 18.1.8 cross-compiled for mingw32 with Mesa9x's Win9x patch
+(file-system/random stubs), then Mesa 25.1.6 llvmpipe (-march=core2,
+SSE vectors), with the posix-thread mingw-w64 GCC 13 and Mesa9x's own
+winpthreads. The resulting mesa3d.dll replaces the 2025 upstream one, so
+its on-screen path reads our FBHDA block correctly and it can serve as the
+OpenGL ICD: nvmini.drv reports "SOFTWARE" (OPENGL_GETINFO escape) and
+HKLM\Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers\SOFTWARE
+= mesa3d.dll (INF + d3dsetup.reg). Direct3D keeps using the same DLL via
+OSMesa. Build recipe: /home/guilherme/projects/mesa9x-build (see
+driver/mesa9x-bin/PROVENANCE.txt).
+INSTALL: copy mesa3d.dll (replace the 3045 one), wgltest.exe,
+icdtest.exe to C:\WINDOWS\SYSTEM; import d3dsetup.reg; run icdtest.exe
+(reports which ICD opengl32 loaded), wgltest.exe (renders through the
+ICD), then a 3D screen saver or an OpenGL game. Re-run DXDIAG Test Direct3D to confirm D3D still passes with the new
+DLL. If an OpenGL app shows garbage or crashes, report which program and
+whether DXDIAG D3D still works (isolates ICD path vs Mesa itself).
+
+3045: DIRECT3D (T61 RESULT 2026-10-22: DirectX 9 runtime, all DXDIAG Direct3D
+tests pass; DXDIAG shows 64 MB = the 64 MB shadow buffer (WRAMSize), not the
+card's 128 MB - surfaces live in system RAM in this design).
+vmhal3d.dll (DDI 8, shipped since 3044) rasterizes through
+Mesa9x: it loads mesa3d.dll, prefers the OSMesa API (off-screen rendering,
+then copies the colour buffer into the DirectDraw surface). This package now
+ships mesa3d.dll from Mesa9x v25.1.6.138 (Mesa 25.1.6 / LLVM 18 llvmpipe,
+the newest Mesa9x release; needs SSSE3 = Core 2, which the T61 has).
+CAVEAT: that build predates our FBHDA API (20250702 vs 20260213; FBHDA_t
+grew after `stride`). Direct3D does not touch that path, but the OpenGL ICD
+path inside mesa3d.dll would, so the "SOFTWARE" OpenGL ICD is NOT registered
+(OpenGL apps keep Microsoft's software renderer). An ICD needs a Mesa9x
+built against our 3d_accel.h - a later job.
+TEST ON T61: copy mesa3d.dll to C:\WINDOWS\SYSTEM (44 MB), import
+d3dsetup.reg, run DXDIAG -> Display: Direct3D Acceleration 'Enabled', then
+'Test Direct3D' (DX7 and DX8 spinning cube). Then a Direct3D game (software
+rasterizer: expect playable at 640x480 for DX6/7-era titles). Copy back
+'nvprobe log' and, if vmhal9x wrote one, C:\vmhal9x.log.
+
+3044: DIRECTDRAW (T61 RESULT 2026-10-22: all DXDIAG DirectDraw tests pass).
+vmdisp9x's DirectDraw design: DDRAW asks the 16-bit driver
+(DCICOMMAND escape) for a 32-bit HAL DLL name; the driver answers vmhal9x.dll,
+which DDRAW loads into the application and which drives surfaces through the
+VxD's FBHDA API (surfaces live in the shadow, the blitter shows them). All
+the VxD and .drv plumbing was already in nvmini; what was missing is the
+HAL itself. This package now ships vmhal9x.dll + vmdisp9x.dll (+ vmhal3d.dll)
+built from the vmhal9x commit that matches our FBHDA API (20260213; the
+August-2025 upstream release DLLs do NOT match and would be refused). The
+INF copies them to C:\WINDOWS\SYSTEM; on an existing install just copy the
+three DLLs there yourself (no reboot needed, DDRAW loads them per app).
+Also: FBHDA_mode_query returns the native mode table (9 modes @60 Hz)
+instead of an empty list.
+TEST ON T61: copy the DLLs to C:\WINDOWS\SYSTEM, run DXDIAG -> Display tab:
+DirectDraw Acceleration should read 'Enabled' and 'Test DirectDraw' should
+pass (bouncing white box, then full screen). Then any DirectDraw game.
+'nvprobe log' / C:\NVMINI.LOG will show 'DDGET32BITDRIVERNAME: success' and
+'DDCREATEDRIVEROBJECT: success' (or where it failed).
+
+3043: M4.6b WRITE-COMBINING THROUGH THE PAT (T61 RESULT 2026-10-22: 110 -> 6-7
+cycles/pixel, full-screen blit ~2 ms, window dragging smooth; IA32_PAT entry 1
+was already WC - MTRR.VXD had set it but never marked the pages). 3042's counters on the T61:
+MTRR.VXD refuses the WC request (rc C0000001) because the BIOS marks the
+whole PCI hole C0000000-FFFFFFFF UC in MTRR0, and UC beats any overlapping
+WC MTRR. Result: ~110 cycles per pixel, ~40 ms for a full-screen blit (the
+blit timer runs every 16 ms). The fast path alone changed nothing - the bus
+was the bottleneck. Fix: MTRR UC + PAT WC = WC (Intel SDM 11.12). The VxD
+now sets IA32_PAT entry 1 (PWT=1: 'write-through', unused by Win98) to WC
+with the SDM cache-disable sequence and sets PWT in the page-table entries
+of OUR 24 MB aperture mapping only, after verifying every entry's frame is
+the expected BAR1 page (PTE walk via CR3 + _MapPhysToLinear). The blitter
+issues sfence after each blit so the EVO code's uncached VRAM alias never
+sees stale data. Registry PAT=0 disables it. 'nvprobe mtrr' now prints the
+PAT state, IA32_PAT and correct MTRR sizes (3042 ignored the valid bit and
+the 36-bit physical address width).
+TEST ON T61: desktop as before; 'nvprobe mtrr' before and after ~10 s of
+dragging a window with 'show contents while dragging'; expect
+'PAT: APPLIED', entry1=WC, and cycles/pixel well below 110 (hope: <10).
+If the screen corrupts or the machine freezes right after the desktop
+appears, boot Safe Mode and add PAT=0 to HKLM\Software\vmdisp9x\vesa.
+
+3042: M4.6 SHADOW-BLIT PERFORMANCE. The shadow blitter (wram -> VRAM) used
+two indirect calls per pixel; it now copies whole rows with rep movsd when
+the shadow and scanout layouts match (16->16, 32->32) and uses tight loops
+for 8->32 (palette), 8->16, 16->32 and 32->16. The generic per-pixel path
+stays for gamma ramps, the software cursor and integer-scaled VESA modes.
+Dirty rectangles were already in place (GDI's BeginAccess rect -> one
+bounding box per 16 ms timer tick). Write-combining on the aperture was
+already requested from MTRR.VXD but never checked; the result is now logged
+and 'nvprobe mtrr' dumps the CPU's variable MTRRs (rdmsr in the VxD) so we
+can see whether E0000000 (24 MB - not a power of two) really got WC, plus
+blit counters (TSC cycles per blit / per pixel).
+TEST ON T61: desktop works as before; run 'nvprobe mtrr' once, drag a window
+around for ~10 s, run it again; copy both outputs + 'nvprobe log'. Expect
+'fast path' == blits and the aperture listed as type WC.
+
+3041: M4.4 HARDWARE CURSOR (T61 RESULT 2026-10-22: works). The mouse pointer is now the G86's own 64x64
+A8R8G8B8 cursor (nouveau nv50_cursor.c recipe): the image is built from the
+Windows AND/XOR masks into VRAM at 0x1830000, shown/hidden through the core
+channel (head0 methods 0x89C=ctxdma, 0x880=0x85000000/0x05000000, 0x884=
+offset>>8, then UPDATE), moved through the cursor PIO channel (0x647084 /
+0x647080). Screen-invert pixels (AND=1, XOR=1 - the I-beam) draw as black.
+The software cursor is no longer composited by the shadow blitter, so moving
+the mouse no longer costs a blit. The core ring now wraps with a JUMP-to-0
+(nouveau evo_wait) instead of refusing after ~20 mode sets.
+Fallbacks: HwCursor=0 restores the software cursor; HwCursorScale=1 scales
+the position in the scaled modes if the pointer is offset there.
+TEST ON T61: pointer visible at 1024x768 and tracks the mouse; shape changes
+(arrow / I-beam over text / hourglass / resize arrows); pointer still right
+after switching to 800x600 and back; 'nvprobe log' shows 'NV_cursor_load:
+... -> OK'. If the pointer is invisible or garbage, report whether Windows
+still responds to clicks (the cursor is then at the right place but unseen).
+
+3040: M4.1 FIX - 800x600 True Color came up as garbage (Windows reverted after
+15 s). Cause: NV50 linear scanout surfaces need a 256-byte-aligned pitch
+(nouveau_fbcon rounds up to 256); 800x4=3200 and 800x2=1600 are not, while
+1024- and 640-pixel rows happen to be. NV_hw_pitch() now rounds the scanout
+pitch up (800x600x32 -> 3328); the shadow keeps its exact pitch and the
+blitter's dst_pitch carries the padding.
+T61 RESULT 2026-10-22: all modes tested, all fine (640x480, 800x600, 1024x768
+at 256/High/True color). M4.1 DONE.
+
+3039: M4.1 MODE LIST + M4.2 INF-ONLY INSTALL.
+ M4.1 - native modes are now 640x480, 800x600, 1024x768 at 8, 16 and 32 bpp
+   (NV_mode_ok). The panel raster stays the fixed 1024x768@60 LVDS timing;
+   800x600/640x480 framebuffers are stretched to it by the head scaler
+   (nouveau nv50_crtc_set_scale: SCALE_CTRL 0x8A4=9, SCALE_RES1/2 = 1024x768,
+   0x8C8 = input size). 8 bpp desktops scan out as 32 bpp: the shadow (wram)
+   is 8 bpp and the blitter expands it through the palette (readpx8), so no
+   hardware CLUT is involved. 24 bpp stays rejected by ValidateMode.
+ M4.2 - the INF now also binds the root VGA devnode (*PNP0900), which is where
+   the T61 runs the adapter, so a plain Have Disk install needs no tricks.
+   Everything nvsetup.reg sets is already written by the INF (drv, minivdd,
+   Mode 16,1024,768, DDC=0, Native=1); nvsetup.reg is now a repair tool, and
+   SYSTEM.INI can stay at display.drv=pnpdrvr.drv (KERNEL resolves it through
+   the VDD once the devnode is bound - verified in the QEMU harness).
+TEST ON T61: install the three 3039 files, reboot, then in Display Properties
+check the list (should offer 640x480/800x600/1024x768 at 256/High/True color),
+try 800x600 True Color (expect a stretched desktop) and 1024x768 256 colors
+(expect a normal-looking desktop; icons may show palette artifacts in 256).
+Collect nvprobe log after each switch: 'native mode set: WxHxB ... (scaled)'.
+If a mode comes up black, the panel still has the native timing: press OK /
+wait 15 s for the Windows revert, or switch back in Safe Mode.
+
+3038: M4.3 NATIVE MEMORY SETUP (first M4 item after E4). CONFIRMED ON THE T61
+2026-10-22: PFB reports 128 MB (cfg0 01001800 cfg1 01449000), window 24 MB,
+layout OK, native 1024x768x32 desktop unchanged.
+ - The scanout window handed to the shadow blitter is no longer a fixed 12 MB:
+   it is min(VRAMLimit MB, PCI BAR1 size, NVFB_WINDOW_MAX=24 MB), i.e. 24 MB
+   by default, which leaves room for three 1024x768x32 flip buffers.
+ - NV_vram_check() (vxd_nv.c) reads the real VRAM size from PFB 0x10020C
+   (nouveau nv50_vram.c decode) plus PFB cfg0/cfg1, and validates the layout
+   in nv50_evo.h: window < EVO reservation (24 MB), VRAM >= 32 MB + 32 KiB
+   (RAMIN end). It runs in LIVE VM context only (first call from the
+   mini-VDD register handler, i.e. DriverInit; also lazily before any native
+   mode set) because BAR0 access inside Device_Init freezes the G86.
+ - NV_native_modeset refuses to run if the check failed, so a wrong card or
+   layout logs a reason instead of scribbling EVO structures into VRAM.
+ - nvprobe (no arguments) now prints VRAM size, cfg regs, window and the
+   check result; 'nvprobe log' shows the NV_vram_check lines.
+TEST ON T61: install the three 3038 files, reboot, run  nvprobe  and
+nvprobe log > nvlog.txt. Expect 'NV_vram_check: VRAM 128 MB ... window 24 MB'
+and 'layout OK' right after 'register: ebx = 1', desktop unchanged.
+
+3037: *** ROOT CAUSE OF EVERY 'LoadFail = nvmini.drv 0000' SINCE M1 - FIXED ***
+CONFIRMED ON THE T61 2026-10-22: LoadSuccess = nvmini.drv, native EVO modeset
+1024x768x32 at boot, desktop usable, Display Properties can change depth.
+nvmini.drv never ran: Win98 KERNEL rejected the NE image before calling
+DriverInit. init.c declared `extern char __based(__segname("_TEXT")) *pText`
+and locked (__segment)pText. Current Open Watcom compilers treat "_TEXT" in
+__segname() as a user DATA segment: they emit an empty FAR_DATA segment named
+_TEXT, wlink drops it, and the .drv keeps a SEGMENT relocation to non-existent
+segment 3 (see tools: `python3 -I <scratch>/nerelocs.py nvmini.drv`). The
+loader fails the fixup -> LoadModule error 0 -> vga.drv. Upstream's 2023-era
+toolchain did not do this, which is why the official release loads.
+Fix: GlobalSmartPageLock(get_cs()) with `#pragma aux get_cs = "mov ax,cs"`.
+Proven in a QEMU Win98SE harness: with the fix, vesamini.drv (same 16-bit
+objects) logs 'D> DriverInit: ENTER', connects to the VxD, and brings up a
+1024x768x16 desktop. Also in 3037: the 16-bit driver is linked with the
+2025-08 Open Watcom (the Oct-2026 wlink snapshot ignores 'segment type data
+preload fixed'; the makefile now also names class DATA/BSS explicitly), the
+DIBENG mini driver's NE now matches the official layout (flags 8201, FIXED
+DGROUP, no data-segment entries). dbg output additionally mirrored to I/O
+port E9h (QEMU -debugcon), harmless on real hardware.
+TEST ON T61: copy nvmini.drv + nvmini.vxd + nvprobe.exe (3037). Keep SYSTEM.INI
+display.drv=nvmini.drv (direct name is fine now; pnpdrvr.drv also works once
+the devnode is bound) and the nvsetup.reg values. Reboot. Expect BOOTLOG
+'LoadSuccess = nvmini.drv' and the native 1024x768x16 desktop. Then collect
+nvprobe log > nvlog.txt (now full of 'D>' lines) and BOOTLOG.TXT.
+
+3035: SECOND LOG CHANNEL + more VxD breadcrumbs. The 3034 ring from the T61
+showed a healthy VxD (native init OK, Device_Init DONE) but NOT ONE 'D> ' line
+and no 'register:' line: the 16-bit driver reached neither the VxD PM16 API
+nor our mini-VDD table. To see the 16-bit side regardless, nvmini.drv now
+ALSO appends every dbg line to C:\NVMINI.LOG (KERNEL _lopen/_lwrite, max 600
+lines per boot session; delete the file to start clean). The VxD additionally
+logs: the VDD mini dispatch table length (handlers installed only if >= 0x31),
+the first PM16 API call it receives, any unknown PM16 service number, and the
+arrival of OP_FBHDA_SETUP.
+TEST: copy the three files, reboot, then collect  nvprobe log > nvlog.txt,
+C:\NVMINI.LOG, BOOTLOG.TXT (logged boot) and the live C:\WINDOWS\SYSTEM.INI.
+
+3034: DEBUG LOG WITHOUT A SERIAL PORT. DBGPRINT is now compiled in, but the
+sink is a 16 KB ring buffer inside nvmini.vxd (dbgring.h) instead of COM1:
+  V> ...   lines printed by the VxD (Device_Init, VESA/native init, mini-VDD
+           register handler, mode set hooks)
+  D> ...   lines printed by nvmini.drv (DriverInit, VXD connect per device id,
+           FBHDA, PhysicalEnable/SetDisplayMode), pushed one character at a
+           time through the VxD PM16 API (OP_NV_DBG_PUTC)
+Read it after the boot with:   nvprobe log > nvlog.txt
+It survives the vga.drv fallback (the VxD stays loaded). As with lastset: if
+BOOTLOG has no 'Dynamic load device nvmini.vxd', nvprobe loads a fresh VxD and
+the ring only holds that fresh instance's init. Nothing is written to disk at
+boot. Ops: OP_NV_DBGLOG 0x500A (W32 ioctl), OP_NV_DBG_PUTC 0x500B (PM16).
+TEST: copy nvmini.vxd/.drv/nvprobe.exe (3034), SYSTEM.INI (no IgnoreRegistry),
+merge nvsetup.reg, reboot, then:  nvprobe log > nvlog.txt  and send it with
+BOOTLOG.TXT. First expected lines: 'D> DriverInit: ENTER (nvmini.drv build
+3034)' followed by 'D> VDD_REGISTER_DISPLAY_DRIVER_INFO for device id: N' and
+'V> register: ebx = N ...' - the exact point DriverInit gives up.
+
+FIELD NOTE 2026-10-21: do NOT use [display] IgnoreRegistry=1 in SYSTEM.INI.
+The Win98 VDD reads the same key (VDD_PNP_Load_MiniVDD) and, when set, skips
+loading DEFAULT\minivdd -> nvmini.vxd never loads, nvmini.drv DriverInit
+fails (LoadFail 0000) and Windows is on vga.drv. Set the desktop mode through
+the registry instead (nvsetup.reg now writes Config\0001\Display\Settings
+1024x768x16 and DEFAULT\Mode=16,1024,768); keep x_resolution/y_resolution/bpp
+in [Display] only as the fallback. dist/driver/SYSTEM.INI is the reference.
+
+3033: Native=1 is now the built-in default (no registry value needed); set
+Native=0 to get the safe vga.drv boot. The INF also writes Native=1, and
+nvsetup.reg sets everything in one go: double-click it on the T61 (or
+`regedit /s nvsetup.reg`). It assumes the adapter's class key is
+Class\Display\0000 - check in regedit that 0000\DEFAULT holds
+minivdd=nvmini.vxd; if your NVIDIA key is 0001 etc., edit the path in the file.
+
+3032: SLOW-BOOT FIX + three static-review fixes (on top of 3031).
+ a) ~3 min boot: BOOTLOG tick stamps put 173 of the ~181 s of the VxD phase
+    inside CONFIGMG "Enumerating NVIDIA Quadro NVS 140M" -> "Enumerated". That
+    is the Win98 VDD's monitor enumerator reading the EDID itself through INT
+    10h AX=4F15 in V86 mode (no mini-VDD GET_MONITOR_INFO); the G86 VBIOS
+    under V86 crawls. The VDD skips the probe when HKR\DEFAULT\DDC is "0":
+    added to vmdisp9x.inf ([NV.AddReg]; the shared [VM.AddReg] wrote DDC=1, so
+    the T61 registry currently says 1). Without reinstalling, CHANGE it with
+    regedit: HKLM\System\CurrentControlSet\Services\Class\Display\000N\DEFAULT
+      (the key holding minivdd=nvmini.vxd): String value DDC: 1 -> 0
+ b) native setmode never armed the blitter: VESA_draw() bailed on vga_mode /
+    act_mode, so a successful handshake would have shown a black desktop.
+ c) Native=0 with display.drv=nvmini.drv: register_display_driver dereferenced
+    hda==NULL once 3031's id probe made it reachable. Now returns zeros ->
+    clean vga.drv fallback (VRAM slot[3]=0x302 marks that case).
+ d) EVO takeover claims nv_owned only after a completed commit.
+TEST: regedit DDC=0 (or reinstall INF), copy the three files, Native=1, reboot.
+Expect: VxD phase seconds instead of minutes, desktop 1024x768x16 on nvmini.drv.
+
+3031: THE DRIVERINIT FIX (from Win98SE VDD.VXD disassembly, 98 DDK symbols).
+The Win98 VDD keys every display-driver call on EBX as a DISPLAY DEVICE ID
+(1..N), not a VM handle. Id 1 = the devnode the VDD considers "the VGA" and
+is served by the global mini-VDD dispatch table. A mini-VDD the VDD loads for
+any OTHER display devnode is moved into that device's private table and the
+global table is restored (VDD _LoadMiniVDD). The upstream vmdisp9x .drv
+always registers with EBX = VM id = 1, so on this T61 - where the ghost
+"Standard PCI Graphics Adapter (VGA)" is id 1 and the NVIDIA devnode is id 2 -
+the register call hit an empty table, EDX stayed 0, DriverInit returned 0.
+nvmini.drv now tries VDD_REGISTER_DISPLAY_DRIVER_INFO with ids 1..4 and keeps
+the first id whose mini-VDD returns an FBHDA alias for all later VDD calls.
+The VxD logs that id right after the 0x300 marker (slot [1]).
+TEST: same SYSTEM.INI as before (display.drv=nvmini.drv, [display] 1024x768
+bpp=16 IgnoreRegistry=1), Native=1, replace the three files, reboot.
+Expect the desktop at 1024x768x16 on nvmini.drv. If it still falls back:
+  nvprobe vramrd 0x1900000 16  -> slot[0]=B0070100, slot[1]=device id,
+  slot[3]=0x301/0x302. BOOTLOG.TXT "LoadFail = nvmini.drv" code tells the rest.
+
+3030: boot-handshake VRAM trace. With display.drv=nvmini.drv the 16-bit driver
+now LOADS at boot (file-found; pnpdrvr.drv was missing -> that was the earlier
+LoadFail 0002), but its DriverInit returns 0 => "LoadFail nvmini.drv 0000" and
+Windows falls back to vga.drv. lastset shows hook branch 0 (setmode never
+reached), so DriverInit fails in the VxD connect handshake, before any modeset.
+register_display_driver (the mini-VDD side of the driver's
+VDD_REGISTER_DISPLAY_DRIVER_INFO call) now resets the VRAM boot log and logs how
+far the handshake gets. Diagnostic procedure:
+  1. nvprobe vramfill 0x1900000 16 0        (pre-clear the log)
+  2. reboot (Native=1) -> it falls back to vga.drv as before
+  3. nvprobe vramrd 0x1900000 16
+     [0]=B0070100 magic -> register_display_driver WAS reached
+       (absent/all-zero -> handshake dies BEFORE our mini-VDD)
+     then 0x300, raw hda ptr, 0x301(ok)/0x302(null), hda_pm16, mouse_pm16,
+     vram_pm16 selectors.
