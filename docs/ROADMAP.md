@@ -115,6 +115,12 @@ commit in `driver/PROVENANCE.txt`). Our additions are `vxd_nv.{c,h}`,
   Direct3D pass on the T61 with the rebuilt DLL (79 MB, O3 LLVM). Recipe in
   driver/mesa9x-bin/PROVENANCE.txt.
   Hardware 2D/3D acceleration on the G86 itself remains out of scope.
+  **UPDATE (M5.1, build 3061, 2026-10-24):** hardware acceleration is no longer out
+  of scope - it is underway. The G86's graphics engine (PGRAPH) now executes our
+  commands: nvprobe gpu2d brings up the per-chip context microcode (ported from
+  nouveau nv50_grctx), a PFIFO command channel, and the 2D engine, and fills a
+  rectangle in VRAM, verified on the T61. See docs/HW3D_PLAN.md. Next: M5.2 GPU
+  memory manager + fences, M5.3 the Mesa nouveau winsys, M5.4 the 3D class + ICD.
   **Correction (build 3051, 2026-10-23):** the 3046 mesa3d.dll never actually loaded on
   Windows 98: it imported five KERNEL32 functions that Win98 lacks (pulled in by
   libstdc++'s std::filesystem via gallivm's lp_bld_debug.cpp), so opengl32 fell back to
