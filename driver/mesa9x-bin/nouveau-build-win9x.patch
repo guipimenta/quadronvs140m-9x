@@ -48,7 +48,7 @@ index 12b3e391..1a7d1456 100644
  MesaVirGLLib_OBJS := $(MesaVirGLLib_OBJS:.cpp=.cpp_gen$(OBJ))
  $(LIBPREFIX)MesaVirGL$(LIBSUFFIX): $(MesaVirGL_OBJS)
 diff --git a/mesa-25.1.x.mk b/mesa-25.1.x.mk
-index 46cccbb9..188a9688 100644
+index 46cccbb9..48500104 100644
 --- a/mesa-25.1.x.mk
 +++ b/mesa-25.1.x.mk
 @@ -980,7 +980,20 @@ MesaSVGAWinsysLib_SRC  = \
@@ -63,12 +63,12 @@ index 46cccbb9..188a9688 100644
 +# nvidia_reverse repo docs/HW3D_PLAN.md (M5.3c).
 +NVDRV = /home/guilherme/projects/nvidia_reverse/driver/vmdisp9x-nv
 +MesaNouveauLib_SRC = \
-+	$(filter-out %/nouveau_vp3_video.c %/nv84_video.c %/nv98_video.c %/nv98_video_vp.c, \
++	$(filter-out %_video.c %_video_bsp.c %_video_vp.c %_video_ppp.c, \
 +	  $(wildcard $(MESA_VER)/src/gallium/drivers/nouveau/*.c) \
 +	  $(wildcard $(MESA_VER)/src/gallium/drivers/nouveau/nv50/*.c)) \
 +	$(wildcard $(MESA_VER)/src/nouveau/codegen/*.cpp) \
 +	$(MESA_VER)/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c \
-+	$(NVDRV)/nvshim.c
++	$(NVDRV)/nvshim.c $(NVDRV)/nvshim_stubs.c
 +
  MesaGdiLib_SRC = \
    $(MESA_VER)/src/gallium/winsys/sw/gdi/gdi_sw_winsys.c \

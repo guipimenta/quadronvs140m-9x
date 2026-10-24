@@ -109,15 +109,32 @@ The nouveau driver lib is wired into the mesa9x build and archives cleanly:
   exit 0. The mesa9x-tree diff is saved in driver/mesa9x-bin/nouveau-build-win9x.patch
   (that tree is outside this repo).
 
-### NEXT: M5.3c step 2b-ii - link MesaNouveauLib into mesa3d.dll + select nouveau
-- Add $(LIBPREFIX)MesaNouveauLib$(LIBSUFFIX) to LIBS_TO_BUILD and to the
-  mesa3d.w98me.dll link line (opengl_simd_LIBS / MESA_SIMD_LIBS). Resolve link-time
-  undefined symbols (the nv50 driver pulls nir/tgsi/the disk cache - mostly already
-  in MesaLibSimd/AuxLibSimd; the video files may drag the vl_* layer, drop them if so).
-- WGL frontend: the pipe-screen is hard-wired to llvmpipe. Make the win9x target
-  (MesaOS_SRC / the stw_winsys create_screen) call nouveau_drm_screen_create when our
-  VxD is present (gate on OP_NV_PROBE); nvshim's nouveau_drm_new ignores fd and opens
-  \\.\nvmini.vxd. Run impcheck_win98.py on the result.
+### M5.3c step 2b-ii DONE (host-verified): the nouveau lib LINKS cleanly
+Trial-linked a stub that calls nouveau_drm_screen_create against libMesaNouveauLib.a +
+the mesa simd libs (--start-group): resolves to just 3 undefs - crt_sse2_is_safe
+(extra/crtex.c), _aligned_malloc9x/_aligned_free9x - all already in mesa3d.dll's own
+link set. So linking MesaNouveauLib into mesa3d.dll will resolve. Needed fixes found:
+- Exclude ALL video files (%_video.c %_video_bsp.c %_video_vp.c %_video_ppp.c), not
+  just the 4 that fail to compile - the others pull the vl_* video layer.
+- Their entry points are still REFERENCED by core screen/context init, so stub them
+  in driver/vmdisp9x-nv/nvshim_stubs.c (also in MesaNouveauLib_SRC): nv30/nvc0_screen_create
+  (return NULL - only nv50 built; they return struct nouveau_screen *, NOT pipe_screen),
+  nouveau_screen_init_vdec/_context_init_vdec, nv84/nv98/vp3 video query+codec hooks.
+- Link with g++ (libstdc++ for the C++ codegen) and --start-group (circular lib deps).
+
+### NEXT: M5.3c step 2b-iii - build the actual nouveau mesa3d.dll + select nouveau
+- Add $(LIBPREFIX)MesaNouveauLib$(LIBSUFFIX) to the mesa3d.w98me.dll link line
+  (opengl_simd_LIBS / MESA_SIMD_LIBS) and to LIBS_TO_BUILD.
+- WGL frontend: wgl_screen_create() in src/gallium/targets/wgl/wgl.c (compiled into
+  MesaGdiLibICD) builds a gdi sw_winsys and tries llvmpipe/softpipe. Add a branch at
+  the TOP that calls nouveau_drm_screen_create(0) (our nouveau_drm_new ignores fd and
+  opens \\.\nvmini.vxd) and returns it if non-NULL, else falls through to sw. Guard
+  with GALLIUM_NOUVEAU (add -D to the mesa3d build only, to avoid forcing opengl32/svga
+  DLLs to link nouveau). Keep the patch in driver/mesa9x-bin/nouveau-build-win9x.patch.
+- PRESENT path: a hw nouveau screen needs wgl_present to blit the rendered BO to the
+  HDC (the sw path uses gdi_sw_display/vramcpy on the sw winsys displaytarget - a hw
+  screen has none). Minimal first cut can copy via the fb; real present is step 3/M5.4.
+- Run impcheck_win98.py on the DLL.
 Then M5.3c step 3 - make it INITIALISE on the T61:
 - The VxD channel must bind MESA's RAMHT handle set (nv04_fifo.vram=0xbeef0201 /
   .gart=0xbeef0202 from nouveau_screen.c, plus engine objs 0xbeef0301 notifier /
