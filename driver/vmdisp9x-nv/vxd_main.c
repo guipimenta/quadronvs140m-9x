@@ -1366,6 +1366,17 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			rc = 0;
 			break;
 		}
+		case OP_NV_GPU_3DTEST:
+		{
+			/* M5.4: bind NV84_3D (0x8297) + run a real QUERY_GET fence. The 3D
+			 * engine writes the sequence to a VM-mapped BO. Opt-in; touches only
+			 * PGRAPH/PFIFO like the other GPU tests. Recover a trap with a reboot. */
+			nv_gpu_2dfill_t fl;
+			NV_gpu_3dtest(&fl);
+			memcpy(outBuf, &fl, sizeof(fl));
+			rc = 0;
+			break;
+		}
 		case OP_NV_GPU_VMTEST:
 		{
 			nv_gpu_2dfill_t fl;

@@ -45,11 +45,13 @@ typedef struct nv_gpu_2dfill
 	unsigned long gr_idle;
 	unsigned long pre_px[1], px[3];
 	unsigned long heap_addr, notified, notify[4];  /* M5.2b fence */
+	unsigned long trap_status, trap_regs[5];        /* M5.4: PGRAPH 0x400108 + unit trap regs */
 } nv_gpu_2dfill_t;
 
 int NV_gpu_2dfill(nv_gpu_2dfill_t *out);
 int NV_gpu_vmtest(nv_gpu_2dfill_t *out);  /* M5.2a: fill via a GPU VIRTUAL address */
-int NV_gpu_fence (nv_gpu_2dfill_t *out);  /* M5.2b: VRAM heap + notifier-based fence */
+int NV_gpu_fence (nv_gpu_2dfill_t *out);  /* M5.2b: VRAM heap + 2D-write fence stand-in */
+int NV_gpu_3dtest(nv_gpu_2dfill_t *out);  /* M5.4: REAL NV84_3D QUERY_GET fence (3D engine) */
 
 /* M5.3: persistent channel + ring-3 command submission */
 typedef struct nv_gpu_submit

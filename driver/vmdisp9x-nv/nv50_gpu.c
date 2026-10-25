@@ -55,6 +55,7 @@ extern nv_hwinfo_t nv_hwinfo;
 #define NVGPU_CACHE   0x03003000UL   /* FIFO cache (4 KiB)                       */
 #define NVGPU_VRAMDMA 0x03004000UL   /* physical VRAM ctxdma (pushbuf + M5.1 DST)*/
 #define NVGPU_OBJ2D   0x03004100UL   /* 2D engine object instance                */
+#define NVGPU_OBJ3D   0x03004200UL   /* M5.4: NV84_3D engine object instance     */
 #define NVGPU_VMDMA   0x03006000UL   /* M5.2 VM-target ctxdma (DMA_DST via VM)   */
 #define NVGPU_OBJAREA 0x03008000UL   /* M5.3c: instances for Mesa-bound objects  */
 #define NVGPU_OBJAREA_END 0x03010000UL /* (32 KiB, channel-relative <1MB)        */
@@ -70,9 +71,11 @@ extern nv_hwinfo_t nv_hwinfo;
 #define NVGPU_INST(x) (((x) - NVGPU_RAMIN) >> 4)
 /* gpu_2dfill_core flags */
 #define NVF_VM     0x1   /* address the fill through the GPU VM (M5.2a)      */
-#define NVF_FENCE  0x2   /* 3D-class QUERY fence: GPU writes a sequence (M5.2b) */
+#define NVF_FENCE  0x2   /* 2D-write fence stand-in: GPU writes a sequence (M5.2b) */
+#define NVF_3D     0x4   /* M5.4: REAL NV84_3D QUERY_GET fence (the 3D engine runs) */
 #define NVGPU_CHID    1UL            /* our channel id (avoid 0/127)             */
 #define NV50_2D_CLASS_ 0x0000502dUL
+#define NV84_3D_CLASS_ 0x00008297UL
 
 /* PFIFO registers */
 #define PFIFO_INTR_0        0x00002100UL
@@ -361,10 +364,13 @@ int NV_gpu_ctxtest(nv_gpu_ctxtest_t *out)
 static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 {
 	const int do_fence = (flags & NVF_FENCE)  ? 1 : 0;
-	/* the 3D query writes through the channel VM, so a fence implies use_vm */
-	const int use_vm   = (flags & (NVF_VM | NVF_FENCE)) ? 1 : 0;
+	const int do_3d    = (flags & NVF_3D)     ? 1 : 0;
+	/* both fence paths write through the channel VM, so a fence implies use_vm */
+	const int use_vm   = (flags & (NVF_VM | NVF_FENCE | NVF_3D)) ? 1 : 0;
+	/* both the 2D-write stand-in and the real 3D QUERY need a VM-mapped fence BO */
+	const int want_fence_bo = do_fence || do_3d;
 	unsigned long fence_addr = 0, fence_vm = 0;
-	const unsigned long fence_seq = 0xcafe0001UL;
+	const unsigned long fence_seq = do_3d ? 0x3d000001UL : 0xcafe0001UL;
 	const unsigned long chid   = NVGPU_CHID;
 	const unsigned long ramin  = NVGPU_RAMIN;
 	const unsigned long grctx  = NVGPU_GRCTX;
@@ -372,6 +378,7 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 	const unsigned long pitch  = 1024UL;              /* bytes (256 px * 4)    */
 	const unsigned long w = 256UL, h = 256UL;
 	unsigned long inst12, i, pushbytes, d[4], pmc, fifo;
+	unsigned long dv[16];   /* M5.4: multi-dword method runs (DMA_ZETA/COLOR/RT) */
 	unsigned long ecolor, epitch, ew, eh, edst;
 
 	memset(out, 0, sizeof(*out));
@@ -429,7 +436,7 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 		NV_vram_wr32(NVGPU_VMPD + 0x10, NVGPU_VRAMPT | 0x61UL);
 		NV_vram_wr32(NVGPU_VMPD + 0x14, 0);
 	}
-	if(do_fence)
+	if(want_fence_bo)
 	{
 		/* allocate a fence BO from the VRAM heap, map its page into the VM
 		 * (so the 3D engine can reach it), and pre-fill it with 0. The 3D
@@ -447,6 +454,13 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 	NV_vram_fill(NVGPU_CACHE, 0x1000 / 4, 0);
 	NV_vram_wr32(NVGPU_OBJ2D + 0,  NV50_2D_CLASS_);   /* 0x502d                */
 	NV_vram_wr32(NVGPU_OBJ2D + 20, 0x00010000UL);     /* dword 5               */
+	if(do_3d)
+	{
+		/* M5.4: the NV84_3D engine object. Same instance layout as 2D:
+		 * dword0 = class, dword5 = 0x00010000 (engine = PGRAPH). */
+		NV_vram_wr32(NVGPU_OBJ3D + 0,  NV84_3D_CLASS_);  /* 0x8297             */
+		NV_vram_wr32(NVGPU_OBJ3D + 20, 0x00010000UL);
+	}
 
 	/* RAMHT: 2D object (graphics engine 1), VRAM ctxdma (SW engine 0) */
 	NV_vram_fill(NVGPU_RAMHT, 0x1000 / 4, 0);
@@ -454,6 +468,8 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 	gpu_ramht(0xbeef0002UL, NVGPU_VRAMDMA - NVGPU_RAMIN, 0);
 	if(use_vm)
 		gpu_ramht(0xbeef0003UL, NVGPU_VMDMA - NVGPU_RAMIN, 0);
+	if(do_3d)
+		gpu_ramht(0xbeef8297UL, NVGPU_OBJ3D - NVGPU_RAMIN, 1);  /* 3D engine */
 
 	/* RAMFC (G84/G86 layout) */
 	NV_vram_fill(NVGPU_RAMFC, 0x100 / 4, 0);
@@ -524,8 +540,52 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 	eh     = do_fence ? 1UL       : h;
 	edst   = do_fence ? fence_vm  : (use_vm ? NVGPU_VM_SCRATCH : NVGPU_SCRATCH);
 
-	/* method stream: bind 2D, set destination surface, fill the rectangle */
 	i = 0;
+	if(do_3d)
+	{
+		/* M5.4: bind the REAL NV84_3D engine, do the BO-FREE PREFIX of
+		 * nv50_screen_init_hwctx (DMA_NOTIFY/ZETA/COLOR + the ROP/raster enables,
+		 * all pointing DMA at the VM ctxdma 0xbeef0003), THEN emit the QUERY_GET
+		 * write-fence. A bare QUERY (build 3077) TRAPped (PGRAPH_INTR 0x00200000)
+		 * because the CROP unit the fence waits on had no valid DMA_COLOR/ZETA or
+		 * RT state. This prefix is exactly what nouveau runs before its first
+		 * fence; everything here uses only the VRAM ctxdma + constants (no BOs -
+		 * the BO-backed VP/FP/TLS/CB setup comes later with real allocations).
+		 *   QUERY_GET value = WRITE_UNK0 | UNK4(0x10) | UNIT_CROP(0xf000) |
+		 *                     TYPE_QUERY(0) | QUERY_SELECT_ZERO(0) | SHORT(0x10000000)
+		 *                   = 0x1000f010  (the nouveau "short" write-fence). */
+		for(i = 0; i < 16; i++) dv[i] = 0xbeef0003UL;   /* VM ctxdma handle run  */
+		i = 0;
+		d[0] = 0xbeef8297UL;             i = gpu_push(i, 0x0000, 1, d);  /* SET_OBJECT 3D      */
+		d[0] = 1;                        i = gpu_push(i, 0x1558, 1, d);  /* COND_MODE ALWAYS   */
+		d[0] = 0xbeef0003UL;             i = gpu_push(i, 0x0180, 1, d);  /* DMA_NOTIFY         */
+		                                 i = gpu_push(i, 0x0184, 11, dv);/* DMA_ZETA (11)      */
+		                                 i = gpu_push(i, 0x01c0, 8,  dv);/* DMA_COLOR(0) (8)   */
+		d[0] = 2;                        i = gpu_push(i, 0x19a0, 1, d);  /* REG_MODE STRIPED   */
+		d[0] = 0xf;                      i = gpu_push(i, 0x1400, 1, d);  /* UNK1400_LANES      */
+		d[0] = 0x18;                     i = gpu_push(i, 0x0de4, 1, d);  /* WATCHDOG_TIMER     */
+		d[0] = 0;                        i = gpu_push(i, 0x19cc, 1, d);  /* ZETA_COMP_ENABLE   */
+		dv[0]=dv[1]=dv[2]=dv[3]=dv[4]=dv[5]=dv[6]=dv[7]=0;
+		                                 i = gpu_push(i, 0x19e0, 8,  dv);/* RT_COMP_ENABLE (8) */
+		d[0] = 1;                        i = gpu_push(i, 0x121c, 1, d);  /* RT_CONTROL = 1     */
+		d[0] = 0;                        i = gpu_push(i, 0x15b4, 1, d);  /* CSAA_ENABLE        */
+		d[0] = 0;                        i = gpu_push(i, 0x1534, 1, d);  /* MULTISAMPLE_ENABLE */
+		d[0] = 0;                        i = gpu_push(i, 0x15d0, 1, d);  /* MULTISAMPLE_MODE MS1 */
+		d[0] = 0;                        i = gpu_push(i, 0x153c, 1, d);  /* MULTISAMPLE_CTRL   */
+		d[0] = 1;                        i = gpu_push(i, 0x0de8, 1, d);  /* PRIM_RESTART_W_DA  */
+		d[0] = 1;                        i = gpu_push(i, 0x133c, 1, d);  /* BLEND_SEPARATE_ALPHA */
+		d[0] = 0;                        i = gpu_push(i, 0x13ac, 1, d);  /* SCREEN_Y_CONTROL   */
+		d[0] = 0; d[1] = 0;              i = gpu_push(i, 0x0df8, 2, d);  /* WINDOW_OFFSET_X/Y  */
+		d[0] = 0x3f;                     i = gpu_push(i, 0x1590, 1, d);  /* ZCULL_REGION       */
+		d[0] = 0;                                 /* QUERY_ADDRESS_HIGH (<4GiB)   */
+		d[1] = (unsigned long)fence_vm;           /* QUERY_ADDRESS_LOW            */
+		d[2] = fence_seq;                         /* QUERY_SEQUENCE               */
+		d[3] = 0x1000f010UL;                      /* QUERY_GET (short write-fence)*/
+		                                 i = gpu_push(i, 0x1b00, 4, d);  /* QUERY_* (4 dwords) */
+	}
+	else
+	{
+	/* method stream: bind 2D, set destination surface, fill the rectangle */
 	d[0] = 0xbeef502dUL;             i = gpu_push(i, 0x0000, 1, d);  /* SET_OBJECT */
 	d[0] = use_vm ? 0xbeef0003UL : 0xbeef0002UL; i = gpu_push(i, 0x0184, 1, d); /* DMA_DST */
 	d[0] = 0xcfUL;                   i = gpu_push(i, 0x0200, 1, d);  /* DST_FORMAT */
@@ -541,11 +601,12 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 	d[0] = ecolor;                   i = gpu_push(i, 0x0588, 1, d);  /* DRAW_COLOR */
 	d[0] = 0; d[1] = 0; d[2] = ew; d[3] = eh;
 	                                 i = gpu_push(i, 0x0600, 4, d);  /* POINT32 (0,0)-(w,h) */
+	}
 	pushbytes = i * 4;
 	out->put_bytes = pushbytes;
 
 	/* clear scratch to a different value so a successful fill is visible */
-	if(!do_fence)
+	if(!want_fence_bo)
 	{
 		NV_vram_fill(NVGPU_SCRATCH, (w * h), 0x99999999UL);
 		out->pre_px[0] = NV_vram_rd32(NVGPU_SCRATCH + 0);
@@ -587,12 +648,21 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 	out->pfifo_intr = NV_rd32(PFIFO_INTR_0);
 	out->pgraph_intr= NV_rd32(PGRAPH_INTR);
 	out->pgraph_stat= NV_rd32(PGRAPH_STATUS);
+	/* M5.4: on a PGRAPH TRAP (PGRAPH_INTR 0x00200000) the per-unit trap status
+	 * is at 0x400108 and the DISPATCH unit latches the faulting method/subc/data
+	 * at 0x400808/0x40080c/0x400810 - capture them so a trap is diagnosable. */
+	out->trap_status  = NV_rd32(0x400108);
+	out->trap_regs[0] = NV_rd32(0x400808);  /* DISPATCH: bit31 valid, mthd/subc  */
+	out->trap_regs[1] = NV_rd32(0x40080c);  /* DISPATCH: data                    */
+	out->trap_regs[2] = NV_rd32(0x400810);  /* DISPATCH: more                    */
+	out->trap_regs[3] = NV_rd32(0x400c04);  /* VFETCH unit trap                  */
+	out->trap_regs[4] = NV_rd32(0x405018);  /* CCACHE unit trap                  */
 	/* read back the fill */
 	out->px[0] = NV_vram_rd32(NVGPU_SCRATCH + 0);
 	out->px[1] = NV_vram_rd32(NVGPU_SCRATCH + (w/2)*4 + (h/2)*pitch);
 	out->px[2] = NV_vram_rd32(NVGPU_SCRATCH + (w-1)*4 + (h-1)*pitch);
 	out->filled = (out->px[0] == color && out->px[1] == color && out->px[2] == color) ? 1 : 0;
-	if(do_fence)
+	if(want_fence_bo)
 	{
 		out->notify[0] = NV_vram_rd32(fence_addr + 0);  /* the value the GPU wrote */
 		out->notify[1] = fence_seq;                     /* the value we asked for  */
@@ -818,6 +888,7 @@ int NV_gpu_vram_read(unsigned long offset, unsigned long count, nv_gpu_vread_t *
 int NV_gpu_2dfill(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, 0); }
 int NV_gpu_vmtest(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, NVF_VM); }
 int NV_gpu_fence (nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, NVF_FENCE); }
+int NV_gpu_3dtest(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, NVF_3D); }
 
 /* ===================== M5.3c: bind an object at a caller's handle ============
  * The Mesa nouveau winsys creates channel objects with ITS OWN handles (vram

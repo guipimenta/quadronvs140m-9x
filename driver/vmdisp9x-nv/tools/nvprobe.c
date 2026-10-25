@@ -740,6 +740,40 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	if(argc >= 2 && strcmp(argv[1], "3d") == 0)
+	{
+		/* M5.4: bind the REAL NV84_3D engine (0x8297) and run the QUERY_GET
+		 * fence that nv50_screen_create emits - the exact op that TRAPs today.
+		 * If the 3D engine writes the sequence, the Mesa nouveau screen can
+		 * init on the GPU. */
+		nv_gpu_2dfill_t fl;
+		memset(&fl, 0, sizeof(fl));
+		if(!DeviceIoControl(vxd, OP_NV_GPU_3DTEST, NULL, 0, &fl, sizeof(fl), &ret, NULL))
+		{
+			printf("OP_NV_GPU_3DTEST failed (error %lu)\n", GetLastError());
+			CloseHandle(vxd); return 1;
+		}
+		CloseHandle(vxd);
+		printf("REAL NV84_3D QUERY FENCE (build %lu): stage %lu/6 ctxctl=%08lX\n",
+			fl.build, fl.stage, fl.ctxctl);
+		printf("fence BO @ VRAM %08lX (VM %08lX)\n", fl.heap_addr, fl.notify[2]);
+		printf("IB GET/PUT = %08lX / %08lX %s  PFIFO_INTR=%08lX PGRAPH_INTR=%08lX err=%lu(6=MEMFAULT)\n",
+			fl.get, fl.put, (fl.get==fl.put)?"(drained)":"(STALLED)",
+			fl.pfifo_intr, fl.pgraph_intr, (fl.dma_state>>29)&7);
+		printf("3D engine wrote fence value: got %08lX, expected %08lX (was 0)\n",
+			fl.notify[0], fl.notify[1]);
+		if(fl.notified)
+			printf("*** 3D ENGINE WORKS - NV84_3D executed a QUERY fence! screen-init unblocked (M5.4) ***\n");
+		else
+		{
+			printf("3D fence not written. TRAP 0x400108=%08lX  DISPATCH mthd=%08lX data=%08lX unk=%08lX\n",
+				fl.trap_status, fl.trap_regs[0], fl.trap_regs[1], fl.trap_regs[2]);
+			printf("  VFETCH=%08lX CCACHE=%08lX  (PGRAPH_INTR 0x200000=TRAP, 0x100000=DATA_ERROR)\n",
+				fl.trap_regs[3], fl.trap_regs[4]);
+		}
+		return 0;
+	}
+
 	if(argc >= 2 && strcmp(argv[1], "vmtest") == 0)
 	{
 		nv_gpu_2dfill_t fl;
