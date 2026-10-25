@@ -138,20 +138,26 @@ first hardware-nouveau OpenGL ICD for Win9x exists and is Win98-loadable. How:
   default DLL stays llvmpipe/software, so it is safe to ship before hw init works.
 All mesa-tree edits are in driver/mesa9x-bin/nouveau-build-win9x.patch (3 files).
 
-### M5.4 step 1 (build 3077, awaiting T61) - REAL NV84_3D QUERY fence
-The object-bind path (M5.3c step 3, build 3076) is T61-VERIFIED: `nvprobe bind`
-binds Mesa's handles and drives the 2D engine through them. Build 3077 attacks
-the next blocker directly - the 3D QUERY fence that TRAPs during
-nv50_screen_create. New OP_NV_GPU_3DTEST (0x5017) / `nvprobe 3d`: on the proven
-channel/VM/grctx, it binds the NV84_3D object (0x8297) and submits the exact
-nouveau write-fence (QUERY_ADDRESS_HIGH/LOW=VM BO, SEQUENCE, GET=0x1000f010).
-If the 3D engine writes the sequence to the VM-mapped BO, the 3D engine runs and
-nv50_screen_create's fence will land. Implemented as NVF_3D in gpu_2dfill_core
-(2D/VM/fence paths byte-identical when off). Expected: "3D ENGINE WORKS". If it
-TRAPs, PGRAPH_INTR names the class and M5.4 needs more of nv50_screen_init_hwctx
-(DMA_COLOR/ZETA + register defaults) before the QUERY.
-AFTER 3D fence lands: wire GALLIUM_DRIVER=nouveau and run nv50_screen_create on
-the T61 (it should now pass the fence), then the real present path -> Half-Life.
+### M5.4 DONE (build 3078, released v3078, T61-VERIFIED) - the NV84_3D engine runs
+`nvprobe 3d`: the G86's own NV84_3D (0x8297) engine executes the exact QUERY_GET
+write-fence nv50_screen_create emits and writes the sequence (3D000001) to a
+VM-mapped BO with PGRAPH_INTR=0 (no trap). First hardware execution of the 3D
+engine under this driver; the screen-init fence blocker is cleared.
+- 3077 (step 1): bare QUERY after SET_OBJECT(3D)+DMA_NOTIFY TRAPped
+  (PGRAPH_INTR=0x00200000, a PGRAPH unit trap) - the UNIT_CROP fence waits on the
+  CROP/ROP unit, which had no valid DMA/RT state.
+- 3078 (step 2): run the BO-FREE PREFIX of nv50_screen_init_hwctx before the QUERY
+  (DMA_NOTIFY + DMA_ZETA(11) + DMA_COLOR(0)(8) all = VM ctxdma 0xbeef0003, then
+  REG_MODE/UNK1400_LANES/WATCHDOG/ZETA_COMP/RT_COMP(8)/RT_CONTROL/CSAA/MULTISAMPLE/
+  PRIM_RESTART/BLEND/SCREEN_Y/WINDOW_OFFSET/ZCULL). Now the CROP unit is valid and
+  the fence lands. Implemented as NVF_3D in gpu_2dfill_core; `nvprobe 3d` dumps the
+  trap regs (0x400108 + DISPATCH/VFETCH/CCACHE) if a future trap occurs.
+
+### NEXT (M5.4 continued): run nv50_screen_create on the T61, then draw
+Wire GALLIUM_DRIVER=nouveau and run nv50_screen_create on the T61 - its fence now
+lands. Then the BO-backed hwctx tail (VP/FP/GP code BO, TLS, stack, uniforms/CB with
+real nv_heap allocations), a clear+triangle, and the real present path (wgl_present
+is a stub guard today) -> Half-Life on the GPU.
 
 ### REFERENCE: making the nouveau screen INITIALISE on the T61
 Set GALLIUM_DRIVER=nouveau (HKLM\Software\vmdisp9x\apps\<exe>\mesa, like
