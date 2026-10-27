@@ -1881,8 +1881,172 @@ index 46cccbb9..48500104 100644
  MesaGdiLib_SRC = \
    $(MESA_VER)/src/gallium/winsys/sw/gdi/gdi_sw_winsys.c \
    $(MESA_VER)/src/gallium/winsys/sw/wrapper/wrapper_sw_winsys.c \
+diff --git a/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_screen.c b/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_screen.c
+index fe105908..9be572bc 100644
+--- a/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_screen.c
++++ b/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_screen.c
+@@ -1,3 +1,11 @@
++#ifdef WIN9X
++/* M5.4 bring-up trace hook: NULL unless the nouveau ICD build installs it. */
++#include <stdint.h>
++extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
++#define M9XT(l,a,b) do{ if(mesa9x_trace_hook){ uint32_t _v[2]={(uint32_t)(uintptr_t)(a),(uint32_t)(uintptr_t)(b)}; mesa9x_trace_hook((l),2,_v);} }while(0)
++#else
++#define M9XT(l,a,b) ((void)0)
++#endif
+ #include "git_sha1.h"
+ 
+ #include "pipe/p_defines.h"
+@@ -507,6 +515,7 @@ nouveau_context_init(struct nouveau_context *context, struct nouveau_screen *scr
+    context->screen = screen;
+ 
+    ret = nouveau_client_new(screen->device, &context->client);
++   M9XT("nouveau: context_init client_new ret", ret, 0);
+    if (ret)
+       return ret;
+ 
+@@ -515,5 +524,6 @@ nouveau_context_init(struct nouveau_context *context, struct nouveau_screen *scr
+    if (ret)
+       return ret;
+ 
++   M9XT("nouveau: context_init pushbuf ret", ret, 0);
+    return 0;
+ }
+diff --git a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_context.c b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_context.c
+index a41df157..53ef5e57 100644
+--- a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_context.c
++++ b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_context.c
+@@ -1,3 +1,11 @@
++#ifdef WIN9X
++/* M5.4 bring-up trace hook: NULL unless the nouveau ICD build installs it. */
++#include <stdint.h>
++extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
++#define M9XT(l,a,b) do{ if(mesa9x_trace_hook){ uint32_t _v[2]={(uint32_t)(uintptr_t)(a),(uint32_t)(uintptr_t)(b)}; mesa9x_trace_hook((l),2,_v);} }while(0)
++#else
++#define M9XT(l,a,b) ((void)0)
++#endif
+ /*
+  * Copyright 2010 Christoph Bumiller
+  *
+@@ -309,10 +317,15 @@ nv50_create(struct pipe_screen *pscreen, void *priv, unsigned ctxflags)
+       return NULL;
+    pipe = &nv50->base.pipe;
+ 
+-   if (!nv50_blitctx_create(nv50))
++   M9XT("nv50: create enter", nv50, 0);
++   if (!nv50_blitctx_create(nv50)) {
++      M9XT("nv50: FAIL blitctx_create", 0, 0);
+       goto out_err;
++   }
+ 
+-   if (nouveau_context_init(&nv50->base, &screen->base))
++   ret = nouveau_context_init(&nv50->base, &screen->base);
++   M9XT("nv50: nouveau_context_init ret", ret, 0);
++   if (ret)
+       goto out_err;
+ 
+    ret = nouveau_bufctx_new(nv50->base.client, 2, &nv50->bufctx);
+@@ -322,6 +335,7 @@ nv50_create(struct pipe_screen *pscreen, void *priv, unsigned ctxflags)
+    if (!ret)
+       ret = nouveau_bufctx_new(nv50->base.client, NV50_BIND_CP_COUNT,
+                                &nv50->bufctx_cp);
++   M9XT("nv50: bufctx_new x3 ret", ret, 0);
+    if (ret)
+       goto out_err;
+ 
+@@ -333,6 +347,7 @@ nv50_create(struct pipe_screen *pscreen, void *priv, unsigned ctxflags)
+    pipe->screen = pscreen;
+    pipe->priv = priv;
+    pipe->stream_uploader = u_upload_create_default(pipe);
++   M9XT("nv50: stream_uploader", pipe->stream_uploader, 0);
+    if (!pipe->stream_uploader)
+       goto out_err;
+    pipe->const_uploader = pipe->stream_uploader;
+@@ -421,9 +436,11 @@ nv50_create(struct pipe_screen *pscreen, void *priv, unsigned ctxflags)
+ 
+    nouveau_fence_new(&nv50->base, &nv50->base.fence);
+ 
++   M9XT("nv50: create OK pipe", pipe, 0);
+    return pipe;
+ 
+ out_err:
++   M9XT("nv50: create FAILED", 0, 0);
+    if (pipe->stream_uploader)
+       u_upload_destroy(pipe->stream_uploader);
+    if (nv50->bufctx_3d)
+diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c
+index 3ef71913..a1559c73 100644
+--- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c
++++ b/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c
+@@ -1,3 +1,11 @@
++#ifdef WIN9X
++/* M5.4 bring-up trace hook: NULL unless the nouveau ICD build installs it. */
++#include <stdint.h>
++extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
++#define M9XT(l,a,b) do{ if(mesa9x_trace_hook){ uint32_t _v[2]={(uint32_t)(uintptr_t)(a),(uint32_t)(uintptr_t)(b)}; mesa9x_trace_hook((l),2,_v);} }while(0)
++#else
++#define M9XT(l,a,b) ((void)0)
++#endif
+ /**************************************************************************
+  *
+  * Copyright 2008 VMware, Inc.
+@@ -166,6 +174,7 @@ stw_create_context_attribs(HDC hdc, INT iLayerPlane, struct stw_context *shareCt
+    struct stw_context *ctx = NULL;
+    enum st_context_error ctx_err = 0;
+ 
++   M9XT("stw: create_context_attribs enter hdc/pfi", hdc, pfi);
+    if (!stw_dev)
+       return 0;
+ 
+@@ -244,9 +253,11 @@ stw_create_context_attribs(HDC hdc, INT iLayerPlane, struct stw_context *shareCt
+    }
+ 
+    attribs.options = stw_dev->st_options;
++   M9XT("stw: attribs profile/major", attribs.profile, majorVersion);
+ 
+    ctx->st = st_api_create_context(
+          fscreen, &attribs, &ctx_err, shareCtx ? shareCtx->st : NULL);
++   M9XT("stw: st_api_create_context st/err", ctx->st, ctx_err);
+    if (ctx->st == NULL)
+       goto no_st_ctx;
+ 
+@@ -260,8 +271,10 @@ stw_create_context_attribs(HDC hdc, INT iLayerPlane, struct stw_context *shareCt
+    return ctx;
+ 
+ no_st_ctx:
++   M9XT("stw: FAIL no_st_ctx", 0, 0);
+    FREE(ctx);
+ no_ctx:
++   M9XT("stw: FAIL no_ctx", 0, 0);
+    return NULL;
+ }
+ 
+diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c
+index d7db69a2..6f3bbf60 100644
+--- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c
++++ b/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c
+@@ -1,3 +1,11 @@
++#ifdef WIN9X
++/* M5.4 bring-up trace hook: NULL unless the nouveau ICD build installs it. */
++#include <stdint.h>
++extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
++#define M9XT(l,a,b) do{ if(mesa9x_trace_hook){ uint32_t _v[2]={(uint32_t)(uintptr_t)(a),(uint32_t)(uintptr_t)(b)}; mesa9x_trace_hook((l),2,_v);} }while(0)
++#else
++#define M9XT(l,a,b) ((void)0)
++#endif
+ /**************************************************************************
+  *
+  * Copyright 2008 VMware, Inc.
+@@ -331,6 +339,7 @@ stw_pixelformat_init(void)
+    assert(stw_dev->pixelformat_count <=
+           util_dynarray_num_elements(&stw_dev->pixelformats,
+                                      struct stw_pixelformat_info));
++   M9XT("stw: pixelformat_init count", stw_dev->pixelformat_count, 0);
+ }
+ 
+ 
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..01cb6dbf 100644
+index 8017cd00..51e467fb 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,10 @@
@@ -1909,7 +2073,7 @@ index 8017cd00..01cb6dbf 100644
  
  #ifdef WIN9X
  #include "3d_accel.h"
-@@ -92,6 +102,22 @@ void crt_locks_destroy();
+@@ -92,6 +102,23 @@ void crt_locks_destroy();
  
  static const char *created_driver_name = NULL;
  
@@ -1917,6 +2081,7 @@ index 8017cd00..01cb6dbf 100644
 +/* M5.4 step 3d: trace the path INTO screen creation (builds 3079-3081 died before
 + * the shim's first trace point). Writes to C:\nvshim.log via the shim's logger. */
 +extern void nvshim_trace(const char *label, unsigned n, const uint32_t *v);
++extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
 +static void nvt(const char *pre, const char *str, unsigned n, uint32_t a0, uint32_t a1)
 +{
 +   char lbl[128]; int k = 0; uint32_t v[2];
@@ -1932,12 +2097,13 @@ index 8017cd00..01cb6dbf 100644
  static struct pipe_screen *
  wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  {
-@@ -99,6 +125,15 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
+@@ -99,6 +126,16 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  
     debug_printf("tried driver: %s\n", driver);
  
 +#ifdef GALLIUM_NOUVEAU
 +   if (strcmp(driver, "nouveau") == 0) {
++      mesa9x_trace_hook = nvshim_trace;   /* route stw/st/nv50 traces into C:\nvshim.log */
 +      nvt("wgl: nouveau_drm_screen_create enter lasterr", NULL, 1, GetLastError(), 0);
 +      screen = nouveau_drm_screen_create(0);   /* fd ignored; opens the VxD */
 +      nvt("wgl: nouveau_drm_screen_create exit screen/lasterr", NULL, 2, (uint32_t)(uintptr_t)screen, GetLastError());
@@ -1948,7 +2114,7 @@ index 8017cd00..01cb6dbf 100644
  #ifdef GALLIUM_LLVMPIPE
     if (strcmp(driver, "llvmpipe") == 0) {
  # ifdef HAVE_CRTEX
-@@ -138,6 +173,7 @@ wgl_screen_create(HDC hDC)
+@@ -138,6 +175,7 @@ wgl_screen_create(HDC hDC)
     struct sw_winsys *winsys;
     UNUSED bool sw_only = debug_get_bool_option("LIBGL_ALWAYS_SOFTWARE", false);
  
@@ -1956,7 +2122,7 @@ index 8017cd00..01cb6dbf 100644
     winsys = gdi_create_sw_winsys(gdi_sw_acquire_hdc_by_value, gdi_sw_release_hdc_by_value);
     if (!winsys)
        return NULL;
-@@ -175,7 +211,9 @@ wgl_screen_create(HDC hDC)
+@@ -175,7 +213,9 @@ wgl_screen_create(HDC hDC)
     	  }
  #endif
     	
@@ -1966,7 +2132,7 @@ index 8017cd00..01cb6dbf 100644
        if (screen) {
           created_driver_name = drivers[i];
           return screen;
-@@ -184,6 +222,7 @@ wgl_screen_create(HDC hDC)
+@@ -184,6 +224,7 @@ wgl_screen_create(HDC hDC)
           break;
     }
  
@@ -1974,7 +2140,7 @@ index 8017cd00..01cb6dbf 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +276,30 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +278,30 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2068,6 +2234,54 @@ index d2615102..57656890 100644
                                           nouveau_screen_create);
 +#endif
  }
+diff --git a/mesa-25.1.x/src/mesa/state_tracker/st_manager.c b/mesa-25.1.x/src/mesa/state_tracker/st_manager.c
+index 4b060881..9022600d 100644
+--- a/mesa-25.1.x/src/mesa/state_tracker/st_manager.c
++++ b/mesa-25.1.x/src/mesa/state_tracker/st_manager.c
+@@ -1,3 +1,11 @@
++#ifdef WIN9X
++/* M5.4 bring-up trace hook: NULL unless the nouveau ICD build installs it. */
++#include <stdint.h>
++extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
++#define M9XT(l,a,b) do{ if(mesa9x_trace_hook){ uint32_t _v[2]={(uint32_t)(uintptr_t)(a),(uint32_t)(uintptr_t)(b)}; mesa9x_trace_hook((l),2,_v);} }while(0)
++#else
++#define M9XT(l,a,b) ((void)0)
++#endif
+ /*
+  * Mesa 3-D graphics library
+  *
+@@ -979,6 +987,7 @@ st_api_create_context(struct pipe_frontend_screen *fscreen,
+                                           PIPE_CONTEXT_PREFER_THREADED |
+                                           lod_bias_flag |
+                                           attribs->context_flags);
++   M9XT("st: screen->context_create pipe", pipe, 0);
+    if (!pipe) {
+       *error = ST_CONTEXT_ERROR_NO_MEMORY;
+       return NULL;
+@@ -990,6 +999,7 @@ st_api_create_context(struct pipe_frontend_screen *fscreen,
+    st = st_create_context(attribs->profile, pipe, mode_ptr, shared_ctx,
+                           &attribs->options, no_error,
+                           !!fscreen->validate_egl_image);
++   M9XT("st: st_create_context st", st, 0);
+    if (!st) {
+       *error = ST_CONTEXT_ERROR_NO_MEMORY;
+       pipe->destroy(pipe);
+diff --git a/mesa-25.1.x/src/util/u_debug.c b/mesa-25.1.x/src/util/u_debug.c
+index 96f7ccaa..8efc4c31 100644
+--- a/mesa-25.1.x/src/util/u_debug.c
++++ b/mesa-25.1.x/src/util/u_debug.c
+@@ -43,6 +43,11 @@
+ #endif
+ 
+ 
++#ifdef WIN9X
++#include <stdint.h>
++void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v) = NULL;
++#endif
++
+ void
+ _debug_vprintf(const char *format, va_list ap)
+ {
 diff --git a/win9x/vramcpy.c b/win9x/vramcpy.c
 index 61e11c1d..7386c73f 100644
 --- a/win9x/vramcpy.c

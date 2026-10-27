@@ -210,6 +210,19 @@ Expect: wgltest's window shows the GPU-cleared gray; log 'wgl: present map/strid
 with a non-zero map. If map=0: transfer_map failed (bo_new/M2MF) - check the kick
 lines for pgi != 0 (an M2MF trap would be the first use of that engine).
 
+### M5.4 step 4b (build 3084): context-creation trace - AWAITING T61
+3083 on the T61: screen create OK (log identical to 3082) then CreateContext 126 - the
+failure is in CONTEXT creation, which had no trace. 3084 adds a runtime hook:
+u_debug.c defines `void (*mesa9x_trace_hook)(label,n,vals)` = NULL (every target links
+util, so the shared stw/st objects stay link-clean for opengl32/svga); wgl.c sets it to
+nvshim_trace when nouveau is selected. Traced into C:\nvshim.log: stw_create_context_
+attribs (enter hdc/pfi, profile, st_api_create_context result, no_ctx/no_st_ctx exits),
+stw_pixelformat_init count, st_api_create_context (pipe, st), nv50_create (enter,
+blitctx, nouveau_context_init ret, bufctx_new x3, stream_uploader, OK/FAILED),
+nouveau_context_init (client_new/pushbuf ret), shim client_new/bufctx_new. The LAST
+line names the failing step. (Build gotcha: this Mesa's stw_device has no
+pixelformat_extended_count.) Patch is now 12 files.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

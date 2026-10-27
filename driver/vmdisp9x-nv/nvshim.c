@@ -352,6 +352,7 @@ int nouveau_client_new(struct nouveau_device *dev, struct nouveau_client **pclie
 	if(!c) return -1;
 	c->device = dev;
 	*pclient = c;
+	NVLOG0("client_new ok");
 	return 0;
 }
 
@@ -530,6 +531,7 @@ int nouveau_bufctx_new(struct nouveau_client *client, int bins, struct nouveau_b
 	bc->base.current.prev = bc->base.current.next = &bc->base.current;
 	bc->nref = 0;
 	*pbc = &bc->base;
+	NVLOG1("bufctx_new ok bins", bins);
 	return 0;
 }
 
