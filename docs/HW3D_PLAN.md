@@ -184,6 +184,26 @@ engine under this driver; the screen-init fence blocker is cleared.
   declares wgl.c a prerequisite of that object (in nouveau-build-win9x.patch). After a
   Mesa rebuild ALWAYS check: strings mesa3d.w98me.dll | grep 'wgl: try driver' (>0).
 
+### M5.4 step 3 DONE (build 3082, T61-VERIFIED 2026-10-27): nv50_screen_create RUNS
+With `set GALLIUM_DRIVER=nouveau` in the DOS box, wgltest's C:\nvshim.log shows the
+whole path succeed on hardware: try driver 'nouveau' -> drm_new/device_new ok, chipset
+0x86 -> Mesa binds notifier/M2MF/2D/NV84_3D(0x8297)/compute via the shim -> 6 BOs
+allocated -> ONE kick of 0x25c dwords (Mesa's full init_hwctx incl. the BO-backed
+VP/FP/TLS/CB tail) with PGRAPH_INTR=0 -> init(dev) screen=00d62010, context_create
+valid, wgl result screen ok. Mesa's unmodified nv50 driver is running the G86.
+WHY it never worked before: GALLIUM_DRIVER read EMPTY from the registry path -
+os_get_option (WIN9X) = getenv() then vmhal_setup_str("mesa",name) which lives in
+vmdisp9x.dll (win9x/vmsetup.h: GetModuleHandle/LoadLibrary "vmdisp9x.dll" +
+GetProcAddress); that returned nothing (lasterr 2). The env var bypasses it.
+(Earlier 126 errors came from the STALE wgl object, not the hardware.)
+
+### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
+drawn frame never reaches the display) - read the GPU color buffer back via the shim
+and blit it to the visible framebuffer (first version), later a 2D-engine blit into
+the scanout surface; then a clear + triangle visible in the wgltest window.
+(b) make the registry path work (debug vmhal_setup_str / vmdisp9x.dll load in a
+GL-only process) so Half-Life, launched without a DOS box, picks nouveau.
+
 ### NEXT (M5.4 continued): run nv50_screen_create on the T61, then draw
 Wire GALLIUM_DRIVER=nouveau and run nv50_screen_create on the T61 - its fence now
 lands. Then the BO-backed hwctx tail (VP/FP/GP code BO, TLS, stack, uniforms/CB with
