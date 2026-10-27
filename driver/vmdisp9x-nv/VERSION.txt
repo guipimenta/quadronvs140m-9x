@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3088  (M5.4 step 5b: 3087 logs show a SILENT 3D-engine hang inside the frame kick (no trap; the next 3D method stalls the pusher). VxD now latches wedged on a still-busy engine; the shim dumps the first 16 kicks' method streams to C:\nvkick.txt. Run nvgl, send C:\nvshim.log, C:\nvtail.txt and C:\nvkick.txt)
+Build: 3089  (M5.4 step 5c: 3088 logs show PGRAPH idle while the PFIFO puller is stuck; the init kick binds the COMPUTE class (0x50c0) on subchannel 6 and the shim never bound it - fixed (shim + VxD). A wedge now dumps the PFIFO pusher/puller and PGRAPH state into the debug ring (nvtail). Test: nvgl; send C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

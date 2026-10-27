@@ -310,6 +310,32 @@ references) and compare with a reference nouveau trace of the same frame; suspec
 hwctx tail Mesa expects (VP/FP code BO, TLS, stack, uniforms) vs what our channel provides,
 and vertex-fetch/shader addresses in the VM window.
 
+### M5.4 step 5c (build 3088 on the T61 -> 3089): it is the PFIFO PULLER that is stuck, and the
+### init kick binds a COMPUTE object the shim never created
+3088 reproduced 3087 exactly (analysis/t61-logs/3088-*) with one new fact: at the wedge
+PGRAPH_STATUS reads 0 (idle) and gridle=0 after the frame kick - the 3D engine is NOT busy,
+so the pusher/puller is what stopped, not the engine. The kick dump decoded cleanly
+(tools/nvkick_decode.py, output in 3088-nvkick-decoded.txt): kick 0 = nv50_screen_create's
+init (SET_OBJECT M2MF/2D/3D, DMA handles, the whole hwctx tail), kicks 1/2 = a 32-byte TSC
+upload through 2D SIFC (R8 linear, DST 0x44250000) + TSC_FLUSH, kick 2 also = the glClear
+(RT 0x44274000 A8R8G8B8 632x451 tiled, ZETA 0x443b4000 Z24S8, CLEAR_BUFFERS 0x3c), kick 3 =
+the frame (state, VP/FP code uploads via SIFC into the code BO at +0x7ff40/+0x7ffc0,
+VERTEX_ARRAY 0x444f400c stride 24, VERTEX_BEGIN_GL POLYGON, 3 vertices), kick 4 = the QUERY
+fence. Every method is a plain nv50 frame - EXCEPT dword 427 of kick 0: SET_OBJECT
+0xbeef50c0 on subchannel 6 (COMPUTE) followed by ~100 compute methods. nvshim.c's
+nouveau_object_new only RECORDS class 0x50c0 (never bound it; nv_class_is_gfx in the VxD
+did not list it either), so the puller met a handle absent from RAMHT. The arithmetic fits:
+everything after dword ~410 of the init stream (1002 dwords) fits the pusher's cache, which
+is why IB get reached 4 (fetched) and stopped before 5. The clear never ran because the
+puller never got past kick 0 -> random present samples. No CACHE_ERROR interrupt was seen
+(pfi=0), which the 3089 stall dump will explain (PULL0 / the cache entry at CACHE1 GET).
+3089: shim + VxD bind 0x50c0/0x85c0 as PGRAPH objects; NV_gpu_submit dumps the PFIFO
+pusher/puller + PGRAPH state on a wedge (S> pfifo / S> c1 / S> cache[..] <- GET / S> gr
+lines in nvtail); 'submit end' carries dmaget/c1put/c1get/pull0; the shim logs the captured
+pusher state on a failed kick. Expect: no wedge, the clear colour (ff000000) in the present
+samples, the triangle in the window. If it still wedges: the cache[..] <- GET line names
+the stuck method.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

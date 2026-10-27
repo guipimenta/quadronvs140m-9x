@@ -1,0 +1,5 @@
+14570:V> S> submit end get=3 pfi=00000000 loops=1 gridle=0
+14584:V> S> submit begin cnt=668 m0=00046F90 m1=00000001 ibput=3
+14585:V> S> submit end get=4 pfi=00000000 loops=1 gridle=0
+14591:V> S> submit begin cnt=5 m0=00107B00 m1=00000000 ibput=4
+14592:V> S> submit WEDGED get=4 put=5 pfi=00000000 pgi=00000000 loops=2000000 gridle=0 status=00000000

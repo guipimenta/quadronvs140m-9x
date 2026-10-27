@@ -806,6 +806,44 @@ static unsigned long nv_chan_init(void)
  * engine to drain and go idle, and fills diagnostics. */
 static unsigned long g_gpu_wedged = 0;   /* 3087: latched by a trap or an unconsumed kick */
 
+/* 3089: when a kick wedges, dump the PFIFO pusher/puller and PGRAPH state so the
+ * stall point is visible: DMA GET/PUT (how far the pusher fetched), CACHE1
+ * GET/PUT (cache fill; PUT-GET == cache size means the puller is stuck), PULL0
+ * (bit 4 = puller hung on a method it cannot deliver), the cache entries around
+ * CACHE1 GET (the method the puller is stuck on; NV40+ cache RAM at 0x90000,
+ * 512 entries of method/data), and the PGRAPH context/trap registers. */
+#define PFIFO_CACHE1_MTHD(i) (0x00090000UL + (i) * 8UL)
+#define PFIFO_CACHE1_DATA(i) (0x00090004UL + (i) * 8UL)
+static void gpu_dump_stall(unsigned long chid)
+{
+	unsigned long c1get, c1put, k, idx;
+
+	dbg_printf("S> pfifo intr=%08lX en=%08lX pmc=%08lX caches=%08lX ctxtab=%08lX ibput=%lu ibget=%lu 3330=%08lX 3334=%08lX\n",
+	           NV_rd32(PFIFO_INTR_0), NV_rd32(PFIFO_INTR_EN_0), NV_rd32(0x000100UL), NV_rd32(PFIFO_CACHES),
+	           NV_rd32(PFIFO_CTX_TABLE(chid)), NV_rd32(PFIFO_USER_IBPUT(chid)), NV_rd32(PFIFO_USER_IBGET(chid)),
+	           NV_rd32(0x3330UL), NV_rd32(0x3334UL));
+	dbg_printf("S> c1 push0=%08lX push1=%08lX dmapush=%08lX fetch=%08lX state=%08lX inst=%08lX ctl=%08lX\n",
+	           NV_rd32(0x3200UL), NV_rd32(0x3204UL), NV_rd32(0x3220UL), NV_rd32(0x3224UL),
+	           NV_rd32(0x3228UL), NV_rd32(0x322cUL), NV_rd32(0x3230UL));
+	c1put = NV_rd32(0x3210UL);
+	c1get = NV_rd32(0x3270UL);
+	dbg_printf("S> c1 dmaput=%08lX dmaget=%08lX ref=%08lX sub=%08lX c1put=%08lX c1get=%08lX pull0=%08lX pull1=%08lX eng=%08lX\n",
+	           NV_rd32(0x3240UL), NV_rd32(0x3244UL), NV_rd32(0x3248UL), NV_rd32(0x324cUL),
+	           c1put, c1get, NV_rd32(0x3250UL), NV_rd32(0x3254UL), NV_rd32(0x3280UL));
+	for(k = 0; k < 8; k++)
+	{
+		idx = ((c1get >> 2) + k + 510UL) & 511UL;   /* two before GET, then six from GET */
+		dbg_printf("S> cache[%03lX] mthd=%08lX data=%08lX%s\n", idx,
+		           NV_rd32(PFIFO_CACHE1_MTHD(idx)), NV_rd32(PFIFO_CACHE1_DATA(idx)), k == 2 ? "  <- GET" : "");
+	}
+	dbg_printf("S> gr intr=%08lX trap=%08lX status=%08lX taddr=%08lX tdata=%08lX cur=%08lX ctxptr=%08lX class=%08lX\n",
+	           NV_rd32(PGRAPH_INTR), NV_rd32(0x400108UL), NV_rd32(PGRAPH_STATUS), NV_rd32(0x400704UL),
+	           NV_rd32(0x400708UL), NV_rd32(PGRAPH_CTXCTL_CUR), NV_rd32(PGRAPH_CHANNEL_CTX_PTR), NV_rd32(0x400814UL));
+	dbg_printf("S> gr 320=%08lX 500=%08lX 804=%08lX 808=%08lX 80c=%08lX 810=%08lX 824=%08lX 13c=%08lX\n",
+	           NV_rd32(0x400320UL), NV_rd32(0x400500UL), NV_rd32(0x400804UL), NV_rd32(0x400808UL),
+	           NV_rd32(0x40080cUL), NV_rd32(0x400810UL), NV_rd32(0x400824UL), NV_rd32(PGRAPH_INTR_EN));
+}
+
 int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out)
 {
 	const unsigned long chid = NVGPU_CHID;
@@ -900,11 +938,13 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 		dbg_printf("S> submit WEDGED get=%lu put=%lu pfi=%08lX pgi=%08lX loops=%lu gridle=%lu status=%08lX\n",
 		           out->get, out->put, out->pfifo_intr, out->pgraph_intr, out->idle_loops,
 		           out->gr_idle, NV_rd32(PGRAPH_STATUS));
+		gpu_dump_stall(chid);
 		return 1;
 	}
 	out->ok          = 1;
-	dbg_printf("S> submit end get=%lu pfi=%08lX loops=%lu gridle=%lu\n", out->get, out->pfifo_intr,
-	           out->idle_loops, out->gr_idle);
+	dbg_printf("S> submit end get=%lu pfi=%08lX loops=%lu gridle=%lu dmaget=%08lX c1put=%08lX c1get=%08lX pull0=%08lX\n",
+	           out->get, out->pfifo_intr, out->idle_loops, out->gr_idle, out->c1_get,
+	           NV_rd32(0x3210UL), NV_rd32(0x3270UL), out->pull0);
 	return 1;
 }
 
@@ -945,6 +985,7 @@ static int nv_class_is_gfx(unsigned long oclass)
 	{
 	case 0x502dUL: case 0x5039UL: case 0x5097UL:
 	case 0x8297UL: case 0x8597UL: case 0x8697UL:
+	case 0x50c0UL: case 0x85c0UL:            /* 3089: COMPUTE runs on PGRAPH too */
 		return 1;
 	}
 	return 0;

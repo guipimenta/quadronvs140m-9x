@@ -201,6 +201,11 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 		static int nfail = 0;
 		if(nfail++ < 32) NVLOG3("kick FAIL cnt/get/put", count, sb.get, sb.put);
 		if(nfail <= 32) NVLOG3("kick FAIL pfi/pgi/wedged", sb.pfifo_intr, sb.pgraph_intr, sb.wedged);
+		/* 3089: the pusher/puller state the VxD already captured (where the
+		 * pusher's DMA GET sits, the cache fill, the header being parsed). */
+		if(nfail <= 32) NVLOG3("kick FAIL dmaget/dmaput/state", sb.c1_get, sb.c1_put, sb.dma_state);
+		if(nfail <= 32) NVLOG3("kick FAIL pull0/dmapush/push0", sb.pull0, sb.dma_push, sb.push0);
+		if(nfail <= 32) NVLOG3("kick FAIL caches/ctxtab/putoff", sb.caches, sb.ctxtable, sb.put_off);
 		if(!g_gpu_dead) { g_gpu_dead = 1; NVLOG1("GPU DEAD - submissions stopped, loops", sb.idle_loops); }
 #endif
 		return -1;
@@ -460,6 +465,13 @@ int nouveau_object_new(struct nouveau_object *parent, uint64_t handle, uint32_t 
 	{
 	case 0x502d: case 0x5039: case 0x5097:              /* 2D / M2MF / NV50_3D */
 	case 0x8297: case 0x8597: case 0x8697:              /* NV84/94/96 3D       */
+	case 0x50c0: case 0x85c0:                           /* NV50/NVA3 COMPUTE   */
+	/* 3089: the compute class was NOT bound before. nv50_screen_create still
+	 * emits SET_OBJECT 0xbeef50c0 on subchannel 6 plus ~100 compute methods
+	 * (dword 427 of the 604-dword init kick), so the puller met a handle that
+	 * is not in RAMHT - the prime suspect for the silent stall of 3087/3088
+	 * (every kick after dword ~410 of the init stream fits in the pusher's
+	 * cache, which is exactly why IB get "advanced" to 4 and not 5). */
 	case NOUVEAU_NOTIFIER_CLASS:
 		vxd_bind((uint32_t)handle, oclass);
 		break;
