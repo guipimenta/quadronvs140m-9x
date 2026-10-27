@@ -9,6 +9,8 @@ Files:
   mesa3d.dll   - Mesa9x 25.1.6 software OpenGL (llvmpipe), OpenGL ICD + D3D
                  rasterizer; 3046: built here against FBHDA API 20260213
   wgltest.exe, icdtest.exe - Mesa9x test programs (3046)
+  nvgl.bat     - 3085: one-shot GPU OpenGL test: clears C:\nvshim.log, sets
+                 GALLIUM_DRIVER=nouveau, runs wgltest, opens the log (nvgl sw = llvmpipe)
   d3dsetup.reg - Mesa vector width + OpenGL ICD key for existing installs
   nvmini.drv   - 16-bit DIBENG display driver (3031: VDD device-id probe)
   nvprobe.exe  - Win32 diagnostic/control tool (3034: 'nvprobe log' dumps the ring)
