@@ -455,6 +455,26 @@ textured scene in wgltest to validate texture upload (M2MF linear->tiled, TIC/TS
 fake GPU before the T61, (3) launch recipe: DOS box with set GALLIUM_DRIVER=nouveau (+
 MESA_EXTENSION_MAX_YEAR=2000 for hl.exe) and the registry ICD route (OpenGLdrivers\SOFTWARE).
 
+### M5.5 step 2 (build 3093): towards Half-Life
+- wgl.c: the front resource is dropped and re-imported when FBHDA surface/pitch/bpp/width/
+  height change (a game going fullscreen 640x480x16 gets a B5G6R5 front; the 2D blit
+  converts from the window buffer's format).
+- wgltest 'texture' scene (wgltest.c + wgltest_api.h, 17th file of the Mesa patch): two
+  textures (256^2 RGBA with 9 mip levels via glTexImage2D per level, 64^2 RGBA alpha sprite),
+  a glTexSubImage2D 32x32 patch every 16 frames (lightmaps), a textured cube with depth test
+  and linear fog, a blended + alpha-tested sprite, perspective projection. Under the fake GPU
+  (analysis/fake-runs/3093-wine-fake-texture-*): Mesa uploads textures with M2MF linear ->
+  tiled copies from a staging BO (TILING_MODE_OUT 0x40, 1024 B x 256 lines), tiled texture
+  BOs get kind 0x70 (0x40000 + 0x60000 for the mip chain), TIC/TSC uploads via 2D SIFC, 96
+  kicks clean, 567 frames / 2 s; the software renderer runs the same scene.
+- nvhl.bat + INSTALL.txt: copy nvhl.bat + mesa3d.dll next to hl.exe, set NVDRV, run nvhl
+  [-width 640 -height 480]; it sets GALLIUM_DRIVER=nouveau + MESA_EXTENSION_MAX_YEAR=2000,
+  tails the VxD log, runs hl.exe, leaves the three log files.
+T61 order: (1) `wgltest driver mesa3d.dll window texture` with GALLIUM_DRIVER=nouveau (nvgl's
+DOS box) - the textured cube must render; (2) Half-Life via nvhl.bat. Known gaps for games:
+no clipping of the present blit against overlapping windows (fullscreen is fine), 64 MB VRAM
+heap with no eviction (a bo_new failure crashes Mesa - watch 'heap full' in the log), no GART.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

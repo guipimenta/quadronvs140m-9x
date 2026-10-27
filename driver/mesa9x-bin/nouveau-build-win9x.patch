@@ -2347,7 +2347,7 @@ index d7db69a2..97b7426c 100644
     return bestindex;
  }
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..edb59a23 100644
+index 8017cd00..e729e9e5 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,12 @@
@@ -2452,7 +2452,7 @@ index 8017cd00..edb59a23 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +289,151 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +289,164 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2498,10 +2498,23 @@ index 8017cd00..edb59a23 100644
 +            if (!hda && fake && !cpu_present) hda = &fake_hda;
 +         }
 +         if (hda && hda->bpp >= 16 && hda->overlay == 0) {
++            /* 3093: follow display-mode changes (a game going fullscreen): when
++             * the scanout surface, pitch, depth or size differ from what the
++             * front resource was imported with, drop it and import again. */
++            static uint32_t fb_surface, fb_pitch, fb_bpp, fb_w, fb_h;
++            if (front && (hda->surface != fb_surface || hda->pitch != fb_pitch || hda->bpp != fb_bpp ||
++                          hda->width != fb_w || hda->height != fb_h)) {
++               nvt("wgl: front mode changed w/h", NULL, 2, hda->width, hda->height);
++               pipe_resource_reference(&front, NULL);
++               front = NULL;
++               front_tried = 0;
++            }
 +            if (!front && !front_tried) {
 +               struct pipe_resource templ;
 +               struct winsys_handle wh;
 +               front_tried = 1;
++               fb_surface = hda->surface; fb_pitch = hda->pitch; fb_bpp = hda->bpp;
++               fb_w = hda->width; fb_h = hda->height;
 +               memset(&templ, 0, sizeof(templ));
 +               memset(&wh, 0, sizeof(wh));
 +               templ.target = PIPE_TEXTURE_2D;
@@ -2604,7 +2617,7 @@ index 8017cd00..edb59a23 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
-@@ -326,6 +523,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -326,6 +536,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  
        stw_init(&stw_winsys, hinstDLL);
        stw_init_thread();
@@ -2618,7 +2631,7 @@ index 8017cd00..edb59a23 100644
        break;
  
     case DLL_THREAD_ATTACH:
-@@ -337,6 +541,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -337,6 +554,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
        break;
  
     case DLL_PROCESS_DETACH:
@@ -2741,10 +2754,10 @@ index 96f7ccaa..8efc4c31 100644
  _debug_vprintf(const char *format, va_list ap)
  {
 diff --git a/wgltest.c b/wgltest.c
-index 6c6d2fc1..5ef7b1c3 100644
+index 6c6d2fc1..fb966069 100644
 --- a/wgltest.c
 +++ b/wgltest.c
-@@ -1,979 +1,991 @@
+@@ -1,979 +1,1160 @@
 -/******************************************************************************
 - * Copyright (c) 2023-2024 Jaroslav Hensl                                     *
 - *                                                                            *
@@ -3755,6 +3768,7 @@ index 6c6d2fc1..5ef7b1c3 100644
 +#include <GL/gl.h>
 +#include <GL/glext.h>
 +#include <math.h>
++#include <stdlib.h>
 +
 +static const char *usage = 
 +  "wgltest [command <command arg>] [another command <...>]\n\n"
@@ -3806,6 +3820,29 @@ index 6c6d2fc1..5ef7b1c3 100644
 +typedef void (APIENTRY *glFlush_f)(void);
 +typedef const GLubyte* (APIENTRY *glGetString_f)(GLenum name);
 +typedef void (APIENTRY *glGetIntegerv_f)(GLenum pname, GLint *data);
++typedef void (APIENTRY *glGenTextures_f)(GLsizei n, GLuint *textures);
++typedef void (APIENTRY *glBindTexture_f)(GLenum target, GLuint texture);
++typedef void (APIENTRY *glDeleteTextures_f)(GLsizei n, const GLuint *textures);
++typedef void (APIENTRY *glTexImage2D_f)(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels);
++typedef void (APIENTRY *glTexSubImage2D_f)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels);
++typedef void (APIENTRY *glTexParameteri_f)(GLenum target, GLenum pname, GLint param);
++typedef void (APIENTRY *glTexEnvi_f)(GLenum target, GLenum pname, GLint param);
++typedef void (APIENTRY *glEnable_f)(GLenum cap);
++typedef void (APIENTRY *glDisable_f)(GLenum cap);
++typedef void (APIENTRY *glTexCoord2f_f)(GLfloat s, GLfloat t);
++typedef void (APIENTRY *glBlendFunc_f)(GLenum sfactor, GLenum dfactor);
++typedef void (APIENTRY *glDepthFunc_f)(GLenum func);
++typedef void (APIENTRY *glAlphaFunc_f)(GLenum func, GLclampf ref);
++typedef void (APIENTRY *glColor4f_f)(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
++typedef void (APIENTRY *glMatrixMode_f)(GLenum mode);
++typedef void (APIENTRY *glLoadIdentity_f)(void);
++typedef void (APIENTRY *glFrustum_f)(GLdouble l, GLdouble r, GLdouble b, GLdouble t, GLdouble n, GLdouble f);
++typedef void (APIENTRY *glTranslatef_f)(GLfloat x, GLfloat y, GLfloat z);
++typedef void (APIENTRY *glFogi_f)(GLenum pname, GLint param);
++typedef void (APIENTRY *glFogf_f)(GLenum pname, GLfloat param);
++typedef void (APIENTRY *glFogfv_f)(GLenum pname, const GLfloat *params);
++typedef void (APIENTRY *glHint_f)(GLenum target, GLenum mode);
++typedef GLenum (APIENTRY *glGetError_f)(void);
 +
 +typedef BOOL (WINAPI *wglMakeCurrent_f)(HDC hdc, HGLRC hglrc);
 +typedef HGLRC (WINAPI *wglCreateContext_f)(HDC hdc);
@@ -4106,6 +4143,144 @@ index 6c6d2fc1..5ef7b1c3 100644
 +	
 +	GL32.glPopMatrix();
 +	
++	GL32.glFlush();
++}
++
++/* ---- "texture" scene (3093): what a GoldSrc-class game needs from the driver -
++ * mipmapped RGBA textures (glTexImage2D per level), a dynamic glTexSubImage2D
++ * patch every 16 frames (lightmaps), depth test, fog, a blended + alpha-tested
++ * sprite, perspective projection. Runs on any renderer; under the fake GPU it
++ * produces the texture-upload (M2MF/SIFC, TIC/TSC) command streams for the
++ * validator before the real hardware sees them. */
++static int    setup_scene = 0;          /* 0 = triangle, 1 = textured */
++static GLuint tex_checker = 0, tex_alpha = 0;
++static unsigned char *tex_buf = NULL;
++static GLenum scene_err = 0;
++
++static void tex_make_level(unsigned char *dst, int size, int level)
++{
++	int x, y, cell = 32 >> (level > 4 ? 4 : level);
++	if(cell < 1) cell = 1;
++	for(y = 0; y < size; y++)
++		for(x = 0; x < size; x++)
++		{
++			int c = ((x / cell) + (y / cell)) & 1;
++			unsigned char *p = dst + (y * size + x) * 4;
++			p[0] = c ? 255 : (unsigned char)(size > 1 ? x * 255 / (size - 1) : 128);
++			p[1] = c ? (unsigned char)(size > 1 ? y * 255 / (size - 1) : 128) : 32;
++			p[2] = c ? 32 : 255;
++			p[3] = 255;
++		}
++}
++
++static void tex_make_alpha(unsigned char *dst, int size)
++{
++	int x, y;
++	for(y = 0; y < size; y++)
++		for(x = 0; x < size; x++)
++		{
++			float dx = (x + 0.5f) - size * 0.5f, dy = (y + 0.5f) - size * 0.5f;
++			float d = (float)sqrt(dx * dx + dy * dy) / (size * 0.5f);
++			unsigned char *p = dst + (y * size + x) * 4;
++			float a = 1.0f - d; if(a < 0) a = 0;
++			p[0] = 255; p[1] = 220; p[2] = 40; p[3] = (unsigned char)(a * 255);
++		}
++}
++
++static void scene_init(void)
++{
++	int level, size;
++	GLfloat fogc[4] = {0.10f, 0.10f, 0.15f, 1.0f};
++	tex_buf = (unsigned char*)malloc(256 * 256 * 4);
++	if(!tex_buf) return;
++	GL32.glGenTextures(1, &tex_checker);
++	GL32.glBindTexture(GL_TEXTURE_2D, tex_checker);
++	for(level = 0, size = 256; size >= 1; level++, size >>= 1)
++	{
++		tex_make_level(tex_buf, size, level);
++		GL32.glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
++	}
++	GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
++	GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++	GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
++	GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
++	GL32.glGenTextures(1, &tex_alpha);
++	GL32.glBindTexture(GL_TEXTURE_2D, tex_alpha);
++	tex_make_alpha(tex_buf, 64);
++	GL32.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 64, 64, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
++	GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
++	GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++	GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
++	GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
++	GL32.glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
++	GL32.glMatrixMode(GL_PROJECTION);
++	GL32.glLoadIdentity();
++	GL32.glFrustum(-1.0, 1.0, -0.75, 0.75, 1.0, 20.0);
++	GL32.glMatrixMode(GL_MODELVIEW);
++	GL32.glDepthFunc(GL_LEQUAL);
++	GL32.glFogi(GL_FOG_MODE, GL_LINEAR);
++	GL32.glFogf(GL_FOG_START, 3.0f);
++	GL32.glFogf(GL_FOG_END, 9.0f);
++	GL32.glFogfv(GL_FOG_COLOR, fogc);
++	GL32.glHint(GL_FOG_HINT, GL_NICEST);
++	scene_err = GL32.glGetError();
++}
++
++static void tex_quad(float ax, float ay, float az, float bx, float by, float bz,
++                     float cx, float cy, float cz, float dx, float dy, float dz, float rep)
++{
++	GL32.glBegin(GL_QUADS);
++		GL32.glTexCoord2f(0,   0);   GL32.glVertex3f(ax, ay, az);
++		GL32.glTexCoord2f(rep, 0);   GL32.glVertex3f(bx, by, bz);
++		GL32.glTexCoord2f(rep, rep); GL32.glVertex3f(cx, cy, cz);
++		GL32.glTexCoord2f(0,   rep); GL32.glVertex3f(dx, dy, dz);
++	GL32.glEnd();
++}
++
++void draw_textured(float rot, unsigned frame)
++{
++	static int inited = 0;
++	if(!inited) { scene_init(); inited = 1; }
++	GL32.glClearColor(0.10f, 0.10f, 0.15f, 1.0f);
++	GL32.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
++	GL32.glEnable(GL_DEPTH_TEST);
++	GL32.glEnable(GL_TEXTURE_2D);
++	GL32.glEnable(GL_FOG);
++	GL32.glLoadIdentity();
++	GL32.glTranslatef(0.0f, 0.0f, -5.0f - 2.0f * (float)sin(rot * 0.02));
++	GL32.glRotatef(rot, 1.0f, 1.0f, 0.0f);
++	GL32.glRotatef(rot * 0.7f, 0.0f, 0.0f, 1.0f);
++	GL32.glBindTexture(GL_TEXTURE_2D, tex_checker);
++	GL32.glColor4f(1, 1, 1, 1);
++	/* a textured cube (6 quads, texture repeated twice) */
++	tex_quad(-1,-1, 1,  1,-1, 1,  1, 1, 1, -1, 1, 1, 2.0f);
++	tex_quad( 1,-1,-1, -1,-1,-1, -1, 1,-1,  1, 1,-1, 2.0f);
++	tex_quad(-1,-1,-1, -1,-1, 1, -1, 1, 1, -1, 1,-1, 2.0f);
++	tex_quad( 1,-1, 1,  1,-1,-1,  1, 1,-1,  1, 1, 1, 2.0f);
++	tex_quad(-1, 1, 1,  1, 1, 1,  1, 1,-1, -1, 1,-1, 2.0f);
++	tex_quad(-1,-1,-1,  1,-1,-1,  1,-1, 1, -1,-1, 1, 2.0f);
++	/* dynamic texture update (lightmap-style): a 32x32 patch every 16 frames */
++	if((frame & 15) == 0 && tex_buf)
++	{
++		int i; unsigned char v = (unsigned char)(frame * 4);
++		for(i = 0; i < 32 * 32; i++) { tex_buf[i * 4] = v; tex_buf[i * 4 + 1] = (unsigned char)(255 - v); tex_buf[i * 4 + 2] = 128; tex_buf[i * 4 + 3] = 255; }
++		GL32.glTexSubImage2D(GL_TEXTURE_2D, 0, ((frame >> 4) & 7) * 32, 64, 32, 32, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
++	}
++	/* a translucent, alpha-tested sprite in front of the cube */
++	GL32.glDisable(GL_FOG);
++	GL32.glBindTexture(GL_TEXTURE_2D, tex_alpha);
++	GL32.glEnable(GL_BLEND);
++	GL32.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
++	GL32.glEnable(GL_ALPHA_TEST);
++	GL32.glAlphaFunc(GL_GREATER, 0.05f);
++	GL32.glLoadIdentity();
++	GL32.glTranslatef(0.9f * (float)sin(rot * 0.05), 0.3f * (float)cos(rot * 0.03), -3.0f);
++	GL32.glColor4f(1, 1, 1, 0.9f);
++	tex_quad(-0.5f,-0.5f,0, 0.5f,-0.5f,0, 0.5f,0.5f,0, -0.5f,0.5f,0, 1.0f);
++	GL32.glDisable(GL_ALPHA_TEST);
++	GL32.glDisable(GL_BLEND);
++	GL32.glDisable(GL_TEXTURE_2D);
++	GL32.glDisable(GL_DEPTH_TEST);
 +	GL32.glFlush();
 +}
 +
@@ -4468,6 +4643,10 @@ index 6c6d2fc1..5ef7b1c3 100644
 +		{
 +			setup_fullscreen = FALSE;
 +		}
++		else if(strcmp(argv[i], "texture") == 0)
++		{
++			setup_scene = 1;
++		}
 +		else
 +		{
 +			GUIError("Command line: unknown argument '%s'\n\nrun '%s help' to list supported command line arguments", argv[i], argv[0]);
@@ -4694,7 +4873,10 @@ index 6c6d2fc1..5ef7b1c3 100644
 +			TranslateMessage(&msg);
 +			DispatchMessage(&msg);
 +		}
-+		draw(0.2f * timer, (timer >> 2) & 0xFF);
++		if(setup_scene)
++			draw_textured(0.5f * timer, (unsigned)timer);
++		else
++			draw(0.2f * timer, (timer >> 2) & 0xFF);
 +		wrpSwapBuffers(dc);
 +	}
 +	while(running);
@@ -4715,6 +4897,116 @@ index 6c6d2fc1..5ef7b1c3 100644
 +
 +	return 0;
 +}
+diff --git a/wgltest_api.h b/wgltest_api.h
+index 52b80742..2892acc1 100644
+--- a/wgltest_api.h
++++ b/wgltest_api.h
+@@ -1,41 +1,64 @@
+-/*
+- - name
+- - GetProcAddress/wglGetProcAddress
+- - GL api/winapi/driver api
+- - default lib (opengl32.dll/gdi32.dll)
+-*/
+-
+-GL_API_LOAD(glClearColor,      FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glClear,           FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glPushMatrix,      FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glPopMatrix,       FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glBegin,           FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glEnd,             FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glRotatef,         FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glColor3f,         FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glVertex3f,        FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glFlush,           FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glGetString,       FUNC_GL, LIB_GL32)
+-GL_API_LOAD(glGetIntegerv,     FUNC_GL, LIB_GL32)
+-GL_API_LOAD(wglMakeCurrent,    FUNC_WGL, LIB_GL32)
+-GL_API_LOAD(wglCreateContext,  FUNC_WGL, LIB_GL32)
+-GL_API_LOAD(wglDeleteContext,  FUNC_WGL, LIB_GL32)
+-GL_API_LOAD(wglGetProcAddress, FUNC_WINAPI, LIB_GL32)
+-
+-GL_API_LOAD(SetPixelFormat,      FUNC_WINAPI, LIB_GDI32)
+-GL_API_LOAD(SwapBuffers,         FUNC_WINAPI, LIB_GDI32)
+-GL_API_LOAD(ChoosePixelFormat,   FUNC_WINAPI, LIB_GDI32)
+-GL_API_LOAD(DescribePixelFormat, FUNC_WINAPI, LIB_GDI32)
+-
+-GL_API_LOAD(wglChoosePixelFormat,   FUNC_WRAP, LIB_GL32)
+-GL_API_LOAD(wglSetPixelFormat,      FUNC_WRAP, LIB_GL32)
+-GL_API_LOAD(wglSwapBuffers,         FUNC_WRAP, LIB_GL32)
+-GL_API_LOAD(wglDescribePixelFormat, FUNC_WRAP, LIB_GL32)
+-
+-GL_API_LOAD(DrvSetPixelFormat,      FUNC_DRV, LIB_DRV)
+-GL_API_LOAD(DrvSwapBuffers,         FUNC_DRV, LIB_DRV)
+-GL_API_LOAD(DrvDescribePixelFormat, FUNC_DRV, LIB_DRV)
+-GL_API_LOAD(DrvGetProcAddress,      FUNC_DRV, LIB_DRV)
+-GL_API_LOAD(DrvSetContext,          FUNC_DRV, LIB_DRV)
+-GL_API_LOAD(DrvCreateLayerContext,  FUNC_DRV, LIB_DRV)
+-GL_API_LOAD(DrvReleaseContext,      FUNC_DRV, LIB_DRV)
++/*
++ - name
++ - GetProcAddress/wglGetProcAddress
++ - GL api/winapi/driver api
++ - default lib (opengl32.dll/gdi32.dll)
++*/
++
++GL_API_LOAD(glClearColor,      FUNC_GL, LIB_GL32)
++GL_API_LOAD(glClear,           FUNC_GL, LIB_GL32)
++GL_API_LOAD(glPushMatrix,      FUNC_GL, LIB_GL32)
++GL_API_LOAD(glPopMatrix,       FUNC_GL, LIB_GL32)
++GL_API_LOAD(glBegin,           FUNC_GL, LIB_GL32)
++GL_API_LOAD(glEnd,             FUNC_GL, LIB_GL32)
++GL_API_LOAD(glRotatef,         FUNC_GL, LIB_GL32)
++GL_API_LOAD(glColor3f,         FUNC_GL, LIB_GL32)
++GL_API_LOAD(glVertex3f,        FUNC_GL, LIB_GL32)
++GL_API_LOAD(glFlush,           FUNC_GL, LIB_GL32)
++GL_API_LOAD(glGetString,       FUNC_GL, LIB_GL32)
++GL_API_LOAD(glGetIntegerv,     FUNC_GL, LIB_GL32)
++GL_API_LOAD(glGenTextures,     FUNC_GL, LIB_GL32)
++GL_API_LOAD(glBindTexture,     FUNC_GL, LIB_GL32)
++GL_API_LOAD(glDeleteTextures,  FUNC_GL, LIB_GL32)
++GL_API_LOAD(glTexImage2D,      FUNC_GL, LIB_GL32)
++GL_API_LOAD(glTexSubImage2D,   FUNC_GL, LIB_GL32)
++GL_API_LOAD(glTexParameteri,   FUNC_GL, LIB_GL32)
++GL_API_LOAD(glTexEnvi,         FUNC_GL, LIB_GL32)
++GL_API_LOAD(glEnable,          FUNC_GL, LIB_GL32)
++GL_API_LOAD(glDisable,         FUNC_GL, LIB_GL32)
++GL_API_LOAD(glTexCoord2f,      FUNC_GL, LIB_GL32)
++GL_API_LOAD(glBlendFunc,       FUNC_GL, LIB_GL32)
++GL_API_LOAD(glDepthFunc,       FUNC_GL, LIB_GL32)
++GL_API_LOAD(glAlphaFunc,       FUNC_GL, LIB_GL32)
++GL_API_LOAD(glColor4f,         FUNC_GL, LIB_GL32)
++GL_API_LOAD(glMatrixMode,      FUNC_GL, LIB_GL32)
++GL_API_LOAD(glLoadIdentity,    FUNC_GL, LIB_GL32)
++GL_API_LOAD(glFrustum,         FUNC_GL, LIB_GL32)
++GL_API_LOAD(glTranslatef,      FUNC_GL, LIB_GL32)
++GL_API_LOAD(glFogi,            FUNC_GL, LIB_GL32)
++GL_API_LOAD(glFogf,            FUNC_GL, LIB_GL32)
++GL_API_LOAD(glFogfv,           FUNC_GL, LIB_GL32)
++GL_API_LOAD(glHint,            FUNC_GL, LIB_GL32)
++GL_API_LOAD(glGetError,        FUNC_GL, LIB_GL32)
++GL_API_LOAD(wglMakeCurrent,    FUNC_WGL, LIB_GL32)
++GL_API_LOAD(wglCreateContext,  FUNC_WGL, LIB_GL32)
++GL_API_LOAD(wglDeleteContext,  FUNC_WGL, LIB_GL32)
++GL_API_LOAD(wglGetProcAddress, FUNC_WINAPI, LIB_GL32)
++
++GL_API_LOAD(SetPixelFormat,      FUNC_WINAPI, LIB_GDI32)
++GL_API_LOAD(SwapBuffers,         FUNC_WINAPI, LIB_GDI32)
++GL_API_LOAD(ChoosePixelFormat,   FUNC_WINAPI, LIB_GDI32)
++GL_API_LOAD(DescribePixelFormat, FUNC_WINAPI, LIB_GDI32)
++
++GL_API_LOAD(wglChoosePixelFormat,   FUNC_WRAP, LIB_GL32)
++GL_API_LOAD(wglSetPixelFormat,      FUNC_WRAP, LIB_GL32)
++GL_API_LOAD(wglSwapBuffers,         FUNC_WRAP, LIB_GL32)
++GL_API_LOAD(wglDescribePixelFormat, FUNC_WRAP, LIB_GL32)
++
++GL_API_LOAD(DrvSetPixelFormat,      FUNC_DRV, LIB_DRV)
++GL_API_LOAD(DrvSwapBuffers,         FUNC_DRV, LIB_DRV)
++GL_API_LOAD(DrvDescribePixelFormat, FUNC_DRV, LIB_DRV)
++GL_API_LOAD(DrvGetProcAddress,      FUNC_DRV, LIB_DRV)
++GL_API_LOAD(DrvSetContext,          FUNC_DRV, LIB_DRV)
++GL_API_LOAD(DrvCreateLayerContext,  FUNC_DRV, LIB_DRV)
++GL_API_LOAD(DrvReleaseContext,      FUNC_DRV, LIB_DRV)
 diff --git a/win9x/vramcpy.c b/win9x/vramcpy.c
 index 61e11c1d..7386c73f 100644
 --- a/win9x/vramcpy.c

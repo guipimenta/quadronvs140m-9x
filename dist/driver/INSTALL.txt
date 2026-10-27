@@ -83,6 +83,22 @@ in software through Mesa9x. Needed in C:\WINDOWS\SYSTEM: vmhal3d.dll (from
 install copy mesa3d.dll there and import d3dsetup.reg. Check: DXDIAG ->
 Display -> "Direct3D Acceleration: Enabled", then "Test Direct3D".
 
+GPU OPENGL - HALF-LIFE (build 3093+)
+------------------------------------
+Hardware-accelerated OpenGL (Mesa's nv50 driver on the G86) is opt-in per
+program through the environment: set GALLIUM_DRIVER=nouveau in the DOS box
+that starts the program. Without it the ICD renders in software as before.
+Half-Life: copy nvhl.bat and mesa3d.dll from this package into the Half-Life
+folder (next to hl.exe), edit NVDRV in nvhl.bat to this package's folder, then
+in a DOS box in the Half-Life folder run:  nvhl  (or nvhl -width 640 -height 480).
+The batch sets GALLIUM_DRIVER=nouveau and MESA_EXTENSION_MAX_YEAR=2000 (the
+GoldSrc extension-string overflow), starts the VxD log tail, runs hl.exe and
+leaves C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt for diagnosis. In the
+game, Video options -> OpenGL, "Default" driver, 640x480 or 800x600.
+wgltest's "texture" scene (wgltest driver mesa3d.dll window texture) is the
+driver-side rehearsal of what a game needs (mipmapped textures, dynamic
+texture updates, depth, fog, blending, alpha test).
+
 OPENGL (build 3046+)
 --------------------
 OpenGL programs get Mesa9x (llvmpipe, OpenGL 3.x/4.x software rendering)

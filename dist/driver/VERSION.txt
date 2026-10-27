@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3092  (M5.5 step 1 SPEED: 3091 drew the triangle on the T61 at ~1 fps. Now: GPU present (the window buffer is blitted into the scanout surface by the 2D engine, no CPU readback), dirty-diff shadow flushes, 1024-dword VRAM reads, a real notifier block (the per-frame M2MF trap), playlist moved out of the pushbuffer. Log lines carry [ms]; 'wgl: present frames/ms' every 2 s. Test: nvgl; send C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt)
+Build: 3093  (M5.5 step 2: towards Half-Life. 3092 = ~60 fps on the T61 (milestone). Now: the front buffer follows display-mode changes (fullscreen), wgltest 'texture' scene (texture uploads validated under the fake GPU), nvhl.bat launcher. VxD/DRV unchanged bar the stamp. Test: wgltest driver mesa3d.dll window texture (via nvgl: set the scene by hand), then Half-Life per INSTALL.txt)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
