@@ -12,6 +12,7 @@
 #define NVSHIM_IOCTL_H
 
 /* VxD DeviceIoControl opcodes (vxd_nv.h). */
+#define OP_NV_RD32          0x5001  /* 3094: read BAR0 MMIO dwords: in[0]=byte offset, in[1]=count -> out dwords (GRAPH_UNITS 0x1540) */
 #define OP_NV_SUBMIT      0x5013  /* submit a ring-3 method stream to the channel */
 #define OP_NV_VRAM_READ   0x5014  /* read back VRAM dwords                        */
 #define OP_NV_VRAM_WRITE  0x5015  /* write a block of dwords into VRAM (BO flush) */

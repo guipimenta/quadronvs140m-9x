@@ -1,0 +1,96 @@
+17:[29] bo_new sz/phys/vmoff 00001000 04000000 44000000
+26:[34] bo_new sz/phys/vmoff 00181000 04010000 44010000
+28:[35] bo_new sz/phys/vmoff 00008000 041a0000 441a0000
+29:[36] bo_new sz/phys/vmoff 00020000 041b0000 441b0000
+30:[36] bo_new sz/phys/vmoff 00050000 041d0000 441d0000
+31:[37] bo_new sz/phys/vmoff 00030000 04220000 44220000
+34:[40] kick > cnt/m0/m1 0000025c 0004a000 beef5039
+65:[364] bo_new sz/phys/vmoff 00001000 04001000 44001000
+72:[390] bo_new sz/phys/vmoff 00010000 04250000 44250000
+74:[390] bo_new sz/phys/vmoff 00010000 04260000 44260000
+77:[399] kick > cnt/m0/m1 00000022 00088200 000000f3
+101:[484] bo_new sz/phys/vmoff 00001000 04002000 44002000
+108:[505] bo_new sz/phys/vmoff 00120000 04270000 44270000
+110:[505] bo_new sz/phys/vmoff 00120000 04390000 44390000
+112:[519] bo_new sz/phys/vmoff 00040000 044b0000 444b0000
+114:[519] bo_new sz/phys/vmoff 00040000 044f0000 444f0000
+115:[520] kick > cnt/m0/m1 00000022 00088200 000000f3
+117:[522] bo_new sz/phys/vmoff 00060000 04530000 44530000
+119:[522] bo_new sz/phys/vmoff 00010000 04590000 44590000
+120:[524] kick > cnt/m0/m1 00000018 0004a200 00000001
+121:[524] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 444f0000 00040000 044f0000
+123:[527] bo_new sz/phys/vmoff 00004000 04003000 44003000
+124:[527] kick > cnt/m0/m1 00000018 0004a200 00000001
+125:[527] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44590000 00010000 04590000
+127:[529] bo_new sz/phys/vmoff 00001000 04007000 44007000
+128:[530] kick > cnt/m0/m1 00000018 0004a200 00000001
+129:[530] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44003000 00004000 04003000
+131:[532] bo_new sz/phys/vmoff 00000400 04008000 44008000
+132:[533] kick > cnt/m0/m1 00000018 0004a200 00000001
+133:[533] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44007000 00001000 04007000
+135:[535] bo_new sz/phys/vmoff 00000100 04008400 44008400
+136:[536] kick > cnt/m0/m1 00000018 0004a200 00000001
+137:[536] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008000 00000400 04008000
+139:[538] bo_new sz/phys/vmoff 00000040 04008500 44008500
+140:[539] kick > cnt/m0/m1 00000018 0004a200 00000001
+141:[539] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008400 00000100 04008400
+143:[541] bo_new sz/phys/vmoff 00000010 04008600 44008600
+144:[541] kick > cnt/m0/m1 00000018 0004a200 00000001
+145:[541] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008500 00000040 04008500
+147:[544] bo_new sz/phys/vmoff 00000004 04008700 44008700
+148:[544] kick > cnt/m0/m1 00000018 0004a200 00000001
+149:[544] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008600 00000010 04008600
+151:[547] bo_new sz/phys/vmoff 00010000 045a0000 445a0000
+153:[547] bo_new sz/phys/vmoff 00004000 04008800 44008800
+154:[548] kick > cnt/m0/m1 00000018 0004a200 00000001
+155:[548] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008700 00000004 04008700
+157:[551] kick > cnt/m0/m1 00000076 0004a200 00000001
+158:[551] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008800 00004000 04008800
+160:[553] bo_new sz/phys/vmoff 00200000 045b0000 445b0000
+162:[559] kick > cnt/m0/m1 0000034e 0018a200 00000000
+164:[562] bo_new sz/phys/vmoff 00001000 0400c800 4400c800
+165:[564] kick > cnt/m0/m1 00000164 0004a200 00000001
+166:[564] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 4400c800 00001000 0400c800
+172:[570] kick > cnt/m0/m1 00000025 00088200 000000e8
+175:[572] bo_new sz/phys/vmoff 00001000 0400e000 4400e000
+176:[573] kick > cnt/m0/m1 00000005 00107b00 00000000
+178:[575] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+180:[577] kick > cnt/m0/m1 0000009d 00046f90 00000001
+182:[580] kick > cnt/m0/m1 00000090 00046f90 00000001
+184:[582] kick > cnt/m0/m1 00000025 00088200 000000e8
+187:[585] bo_new sz/phys/vmoff 00001000 04002000 44002000
+188:[585] kick > cnt/m0/m1 00000005 00107b00 00000000
+190:[587] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+192:[589] kick > cnt/m0/m1 0000009d 00046f90 00000001
+194:[592] kick > cnt/m0/m1 00000090 00046f90 00000001
+196:[594] kick > cnt/m0/m1 00000025 00088200 000000e8
+199:[596] bo_new sz/phys/vmoff 00001000 04003000 44003000
+200:[597] kick > cnt/m0/m1 00000005 00107b00 00000000
+202:[599] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+204:[601] kick > cnt/m0/m1 0000009d 00046f90 00000001
+206:[603] kick > cnt/m0/m1 00000090 00046f90 00000001
+208:[606] kick > cnt/m0/m1 00000025 00088200 000000e8
+211:[608] bo_new sz/phys/vmoff 00001000 04002000 44002000
+212:[609] kick > cnt/m0/m1 00000005 00107b00 00000000
+214:[610] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+216:[613] kick > cnt/m0/m1 0000009d 00046f90 00000001
+218:[615] kick > cnt/m0/m1 00000090 00046f90 00000001
+220:[617] kick > cnt/m0/m1 00000025 00088200 000000e8
+223:[620] bo_new sz/phys/vmoff 00001000 04003000 44003000
+224:[620] kick > cnt/m0/m1 00000005 00107b00 00000000
+CHECK: 64 kicks against 9 bound handles: beef0002 beef0003 beef0201 beef0202 beef0301 beef502d beef5039 beef5097 beef50c0
+LOG: [524] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 444f0000 00040000 044f0000
+LOG: [527] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44590000 00010000 04590000
+LOG: [530] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44003000 00004000 04003000
+LOG: [533] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44007000 00001000 04007000
+LOG: [536] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008000 00000400 04008000
+LOG: [539] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008400 00000100 04008400
+LOG: [541] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008500 00000040 04008500
+LOG: [544] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008600 00000010 04008600
+LOG: [548] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008700 00000004 04008700
+LOG: [551] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44008800 00004000 04008800
+LOG: [564] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 4400c800 00001000 0400c800
+LOG: [748] KICK WARN M2MF src has unflushed CPU writes vm/len/bo 44002000 00001000 04002000
+CHECK: 32 bad line(s) in nokref_nvshim.log (KICK WARN / wedge / failed kick / trap / heap full)
+CHECK: 32 fault(s)
+validator exit 2

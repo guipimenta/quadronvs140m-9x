@@ -6,7 +6,8 @@ Usage: python3 -I tools/nvkick_decode.py nvkick.txt [MESA_NV50_DIR] [--kick N]
                                         [--check] [--log nvshim.log] [--tail nvtail.txt] [--quiet]
 
 --check walks every kick with the channel's object set and reports what would stall the
-puller: a SET_OBJECT with a handle that was never bound, a method on a subchannel with no
+puller (and, with --log, fails on the shim's own KICK WARN / wedge / failed-kick / trap /
+heap-full lines - 3094): a SET_OBJECT with a handle that was never bound, a method on a subchannel with no
 object, a DMA_* method (0x180-0x1fc) naming an unbound handle, a bad header type, a
 truncated packet, a 3D QUERY address outside the VM window. The bound set comes from
 "bind handle/class/engine" lines in nvshim.log (3089b+), or "NV_gpu_bind: handle=" lines
@@ -88,9 +89,11 @@ def parse_kicks(path):
     cur = None
     for line in open(path, errors="replace"):
         line = line.strip()
-        m = re.match(r"---- kick (\d+) cnt=(\d+)", line)
+        m = re.match(r"---- kick (\d+) cnt=(\d+)( data)?", line)
         if m:
-            cur = {"idx": int(m.group(1)), "cnt": int(m.group(2)), "dw": []}
+            # 3094: 'data' = a nouveau_pushbuf_data payload (index data the 3D engine
+            # consumes as the data of a VB_ELEMENT header in the previous kick), not methods
+            cur = {"idx": int(m.group(1)), "cnt": int(m.group(2)), "dw": [], "data": bool(m.group(3))}
             kicks.append(cur)
             continue
         if cur is None or not line:
@@ -104,7 +107,9 @@ def decode(kick, lookups, out):
     dw = kick["dw"]
     i = 0
     n = len(dw)
-    out(f"==== kick {kick['idx']}: {kick['cnt']} dwords (dumped {n})")
+    out(f"==== kick {kick['idx']}: {kick['cnt']} dwords (dumped {n})" + (" - pushbuf_data payload (index data), not decoded" if kick.get("data") else ""))
+    if kick.get("data"):
+        return
     while i < n:
         h = dw[i]
         typ = h >> 29
@@ -165,6 +170,8 @@ def check(kicks, handles, out):
     sub = [0] * 8
     faults = 0
     for kick in kicks:
+        if kick.get("data"):
+            continue                       # index payload: nothing to walk
         dw = kick["dw"]; n = len(dw); i = 0
         while i < n:
             h = dw[i]; typ = h >> 29; subc = (h >> 13) & 7; mthd = h & 0x1ffc; cnt = (h >> 18) & 0x7ff
@@ -193,6 +200,21 @@ def check(kicks, handles, out):
                             out(f"CHECK: kick {kick['idx']} dword {i + 1 + k}: QUERY address {qaddr:08x} outside the VM window"); faults += 1
             i += 1 + cnt
     return faults
+
+LOG_BAD = re.compile(r"KICK WARN|FAKE WEDGE|kick FAIL|GPU DEAD|bo_new FAIL|kick TRAP")
+
+def log_faults(logpath, out):
+    """3094: lines the shim writes only when a kick went wrong - KICK WARN (a DMA source
+    that is not a live BO or still holds unflushed CPU writes: the 3093 black textures),
+    a fake-GPU wedge, a failed/trapped kick, a dead GPU, a full heap."""
+    n = 0
+    if logpath and os.path.exists(logpath):
+        for line in open(logpath, errors="replace"):
+            if LOG_BAD.search(line):
+                if n < 12:
+                    out("LOG: " + line.rstrip())
+                n += 1
+    return n
 
 def main():
     argv = sys.argv[1:]
@@ -232,7 +254,11 @@ def main():
         hs = bound_handles(logpath, tailpath)
         print(f"CHECK: {len(kicks)} kicks against {len(hs)} bound handles: " + " ".join(f"{h:08x}" for h in sorted(hs)))
         faults = check(kicks, hs, print)
-        print(f"CHECK: {faults} fault(s)" if faults else "CHECK: clean - every object/handle resolves, every packet is well-formed")
+        nlog = log_faults(logpath, print)
+        if nlog:
+            print(f"CHECK: {nlog} bad line(s) in {logpath} (KICK WARN / wedge / failed kick / trap / heap full)")
+        faults += nlog
+        print(f"CHECK: {faults} fault(s)" if faults else "CHECK: clean - every object/handle resolves, every packet is well-formed, no warnings in the log")
         sys.exit(2 if faults else 0)
 
 if __name__ == "__main__":

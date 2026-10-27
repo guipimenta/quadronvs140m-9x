@@ -475,6 +475,53 @@ DOS box) - the textured cube must render; (2) Half-Life via nvhl.bat. Known gaps
 no clipping of the present blit against overlapping windows (fullscreen is fine), 64 MB VRAM
 heap with no eviction (a bo_new failure crashes Mesa - watch 'heap full' in the log), no GART.
 
+### 3093 on the T61 (2026-10-28): untextured cube, Half-Life "OpenGL mode not supported"
+analysis/t61-logs/3093-*. Two shim bugs, neither visible to the fake GPU as it was:
+- wgltest 'texture': ~59 fps, 0 traps, every kick ok, the M2MF uploads exactly as in the fake
+  reference - but the cube had no texture. The source of every upload is a staging BO
+  (nouveau_bo_new GART|MAP, mapped write-only, filled by the CPU) that Mesa refs in bufctx
+  bin 0, PUSH_VALs, then resets bin 0 and lets go of (nouveau_fence_work unref) BEFORE the
+  kick. libdrm's pushbuf_validate krefs the bufctx's BOs into the pushbuf and holds them
+  until the submit; our validate was a no-op and the kick flushed only the bufctx current at
+  kick time, so the staging shadow never reached VRAM and the engine copied untouched VRAM
+  into the texture. Vertex data worked only because the 2 MB uploader BO stays in bufctx_3d.
+- Half-Life: the shim log ends after 'bo_new 00181000' (code) + 'bo_new 00000100' = a 0-byte
+  stack BO. nouveau_getparam returned ticks*1e6 for EVERY parameter, so GRAPH_UNITS was
+  uptime-derived (TPs/MPsInTP = popcounts of it: wgltest's process got stack 0x30000 + tls
+  0xc0000, HL's got MPsInTP = 0) and nv50_screen_create then divides vram_size by
+  size_of_one_temp = 0 -> exception inside opengl32's first ICD call -> GL init fails ->
+  GoldSrc reports "mode not supported". One process start in 16 hits it.
+
+### M5.5 step 3 (build 3094): krefs, real getparam, a data-flow self-check
+- nvshim.c nouveau_getparam: per-parameter answers; GRAPH_UNITS = PMC 0x1540 read through
+  OP_NV_RD32 (0xF3010001 on the T61 = 1 TP x 2 MPs; the fake GPU answers the same, so
+  simulated and real runs size stack/TLS alike), PCI 10DE:0429, FB_SIZE, CHIPSET_ID,
+  VM_VRAM_BASE, HAS_BO_USAGE; unknown params return -1 and log.
+- nvshim.c pushbuf: libdrm's kref semantics - validate/refn record the current bufctx's BOs
+  in the pushbuf (dedup) and hold a reference until the kick; the kick flushes them (plus the
+  bufctx current at kick time) and drops them after the synchronous submit; pushbuf_space
+  re-krefs after a forced flush; a full list (512) kicks early. NVSHIM_NOKREF=1 reproduces
+  3093.
+- shim_kick_check on every submit, real and fake: M2MF linear sources (OFFSET_IN, the staged
+  rectangle) and 3D VERTEX_ARRAY_START_LOW BOs must be live and carry no unflushed CPU
+  writes -> 'KICK WARN ...' (first 32 logged), stats[5] in 'wgl: stats traps/warns'.
+  tools/nvkick_decode.py --check --log now fails on KICK WARN / FAKE WEDGE / kick FAIL /
+  GPU DEAD / bo_new FAIL / kick TRAP lines. pushbuf_data submits are tagged ' data' in
+  C:\nvkick.txt and skipped by the decoder (index payloads are not methods).
+- Proof under Wine (analysis/fake-runs/3094-*): NOKREF=1 -> 32 logged / 309 counted 'KICK
+  WARN M2MF src has unflushed CPU writes' (the 256^2 level 0 at 444f0000 len 0x40000, every
+  mip level, every 16th-frame TexSubImage patch), validator exit 2 = the 3093 T61 failure
+  reproduced offline; default -> 0 warns, ~290 fps, heap flat at 7.3 MB, 64 kicks clean.
+  tools/qemu98/wine_fake_run.sh gained SCENE= and NOKREF=.
+- VxD/DRV byte-identical to 3093 bar the stamp.
+Lessons for the simulate-first rule: (1) the fake GPU validates the STREAM; a data-flow bug
+(what the engine reads) needs the BO-registry check, now built into every submit; (2) any
+input the shim fabricates (getparam) must be fixed and identical in fake and real mode - an
+uptime-dependent value let the fake runs pass by luck and the T61 fail by luck.
+T61 order: (1) `wgltest driver mesa3d.dll window texture` in the nvgl box - the textured cube;
+the log must show 'graph_units reg/used f3010001 f3010001' and 'stats traps/warns 0 0';
+(2) Half-Life via nvhl.bat.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

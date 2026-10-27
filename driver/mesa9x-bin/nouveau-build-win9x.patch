@@ -2347,7 +2347,7 @@ index d7db69a2..97b7426c 100644
     return bestindex;
  }
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..e729e9e5 100644
+index 8017cd00..5800032d 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,12 @@
@@ -2452,7 +2452,7 @@ index 8017cd00..e729e9e5 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +289,164 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +289,165 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2575,11 +2575,12 @@ index 8017cd00..e729e9e5 100644
 +                  uint32_t now = GetTickCount();
 +                  if (t_last == 0) t_last = now;
 +                  if (now - t_last >= 2000) {
-+                     uint32_t st[5];
++                     uint32_t st[8];
 +                     nvshim_stats(st);
 +                     nvt("wgl: present frames/ms", NULL, 2, nframes, now - t_last);
 +                     nvt("wgl: stats kicks/kickdw", NULL, 2, st[0], st[4]);
 +                     nvt("wgl: stats flushdw/readdw", NULL, 2, st[1], st[2]);
++                     nvt("wgl: stats traps/warns", NULL, 2, st[3], st[5]);   /* 3094: KICK WARN count */
 +                     nframes = 0; t_last = now;
 +                  }
 +               }
@@ -2617,7 +2618,7 @@ index 8017cd00..e729e9e5 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
-@@ -326,6 +536,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -326,6 +537,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  
        stw_init(&stw_winsys, hinstDLL);
        stw_init_thread();
@@ -2631,7 +2632,7 @@ index 8017cd00..e729e9e5 100644
        break;
  
     case DLL_THREAD_ATTACH:
-@@ -337,6 +554,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -337,6 +555,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
        break;
  
     case DLL_PROCESS_DETACH:

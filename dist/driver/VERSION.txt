@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3093  (M5.5 step 2: towards Half-Life. 3092 = ~60 fps on the T61 (milestone). Now: the front buffer follows display-mode changes (fullscreen), wgltest 'texture' scene (texture uploads validated under the fake GPU), nvhl.bat launcher. VxD/DRV unchanged bar the stamp. Test: wgltest driver mesa3d.dll window texture (via nvgl: set the scene by hand), then Half-Life per INSTALL.txt)
+Build: 3094  (M5.5 step 3: two shim bugs from the 3093 T61 run fixed - textures were never flushed to VRAM (libdrm kref semantics added to the pushbuf) and nouveau_getparam returned uptime-derived garbage (Half-Life's screen create divided by zero: 'OpenGL mode not supported'); new pre-submit self-check 'KICK WARN'. VxD/DRV unchanged bar the stamp. Test: wgltest driver mesa3d.dll window texture (nvgl box), then Half-Life via nvhl.bat)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

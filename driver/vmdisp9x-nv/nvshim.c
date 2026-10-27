@@ -44,6 +44,8 @@
 #ifndef NVSHIM_VM_BASE
 #define NVSHIM_VM_BASE    0x40000000UL   /* BO GPU addr = physical offset + 1 GiB */
 #endif
+#define NVSHIM_G86_UNITS  0xF3010001UL   /* 3094: PMC 0x1540 on the T61's G86 (1 TP x 2 MPs); the fake GPU's answer */
+#define NVSHIM_G86_DEVID  0x0429UL       /* 10DE:0429 Quadro NVS 140M */
 
 /* ========================= VxD transport ============================== */
 static HANDLE g_vxd = INVALID_HANDLE_VALUE;
@@ -335,6 +337,16 @@ static BOOL fake_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, D
 	case OP_NV_VM_KIND:
 		if(out && outsz >= 4) *(uint32_t *)out = 1;   /* accepted (no page tables to tag) */
 		return TRUE;
+	case OP_NV_RD32:
+	{
+		/* 3094: the one MMIO read on Mesa's path - PMC 0x1540 (GRAPH_UNITS) */
+		uint32_t *o = (uint32_t *)out, i, n;
+		if(insz < 8 || !o) return FALSE;
+		n = w[1] ? w[1] : 1; if(outsz < n * 4) n = outsz / 4;
+		for(i = 0; i < n; i++) o[i] = (w[0] + i * 4 == 0x1540UL) ? NVSHIM_G86_UNITS : 0;
+		if(ret) *ret = n * 4;
+		return TRUE;
+	}
 	default:
 		return TRUE;   /* OP_NV_DBG_PUTS and anything else: accepted, no effect */
 	}
@@ -348,6 +360,7 @@ static BOOL shim_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, D
 }
 
 static int g_gpu_dead = 0;   /* 3087: set after a wedged/failed kick; no more submits */
+static int g_submit_data = 0; /* 3094: the submit in flight is a pushbuf_data payload (index data), not methods */
 #ifndef NVSHIM_STANDALONE
 /* 3088: dump the full method stream of the first kicks to C:\nvkick.txt so a
  * silent engine hang can be decoded offline against the class headers. */
@@ -364,6 +377,7 @@ static void nvshim_dump_kick(int idx, const uint32_t *m, uint32_t count)
 	{ char d[12]; int n = 0, v = idx; do { d[n++] = (char)('0' + v % 10); v /= 10; } while(v); while(n) line[p++] = d[--n]; }
 	{ const char *h = " cnt="; while(*h) line[p++] = *h++; }
 	{ char d[12]; int n = 0; uint32_t v = count; do { d[n++] = (char)('0' + v % 10); v /= 10; } while(v); while(n) line[p++] = d[--n]; }
+	if(g_submit_data) { const char *h = " data"; while(*h) line[p++] = *h++; }   /* 3094: not methods */
 	line[p++] = '\n'; WriteFile(f, line, (DWORD)p, &ret, NULL);
 	for(i = 0; i < count; i += 8)
 	{
@@ -381,11 +395,14 @@ static void nvshim_dump_kick(int idx, const uint32_t *m, uint32_t count)
 #endif
 /* 3092: per-run counters, read by wgl.c's present stats line (nvshim_stats) */
 static uint32_t g_st_kicks = 0, g_st_flush_dw = 0, g_st_read_dw = 0, g_st_traps = 0, g_st_kick_dw = 0;
+static uint32_t g_st_warn = 0;   /* 3094: KICK WARN count (dead or unflushed DMA sources) */
 void nvshim_stats(uint32_t *v)
 {
 	v[0] = g_st_kicks; v[1] = g_st_flush_dw; v[2] = g_st_read_dw; v[3] = g_st_traps; v[4] = g_st_kick_dw;
+	v[5] = g_st_warn;
 }
 static void shim_refresh_queries(const uint32_t *m, uint32_t count);
+static void shim_kick_check(const uint32_t *m, uint32_t count);
 static int vxd_submit(const uint32_t *methods, uint32_t count)
 {
 	nv_gpu_submit_t sb;
@@ -409,6 +426,9 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 	if(nkick < 400) NVLOG3("kick > cnt/m0/m1", count, methods[0], count > 1 ? methods[1] : 0);
 	if(nkick < shim_kickdump_limit()) nvshim_dump_kick(nkick, methods, count);
 #endif
+	/* 3094: every DMA source this stream names must be a live, flushed BO */
+	if(!g_submit_data)
+		shim_kick_check(methods, count);
 	memset(&sb, 0, sizeof(sb));
 	if(!shim_ioctl(OP_NV_SUBMIT, (void*)methods, count * 4,
 	               &sb, sizeof(sb), &ret) || !sb.ok)
@@ -663,6 +683,71 @@ static struct shim_bo *shim_bo_at(uint32_t phys)
 			return g_bos[i];
 	return NULL;
 }
+/* 3094: self-check of a kick against the BO registry before it is submitted
+ * (real GPU and fake GPU alike). Every DMA address the stream names must sit
+ * in a live BO whose CPU shadow has no unflushed writes, or the engine reads
+ * stale VRAM - which is what 3093's black textures were. Checked: M2MF linear
+ * sources (OFFSET_IN, the staged rectangle) and 3D vertex-array starts (the
+ * whole BO). Logged as 'KICK WARN' (first 32), counted in stats[5];
+ * tools/nvkick_decode.py --check fails a run whose log carries one. */
+static void shim_check_range(int what, uint32_t vm, uint32_t len)
+{
+	struct shim_bo *b; uint32_t phys, off;
+	static int nwarn = 0;
+	if(vm < NVSHIM_VM_BASE + NVSHIM_HEAP_BASE || vm >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
+		return;                              /* scanout surface / instance area: not ours to check */
+	phys = vm - NVSHIM_VM_BASE;
+	b = shim_bo_at(phys);
+	if(!b)
+	{
+		g_st_warn++;
+		if(nwarn++ < 32)
+		{
+			if(what) NVLOG2("KICK WARN vertex array not in a live BO vm/len", vm, len);
+			else     NVLOG2("KICK WARN M2MF src not in a live BO vm/len", vm, len);
+		}
+		return;
+	}
+	if(!b->base.map || !b->clean || b->external) return;
+	off = phys - b->phys;
+	if(off >= b->shadow_sz) return;
+	if(len == 0 || off + len > b->shadow_sz) len = b->shadow_sz - off;
+	if(memcmp((char*)b->base.map + off, b->clean + off, len) != 0)
+	{
+		g_st_warn++;
+		if(nwarn++ < 32)
+		{
+			if(what) NVLOG3("KICK WARN vertex array has unflushed CPU writes vm/len/bo", vm, len, b->phys);
+			else     NVLOG3("KICK WARN M2MF src has unflushed CPU writes vm/len/bo", vm, len, b->phys);
+		}
+	}
+}
+static void shim_kick_check(const uint32_t *m, uint32_t count)
+{
+	uint32_t i = 0, in_linear = 1, in_off = 0, in_pitch = 0, in_len = 0, in_lines = 0;
+	while(i < count)
+	{
+		uint32_t h = m[i], typ = h >> 29, subc = (h >> 13) & 7, mthd = h & 0x1ffc, n = (h >> 18) & 0x7ff, k;
+		if((typ != 0 && typ != 2) || i + 1 + n > count) return;   /* malformed: the puller walk reports it */
+		for(k = 0; k < n; k++)
+		{
+			uint32_t mm = typ == 0 ? mthd + 4 * k : mthd, v = m[i + 1 + k];
+			if(subc == 5)                                   /* M2MF (nv50_winsys.h SUBC_M2MF) */
+			{
+				if(mm == 0x200)      in_linear = v;         /* LINEAR_IN */
+				else if(mm == 0x30c) in_off = v;            /* OFFSET_IN */
+				else if(mm == 0x314) in_pitch = v;          /* PITCH_IN */
+				else if(mm == 0x31c) in_len = v;            /* LINE_LENGTH_IN */
+				else if(mm == 0x320) in_lines = v;          /* LINE_COUNT */
+				else if(mm == 0x328 && in_linear && in_lines && in_len)   /* BUFFER_NOTIFY = go */
+					shim_check_range(0, in_off, (in_lines - 1) * in_pitch + in_len);
+			}
+			else if(subc == 3 && mm >= 0x908 && mm < 0x908 + 16 * 0x10 && ((mm - 0x908) & 0xf) == 0)
+				shim_check_range(1, v, 0);                  /* 3D VERTEX_ARRAY_START_LOW(i): whole BO */
+		}
+		i += 1 + n;
+	}
+}
 static void shim_refresh_queries(const uint32_t *m, uint32_t count)
 {
 	uint32_t i = 0, qaddr = 0;
@@ -702,9 +787,10 @@ struct shim_push {
 	struct nouveau_pushbuf base;
 	uint32_t *buf;
 	uint32_t  cap;        /* dwords */
-	struct nouveau_bo *refn[SHIM_MAXREF];
+	struct nouveau_bo *refn[SHIM_MAXREF];   /* 3094: BOs kref'd for the next kick (a reference each) */
 	int       nrefn;
 };
+static void push_unref_all(struct shim_push *p);
 
 /* ========================= drm / device / client ====================== */
 int nouveau_drm_new(int fd, struct nouveau_drm **pdrm)
@@ -777,13 +863,67 @@ int nouveau_device_info(struct nouveau_device *dev, struct nv_device_info_v0 *in
 	return 0;
 }
 
+/* 3094: real answers per parameter. Up to 3093 EVERY param got the tick-based
+ * PTIMER stand-in, so nv50_screen_create read GRAPH_UNITS as a number that
+ * depends on the uptime: TPs = popcount(ticks & 0xffff), MPsInTP =
+ * popcount(ticks & 0x0f000000) - a different stack/TLS size in every process,
+ * and 1 start in 16 (bits 24-27 clear) got MPsInTP = 0: the stack BO is sized
+ * 0 and the next statement DIVIDES BY ZERO (vram_size / size_of_one_temp)
+ * inside opengl32's first ICD call. That was Half-Life's "OpenGL mode not
+ * supported" on 3093: its shim log ends right after a 0x100-byte stack BO.
+ * GRAPH_UNITS is PMC 0x1540 (0xF3010001 on the T61's G86: TP mask bit 0, MP
+ * mask bits 24-25 = 1 TP x 2 MPs), read through OP_NV_RD32; the fake GPU
+ * answers the same value, so simulated and real runs size the same. */
+#define NVSHIM_GETPARAM_PCI_VENDOR    3
+#define NVSHIM_GETPARAM_PCI_DEVICE    4
+#define NVSHIM_GETPARAM_BUS_TYPE      5
+#define NVSHIM_GETPARAM_FB_SIZE       8
+#define NVSHIM_GETPARAM_AGP_SIZE      9
+#define NVSHIM_GETPARAM_CHIPSET_ID    11
+#define NVSHIM_GETPARAM_VM_VRAM_BASE  12
+#define NVSHIM_GETPARAM_GRAPH_UNITS   13
+#define NVSHIM_GETPARAM_PTIMER_TIME   14
+#define NVSHIM_GETPARAM_HAS_BO_USAGE  15
+#define NVSHIM_GETPARAM_HAS_PAGEFLIP  16
+static uint32_t shim_graph_units(void)
+{
+	static uint32_t units = 0;
+	if(!units)
+	{
+		uint32_t in[2], out[4]; DWORD ret = 0;
+		in[0] = 0x1540; in[1] = 1; out[0] = 0;
+		if(nvshim_open())
+			shim_ioctl(OP_NV_RD32, in, sizeof(in), out, sizeof(out), &ret);
+		/* plausibility: at least one TP and one MP, else the known G86 value */
+		units = ((out[0] & 0xffffUL) && (out[0] & 0x0f000000UL)) ? out[0] : NVSHIM_G86_UNITS;
+		NVLOG2("graph_units reg/used", out[0], units);
+	}
+	return units;
+}
+
 int nouveau_getparam(struct nouveau_device *dev, uint64_t param, uint64_t *value)
 {
-	(void)dev; (void)param;
-	/* The only param on the hot path is PTIMER_TIME (a GPU timestamp used for
-	 * fence staleness). A CPU monotonic clock in ns is a safe stand-in. */
-	*value = (uint64_t)GetTickCount() * 1000000ULL;
-	return 0;
+	switch((uint32_t)param)
+	{
+	case NVSHIM_GETPARAM_PCI_VENDOR:   *value = 0x10deUL;           return 0;
+	case NVSHIM_GETPARAM_PCI_DEVICE:   *value = NVSHIM_G86_DEVID;   return 0;
+	case NVSHIM_GETPARAM_BUS_TYPE:     *value = 2;                  return 0;   /* NV_PCIE */
+	case NVSHIM_GETPARAM_FB_SIZE:      *value = dev->vram_size;     return 0;
+	case NVSHIM_GETPARAM_AGP_SIZE:     *value = 0;                  return 0;
+	case NVSHIM_GETPARAM_CHIPSET_ID:   *value = dev->chipset;       return 0;
+	case NVSHIM_GETPARAM_VM_VRAM_BASE: *value = NVSHIM_VM_BASE;     return 0;
+	case NVSHIM_GETPARAM_GRAPH_UNITS:  *value = shim_graph_units(); return 0;
+	case NVSHIM_GETPARAM_HAS_BO_USAGE: *value = 1;                  return 0;
+	case NVSHIM_GETPARAM_HAS_PAGEFLIP: *value = 0;                  return 0;
+	case NVSHIM_GETPARAM_PTIMER_TIME:
+		/* a GPU timestamp used for fence staleness: a CPU clock in ns will do */
+		*value = (uint64_t)GetTickCount() * 1000000ULL;
+		return 0;
+	default:
+		NVLOG1("getparam unknown param", (uint32_t)param);
+		*value = 0;
+		return -1;
+	}
 }
 
 int nouveau_client_new(struct nouveau_device *dev, struct nouveau_client **pclient)
@@ -1145,6 +1285,7 @@ void nouveau_pushbuf_del(struct nouveau_pushbuf **ppush)
 	if(ppush && *ppush)
 	{
 		struct shim_push *p = (struct shim_push *)*ppush;
+		push_unref_all(p);
 		if(p->buf) free(p->buf);
 		free(p);
 		*ppush = NULL;
@@ -1207,6 +1348,42 @@ static void push_flush_refs(struct shim_push *p)
 		if(p->refn[i]) shim_bo_flush((struct shim_bo *)p->refn[i]);
 }
 
+/* 3094: libdrm's kref semantics. nouveau_pushbuf_validate (Mesa's PUSH_VAL)
+ * copies every BO of the pushbuf's CURRENT bufctx into the pushbuf's own list
+ * and HOLDS a reference until the kick; the kick flushes that list (plus the
+ * bufctx current at kick time) and drops the references after the submit. So
+ * a BO Mesa lets go of before the kick - nouveau_bufctx_reset() of a
+ * temporary bin, nouveau_bo_ref(NULL) - stays alive and gets its CPU writes
+ * flushed. 3093 on the T61 drew the 'texture' cube BLACK because of exactly
+ * that: nv50_m2mf_transfer_rect refs the texture staging BO in bufctx bin 0,
+ * PUSH_VALs, emits the M2MF copy and resets bin 0 before the kick, so the
+ * kick saw neither the ref nor the staging data (never flushed) and the
+ * engine copied untouched VRAM into every texture. The fake GPU could not
+ * see it (nothing renders); shim_kick_check now does. NVSHIM_NOKREF=1
+ * restores the 3093 behaviour, to demonstrate that detector. */
+static int shim_nokref(void)
+{
+	static int v = -1;
+	if(v < 0)
+	{
+		char b[8]; DWORD n = GetEnvironmentVariableA("NVSHIM_NOKREF", b, sizeof(b));
+		v = (n > 0 && n < sizeof(b) && b[0] != '0') ? 1 : 0;
+	}
+	return v;
+}
+static void push_unref_all(struct shim_push *p)
+{
+	int i;
+	if(shim_nokref()) { p->nrefn = 0; return; }      /* 3093 mode: recorded without a reference */
+	for(i = 0; i < p->nrefn; i++)
+	{
+		struct nouveau_bo *bo = p->refn[i];
+		p->refn[i] = NULL;
+		nouveau_bo_ref(NULL, &bo);                    /* frees it here if Mesa already let go */
+	}
+	p->nrefn = 0;
+}
+
 int nouveau_pushbuf_kick(struct nouveau_pushbuf *push)
 {
 	struct shim_push *p = (struct shim_push *)push;
@@ -1220,11 +1397,39 @@ int nouveau_pushbuf_kick(struct nouveau_pushbuf *push)
 	/* reset the command buffer for the next batch */
 	push->cur = p->buf;
 	push->end = p->buf + p->cap;
-	p->nrefn = 0;
+	push_unref_all(p);                               /* submits are synchronous: the GPU is done with them */
 
 	if(push->kick_notify)
 		push->kick_notify(push);
 	return ret;
+}
+
+/* Record bo in the pushbuf's kref list (once) and hold a reference on it. A
+ * full list submits what is queued first, as libdrm does when its buffer
+ * list overflows (PUSH_VAL sits at a packet boundary, so that is safe). */
+static void push_kref(struct shim_push *p, struct nouveau_bo *bo)
+{
+	int i;
+	if(!bo) return;
+	for(i = 0; i < p->nrefn; i++)
+		if(p->refn[i] == bo) return;
+	if(p->nrefn >= SHIM_MAXREF)
+	{
+		static int nfull = 0;
+		if(nfull++ < 8) NVLOG1("kref list full - kicking early, cap", (uint32_t)SHIM_MAXREF);
+		nouveau_pushbuf_kick(&p->base);
+	}
+	if(!shim_nokref())
+		((struct shim_bo *)bo)->refcnt++;
+	p->refn[p->nrefn++] = bo;
+}
+static void push_kref_bufctx(struct shim_push *p)
+{
+	struct shim_bufctx *bc = (struct shim_bufctx *)p->base.bufctx;
+	int i;
+	if(!bc || shim_nokref()) return;
+	for(i = 0; i < bc->nref; i++)
+		push_kref(p, bc->refs[i].bo);
 }
 
 int nouveau_pushbuf_space(struct nouveau_pushbuf *push, uint32_t dwords, uint32_t relocs,
@@ -1237,6 +1442,7 @@ int nouveau_pushbuf_space(struct nouveau_pushbuf *push, uint32_t dwords, uint32_
 	{
 		int ret = nouveau_pushbuf_kick(push);  /* flush what we have, start fresh */
 		if(ret) return ret;
+		push_kref_bufctx(p);                   /* 3094: like libdrm, re-validate the bufctx after a forced flush */
 		used = 0;
 	}
 	if(dwords > p->cap)
@@ -1258,7 +1464,11 @@ void nouveau_pushbuf_data(struct nouveau_pushbuf *push, struct nouveau_bo *bo, u
 	if(push->cur != p->buf)
 		nouveau_pushbuf_kick(push);
 	if(b->base.map)
+	{
+		g_submit_data = 1;                     /* 3094: index payload, not methods (dump tag, no kick check) */
 		(void)vxd_submit((const uint32_t*)((char*)b->base.map + offset), dwords);
+		g_submit_data = 0;
+	}
 }
 
 int nouveau_pushbuf_refn(struct nouveau_pushbuf *push, struct nouveau_pushbuf_refn *refs, int nr)
@@ -1266,11 +1476,7 @@ int nouveau_pushbuf_refn(struct nouveau_pushbuf *push, struct nouveau_pushbuf_re
 	struct shim_push *p = (struct shim_push *)push;
 	int i;
 	for(i = 0; i < nr; i++)
-	{
-		if(p->nrefn >= SHIM_MAXREF)
-			break;
-		p->refn[p->nrefn++] = refs[i].bo;
-	}
+		push_kref(p, refs[i].bo);              /* 3094: held until the kick, like libdrm */
 	return 0;
 }
 
@@ -1283,8 +1489,9 @@ void nouveau_pushbuf_reloc(struct nouveau_pushbuf *push, struct nouveau_bo *bo, 
 
 int nouveau_pushbuf_validate(struct nouveau_pushbuf *push)
 {
-	/* Every BO is permanently resident in the VM window, so validation always
-	 * succeeds. (A real heap with eviction would re-check residency here.) */
-	(void)push;
+	/* Every BO is permanently resident in the VM window, so residency never
+	 * fails; what validate does here (3094) is libdrm's other job: kref the
+	 * current bufctx's BOs into the pushbuf until the kick (see push_kref). */
+	push_kref_bufctx((struct shim_push *)push);
 	return 0;
 }

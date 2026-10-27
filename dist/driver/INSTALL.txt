@@ -98,6 +98,11 @@ game, Video options -> OpenGL, "Default" driver, 640x480 or 800x600.
 wgltest's "texture" scene (wgltest driver mesa3d.dll window texture) is the
 driver-side rehearsal of what a game needs (mipmapped textures, dynamic
 texture updates, depth, fog, blending, alpha test).
+Reading C:\nvshim.log (build 3094+): 'graph_units reg/used f3010001 f3010001'
+= the GPU's unit mask was read (1 TP x 2 MPs); 'wgl: stats traps/warns' every
+2 s must stay 0 0 - a 'KICK WARN' line means the engine was handed a buffer
+that is dead or not yet written to VRAM (the 3093 untextured-cube bug), and
+'kick TRAP' means the GPU faulted and the VxD recovered it.
 
 OPENGL (build 3046+)
 --------------------
