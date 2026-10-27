@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3082  (M5.4 step 3d: caller-chain trace - mesa3d.dll now logs the path INTO screen creation (driver name read, each driver tried, result + GetLastError, nouveau winsys steps) to C:\nvshim.log, since 3079-3081 all died before the shim was reached. Test: wgltest driver mesa3d.dll window; type C:\nvshim.log)
+Build: 3083  (M5.4 step 4: first real PRESENT for the hardware nouveau screen - the GPU colour buffer is read back (M2MF de-tile via Mesa's transfer) and shown in the window. 3082 verified Mesa's nv50_screen_create runs on the G86. Enable per DOS box: set GALLIUM_DRIVER=nouveau; wgltest driver mesa3d.dll window; type C:\nvshim.log)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

@@ -197,6 +197,19 @@ vmdisp9x.dll (win9x/vmsetup.h: GetModuleHandle/LoadLibrary "vmdisp9x.dll" +
 GetProcAddress); that returned nothing (lasterr 2). The env var bypasses it.
 (Earlier 126 errors came from the STALE wgl object, not the hardware.)
 
+### M5.4 step 4 (build 3083): first real present for the nouveau screen - AWAITING T61
+wgl_present(nouveau) = pipe_texture_map(ctx,res,READ) -> Mesa's nv50 transfer de-tiles
+the tiled window miptree with M2MF into a staging BO -> shim maps it (VRAM readback)
+-> vramcpy_display_raw() (win9x/vramcpy.c, new: FBHDA fast path / StretchDIBits
+fallback) pushes the pixels into the framebuffer. Shim changes needed for this:
+nouveau_bo_map/bo_wait now kick the pending pushbuf first (libdrm's implicit kick;
+without it the M2MF copy is never submitted before the readback) and the bump heap
+rolls back when the top-most BO is freed (the per-present staging buffer), so
+presenting every frame does not exhaust it. Patch is now 6 files (+ vramcpy.c/.h).
+Expect: wgltest's window shows the GPU-cleared gray; log 'wgl: present map/stride'
+with a non-zero map. If map=0: transfer_map failed (bo_new/M2MF) - check the kick
+lines for pgi != 0 (an M2MF trap would be the first use of that engine).
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

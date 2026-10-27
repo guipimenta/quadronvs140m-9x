@@ -217,6 +217,17 @@ static void vxd_vram_write(uint32_t off, const uint32_t *src, uint32_t dwords)
 
 /* ========================= VRAM heap ================================== */
 static uint32_t g_heap = NVSHIM_HEAP_BASE;
+/* M5.4 present: the most recently created pushbuf. libdrm's bo_map/bo_wait
+ * implicitly kick the client's pending pushbuf before waiting on a BO; Mesa's
+ * nv50 transfer_map relies on that (it queues an M2MF de-tile copy, then maps
+ * the staging BO). Mirror it here so a read-map sees the GPU's result. */
+struct shim_push_hdr { struct nouveau_pushbuf base; uint32_t *buf; };
+static struct nouveau_pushbuf *g_cur_push = NULL;
+static void shim_flush_pending(void)
+{
+	if(g_cur_push && g_cur_push->cur != (uint32_t*)((struct shim_push_hdr*)g_cur_push)->buf)
+		nouveau_pushbuf_kick(g_cur_push);
+}
 
 static uint32_t heap_alloc(uint32_t size, uint32_t align)
 {
@@ -450,6 +461,9 @@ int nouveau_bo_map(struct nouveau_bo *bo, uint32_t access, struct nouveau_client
 {
 	struct shim_bo *b = (struct shim_bo *)bo;
 	(void)client;
+	/* Submit whatever Mesa has queued (e.g. the M2MF copy that fills a staging
+	 * BO) before reading VRAM back - libdrm does this implicitly. */
+	shim_flush_pending();
 	if(!b->base.map)
 	{
 		b->shadow_sz = (uint32_t)b->base.size;
@@ -474,7 +488,11 @@ void nouveau_bo_ref(struct nouveau_bo *bo, struct nouveau_bo **pref)
 	if(old && --old->refcnt == 0)
 	{
 		if(old->base.map) free(old->base.map);
-		free(old);                 /* VRAM is bump-allocated; not reclaimed */
+		/* Bump heap: reclaim when this BO is the top-most allocation (the
+		 * per-present staging buffer always is), else the space is leaked. */
+		if(old->phys + (uint32_t)old->base.size == g_heap)
+			g_heap = old->phys;
+		free(old);
 	}
 	if(pref)
 		*pref = bo;
@@ -484,8 +502,10 @@ int nouveau_bo_wait(struct nouveau_bo *bo, uint32_t access, struct nouveau_clien
 {
 	struct shim_bo *b = (struct shim_bo *)bo;
 	(void)client;
-	/* Submits are synchronous in the VxD, so the GPU is already idle. For a
-	 * read wait, pull the latest VRAM contents into the shadow. */
+	/* Submit anything still queued first (libdrm kicks implicitly here), then
+	 * - submits being synchronous in the VxD - the GPU is idle. For a read
+	 * wait, pull the latest VRAM contents into the shadow. */
+	shim_flush_pending();
 	if((access & NOUVEAU_BO_RD) && b->base.map)
 		vxd_vram_read(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
 	return 0;
@@ -589,6 +609,7 @@ int nouveau_pushbuf_new(struct nouveau_client *client, struct nouveau_object *ch
 	p->base.channel = chan;
 	p->base.cur     = p->buf;
 	p->base.end     = p->buf + p->cap;
+	g_cur_push      = &p->base;
 	p->nrefn = 0;
 	NVLOG1("pushbuf_new cap", p->cap);
 	*ppush = &p->base;
