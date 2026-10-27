@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
-"""Decode C:\\nvkick.txt (the shim's kick-stream dump, build 3088+) into nv50 method names.
+"""Decode C:\\nvkick.txt (the shim's kick-stream dump, build 3088+) into nv50 method names,
+and optionally CHECK the streams the way the PFIFO puller would react to them.
 
 Usage: python3 -I tools/nvkick_decode.py nvkick.txt [MESA_NV50_DIR] [--kick N]
+                                        [--check] [--log nvshim.log] [--tail nvtail.txt] [--quiet]
+
+--check walks every kick with the channel's object set and reports what would stall the
+puller: a SET_OBJECT with a handle that was never bound, a method on a subchannel with no
+object, a DMA_* method (0x180-0x1fc) naming an unbound handle, a bad header type, a
+truncated packet, a 3D QUERY address outside the VM window. The bound set comes from
+"bind handle/class/engine" lines in nvshim.log (3089b+), or "NV_gpu_bind: handle=" lines
+in nvtail.txt (older builds), plus the VxD's fixed bindings. This is the same check the
+shim's NVSHIM_FAKE=1 backend performs in-process; --quiet prints only the check result.
 
 MESA_NV50_DIR defaults to the mesa9x build tree's nv50 directory (nv50_3d.xml.h,
 nv50_2d.xml.h, nv50_compute.xml.h, and the M2MF class from nv50_defs / nv50_winsys).
@@ -134,15 +144,66 @@ def decode(kick, lookups, out):
             out(f"  ... stream truncated (header wants {count}, {len(data)} left)")
         i += 1 + count
 
+VM_BASE, HEAP_BASE, HEAP_END = 0x40000000, 0x04000000, 0x08000000
+FIXED_HANDLES = {0xbeef502d, 0xbeef0002, 0xbeef0003}   # nv_chan_init's own RAMHT entries
+
+def bound_handles(logpath, tailpath):
+    """Handles the channel's RAMHT holds, from the shim log and/or the VxD ring copy."""
+    hs = set(FIXED_HANDLES)
+    for path, rx in ((logpath, r"bind handle/class/engine ([0-9a-f]{8}) ([0-9a-f]{8}) ([0-9a-f]{8})"),
+                     (tailpath, r"NV_gpu_bind: handle=([0-9A-Fa-f]+) class=([0-9A-Fa-f]+) -> inst=[0-9A-Fa-f]+ engine=(\d+)")):
+        if not path or not os.path.exists(path):
+            continue
+        for line in open(path, errors="replace"):
+            m = re.search(rx, line)
+            if m and m.group(3) != "ffffffff":
+                hs.add(int(m.group(1), 16))
+    return hs
+
+def check(kicks, handles, out):
+    """Return the number of faults; the channel state (subchannel objects) persists across kicks."""
+    sub = [0] * 8
+    faults = 0
+    for kick in kicks:
+        dw = kick["dw"]; n = len(dw); i = 0
+        while i < n:
+            h = dw[i]; typ = h >> 29; subc = (h >> 13) & 7; mthd = h & 0x1ffc; cnt = (h >> 18) & 0x7ff
+            if typ not in (0, 2):
+                out(f"CHECK: kick {kick['idx']} dword {i}: bad header {h:08x} (type {typ}) - puller would stop"); faults += 1; break
+            if i + 1 + cnt > n:
+                out(f"CHECK: kick {kick['idx']} dword {i}: header {h:08x} wants {cnt} dwords, {n - i - 1} left"); faults += 1; break
+            if mthd == 0 and cnt == 1:
+                hd = dw[i + 1]
+                if hd not in handles:
+                    out(f"CHECK: kick {kick['idx']} dword {i}: SET_OBJECT subch {subc} handle {hd:08x} is NOT bound - puller would stall here"); faults += 1
+                sub[subc] = hd
+                i += 2; continue
+            if sub[subc] == 0:
+                out(f"CHECK: kick {kick['idx']} dword {i}: method {mthd:04x} on subch {subc} which has no object"); faults += 1
+            qaddr = None
+            for k in range(cnt):
+                mm = mthd + 4 * k if typ == 0 else mthd
+                v = dw[i + 1 + k]
+                if 0x180 <= mm < 0x200 and v not in handles:
+                    out(f"CHECK: kick {kick['idx']} dword {i + 1 + k}: DMA method {mm:04x} on subch {subc} names unbound handle {v:08x}"); faults += 1
+                if subc == 3:
+                    if mm == 0x1b04: qaddr = v
+                    elif mm == 0x1b0c and qaddr is not None:
+                        if not (VM_BASE + HEAP_BASE <= qaddr < VM_BASE + HEAP_END):
+                            out(f"CHECK: kick {kick['idx']} dword {i + 1 + k}: QUERY address {qaddr:08x} outside the VM window"); faults += 1
+            i += 1 + cnt
+    return faults
+
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    only = None
-    for a in sys.argv[1:]:
-        if a.startswith("--kick"):
-            only = int(a.split("=")[1]) if "=" in a else None
-    if "--kick" in sys.argv:
-        only = int(sys.argv[sys.argv.index("--kick") + 1])
-        args = [a for a in args if a != str(only)]
+    argv = sys.argv[1:]
+    def take(opt):
+        if opt in argv:
+            j = argv.index(opt); v = argv[j + 1]; del argv[j:j + 2]; return v
+        return None
+    only = take("--kick"); logpath = take("--log"); tailpath = take("--tail")
+    do_check = "--check" in argv; quiet = "--quiet" in argv
+    args = [a for a in argv if not a.startswith("--")]
+    only = int(only) if only is not None else None
     if not args:
         print(__doc__); sys.exit(1)
     path = args[0]
@@ -162,10 +223,17 @@ def main():
                              (0x31c, 0, 1, "LINE_LENGTH_IN"), (0x320, 0, 1, "LINE_COUNT"), (0x324, 0, 1, "FORMAT"), (0x328, 0, 1, "BUFFER_NOTIFY")]),
     }
     kicks = parse_kicks(path)
-    for k in kicks:
-        if only is not None and k["idx"] != only:
-            continue
-        decode(k, lookups, print)
+    if not quiet:
+        for k in kicks:
+            if only is not None and k["idx"] != only:
+                continue
+            decode(k, lookups, print)
+    if do_check:
+        hs = bound_handles(logpath, tailpath)
+        print(f"CHECK: {len(kicks)} kicks against {len(hs)} bound handles: " + " ".join(f"{h:08x}" for h in sorted(hs)))
+        faults = check(kicks, hs, print)
+        print(f"CHECK: {faults} fault(s)" if faults else "CHECK: clean - every object/handle resolves, every packet is well-formed")
+        sys.exit(2 if faults else 0)
 
 if __name__ == "__main__":
     main()

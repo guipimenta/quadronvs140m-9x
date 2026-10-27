@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3089  (M5.4 step 5c: 3088 logs show PGRAPH idle while the PFIFO puller is stuck; the init kick binds the COMPUTE class (0x50c0) on subchannel 6 and the shim never bound it - fixed (shim + VxD). A wedge now dumps the PFIFO pusher/puller and PGRAPH state into the debug ring (nvtail). Test: nvgl; send C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt)
+Build: 3090  (M5.4 step 5d: 3089 + simulate-first tooling. mesa3d.dll's shim: fake-GPU mode (set NVSHIM_FAKE=1) that validates every kick like the PFIFO puller would; a real VRAM allocator (the bump heap crashed Mesa after ~53 frames in the Wine fake run); fences now signal; every bound handle logged. VxD/DRV unchanged bar the stamp. Test: nvgl; send C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

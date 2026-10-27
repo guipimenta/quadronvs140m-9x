@@ -336,6 +336,55 @@ pusher state on a failed kick. Expect: no wedge, the clear colour (ff000000) in 
 samples, the triangle in the window. If it still wedges: the cache[..] <- GET line names
 the stuck method.
 
+### TESTING PRINCIPLE (2026-10-27, user directive): simulate first, T61 last
+The T61 round trip is the scarce resource. Everything that does not need the silicon is
+tested in a simulated environment BEFORE a build is released for the T61:
+- Win9x loader / GDI / ICD-route behaviour: the QEMU Win98 SE harness (tools/qemu98).
+- Mesa's nv50 command streams: the shim's FAKE-GPU mode. `set NVSHIM_FAKE=1` (plus
+  `GALLIUM_DRIVER=nouveau`) and mesa3d.dll never opens the VxD: VRAM is a RAM heap,
+  binds are recorded, and every kick is walked the way the PFIFO puller would react to
+  it (unbound SET_OBJECT handle, method on a subchannel with no object, DMA_* naming an
+  unbound handle, bad header, truncated packet, QUERY address outside the VM window ->
+  the kick wedges exactly like the VxD reports a real stall: `kick FAIL`, `GPU DEAD`,
+  plus a `FAKE WEDGE <reason> dword/..` line naming the dword). The 3D QUERY fence is
+  emulated so Mesa's fences signal. Nothing is rendered. `NVSHIM_KICKDUMP=N` dumps N
+  kicks to C:\nvkick.txt (default 16). Runs in the Win98 VM or under Wine on the host
+  (`cd dist/driver; GALLIUM_DRIVER=nouveau NVSHIM_FAKE=1 wine wgltest.exe driver
+  mesa3d.dll window`; logs land in ~/.wine/drive_c/).
+- Kick dumps from ANY source (T61 or fake): `python3 -I tools/nvkick_decode.py
+  nvkick.txt --check --log nvshim.log [--tail nvtail.txt] [--quiet]` decodes the streams
+  against the nv50 class headers and runs the same puller checks against the bound
+  handle set (exit 2 on a fault). On the 3088 T61 dump it reports
+  "kick 0 dword 427: SET_OBJECT subch 6 handle beef50c0 is NOT bound" - the 3087/3088
+  stall, found offline.
+- Import tables: `tools/impcheck_win98.py` after every mesa3d.dll rebuild.
+What only the T61 can answer: PFIFO/PGRAPH behaviour on real streams, modesetting, timing.
+Each T61 run must therefore carry maximal instrumentation (kick dump, stall dump, tail).
+
+### M5.4 step 5d (build 3090): simulate-first tooling, and the first bug it caught
+Built under the user's directive (2026-10-27): fake-GPU shim mode (NVSHIM_FAKE=1), the
+kick validator (tools/nvkick_decode.py --check), a Wine loop on the host
+(tools/qemu98/wine_fake_run.sh run from dist/driver: ~30 s per iteration, logs in
+~/.wine/drive_c/). Results of the first runs:
+- The validator on the 3088 T61 dump reports the compute-handle fault at kick 0 dword
+  427 - the 3087/3088 stall, found with no hardware.
+- Mesa's nouveau path under Wine with the fake GPU: screen, two contexts, frames; every
+  kick clean (reference trace in analysis/fake-runs/3090-wine-fake-nvkick*.txt - compare
+  future T61 dumps against it). Then the bump heap ran out after ~53 frames
+  (fence BO + present staging + an occasional non-top-most 1.25 MB surface per frame)
+  and Mesa crashed on the failed bo_new - exactly what the T61 would have done a minute
+  into any run. Replaced by a first-fit free-list allocator (coalescing frees, tiled BOs
+  64 KiB-aligned like nouveau): 4987 frames in 45 s, heap flat at 8.5 MB used / 55 MB
+  largest free block.
+- Fences: Mesa's fence.update reads the screen fence BO's map directly, never through
+  bo_map, so the shim's shadow never saw the GPU's sequence write and every
+  nouveau_fence_wait quietly returned false (on the T61 too). The shim now refreshes the
+  3D QUERY target dwords into the owning BO's shadow after each synchronous kick.
+- Every bound handle is logged ('bind handle/class/engine'), NVSHIM_KICKDUMP=N.
+VxD/DRV byte-identical to 3089 bar the stamp. The T61 run of 3090 answers what only the
+silicon can: does the puller get through the init kick now that the compute object is
+bound, and does the clear land (present samples ff000000, triangle in the window).
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

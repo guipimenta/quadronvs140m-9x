@@ -48,6 +48,8 @@
 /* ========================= VxD transport ============================== */
 static HANDLE g_vxd = INVALID_HANDLE_VALUE;
 static int    g_vxd_owned = 0;   /* did we open it (vs. a handle bound in)? */
+static int  shim_fake(void);
+static BOOL shim_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, DWORD *ret);
 
 void nvshim_bind(void *vxd_handle)
 {
@@ -59,6 +61,12 @@ static int nvshim_open(void)
 {
 	if(g_vxd != INVALID_HANDLE_VALUE)
 		return 1;
+	if(shim_fake())
+	{
+		g_vxd = (HANDLE)(uintptr_t)0x4641;   /* sentinel: the fake backend answers */
+		g_vxd_owned = 0;
+		return 1;
+	}
 	g_vxd = CreateFileA("\\\\.\\nvmini.vxd", 0, 0, 0, OPEN_EXISTING,
 	                    FILE_ATTRIBUTE_NORMAL, 0);
 	if(g_vxd == INVALID_HANDLE_VALUE)
@@ -117,7 +125,7 @@ static void nvshim_logn(const char *label, unsigned n, const uint32_t *v)
 	}
 	/* secondary: the VxD debug ring, to interleave with V>/D> events */
 	if(nvshim_open())
-		DeviceIoControl(g_vxd, OP_NV_DBG_PUTS, buf, (DWORD)p, NULL, 0, &ret, NULL);
+		shim_ioctl(OP_NV_DBG_PUTS, buf, (DWORD)p, NULL, 0, &ret);
 }
 /* Exported for the caller chain (wgl.c, nouveau_drm_winsys.c): trace into the
  * same C:\nvshim.log so one file shows the whole path into screen creation. */
@@ -134,6 +142,192 @@ void nvshim_trace(const char *label, unsigned n, const uint32_t *v) { nvshim_log
 #endif
 
 /* Submit a method-dword stream to the persistent channel (one kick). */
+/* ========================= NVSHIM_FAKE: in-process GPU stand-in ========
+ * Set NVSHIM_FAKE=1 in the environment and the shim never opens the VxD: VRAM
+ * is a RAM heap, OP_NV_BIND records handles, OP_NV_SUBMIT VALIDATES the method
+ * stream the way the PFIFO puller would react to it (unknown object handle,
+ * method on a subchannel without an object, bad header, unbound DMA handle,
+ * query address outside the VM window -> the kick "wedges", ok=0 + wedged=1,
+ * exactly what the VxD reports when the real puller stalls) and emulates the
+ * 3D QUERY fence write. Nothing is rendered (the window shows the heap's
+ * zeros). Purpose: run Mesa's whole nv50 path - screen, context, every frame
+ * of an application - in the Win98 VM or under Wine and catch stream-level
+ * faults before a T61 round trip (the 3087/3088 stall was one: an unbound
+ * COMPUTE handle at dword 427 of the init kick). NVSHIM_KICKDUMP=N sets how
+ * many kicks go to C:\nvkick.txt (default 16; the host decoder reads it). */
+static int g_fake = -1;
+static int shim_fake(void)
+{
+	if(g_fake < 0)
+	{
+		char b[8]; DWORD n = GetEnvironmentVariableA("NVSHIM_FAKE", b, sizeof(b));
+		g_fake = (n > 0 && n < sizeof(b) && b[0] != '0') ? 1 : 0;
+	}
+	return g_fake;
+}
+static int shim_kickdump_limit(void)
+{
+	static int lim = -1;
+	if(lim < 0)
+	{
+		char b[16]; DWORD n = GetEnvironmentVariableA("NVSHIM_KICKDUMP", b, sizeof(b));
+		lim = (n > 0 && n < sizeof(b)) ? atoi(b) : 16;
+		if(lim < 0) lim = 0;
+	}
+	return lim;
+}
+
+#define FAKE_PAGE_SHIFT 20                         /* 1 MiB pages, allocated on first touch */
+#define FAKE_PAGES ((NVSHIM_HEAP_END - NVSHIM_HEAP_BASE) >> FAKE_PAGE_SHIFT)
+static uint8_t *g_fake_page[FAKE_PAGES];
+static uint32_t g_fake_handles[64];
+static int      g_fake_nhandles = 0;
+static uint32_t g_fake_sub[8];                    /* handle bound per subchannel (channel state) */
+static uint32_t g_fake_put = 0;                   /* running command-region offset (put_off) */
+static uint32_t g_fake_ib  = 0;                   /* kicks accepted (IB get/put index) */
+
+static uint8_t *fake_ptr(uint32_t off, int alloc)
+{
+	uint32_t pg;
+	if(off < NVSHIM_HEAP_BASE || off >= NVSHIM_HEAP_END) return NULL;
+	pg = (off - NVSHIM_HEAP_BASE) >> FAKE_PAGE_SHIFT;
+	if(!g_fake_page[pg])
+	{
+		if(!alloc) return NULL;
+		g_fake_page[pg] = (uint8_t*)calloc(1, 1UL << FAKE_PAGE_SHIFT);
+		if(!g_fake_page[pg]) return NULL;
+	}
+	return g_fake_page[pg] + (off & ((1UL << FAKE_PAGE_SHIFT) - 1));
+}
+static uint32_t fake_rd32(uint32_t off) { uint8_t *p = fake_ptr(off, 0); uint32_t v = 0; if(p) memcpy(&v, p, 4); return v; }
+static void     fake_wr32(uint32_t off, uint32_t v) { uint8_t *p = fake_ptr(off, 1); if(p) memcpy(p, &v, 4); }
+
+static int fake_handle_bound(uint32_t h)
+{
+	int i;
+	if(h == 0xbeef502dUL || h == 0xbeef0002UL || h == 0xbeef0003UL) return 1;   /* nv_chan_init's fixed set */
+	for(i = 0; i < g_fake_nhandles; i++) if(g_fake_handles[i] == h) return 1;
+	return 0;
+}
+static int fake_class_is_gfx(uint32_t c)
+{
+	switch(c) { case 0x502d: case 0x5039: case 0x5097: case 0x8297: case 0x8597: case 0x8697: case 0x50c0: case 0x85c0: return 1; }
+	return 0;
+}
+
+/* Walk one kick like the puller would. Returns 0 when it would stall (and
+ * logs why: which dword, which value), 1 when it runs through. */
+static int fake_run(const uint32_t *m, uint32_t count)
+{
+	uint32_t i = 0, qaddr = 0, qseq = 0;
+	while(i < count)
+	{
+		uint32_t h = m[i], typ = h >> 29, subc = (h >> 13) & 7, mthd = h & 0x1ffc, n = (h >> 18) & 0x7ff, k;
+		int inc;
+		if(typ == 0) inc = 1; else if(typ == 2) inc = 0;
+		else { NVLOG3("FAKE WEDGE bad header dword/value/type", i, h, typ); return 0; }
+		if(i + 1 + n > count) { NVLOG3("FAKE WEDGE truncated header dword/value/count", i, h, n); return 0; }
+		if(mthd == 0 && n == 1)
+		{
+			if(!fake_handle_bound(m[i + 1])) { NVLOG3("FAKE WEDGE SET_OBJECT unbound handle dword/subch/handle", i, subc, m[i + 1]); return 0; }
+			g_fake_sub[subc] = m[i + 1];
+			i += 2;
+			continue;
+		}
+		if(g_fake_sub[subc] == 0) { NVLOG3("FAKE WEDGE method on unbound subchannel dword/subch/method", i, subc, mthd); return 0; }
+		for(k = 0; k < n; k++)
+		{
+			uint32_t mm = inc ? mthd + 4 * k : mthd, v = m[i + 1 + k];
+			if(mm >= 0x180 && mm < 0x200 && !fake_handle_bound(v))
+			{ NVLOG3("FAKE WEDGE DMA method unbound handle dword/method/handle", i + 1 + k, mm, v); return 0; }
+			if(subc == 3)   /* 3D: QUERY_ADDRESS_HIGH/LOW/SEQUENCE/GET */
+			{
+				if(mm == 0x1b00) qaddr = 0;             /* high dword: the VM window is below 4 GiB */
+				else if(mm == 0x1b04) qaddr = v;
+				else if(mm == 0x1b08) qseq = v;
+				else if(mm == 0x1b0c)
+				{
+					if(qaddr < NVSHIM_VM_BASE + NVSHIM_HEAP_BASE || qaddr >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
+					{ NVLOG3("FAKE WEDGE QUERY address outside VM window dword/addr/get", i + 1 + k, qaddr, v); return 0; }
+					fake_wr32(qaddr - NVSHIM_VM_BASE, qseq);
+				}
+			}
+		}
+		i += 1 + n;
+	}
+	return 1;
+}
+
+static BOOL fake_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, DWORD *ret)
+{
+	const uint32_t *w = (const uint32_t *)in;
+	if(ret) *ret = 0;
+	switch(op)
+	{
+	case OP_NV_BIND:
+	{
+		nv_gpu_bind_t *bd = (nv_gpu_bind_t *)out;
+		if(insz < 8 || outsz < sizeof(*bd)) return FALSE;
+		memset(bd, 0, sizeof(*bd));
+		bd->handle = w[0]; bd->oclass = w[1];
+		bd->inst   = 0x03008000UL + (uint32_t)g_fake_nhandles * 0x100UL;
+		bd->engine = fake_class_is_gfx(w[1]) ? 1 : 0;
+		bd->ok     = 1;
+		if(g_fake_nhandles < 64 && !fake_handle_bound(w[0])) g_fake_handles[g_fake_nhandles++] = w[0];
+		if(ret) *ret = sizeof(*bd);
+		return TRUE;
+	}
+	case OP_NV_VRAM_READ:
+	{
+		nv_gpu_vread_t *vr = (nv_gpu_vread_t *)out; uint32_t i;
+		if(insz < 8 || outsz < sizeof(*vr)) return FALSE;
+		memset(vr, 0, sizeof(*vr));
+		vr->offset = w[0]; vr->count = w[1] > 64 ? 64 : w[1];
+		for(i = 0; i < vr->count; i++) vr->data[i] = fake_rd32(w[0] + i * 4);
+		vr->ok = 1;
+		if(ret) *ret = sizeof(*vr);
+		return TRUE;
+	}
+	case OP_NV_VRAM_WRITE:
+	{
+		uint32_t i;
+		if(insz < 8 || insz < (2 + w[1]) * 4) return FALSE;
+		for(i = 0; i < w[1]; i++) fake_wr32(w[0] + i * 4, w[2 + i]);
+		return TRUE;
+	}
+	case OP_NV_SUBMIT:
+	{
+		nv_gpu_submit_t *sb = (nv_gpu_submit_t *)out; uint32_t count = insz / 4;
+		if(outsz < sizeof(*sb)) return FALSE;
+		memset(sb, 0, sizeof(*sb));
+		sb->put_off = 0x03200000UL + g_fake_put;
+		sb->ctxctl  = 0x80003000UL;
+		if(!fake_run(w, count))
+		{
+			sb->ok = 0; sb->wedged = 1;
+			sb->get = g_fake_ib; sb->put = g_fake_ib + 1; sb->idle_loops = 2000000UL;
+		}
+		else
+		{
+			g_fake_put = (g_fake_put + count * 4) & 0x000fffffUL;
+			g_fake_ib  = (g_fake_ib + 1) & 255;
+			sb->ok = 1; sb->get = sb->put = g_fake_ib; sb->idle_loops = 1;
+		}
+		if(ret) *ret = sizeof(*sb);
+		return TRUE;
+	}
+	default:
+		return TRUE;   /* OP_NV_DBG_PUTS and anything else: accepted, no effect */
+	}
+}
+
+static BOOL shim_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, DWORD *ret)
+{
+	if(shim_fake())
+		return fake_ioctl(op, in, insz, out, outsz, ret);
+	return DeviceIoControl(g_vxd, op, in, insz, out, outsz, ret, NULL);
+}
+
 static int g_gpu_dead = 0;   /* 3087: set after a wedged/failed kick; no more submits */
 #ifndef NVSHIM_STANDALONE
 /* 3088: dump the full method stream of the first kicks to C:\nvkick.txt so a
@@ -166,6 +360,7 @@ static void nvshim_dump_kick(int idx, const uint32_t *m, uint32_t count)
 	FlushFileBuffers(f);
 }
 #endif
+static void shim_refresh_queries(const uint32_t *m, uint32_t count);
 static int vxd_submit(const uint32_t *methods, uint32_t count)
 {
 	nv_gpu_submit_t sb;
@@ -187,11 +382,11 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 	/* 3087: log BEFORE the kick too (first 400), so a kick that never returns
 	 * from the VxD is identified by its count and first two methods. */
 	if(nkick < 400) NVLOG3("kick > cnt/m0/m1", count, methods[0], count > 1 ? methods[1] : 0);
-	if(nkick < 16) nvshim_dump_kick(nkick, methods, count);
+	if(nkick < shim_kickdump_limit()) nvshim_dump_kick(nkick, methods, count);
 #endif
 	memset(&sb, 0, sizeof(sb));
-	if(!DeviceIoControl(g_vxd, OP_NV_SUBMIT, (void*)methods, count * 4,
-	                    &sb, sizeof(sb), &ret, NULL) || !sb.ok)
+	if(!shim_ioctl(OP_NV_SUBMIT, (void*)methods, count * 4,
+	               &sb, sizeof(sb), &ret) || !sb.ok)
 	{
 #ifndef NVSHIM_STANDALONE
 		/* Log the failure with the GPU state so a TRAP during screen_create/draw
@@ -213,6 +408,12 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 #ifndef NVSHIM_STANDALONE
 	if(nkick++ < 400) NVLOG3("kick ok cnt/put/pgi", count, sb.put_off, sb.pgraph_intr);
 #endif
+	/* 3089b: kicks are synchronous, so every 3D QUERY (fence) write in this
+	 * stream has landed in VRAM; pull those dwords into the owning BO's shadow
+	 * so Mesa's fence.update (which reads the screen fence BO's map directly,
+	 * never through bo_map) sees the sequence. Before this, no fence ever
+	 * signalled on the T61 and every nouveau_fence_wait quietly failed. */
+	shim_refresh_queries(methods, count);
 	return 0;
 }
 
@@ -235,8 +436,8 @@ static void vxd_vram_read(uint32_t off, uint32_t *dst, uint32_t dwords)
 		in[0] = off + done * 4;
 		in[1] = chunk;
 		memset(&vr, 0, sizeof(vr));
-		if(!DeviceIoControl(g_vxd, OP_NV_VRAM_READ, in, sizeof(in),
-		                    &vr, sizeof(vr), &ret, NULL))
+		if(!shim_ioctl(OP_NV_VRAM_READ, in, sizeof(in),
+		               &vr, sizeof(vr), &ret))
 			return;
 		memcpy(dst + done, vr.data, chunk * 4);
 		done += chunk;
@@ -259,7 +460,10 @@ static void vxd_bind(uint32_t handle, uint32_t oclass)
 		return;
 	in[0] = handle; in[1] = oclass;
 	memset(&bd, 0, sizeof(bd));
-	DeviceIoControl(g_vxd, OP_NV_BIND, in, sizeof(in), &bd, sizeof(bd), &ret, NULL);
+	shim_ioctl(OP_NV_BIND, in, sizeof(in), &bd, sizeof(bd), &ret);
+	/* 3089b: name every bound handle in the log so the host validator
+	 * (tools/nvkick_decode.py --check) knows the channel's object set. */
+	NVLOG3("bind handle/class/engine", handle, oclass, bd.ok ? bd.engine : 0xffffffffUL);
 }
 #endif
 
@@ -279,15 +483,14 @@ static void vxd_vram_write(uint32_t off, const uint32_t *src, uint32_t dwords)
 		buf[0] = off + done * 4;
 		buf[1] = chunk;
 		memcpy(&buf[2], src + done, chunk * 4);
-		if(!DeviceIoControl(g_vxd, OP_NV_VRAM_WRITE, buf, (2 + chunk) * 4,
-		                    &ret, sizeof(ret), &ret, NULL))
+		if(!shim_ioctl(OP_NV_VRAM_WRITE, buf, (2 + chunk) * 4,
+		               &ret, sizeof(ret), &ret))
 			return;
 		done += chunk;
 	}
 }
 
 /* ========================= VRAM heap ================================== */
-static uint32_t g_heap = NVSHIM_HEAP_BASE;
 /* M5.4 present: the most recently created pushbuf. libdrm's bo_map/bo_wait
  * implicitly kick the client's pending pushbuf before waiting on a BO; Mesa's
  * nv50 transfer_map relies on that (it queues an M2MF de-tile copy, then maps
@@ -300,16 +503,97 @@ static void shim_flush_pending(void)
 		nouveau_pushbuf_kick(g_cur_push);
 }
 
+/* 3090: a real allocator. The bump heap (with its top-most-only rollback) ran
+ * out after ~53 frames in the Wine fake-GPU run (each frame allocates a fence
+ * BO, a present staging BO and, now and then, a 1.25 MB surface that is not
+ * the top-most block when freed) and Mesa crashed on the failed allocation.
+ * First-fit over an address-sorted free list; frees coalesce with neighbours.
+ * Granularity 256 bytes; tiled BOs (config.nv50.tile_mode) are aligned to the
+ * 64 KiB VM page like nouveau does, everything else to the caller's align. */
+#define HEAP_MAXFREE 1024
+static struct { uint32_t start, size; } g_free[HEAP_MAXFREE];
+static int g_nfree = -1;                      /* -1 = not initialised */
+static uint32_t g_heap_used = 0, g_heap_allocs = 0;
+
+static void heap_init(void)
+{
+	g_free[0].start = NVSHIM_HEAP_BASE;
+	g_free[0].size  = NVSHIM_HEAP_END - NVSHIM_HEAP_BASE;
+	g_nfree = 1;
+}
+static void heap_stats(uint32_t *free_total, uint32_t *largest)
+{
+	int i; uint32_t t = 0, l = 0;
+	if(g_nfree < 0) heap_init();
+	for(i = 0; i < g_nfree; i++) { t += g_free[i].size; if(g_free[i].size > l) l = g_free[i].size; }
+	*free_total = t; *largest = l;
+}
 static uint32_t heap_alloc(uint32_t size, uint32_t align)
 {
-	uint32_t a;
-	if(align < 0x100) align = 0x100;        /* nv50 wants generous alignment */
+	int i;
+	if(g_nfree < 0) heap_init();
+	if(align < 0x100) align = 0x100;
 	size = (size + 0xff) & ~0xffUL;
-	a = (g_heap + (align - 1)) & ~(align - 1);
-	if(a + size > NVSHIM_HEAP_END)
-		return 0;                            /* out of VRAM (bring-up limit) */
-	g_heap = a + size;
-	return a;
+	for(i = 0; i < g_nfree; i++)
+	{
+		uint32_t bs = g_free[i].start, be = g_free[i].start + g_free[i].size;
+		uint32_t a = (bs + (align - 1)) & ~(align - 1);
+		if(a < bs || a + size > be || a + size < a)
+			continue;
+		/* carve [a, a+size) out of block i: head [bs,a) stays as block i (or
+		 * is removed), tail [a+size, be) becomes a new block after it */
+		if(a + size < be)
+		{
+			if(g_nfree >= HEAP_MAXFREE) continue;          /* no room to split */
+			memmove(&g_free[i + 1], &g_free[i], (size_t)(g_nfree - i) * sizeof(g_free[0]));
+			g_nfree++;
+			g_free[i + 1].start = a + size;
+			g_free[i + 1].size  = be - (a + size);
+		}
+		if(a > bs)
+			g_free[i].size = a - bs;
+		else
+		{
+			memmove(&g_free[i], &g_free[i + 1], (size_t)(g_nfree - i - 1) * sizeof(g_free[0]));
+			g_nfree--;
+		}
+		g_heap_used += size;
+		g_heap_allocs++;
+		return a;
+	}
+	return 0;                                   /* out of VRAM */
+}
+static void heap_free(uint32_t start, uint32_t size)
+{
+	int i;
+	size = (size + 0xff) & ~0xffUL;
+	if(g_nfree < 0 || size == 0) return;
+	for(i = 0; i < g_nfree && g_free[i].start < start; i++) ;
+	/* coalesce with the previous block */
+	if(i > 0 && g_free[i - 1].start + g_free[i - 1].size == start)
+	{
+		g_free[i - 1].size += size;
+		if(i < g_nfree && g_free[i - 1].start + g_free[i - 1].size == g_free[i].start)
+		{
+			g_free[i - 1].size += g_free[i].size;
+			memmove(&g_free[i], &g_free[i + 1], (size_t)(g_nfree - i - 1) * sizeof(g_free[0]));
+			g_nfree--;
+		}
+	}
+	else if(i < g_nfree && start + size == g_free[i].start)
+	{
+		g_free[i].start = start;
+		g_free[i].size += size;
+	}
+	else
+	{
+		if(g_nfree >= HEAP_MAXFREE) return;             /* leak rather than corrupt */
+		memmove(&g_free[i + 1], &g_free[i], (size_t)(g_nfree - i) * sizeof(g_free[0]));
+		g_free[i].start = start;
+		g_free[i].size  = size;
+		g_nfree++;
+	}
+	g_heap_used -= size;
 }
 
 /* ========================= private structs ============================ */
@@ -321,6 +605,41 @@ struct shim_bo {
 	uint32_t phys;        /* VRAM byte offset */
 	uint32_t shadow_sz;   /* bytes backing base.map, 0 until first map */
 };
+#define SHIM_MAXBO 4096
+static struct shim_bo *g_bos[SHIM_MAXBO];   /* live BOs, for address -> BO lookups */
+static int             g_nbos = 0;
+static struct shim_bo *shim_bo_at(uint32_t phys)
+{
+	int i;
+	for(i = 0; i < g_nbos; i++)
+		if(phys >= g_bos[i]->phys && phys < g_bos[i]->phys + (uint32_t)g_bos[i]->base.size)
+			return g_bos[i];
+	return NULL;
+}
+static void shim_refresh_queries(const uint32_t *m, uint32_t count)
+{
+	uint32_t i = 0, qaddr = 0;
+	while(i < count)
+	{
+		uint32_t h = m[i], typ = h >> 29, subc = (h >> 13) & 7, mthd = h & 0x1ffc, n = (h >> 18) & 0x7ff, k;
+		if(typ != 0 && typ != 2) return;
+		if(i + 1 + n > count) return;
+		if(subc == 3 && !(mthd == 0 && n == 1))
+			for(k = 0; k < n; k++)
+			{
+				uint32_t mm = typ == 0 ? mthd + 4 * k : mthd, v = m[i + 1 + k];
+				if(mm == 0x1b04) qaddr = v;
+				else if(mm == 0x1b0c && qaddr >= NVSHIM_VM_BASE)
+				{
+					uint32_t phys = qaddr - NVSHIM_VM_BASE;
+					struct shim_bo *b = shim_bo_at(phys);
+					if(b && b->base.map && (phys - b->phys) + 16 <= b->shadow_sz)
+						vxd_vram_read(phys, (uint32_t*)((char*)b->base.map + (phys - b->phys)), 4);
+				}
+			}
+		i += 1 + n;
+	}
+}
 
 struct shim_bufctx {
 	struct nouveau_bufctx base;
@@ -518,14 +837,23 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 	struct shim_bo *b;
 	uint32_t phys;
 	if(size == 0) size = 0x100;
+	if(config && config->nv50.tile_mode && align < 0x10000) align = 0x10000;   /* tiled: 64 KiB page */
 	phys = heap_alloc((uint32_t)size, align);
 	if(!phys)
 	{
 #ifndef NVSHIM_STANDALONE
-		NVLOG2("bo_new FAIL heap full sz/top", (uint32_t)size, g_heap);
+		uint32_t ft, lg; heap_stats(&ft, &lg);
+		NVLOG3("bo_new FAIL heap full sz/free/largest", (uint32_t)size, ft, lg);
 #endif
 		return -1;
 	}
+#ifndef NVSHIM_STANDALONE
+	if((g_heap_allocs & 255) == 0)
+	{
+		uint32_t ft, lg; heap_stats(&ft, &lg);
+		NVLOG3("heap allocs/used/largest", g_heap_allocs, g_heap_used, lg);
+	}
+#endif
 	b = calloc(1, sizeof(*b));
 	if(!b) return -1;
 	b->refcnt       = 1;
@@ -538,6 +866,7 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 	b->base.map     = NULL;
 	if(config) b->base.config = *config;
 	NVLOG3("bo_new sz/phys/vmoff", (uint32_t)size, phys, (uint32_t)b->base.offset);
+	if(g_nbos < SHIM_MAXBO) g_bos[g_nbos++] = b;
 	*pbo = &b->base;
 	return 0;
 }
@@ -572,11 +901,11 @@ void nouveau_bo_ref(struct nouveau_bo *bo, struct nouveau_bo **pref)
 		((struct shim_bo *)bo)->refcnt++;
 	if(old && --old->refcnt == 0)
 	{
+		int i;
+		for(i = 0; i < g_nbos; i++)
+			if(g_bos[i] == old) { g_bos[i] = g_bos[--g_nbos]; break; }
 		if(old->base.map) free(old->base.map);
-		/* Bump heap: reclaim when this BO is the top-most allocation (the
-		 * per-present staging buffer always is), else the space is leaked. */
-		if(old->phys + (uint32_t)old->base.size == g_heap)
-			g_heap = old->phys;
+		heap_free(old->phys, (uint32_t)old->base.size);
 		free(old);
 	}
 	if(pref)

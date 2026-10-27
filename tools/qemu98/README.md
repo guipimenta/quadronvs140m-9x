@@ -25,3 +25,15 @@ Mesa test, and end with `RUNDLL32 user,exitwindows` (shutdown ends QEMU). Read r
 by mounting the image again. `e9.txt` holds the VxD/DRV debug console (port E9).
 The image's old tray tool (Tray3d, from the VBox install) crashes on plain VGA; Enter
 closes it. `pgrep -f "^qemu-system-i386 "` tells whether the VM is still up.
+
+## Mesa's nv50 path without the GPU (fake-GPU shim mode)
+
+`set NVSHIM_FAKE=1` + `set GALLIUM_DRIVER=nouveau` before `wgltest driver mesa3d.dll window`
+(or any GL app through the ICD) makes mesa3d.dll's libdrm shim answer its own ioctls: a RAM
+VRAM heap, recorded binds, and a per-kick walk that wedges on what would stall the real
+PFIFO puller (unbound handles, orphan subchannels, bad headers, bad query addresses). The
+run produces the same `C:\nvshim.log` / `C:\nvkick.txt` as the T61 (`NVSHIM_KICKDUMP=N`
+for more kicks); check them on the host with `tools/nvkick_decode.py nvkick.txt --check
+--log nvshim.log`. The same works under Wine on the host (`wine wgltest.exe ...` from
+`dist/driver`, logs in `~/.wine/drive_c/`), which is the fastest loop; the VM is the
+reference for Win98-specific behaviour (GDI/opengl32/ICD route, 16-bit loader).
