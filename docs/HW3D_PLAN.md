@@ -443,6 +443,18 @@ triangle moving smoothly; the log's frames/ms line gives the real frame rate.
 NEXT (M5.5): per-frame readback of nothing; then Half-Life (fullscreen present = the same
 blit; textures through M2MF now that the notifier is real); window clipping/overlap.
 
+### 3092 on the T61 (2026-10-28): ~60 fps, smooth, no traps
+analysis/t61-logs/3092-*: 'wgl: present frames/ms' = 113/2012, 126/2002, 115/2005 ms (wgltest's
+own pacing), 4 kicks per frame (frame 126 dw, 92 dw, the 37-dw 2D present blit, the 5-dw fence),
+flushes ~1 KB/frame, reads ~2 dwords/frame, zero traps, zero failed kicks. The desktop is
+1024x768x32 (FBHDA surface 0, pitch 4096, bpp 32) and the 2D engine blits the A8R8G8B8 window
+buffer into it directly. From ~1 fps (3091) to ~60 fps with the CPU out of the frame loop.
+NEXT: Half-Life. Needs: (1) the front resource must follow display-mode changes (HL goes
+fullscreen 640x480/800x600 x16: FBHDA surface/pitch/bpp/size change -> re-import), (2) a
+textured scene in wgltest to validate texture upload (M2MF linear->tiled, TIC/TSC) under the
+fake GPU before the T61, (3) launch recipe: DOS box with set GALLIUM_DRIVER=nouveau (+
+MESA_EXTENSION_MAX_YEAR=2000 for hl.exe) and the registry ICD route (OpenGLdrivers\SOFTWARE).
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into
