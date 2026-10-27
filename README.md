@@ -20,8 +20,21 @@ documentation as hardware references.
   1024×768@60 head state through its method ring, services the supervised
   commit handshake, and scans out our own linear framebuffer — verified by
   8 color bars on the T61 panel. See `docs/EVO_PLAN.md` for the full recipe.
-- **M4/E4 — next: wire the native framebuffer into DIBENG** (FBHDA) so Windows
-  renders a real 1024×768 high-color desktop into it.
+- **M4/E4 — native desktop: ACHIEVED (build 3037, 2026-10-22).** The native
+  framebuffer is wired into DIBENG (FBHDA); Windows 98 runs its desktop on our
+  modeset (640×480 / 800×600 / 1024×768 at 8/16/32 bpp).
+- **M5 — hardware-accelerated 3D: MILESTONE (builds 3091/3092, 2026-10-28).**
+  Mesa's unmodified **nv50 Gallium driver** renders on the G86 under Windows 98
+  through a ring-3 libdrm shim and the VxD (persistent PFIFO channel, IB submit,
+  GPU virtual memory with per-surface storage kinds, PGRAPH context, trap
+  recovery). Build 3091 drew the first GPU triangle; build 3092 presents by
+  2D-engine blit into the scanout surface and runs wgltest at **~60 fps** with
+  zero traps. Everything that does not need the silicon is tested first in a
+  simulated environment: a QEMU Win98 harness, a fake-GPU mode of the shim
+  (runs Mesa's whole nv50 path under Wine or in the VM and validates every
+  command stream), and a kick-stream validator. See `docs/HW3D_PLAN.md`.
+- **Next:** Half-Life through the OpenGL ICD route (fullscreen mode changes,
+  textures), then Direct3D via Mesa9x's wrapper.
 
 ## Layout
 
