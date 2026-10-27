@@ -804,6 +804,8 @@ static unsigned long nv_chan_init(void)
 /* Submit a ring-3-built method stream (count dwords). On the first call the
  * channel is brought up. Appends to the pushbuf, advances PUT, waits for the
  * engine to drain and go idle, and fills diagnostics. */
+static unsigned long g_gpu_wedged = 0;   /* 3087: latched by a trap or an unconsumed kick */
+
 int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out)
 {
 	const unsigned long chid = NVGPU_CHID;
@@ -813,6 +815,24 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 	out->build = NV_BUILD;
 	if(count == 0 || bytes > NVGPU_PUSHBUF_SIZE)
 		return 0;
+
+	/* 3087: once the GPU trapped or stopped consuming, refuse further kicks at
+	 * once instead of re-spinning the multi-second polls in ring 0 for every
+	 * frame of a render loop (that is what froze the T61 after 3086's first
+	 * frames). A reboot clears it (the channel is rebuilt from cold). */
+	if(g_gpu_wedged)
+	{
+		out->wedged      = 1;
+		out->ok          = 0;
+		out->pfifo_intr  = NV_rd32(PFIFO_INTR_0);
+		out->pgraph_intr = NV_rd32(PGRAPH_INTR);
+		out->get         = NV_rd32(PFIFO_USER_IBGET(chid));
+		out->put         = g_ib_put;
+		dbg_printf("S> submit REFUSED (wedged) cnt=%lu pgi=%08lX\n", count, out->pgraph_intr);
+		return 0;
+	}
+	dbg_printf("S> submit begin cnt=%lu m0=%08lX m1=%08lX ibput=%lu\n", count, methods[0],
+	           count > 1 ? methods[1] : 0, g_ib_put);
 
 	if(!g_chan_ready)
 	{
@@ -850,6 +870,7 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 		if(NV_rd32(PFIFO_INTR_0) || NV_rd32(PGRAPH_INTR))
 			break;
 	}
+	out->idle_loops = i;
 	out->gr_idle = gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 4000000UL);
 
 	out->get         = NV_rd32(PFIFO_USER_IBGET(chid));  /* IB get index */
@@ -866,7 +887,19 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 	out->push0       = NV_rd32(0x3200);   /* CACHE1_PUSH0 */
 	out->pull0       = NV_rd32(0x3250);   /* CACHE1_PULL0 */
 	out->dma_get_rb  = NV_rd32(0x3244);
+	/* 3087: a PGRAPH trap or an IB entry the pusher never consumed latches the
+	 * GPU as wedged; the caller sees ok=0 (PFIFO_INTR alone is only reported). */
+	if(out->pgraph_intr || out->get != out->put)
+	{
+		g_gpu_wedged = 1;
+		out->wedged  = 1;
+		out->ok      = 0;
+		dbg_printf("S> submit WEDGED get=%lu put=%lu pfi=%08lX pgi=%08lX loops=%lu\n",
+		           out->get, out->put, out->pfifo_intr, out->pgraph_intr, out->idle_loops);
+		return 1;
+	}
 	out->ok          = 1;
+	dbg_printf("S> submit end get=%lu pfi=%08lX loops=%lu\n", out->get, out->pfifo_intr, out->idle_loops);
 	return 1;
 }
 

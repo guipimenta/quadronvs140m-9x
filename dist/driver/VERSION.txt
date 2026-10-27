@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3086  (M5.4 step 4d: the CreateContext 126 was wgltest's driver mode, not the GPU - Win9x GDI's ChoosePixelFormat needs opengl32.dll already loaded in the process; wgltest fixed. nvgl.bat unchanged: run nvgl and send C:\nvshim.log - it should now show the nouveau CONTEXT creation and the first present)
+Build: 3087  (M5.4 step 5: first GPU frames rendered on the T61 by Mesa's nv50 driver (3086 log); this build makes a wedged GPU survivable: VxD latches wedged + refuses further kicks instantly, shim stops submitting after a failed kick, every kick logged before/after, present logs sample pixels; nvgl.bat waits for wgltest and keeps C:\nvtail.txt. Run nvgl, then send C:\nvshim.log AND C:\nvtail.txt)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

@@ -271,6 +271,28 @@ DrvValidateVersion + 7 Drv entry points; 126 is what its LoadLibrary failure ret
 Expected on the T61 with 3086: `nvgl` log continues into stw_create_context_attribs ->
 st_api_create_context -> nv50_create (the 3084 traces), then the first present.
 
+### M5.4 step 5 (build 3086 on the T61): FIRST GPU FRAMES - then a freeze
+With wgltest fixed, `nvgl` on the T61 ran the whole path (log kept in
+analysis/t61-logs/3086-nvshim-first-gpu-frames.log): opengl32's ICD handshake
+(ValidateVersion/SetCallbackProcs, ~1000 DescribePF calls), format 51 chosen, framebuffer
+created, GDI SetPixelFormat accepted, `nv50: create OK`, `st_create_context`,
+`CreateLayerContext dhglrc 2`, MakeCurrent, then TWO FRAMES through Mesa's nv50 driver:
+colour buffers (0x140000 each) + a 0x200000 depth buffer allocated, 11 kicks all pgi=0,
+SwapBuffers -> M2MF de-tile into a 0x1165a0 staging BO -> `wgl: present map/stride`
+twice -> the window showed BANDED NOISE (stale VRAM, not the clear colour). The log ends
+in the third frame after a `kick ok` with NO failure line: the next kick/readback never
+returned = a wedged GPU + the VxD's bounded-but-long ring-0 polls (2M+4M register reads
+per kick) repeated for every kick of the render loop -> the machine froze. Also seen: a
+0x140000 BO per frame (stw re-creates a texture each frame; the bump heap never reuses it
+-> ~45 frames until the 64 MB heap is gone - needs a real allocator soon).
+3087: VxD latches `g_gpu_wedged` on PGRAPH trap or unconsumed IB (ok=0, wedged/idle_loops
+fields) and refuses later kicks at once; `S> submit begin/end/WEDGED/REFUSED` in the ring,
+captured by `nvprobe tail C:\nvtail.txt` which nvgl.bat now starts first. Shim logs every
+kick before/after (first 400), stops after the first failed kick (GPU DEAD), logs big
+readbacks and heap exhaustion. Present logs 4 sample pixels (expected: the clear colour
+in the corners, triangle colour mid-frame). Next log answers: which kick wedges (its
+first methods), and whether the colour buffer ever received the clear.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

@@ -60,6 +60,7 @@ typedef struct nv_gpu_submit
 	unsigned long get, put, pfifo_intr, pgraph_intr, dma_state;
 	unsigned long c1_push1, caches, c1_get, c1_put, ctxtable;
 	unsigned long dma_push, push0, pull0, dma_get_rb;
+	unsigned long wedged, idle_loops;   /* 3087: 1 = GPU latched dead (trap/timeout), poll iterations */
 } nv_gpu_submit_t;
 
 typedef struct nv_gpu_vread

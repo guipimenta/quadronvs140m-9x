@@ -2265,7 +2265,7 @@ index 23967d7e..1a34bacd 100644
     return NULL;
  }
 diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c
-index d7db69a2..23f00f4d 100644
+index d7db69a2..97b7426c 100644
 --- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c
 +++ b/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c
 @@ -1,3 +1,11 @@
@@ -2312,13 +2312,15 @@ index d7db69a2..23f00f4d 100644
     if (!iPixelFormat)
        return 0;
     
-@@ -434,14 +446,22 @@ DrvDescribePixelFormat(HDC hdc, INT iPixelFormat, ULONG cjpfd,
+@@ -434,14 +446,24 @@ DrvDescribePixelFormat(HDC hdc, INT iPixelFormat, ULONG cjpfd,
  
     count = stw_pixelformat_get_count(hdc);
  
 -   if (ppfd == NULL)
 +   if (ppfd == NULL) {
-+      M9XT("stw: DescribePF count-query hdc/count", hdc, count);
++      static int ncq = 0;   /* 3087: opengl32 issues one per format it enumerates - log the first 4 */
++      if (ncq++ < 4)
++         M9XT("stw: DescribePF count-query hdc/count", hdc, count);
        return count;
 +   }
  
@@ -2337,7 +2339,7 @@ index d7db69a2..23f00f4d 100644
        return 0;
     }
  
-@@ -573,5 +593,6 @@ stw_pixelformat_choose(HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd)
+@@ -573,5 +595,6 @@ stw_pixelformat_choose(HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd)
        }
     }
  
@@ -2345,7 +2347,7 @@ index d7db69a2..23f00f4d 100644
     return bestindex;
  }
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..5cb6a36d 100644
+index 8017cd00..1eab3d12 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,10 @@
@@ -2446,7 +2448,7 @@ index 8017cd00..5cb6a36d 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +285,30 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +285,37 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2463,6 +2465,13 @@ index 8017cd00..5cb6a36d 100644
 +      map = pipe_texture_map(ctx, res, 0, 0, PIPE_MAP_READ, 0, 0,
 +                             res->width0, res->height0, &xfer);
 +      nvt("wgl: present map/stride", NULL, 2, (uint32_t)(uintptr_t)map, xfer ? xfer->stride : 0);
++      if (map && xfer && util_format_get_blocksizebits(res->format) == 32) {
++         /* 3087: sample the frame so the log tells a cleared/drawn frame from stale VRAM */
++         const uint32_t *px = (const uint32_t *)map;
++         uint32_t w = res->width0, h = res->height0, st = xfer->stride / 4;
++         nvt("wgl: present px(0,0)/px(w/2,h/2)", NULL, 2, px[0], px[(h / 2) * st + w / 2]);
++         nvt("wgl: present px(0,h-1)/px(w-1,0)", NULL, 2, px[(h - 1) * st], px[w - 1]);
++      }
 +      if (map) {
 +# if defined(WIN9X) && !defined(NO_FBHDA)
 +         vramcpy_display_raw(map, xfer->stride, util_format_get_blocksizebits(res->format),
@@ -2477,7 +2486,7 @@ index 8017cd00..5cb6a36d 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
-@@ -326,6 +398,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -326,6 +405,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  
        stw_init(&stw_winsys, hinstDLL);
        stw_init_thread();
@@ -2491,7 +2500,7 @@ index 8017cd00..5cb6a36d 100644
        break;
  
     case DLL_THREAD_ATTACH:
-@@ -337,6 +416,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -337,6 +423,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
        break;
  
     case DLL_PROCESS_DETACH:

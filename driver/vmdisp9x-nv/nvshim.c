@@ -134,32 +134,47 @@ void nvshim_trace(const char *label, unsigned n, const uint32_t *v) { nvshim_log
 #endif
 
 /* Submit a method-dword stream to the persistent channel (one kick). */
+static int g_gpu_dead = 0;   /* 3087: set after a wedged/failed kick; no more submits */
 static int vxd_submit(const uint32_t *methods, uint32_t count)
 {
 	nv_gpu_submit_t sb;
 	DWORD ret = 0;
+#ifndef NVSHIM_STANDALONE
+	static int nkick = 0;
+#endif
 	if(count == 0)
 		return 0;
 	if(!nvshim_open())
 		return -1;
+#ifndef NVSHIM_STANDALONE
+	if(g_gpu_dead)
+	{
+		static int nrefused = 0;
+		if(nrefused++ < 4) NVLOG1("kick refused: GPU dead, cnt", count);
+		return -1;
+	}
+	/* 3087: log BEFORE the kick too (first 400), so a kick that never returns
+	 * from the VxD is identified by its count and first two methods. */
+	if(nkick < 400) NVLOG3("kick > cnt/m0/m1", count, methods[0], count > 1 ? methods[1] : 0);
+#endif
 	memset(&sb, 0, sizeof(sb));
 	if(!DeviceIoControl(g_vxd, OP_NV_SUBMIT, (void*)methods, count * 4,
 	                    &sb, sizeof(sb), &ret, NULL) || !sb.ok)
 	{
 #ifndef NVSHIM_STANDALONE
-		/* Log the first several failures with the GPU state so a TRAP during
-		 * screen_create/draw is visible. */
+		/* Log the failure with the GPU state so a TRAP during screen_create/draw
+		 * is visible, then stop submitting: the app keeps running on the CPU side
+		 * (garbage window, complete log) instead of freezing the machine in the
+		 * VxD's per-kick polls. */
 		static int nfail = 0;
-		if(nfail++ < 32) NVLOG3("kick FAIL cnt/ctxctl/pgi", count, sb.ctxctl, sb.pgraph_intr);
+		if(nfail++ < 32) NVLOG3("kick FAIL cnt/get/put", count, sb.get, sb.put);
+		if(nfail <= 32) NVLOG3("kick FAIL pfi/pgi/wedged", sb.pfifo_intr, sb.pgraph_intr, sb.wedged);
+		if(!g_gpu_dead) { g_gpu_dead = 1; NVLOG1("GPU DEAD - submissions stopped, loops", sb.idle_loops); }
 #endif
 		return -1;
 	}
 #ifndef NVSHIM_STANDALONE
-	{	/* Light success tracing: the first 64 kicks only, to keep the 16 KB ring
-		 * from wrapping away the init trace. */
-		static int nok = 0;
-		if(nok++ < 64) NVLOG3("kick ok cnt/put/pgi", count, sb.put_off, sb.pgraph_intr);
-	}
+	if(nkick++ < 400) NVLOG3("kick ok cnt/put/pgi", count, sb.put_off, sb.pgraph_intr);
 #endif
 	return 0;
 }
@@ -173,6 +188,9 @@ static void vxd_vram_read(uint32_t off, uint32_t *dst, uint32_t dwords)
 	uint32_t done = 0;
 	if(!nvshim_open())
 		return;
+#ifndef NVSHIM_STANDALONE
+	if(dwords > 4096) NVLOG2("vram_read > off/dwords", off, dwords);
+#endif
 	while(done < dwords)
 	{
 		uint32_t chunk = dwords - done;
@@ -186,6 +204,9 @@ static void vxd_vram_read(uint32_t off, uint32_t *dst, uint32_t dwords)
 		memcpy(dst + done, vr.data, chunk * 4);
 		done += chunk;
 	}
+#ifndef NVSHIM_STANDALONE
+	if(dwords > 4096) NVLOG1("vram_read < dwords", dwords);
+#endif
 }
 
 #ifndef NVSHIM_STANDALONE
@@ -454,7 +475,13 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 	uint32_t phys;
 	if(size == 0) size = 0x100;
 	phys = heap_alloc((uint32_t)size, align);
-	if(!phys) return -1;
+	if(!phys)
+	{
+#ifndef NVSHIM_STANDALONE
+		NVLOG2("bo_new FAIL heap full sz/top", (uint32_t)size, g_heap);
+#endif
+		return -1;
+	}
 	b = calloc(1, sizeof(*b));
 	if(!b) return -1;
 	b->refcnt       = 1;
