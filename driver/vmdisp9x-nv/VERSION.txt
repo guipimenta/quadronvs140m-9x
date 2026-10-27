@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3053  (M4.5 r2: standby/resume recovery via full engine re-init - TEST; OpenGL ICD actually working now: mesa3d.dll rebuilt without the KERNEL32 imports Win98 lacks; Half-Life intro crash FIXED in 3050: DCI refused; OpenGL ICD DONE: Mesa9x rebuilt against our FBHDA API, verified on the T61; Direct3D + DirectDraw DONE; M4.2 INF-only install awaiting a fresh install)
+Build: 3081  (M5.4 step 3c: nv50_screen_create can now RUN on hardware - Mesa's fd-keyed screen cache dup()+fstat() of fd 0 failed on Win9x and returned NULL before the nouveau shim was entered (3079/3080: CreateContext 126, no C:\nvshim.log); bypassed under WIN9X, mesa3d.dll rebuilt. nouveau is OPT-IN via nouveau.reg (GALLIUM_DRIVER=nouveau for wgltest.exe/icdtest.exe); software stays the default. Test: import nouveau.reg; wgltest driver mesa3d.dll window; type C:\nvshim.log)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

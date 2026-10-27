@@ -153,6 +153,26 @@ engine under this driver; the screen-init fence blocker is cleared.
   the fence lands. Implemented as NVF_3D in gpu_2dfill_core; `nvprobe 3d` dumps the
   trap regs (0x400108 + DISPATCH/VFETCH/CCACHE) if a future trap occurs.
 
+### M5.4 step 3 (builds 3079-3081): running Mesa's nv50_screen_create on the T61
+- 3079 shipped the NOUVEAU mesa3d.dll (opt-in: nouveau.reg sets GALLIUM_DRIVER=nouveau
+  for wgltest.exe/icdtest.exe via HKLM\Software\vmdisp9x\apps\<exe>\mesa, the same
+  per-exe registry env mechanism as MESA_EXTENSION_MAX_YEAR in d3dsetup.reg). On the
+  T61: wgltest -> "FAILURE: CreateContext: 126" (= nouveau_drm_screen_create returned
+  NULL; 126 is a stale GetLastError, not the cause).
+- 3080 moved the shim trace to a ring-3 file C:\nvshim.log (the VxD ring's per-second
+  heartbeat evicted it). T61: still 126 AND "File not found" - the shim's first trace
+  point (nouveau_drm_new) was never reached.
+- 3081 ROOT CAUSE: Mesa's nouveau_drm_screen_create() = u_pipe_screen_lookup_or_create(
+  os_dupfd_cloexec(fd), ...): it dup()s + fstat()s the DRM fd for an fd-keyed screen
+  cache. wgl.c passes fd 0; for a GUI process on Win9x that is invalid, so it returned
+  NULL before nouveau_screen_create (which calls the shim) ever ran. FIX: under WIN9X
+  nouveau_drm_winsys.c calls nouveau_screen_create(fd, NULL, NULL) directly (the shim
+  ignores the fd and opens the VxD itself). 4th file in nouveau-build-win9x.patch.
+  mesa3d.dll rebuilt; its import table is IDENTICAL to 3080's (266 entries, the six
+  Win98 DLLs) - verified by diffing import sets with impcheck's own parser, since the
+  QEMU Win98 image (source of the export set) is gone. Awaiting the T61 run: expect
+  C:\nvshim.log to exist and show how far nv50_screen_create gets.
+
 ### NEXT (M5.4 continued): run nv50_screen_create on the T61, then draw
 Wire GALLIUM_DRIVER=nouveau and run nv50_screen_create on the T61 - its fence now
 lands. Then the BO-backed hwctx tail (VP/FP/GP code BO, TLS, stack, uniforms/CB with

@@ -136,3 +136,23 @@ index 8017cd00..30f83e96 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
+diff --git a/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c b/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c
+index d2615102..1de8858a 100644
+--- a/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c
++++ b/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c
+@@ -85,6 +85,15 @@ err_dev_new:
+ struct pipe_screen *
+ nouveau_drm_screen_create(int fd)
+ {
++#ifdef WIN9X
++   /* Win9x (nvmini libdrm shim): there is no DRM fd - nouveau_drm_new ignores it
++    * and opens the VxD itself. The fd-keyed screen cache dup()s + fstat()s the fd,
++    * which fails for fd 0 of a GUI process and returned NULL before
++    * nouveau_screen_create ever ran (build 3079/3080: CreateContext 126, no
++    * shim trace). Create the screen directly. */
++   return nouveau_screen_create(fd, NULL, NULL);
++#else
+    return u_pipe_screen_lookup_or_create(os_dupfd_cloexec(fd), NULL, NULL,
+                                          nouveau_screen_create);
++#endif
+ }
