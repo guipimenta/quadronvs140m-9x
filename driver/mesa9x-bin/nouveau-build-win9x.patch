@@ -1975,7 +1975,7 @@ index a41df157..53ef5e57 100644
        u_upload_destroy(pipe->stream_uploader);
     if (nv50->bufctx_3d)
 diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c
-index 3ef71913..a1559c73 100644
+index 3ef71913..4cf9aff9 100644
 --- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c
 +++ b/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c
 @@ -1,3 +1,11 @@
@@ -1990,7 +1990,31 @@ index 3ef71913..a1559c73 100644
  /**************************************************************************
   *
   * Copyright 2008 VMware, Inc.
-@@ -166,6 +174,7 @@ stw_create_context_attribs(HDC hdc, INT iLayerPlane, struct stw_context *shareCt
+@@ -130,10 +138,14 @@ DrvCreateContext(HDC hdc)
+ DHGLRC APIENTRY
+ DrvCreateLayerContext(HDC hdc, INT iLayerPlane)
+ {
+-   if (!stw_dev)
++   M9XT("stw: CreateLayerContext hdc/lasterr", hdc, GetLastError());
++   if (!stw_dev) {
++      M9XT("stw: CreateLayerContext FAIL stw_dev NULL", 0, 0);
+       return 0;
++   }
+ 
+    const struct stw_pixelformat_info *pfi = stw_pixelformat_get_info_from_hdc(hdc);
++   M9XT("stw: CreateLayerContext pfi", pfi, 0);
+    if (!pfi)
+       return 0;
+ 
+@@ -144,6 +156,7 @@ DrvCreateLayerContext(HDC hdc, INT iLayerPlane)
+       return 0;
+ 
+    DHGLRC ret = stw_create_context_handle(ctx, 0);
++   M9XT("stw: CreateLayerContext ctx/dhglrc", ctx, ret);
+    if (!ret)
+       stw_destroy_context(ctx);
+ 
+@@ -166,6 +179,7 @@ stw_create_context_attribs(HDC hdc, INT iLayerPlane, struct stw_context *shareCt
     struct stw_context *ctx = NULL;
     enum st_context_error ctx_err = 0;
  
@@ -1998,7 +2022,7 @@ index 3ef71913..a1559c73 100644
     if (!stw_dev)
        return 0;
  
-@@ -244,9 +253,11 @@ stw_create_context_attribs(HDC hdc, INT iLayerPlane, struct stw_context *shareCt
+@@ -244,9 +258,11 @@ stw_create_context_attribs(HDC hdc, INT iLayerPlane, struct stw_context *shareCt
     }
  
     attribs.options = stw_dev->st_options;
@@ -2010,7 +2034,7 @@ index 3ef71913..a1559c73 100644
     if (ctx->st == NULL)
        goto no_st_ctx;
  
-@@ -260,8 +271,10 @@ stw_create_context_attribs(HDC hdc, INT iLayerPlane, struct stw_context *shareCt
+@@ -260,8 +276,10 @@ stw_create_context_attribs(HDC hdc, INT iLayerPlane, struct stw_context *shareCt
     return ctx;
  
  no_st_ctx:
@@ -2021,8 +2045,227 @@ index 3ef71913..a1559c73 100644
     return NULL;
  }
  
+@@ -314,6 +332,8 @@ DrvDeleteContext(DHGLRC dhglrc)
+    struct stw_context *ctx ;
+    BOOL ret = false;
+ 
++   M9XT("stw: DeleteContext dhglrc", dhglrc, 0);
++
+    if (!stw_dev)
+       return false;
+ 
+@@ -360,6 +380,8 @@ DrvReleaseContext(DHGLRC dhglrc)
+ {
+    struct stw_context *ctx;
+ 
++   M9XT("stw: ReleaseContext dhglrc", dhglrc, 0);
++
+    if (!stw_dev)
+       return false;
+ 
+@@ -975,6 +997,8 @@ DrvSetContext(HDC hdc, DHGLRC dhglrc, PFN_SETPROCTABLE pfnSetProcTable)
+ {
+    PGLCLTPROCTABLE r = (PGLCLTPROCTABLE)&cpt;
+ 
++   M9XT("stw: SetContext hdc/dhglrc", hdc, dhglrc);
++
+    if (!stw_make_current_by_handles(hdc, hdc, dhglrc))
+       r = NULL;
+ 
+diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_device.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_device.c
+index 2912a10f..89952f5d 100644
+--- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_device.c
++++ b/mesa-25.1.x/src/gallium/frontends/wgl/stw_device.c
+@@ -1,3 +1,11 @@
++#ifdef WIN9X
++/* M5.4 bring-up trace hook: NULL unless the nouveau ICD build installs it. */
++#include <stdint.h>
++extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
++#define M9XT(l,a,b) do{ if(mesa9x_trace_hook){ uint32_t _v[2]={(uint32_t)(uintptr_t)(a),(uint32_t)(uintptr_t)(b)}; mesa9x_trace_hook((l),2,_v);} }while(0)
++#else
++#define M9XT(l,a,b) ((void)0)
++#endif
+ /**************************************************************************
+  *
+  * Copyright 2008 VMware, Inc.
+@@ -210,6 +218,7 @@ stw_init_screen(HDC hdc)
+       }
+       init_options();
+       stw_pixelformat_init();
++      M9XT("stw: init_screen done screen/max2d", stw_dev->screen, stw_dev->max_2d_length);
+    }
+ 
+    LeaveCriticalSection(&stw_dev->screen_mutex);
+@@ -241,6 +250,8 @@ stw_cleanup(void)
+ {
+    DHGLRC dhglrc;
+ 
++   M9XT("stw: CLEANUP enter stw_dev", stw_dev, 0);
++
+    debug_printf("%s\n", __func__);
+ 
+    if (!stw_dev)
+@@ -255,6 +266,7 @@ stw_cleanup(void)
+    stw_unlock_contexts(stw_dev);
+    if (dhglrc) {
+       debug_printf("%s: contexts still active -- cleanup aborted\n", __func__);
++      M9XT("stw: CLEANUP aborted, stw_dev -> NULL", 0, 0);
+       stw_dev = NULL;
+       return;
+    }
+@@ -294,6 +306,8 @@ DrvSetCallbackProcs(INT nProcs, PROC *pProcs)
+ {
+    size_t size;
+ 
++   M9XT("stw: SetCallbackProcs n/stw_dev", nProcs, stw_dev);
++
+    if (stw_dev == NULL)
+       return;
+ 
+@@ -307,6 +321,7 @@ DrvSetCallbackProcs(INT nProcs, PROC *pProcs)
+ BOOL APIENTRY
+ DrvValidateVersion(ULONG ulVersion)
+ {
++   M9XT("stw: ValidateVersion ver/stw_dev", ulVersion, stw_dev);
+    /* ulVersion is the version reported by the KMD:
+     * - via D3DKMTQueryAdapterInfo(KMTQAITYPE_UMOPENGLINFO) on WDDM,
+     * - or ExtEscape on XPDM and can be used to ensure the KMD and OpenGL ICD
+diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_framebuffer.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_framebuffer.c
+index 0eb72d92..af90cc06 100644
+--- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_framebuffer.c
++++ b/mesa-25.1.x/src/gallium/frontends/wgl/stw_framebuffer.c
+@@ -1,3 +1,11 @@
++#ifdef WIN9X
++/* M5.4 bring-up trace hook: NULL unless the nouveau ICD build installs it. */
++#include <stdint.h>
++extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
++#define M9XT(l,a,b) do{ if(mesa9x_trace_hook){ uint32_t _v[2]={(uint32_t)(uintptr_t)(a),(uint32_t)(uintptr_t)(b)}; mesa9x_trace_hook((l),2,_v);} }while(0)
++#else
++#define M9XT(l,a,b) ((void)0)
++#endif
+ /**************************************************************************
+  *
+  * Copyright 2008-2009 VMware, Inc.
+@@ -320,6 +328,7 @@ stw_framebuffer_create(HWND hWnd, const struct stw_pixelformat_info *pfi, enum s
+       return NULL;
+ 
+    fb->hWnd = hWnd;
++   M9XT("stw: fb_create hwnd/pfi", hWnd, pfi);
+ 
+    if (stw_dev->stw_winsys->create_framebuffer)
+       fb->winsys_framebuffer =
+@@ -345,6 +354,7 @@ stw_framebuffer_create(HWND hWnd, const struct stw_pixelformat_info *pfi, enum s
+    fb->pfi = pfi;
+    fb->drawable = stw_st_create_framebuffer( fb, fscreen );
+    if (!fb->drawable) {
++      M9XT("stw: fb_create FAIL drawable", 0, 0);
+       FREE( fb );
+       return NULL;
+    }
+@@ -533,8 +543,11 @@ DrvSetPixelFormat(HDC hdc, LONG iPixelFormat)
+ 
+    index = (uint) iPixelFormat - 1;
+    count = stw_pixelformat_get_count(hdc);
+-   if (index >= count)
++   M9XT("stw: SetPF enter ipf/count", iPixelFormat, count);
++   if (index >= count) {
++      M9XT("stw: SetPF FAIL index>=count", index, count);
+       return false;
++   }
+ 
+    fb = stw_framebuffer_from_hdc_locked(hdc);
+    if (fb) {
+@@ -544,6 +557,7 @@ DrvSetPixelFormat(HDC hdc, LONG iPixelFormat)
+        */
+       bool bPbuffer = fb->owner == STW_FRAMEBUFFER_PBUFFER;
+ 
++      M9XT("stw: SetPF fb-exists owner/hwnd", fb->owner, fb->hWnd);
+       stw_framebuffer_unlock( fb );
+ 
+       return bPbuffer;
+@@ -552,6 +566,7 @@ DrvSetPixelFormat(HDC hdc, LONG iPixelFormat)
+    const struct stw_pixelformat_info *pfi = stw_pixelformat_get_info(iPixelFormat);
+ 
+    fb = stw_framebuffer_create(WindowFromDC(hdc), pfi, STW_FRAMEBUFFER_WGL_WINDOW, stw_dev->fscreen);
++   M9XT("stw: SetPF fb_create ret/pfi", fb, pfi);
+    if (!fb) {
+       return false;
+    }
+@@ -561,13 +576,18 @@ DrvSetPixelFormat(HDC hdc, LONG iPixelFormat)
+    /* Some applications mistakenly use the undocumented wglSetPixelFormat
+     * function instead of SetPixelFormat, so we call SetPixelFormat here to
+     * avoid opengl32.dll's wglCreateContext to fail */
+-   if (GetPixelFormat(hdc) == 0) {
+-      BOOL bRet = SetPixelFormat(hdc, iPixelFormat, NULL);
+-      if (!bRet) {
+-	  debug_printf("SetPixelFormat failed\n");
++   {
++      int gpf = GetPixelFormat(hdc);
++      M9XT("stw: SetPF GDI GetPixelFormat ret/lasterr", gpf, GetLastError());
++      if (gpf == 0) {
++         BOOL bRet = SetPixelFormat(hdc, iPixelFormat, NULL);
++         M9XT("stw: SetPF GDI SetPixelFormat ret/lasterr", bRet, GetLastError());
++         if (!bRet) {
++            debug_printf("SetPixelFormat failed\n");
++         }
+       }
+    }
+-
++   M9XT("stw: SetPF OK hwnd", WindowFromDC(hdc), 0);
+    return true;
+ }
+ 
+@@ -597,6 +617,7 @@ DrvPresentBuffers(HDC hdc, LPPRESENTBUFFERS data)
+    struct pipe_context *pipe;
+    struct pipe_resource *res;
+ 
++   M9XT("stw: PresentBuffers hdc", hdc, 0);
+    if (!stw_dev)
+       return false;
+ 
+@@ -779,6 +800,8 @@ DrvSwapBuffers(HDC hdc)
+ {
+    struct stw_framebuffer *fb;
+ 
++   M9XT("stw: SwapBuffers hdc", hdc, 0);
++
+    if (!stw_dev)
+       return false;
+ 
+diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_getprocaddress.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_getprocaddress.c
+index 23967d7e..1a34bacd 100644
+--- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_getprocaddress.c
++++ b/mesa-25.1.x/src/gallium/frontends/wgl/stw_getprocaddress.c
+@@ -1,3 +1,11 @@
++#ifdef WIN9X
++/* M5.4 bring-up trace hook: NULL unless the nouveau ICD build installs it. */
++#include <stdint.h>
++extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
++#define M9XT(l,a,b) do{ if(mesa9x_trace_hook){ uint32_t _v[2]={(uint32_t)(uintptr_t)(a),(uint32_t)(uintptr_t)(b)}; mesa9x_trace_hook((l),2,_v);} }while(0)
++#else
++#define M9XT(l,a,b) ((void)0)
++#endif
+ /**************************************************************************
+  *
+  * Copyright 2008 VMware, Inc.
+@@ -152,6 +160,15 @@ DrvGetProcAddress_icd(
+    /* public interface for ICD - return NULL if function is undefined so opengl32.dll can detect
+       which set of functions to use
+     */
++#ifdef WIN9X
++   if (mesa9x_trace_hook) {
++      char lbl[96]; int k = 0; const char *q = "stw: GetProcAddress miss '";
++      while (*q) lbl[k++] = *q++;
++      q = lpszProc; while (*q && k < 90) lbl[k++] = *q++;
++      lbl[k++] = '\''; lbl[k] = 0;
++      mesa9x_trace_hook(lbl, 0, NULL);
++   }
++#endif
+    debug_printf("wglGetProcAddress(\"%s\") returning NULL\n", lpszProc);
+    return NULL;
+ }
 diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c
-index d7db69a2..6f3bbf60 100644
+index d7db69a2..23f00f4d 100644
 --- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c
 +++ b/mesa-25.1.x/src/gallium/frontends/wgl/stw_pixelformat.c
 @@ -1,3 +1,11 @@
@@ -2045,8 +2288,64 @@ index d7db69a2..6f3bbf60 100644
  }
  
  
+@@ -386,6 +395,7 @@ stw_pixelformat_guess(HDC hdc)
+    int iPixelFormat = GetPixelFormat(hdc);
+    PIXELFORMATDESCRIPTOR pfd;
+ 
++   M9XT("stw: guess GDI GetPixelFormat ipf/lasterr", iPixelFormat, GetLastError());
+    if (!iPixelFormat)
+       return 0;
+    if (!DescribePixelFormat(hdc, iPixelFormat, sizeof(pfd), &pfd))
+@@ -404,6 +414,7 @@ stw_pixelformat_get_info_from_hdc(HDC hdc)
+     */
+    struct stw_framebuffer *fb;
+    fb = stw_framebuffer_from_hdc(hdc);
++   M9XT("stw: get_info_from_hdc hdc/fb", hdc, fb);
+    if (fb) {
+       const struct stw_pixelformat_info *pfi = fb->pfi;
+       stw_framebuffer_unlock(fb);
+@@ -415,6 +426,7 @@ stw_pixelformat_get_info_from_hdc(HDC hdc)
+     * pixel format in some cases, so use that.
+     */
+    int iPixelFormat = stw_pixelformat_guess(hdc);
++   M9XT("stw: get_info_from_hdc guess ipf", iPixelFormat, 0);
+    if (!iPixelFormat)
+       return 0;
+    
+@@ -434,14 +446,22 @@ DrvDescribePixelFormat(HDC hdc, INT iPixelFormat, ULONG cjpfd,
+ 
+    count = stw_pixelformat_get_count(hdc);
+ 
+-   if (ppfd == NULL)
++   if (ppfd == NULL) {
++      M9XT("stw: DescribePF count-query hdc/count", hdc, count);
+       return count;
++   }
+ 
+-   if (cjpfd != sizeof(PIXELFORMATDESCRIPTOR))
++   if (iPixelFormat <= 2 || (iPixelFormat % 100) == 0)
++      M9XT("stw: DescribePF i/cjpfd", iPixelFormat, cjpfd);
++
++   if (cjpfd != sizeof(PIXELFORMATDESCRIPTOR)) {
++      M9XT("stw: DescribePF BAD cjpfd i/cj", iPixelFormat, cjpfd);
+       return 0;
++   }
+ 
+    pfi = stw_pixelformat_get_info(iPixelFormat);
+    if (!pfi) {
++      M9XT("stw: DescribePF no pfi i/count", iPixelFormat, count);
+       return 0;
+    }
+ 
+@@ -573,5 +593,6 @@ stw_pixelformat_choose(HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd)
+       }
+    }
+ 
++   M9XT("stw: choose count/best", count, bestindex);
+    return bestindex;
+ }
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..51e467fb 100644
+index 8017cd00..32b2043c 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,10 @@
@@ -2073,13 +2372,14 @@ index 8017cd00..51e467fb 100644
  
  #ifdef WIN9X
  #include "3d_accel.h"
-@@ -92,6 +102,23 @@ void crt_locks_destroy();
+@@ -92,6 +102,24 @@ void crt_locks_destroy();
  
  static const char *created_driver_name = NULL;
  
 +#ifdef GALLIUM_NOUVEAU
 +/* M5.4 step 3d: trace the path INTO screen creation (builds 3079-3081 died before
 + * the shim's first trace point). Writes to C:\nvshim.log via the shim's logger. */
++#include <stdlib.h>
 +extern void nvshim_trace(const char *label, unsigned n, const uint32_t *v);
 +extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
 +static void nvt(const char *pre, const char *str, unsigned n, uint32_t a0, uint32_t a1)
@@ -2097,7 +2397,7 @@ index 8017cd00..51e467fb 100644
  static struct pipe_screen *
  wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  {
-@@ -99,6 +126,16 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
+@@ -99,6 +127,16 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  
     debug_printf("tried driver: %s\n", driver);
  
@@ -2114,7 +2414,7 @@ index 8017cd00..51e467fb 100644
  #ifdef GALLIUM_LLVMPIPE
     if (strcmp(driver, "llvmpipe") == 0) {
  # ifdef HAVE_CRTEX
-@@ -138,6 +175,7 @@ wgl_screen_create(HDC hDC)
+@@ -138,6 +176,7 @@ wgl_screen_create(HDC hDC)
     struct sw_winsys *winsys;
     UNUSED bool sw_only = debug_get_bool_option("LIBGL_ALWAYS_SOFTWARE", false);
  
@@ -2122,7 +2422,7 @@ index 8017cd00..51e467fb 100644
     winsys = gdi_create_sw_winsys(gdi_sw_acquire_hdc_by_value, gdi_sw_release_hdc_by_value);
     if (!winsys)
        return NULL;
-@@ -175,7 +213,9 @@ wgl_screen_create(HDC hDC)
+@@ -175,7 +214,9 @@ wgl_screen_create(HDC hDC)
     	  }
  #endif
     	
@@ -2132,7 +2432,7 @@ index 8017cd00..51e467fb 100644
        if (screen) {
           created_driver_name = drivers[i];
           return screen;
-@@ -184,6 +224,7 @@ wgl_screen_create(HDC hDC)
+@@ -184,6 +225,7 @@ wgl_screen_create(HDC hDC)
           break;
     }
  
@@ -2140,7 +2440,7 @@ index 8017cd00..51e467fb 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +278,30 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +279,30 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2171,6 +2471,31 @@ index 8017cd00..51e467fb 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
+@@ -326,6 +392,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+ 
+       stw_init(&stw_winsys, hinstDLL);
+       stw_init_thread();
++#ifdef GALLIUM_NOUVEAU
++      {  /* 3085: count DLL instances in the process (opengl32 may load the ICD by its own path) */
++         const char *g = getenv("GALLIUM_DRIVER");
++         if (g && strcmp(g, "nouveau") == 0)
++            nvt("wgl: DllMain ATTACH hinst", NULL, 1, (uint32_t)(uintptr_t)hinstDLL, 0);
++      }
++#endif
+       break;
+ 
+    case DLL_THREAD_ATTACH:
+@@ -337,6 +410,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+       break;
+ 
+    case DLL_PROCESS_DETACH:
++#ifdef GALLIUM_NOUVEAU
++      if (mesa9x_trace_hook)
++         nvt("wgl: DllMain DETACH hinst/lpvReserved", NULL, 2, (uint32_t)(uintptr_t)hinstDLL, (uint32_t)(uintptr_t)lpvReserved);
++#endif
+       if (lpvReserved == NULL) {
+          // We're being unloaded from the process.
+          stw_cleanup_thread();
 diff --git a/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c b/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c
 index d2615102..57656890 100644
 --- a/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c

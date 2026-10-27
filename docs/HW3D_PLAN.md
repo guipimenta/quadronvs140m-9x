@@ -223,6 +223,30 @@ nouveau_context_init (client_new/pushbuf ret), shim client_new/bufctx_new. The L
 line names the failing step. (Build gotcha: this Mesa's stw_device has no
 pixelformat_extended_count.) Patch is now 12 files.
 
+### M5.4 step 4c (build 3085): ICD-surface trace - AWAITING T61
+3084 on the T61: the log ends at `stw: pixelformat_init count 0x1e0` (480 displayable
+formats) and NOTHING from stw_create_context_attribs - so wglCreateContext never reaches
+context creation; the failure is earlier. In `wgltest driver mesa3d.dll` mode the only
+non-ICD step is ChoosePixelFormat: wgltest's DrvGetProcAddress("wglChoosePixelFormat")
+misses (stw only exports the ARB variant), so it falls back to GDI's ChoosePixelFormat ->
+opengl32 -> the registered ICD (nvmini.drv reports "SOFTWARE" -> OpenGLdrivers\SOFTWARE
+= mesa3d.dll; pftest proved that route in 3051 with 576 llvmpipe formats). Then
+DrvSetPixelFormat(idx) must create the framebuffer and DrvCreateLayerContext must find
+it; by the code both succeed for any idx in 1..480. Candidates: ChoosePixelFormat
+returned 0 (index>=count exit), a framebuffer already existed, stw_dev went NULL
+(stw_cleanup from a DETACH), or opengl32 loaded a SECOND mesa3d.dll instance through
+its registry path. 3085 traces the whole ICD surface: DescribePixelFormat (count
+queries, first/every-100th describe, bad-size/no-pfi exits), SetPixelFormat (every
+exit, framebuffer_create result, the GDI GetPixelFormat/SetPixelFormat calls + lasterr),
+CreateLayerContext (entry hdc/lasterr, stw_dev NULL exit, pfi, ctx/handle), SetContext/
+ReleaseContext/DeleteContext, SwapBuffers/PresentBuffers, ValidateVersion/
+SetCallbackProcs (opengl32's handshake), GetProcAddress misses by name, stw_cleanup,
+choose/guess/get_info_from_hdc, DllMain ATTACH per instance + DETACH. The shim log is
+now shared APPEND mode with a `==== shim log open, instance` header, so a second
+instance can neither truncate nor be locked out (delete C:\nvshim.log between runs).
+Patch is now 15 files (+ stw_framebuffer.c, stw_getprocaddress.c, stw_device.c);
+import table +SetFilePointer only.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

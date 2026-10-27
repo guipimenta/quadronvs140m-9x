@@ -93,12 +93,25 @@ static void nvshim_logn(const char *label, unsigned n, const uint32_t *v)
 		{ int d = (int)((v[k] >> i) & 0xf); buf[p++] = (char)(d < 10 ? '0' + d : 'a' + d - 10); }
 	}
 	buf[p++] = '\n';
-	/* primary: C:\nvshim.log (opened once, truncating, flushed per line) */
+	/* primary: C:\nvshim.log. APPEND mode since 3085 (shared read+write, seek to
+	 * the end before every line): a second instance of this DLL in the same
+	 * process (opengl32 loading the ICD by its own path) can then neither
+	 * truncate this instance's lines nor be locked out, and each instance
+	 * announces itself once with a per-instance address. Delete the file between
+	 * runs (`del C:\nvshim.log`). */
 	if(g_logf == INVALID_HANDLE_VALUE)
-		g_logf = CreateFileA("C:\\nvshim.log", GENERIC_WRITE, FILE_SHARE_READ,
-		                     0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+	{
+		g_logf = CreateFileA("C:\\nvshim.log", GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+		                     0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+		if(g_logf != INVALID_HANDLE_VALUE)
+		{
+			uint32_t hv[1]; hv[0] = (uint32_t)(uintptr_t)&g_logf;
+			nvshim_logn("==== shim log open, instance", 1, hv);
+		}
+	}
 	if(g_logf != INVALID_HANDLE_VALUE)
 	{
+		SetFilePointer(g_logf, 0, NULL, FILE_END);
 		WriteFile(g_logf, buf, (DWORD)p, &ret, NULL);
 		FlushFileBuffers(g_logf);
 	}

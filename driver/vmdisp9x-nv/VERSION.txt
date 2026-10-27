@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3084  (M5.4 step 4b: context-creation trace - 3083 showed screen create OK but CreateContext 126 after; mesa3d.dll now traces stw/st/nv50 context creation into C:\nvshim.log. Enable per DOS box: set GALLIUM_DRIVER=nouveau; wgltest driver mesa3d.dll window; type C:\nvshim.log)
+Build: 3085  (M5.4 step 4c: ICD-surface trace - 3084 showed wglCreateContext never reaches context creation; mesa3d.dll now traces DescribePixelFormat/SetPixelFormat/CreateLayerContext/the opengl32 handshake/DllMain per instance into C:\nvshim.log, which is now append-mode. Per DOS box: del C:\nvshim.log; set GALLIUM_DRIVER=nouveau; wgltest driver mesa3d.dll window; type C:\nvshim.log)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
