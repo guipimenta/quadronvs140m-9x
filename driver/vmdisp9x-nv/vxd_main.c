@@ -968,7 +968,7 @@ static void nv_ioctl_trace(struct DIOCParams *params)
 	const DWORD *in = (const DWORD*)params->lpInBuffer;
 
 	nv_ioctl_total++;
-	if(op == DIOC_OPEN || op == DIOC_CLOSEHANDLE || op == OP_NV_DBGLOG || op == OP_NV_DBGLOG2) return;
+	if(op == DIOC_OPEN || op == DIOC_CLOSEHANDLE || op == OP_NV_DBGLOG || op == OP_NV_DBGLOG2 || op == OP_NV_DBG_PUTS) return;
 	nv_trace_check_mode();
 
 	for(slot = 0; slot < nv_iot_used; slot++)
@@ -1234,6 +1234,14 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			DWORD n = dbg_ring_read2((char*)outBuf, params->cbOutBuffer);
 			if(params->lpcbBytesReturned)
 				*(DWORD*)params->lpcbBytesReturned = n;
+			rc = 0;
+			break;
+		}
+		case OP_NV_DBG_PUTS:
+		{
+			/* 3079: the ring-3 libdrm shim (in mesa3d.dll) traces nv50_screen_create
+			 * into the ring so a failure is diagnosable with "nvprobe log". */
+			dbg_ring_puts((const char*)inBuf, params->cbInBuffer);
 			rc = 0;
 			break;
 		}

@@ -79,6 +79,22 @@ void dbg_ring_putc( char c )
 	dbg_ring_total++;
 }
 
+/* Append a ring-3 string (from the libdrm shim in mesa3d.dll, via OP_NV_DBG_PUTS)
+ * to the ring, prefixing each line with "S> " so shim lines are distinct from
+ * the VxD's "V> " and the 16-bit driver's "D> ". */
+void dbg_ring_puts( const char *s, uint32_t len )
+{
+	static int bol = 1;
+	uint32_t i;
+	for(i = 0; i < len && s[i]; i++)
+	{
+		if(bol) { dbg_ring_putc('S'); dbg_ring_putc('>'); dbg_ring_putc(' '); bol = 0; }
+		dbg_ring_putc(s[i]);
+		outp(0xE9, s[i]);
+		if(s[i] == '\n') bol = 1;
+	}
+}
+
 /* Copy the ring, oldest character first, into out (at most max bytes).
  * Returns the number of bytes copied. */
 uint32_t dbg_ring_read( char *out, uint32_t max )

@@ -126,6 +126,7 @@ void dbg_printf( const char *s, ... );
 #endif
 #ifdef DBGRING
 void  dbg_ring_putc( char c );
+void  dbg_ring_puts( const char *s, DWORD len );  /* ring-3 shim log (prefix "S> ") */
 unsigned long dbg_ring_read2( char *out, unsigned long max );
 DWORD dbg_ring_read( char *out, DWORD max );
 #endif

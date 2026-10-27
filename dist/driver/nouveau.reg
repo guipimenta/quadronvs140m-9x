@@ -1,0 +1,22 @@
+REGEDIT4
+
+; M5.4 (build 3080): enable the HARDWARE nouveau Gallium driver for the GL test
+; programs. GALLIUM_DRIVER=nouveau makes mesa3d.dll drive the G86's own 3D engine
+; (through nvmini.vxd) instead of llvmpipe software. This is OPT-IN PER-EXE - every
+; other program keeps using software, so the desktop stays safe.
+;
+; After importing, run (from the dist\driver folder, in a window so a GPU fault
+; can't take the screen down):
+;     wgltest driver mesa3d.dll window
+; then read how far nv50_screen_create got in the trace file:
+;     type C:\nvshim.log
+; The shim's trace lines are drm_new / device_new / device_info / object_new /
+; bo_new / pushbuf_new / kick ... - the LAST line shows the stage it died at.
+; (The same lines also go to the VxD ring, prefixed "S> ", but the desktop's
+; heartbeat spam evicts them fast; C:\nvshim.log is the reliable copy.)
+
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\wgltest.exe\mesa]
+"GALLIUM_DRIVER"="nouveau"
+
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\icdtest.exe\mesa]
+"GALLIUM_DRIVER"="nouveau"

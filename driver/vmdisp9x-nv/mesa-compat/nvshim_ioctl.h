@@ -16,6 +16,7 @@
 #define OP_NV_VRAM_READ   0x5014  /* read back VRAM dwords                        */
 #define OP_NV_VRAM_WRITE  0x5015  /* write a block of dwords into VRAM (BO flush) */
 #define OP_NV_BIND        0x5016  /* bind an object at a caller handle (RAMHT)   */
+#define OP_NV_DBG_PUTS    0x5018  /* append a trace string to the VxD debug ring */
 
 /* OP_NV_SUBMIT result (nv50_gpu.h: nv_gpu_submit_t). nvshim.c reads .ok only;
  * the rest keeps the layout identical to the VxD's so the ioctl memcpy fits. */

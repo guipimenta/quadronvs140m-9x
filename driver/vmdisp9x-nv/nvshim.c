@@ -67,6 +67,56 @@ static int nvshim_open(void)
 	return 1;
 }
 
+/* ---- bring-up trace (M5.4): trace the Mesa nv50_screen_create path so a
+ * failure on the T61 is diagnosable. Standalone nvprobe has printf and does not
+ * need this.
+ *
+ * PRIMARY sink is a disk file, C:\nvshim.log: the shim runs in ring 3 (the GL
+ * app's process), so it can write straight to disk. That is immune to the VxD
+ * debug ring's heartbeat flood (the desktop's per-second HB lines wrap a 16 KB
+ * ring in seconds and evict the init trace before `nvprobe log` can read it).
+ * The file is truncated at first use and flushed per line, so the full trace
+ * survives even if screen_create faults. The VxD ring is kept as a secondary
+ * sink so the shim lines still interleave with the VxD's own V>/D> events. */
+#ifndef NVSHIM_STANDALONE
+static HANDLE g_logf = INVALID_HANDLE_VALUE;
+static void nvshim_logn(const char *label, unsigned n, const uint32_t *v)
+{
+	char buf[160];
+	int p = 0, i; unsigned k;
+	DWORD ret;
+	for(i = 0; label[i] && p < 120; i++) buf[p++] = label[i];
+	for(k = 0; k < n; k++)
+	{
+		buf[p++] = ' ';
+		for(i = 28; i >= 0; i -= 4)
+		{ int d = (int)((v[k] >> i) & 0xf); buf[p++] = (char)(d < 10 ? '0' + d : 'a' + d - 10); }
+	}
+	buf[p++] = '\n';
+	/* primary: C:\nvshim.log (opened once, truncating, flushed per line) */
+	if(g_logf == INVALID_HANDLE_VALUE)
+		g_logf = CreateFileA("C:\\nvshim.log", GENERIC_WRITE, FILE_SHARE_READ,
+		                     0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+	if(g_logf != INVALID_HANDLE_VALUE)
+	{
+		WriteFile(g_logf, buf, (DWORD)p, &ret, NULL);
+		FlushFileBuffers(g_logf);
+	}
+	/* secondary: the VxD debug ring, to interleave with V>/D> events */
+	if(nvshim_open())
+		DeviceIoControl(g_vxd, OP_NV_DBG_PUTS, buf, (DWORD)p, NULL, 0, &ret, NULL);
+}
+#define NVLOG0(l)         nvshim_logn((l), 0, NULL)
+#define NVLOG1(l,a)       do{ uint32_t _v[1]; _v[0]=(uint32_t)(a); nvshim_logn((l),1,_v);}while(0)
+#define NVLOG2(l,a,b)     do{ uint32_t _v[2]; _v[0]=(uint32_t)(a); _v[1]=(uint32_t)(b); nvshim_logn((l),2,_v);}while(0)
+#define NVLOG3(l,a,b,c)   do{ uint32_t _v[3]; _v[0]=(uint32_t)(a); _v[1]=(uint32_t)(b); _v[2]=(uint32_t)(c); nvshim_logn((l),3,_v);}while(0)
+#else
+#define NVLOG0(l)
+#define NVLOG1(l,a)
+#define NVLOG2(l,a,b)
+#define NVLOG3(l,a,b,c)
+#endif
+
 /* Submit a method-dword stream to the persistent channel (one kick). */
 static int vxd_submit(const uint32_t *methods, uint32_t count)
 {
@@ -79,7 +129,22 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 	memset(&sb, 0, sizeof(sb));
 	if(!DeviceIoControl(g_vxd, OP_NV_SUBMIT, (void*)methods, count * 4,
 	                    &sb, sizeof(sb), &ret, NULL) || !sb.ok)
+	{
+#ifndef NVSHIM_STANDALONE
+		/* Log the first several failures with the GPU state so a TRAP during
+		 * screen_create/draw is visible. */
+		static int nfail = 0;
+		if(nfail++ < 32) NVLOG3("kick FAIL cnt/ctxctl/pgi", count, sb.ctxctl, sb.pgraph_intr);
+#endif
 		return -1;
+	}
+#ifndef NVSHIM_STANDALONE
+	{	/* Light success tracing: the first 64 kicks only, to keep the 16 KB ring
+		 * from wrapping away the init trace. */
+		static int nok = 0;
+		if(nok++ < 64) NVLOG3("kick ok cnt/put/pgi", count, sb.put_off, sb.pgraph_intr);
+	}
+#endif
 	return 0;
 }
 
@@ -191,6 +256,7 @@ struct shim_push {
 int nouveau_drm_new(int fd, struct nouveau_drm **pdrm)
 {
 	struct nouveau_drm *drm = calloc(1, sizeof(*drm));
+	NVLOG1("drm_new fd", (uint32_t)fd);
 	if(!drm) return -1;
 	drm->fd = fd;
 	drm->version = 0x01000000;   /* pretend DRM 1.0.0 */
@@ -207,6 +273,7 @@ void nouveau_drm_del(struct nouveau_drm **pdrm)
 int nouveau_device_new(struct nouveau_object *parent, struct nouveau_device **pdev)
 {
 	struct nouveau_device *dev = calloc(1, sizeof(*dev));
+	NVLOG0("device_new");
 	if(!dev) return -1;
 	dev->object.parent = parent;
 	dev->object.oclass = 0x80000000;   /* NV_DEVICE */
@@ -249,6 +316,7 @@ int nouveau_device_info(struct nouveau_device *dev, struct nv_device_info_v0 *in
 	info->family   = NV_DEVICE_INFO_V0_TESLA;
 	info->ram_size = dev->vram_size;
 	info->ram_user = dev->vram_limit;
+	NVLOG2("device_info chipset/family", info->chipset, info->family);
 #else
 	(void)dev; (void)info;
 #endif
@@ -283,6 +351,7 @@ int nouveau_object_new(struct nouveau_object *parent, uint64_t handle, uint32_t 
                        void *data, uint32_t length, struct nouveau_object **pobj)
 {
 	struct nouveau_object *obj = calloc(1, sizeof(*obj));
+	NVLOG2("object_new handle/oclass", (uint32_t)handle, oclass);
 	if(!obj) return -1;
 	obj->parent = parent;
 	obj->handle = handle;
@@ -369,6 +438,7 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 	b->base.offset  = (uint64_t)phys + NVSHIM_VM_BASE; /* GPU (VM) address */
 	b->base.map     = NULL;
 	if(config) b->base.config = *config;
+	NVLOG3("bo_new sz/phys/vmoff", (uint32_t)size, phys, (uint32_t)b->base.offset);
 	*pbo = &b->base;
 	return 0;
 }
@@ -517,6 +587,7 @@ int nouveau_pushbuf_new(struct nouveau_client *client, struct nouveau_object *ch
 	p->base.cur     = p->buf;
 	p->base.end     = p->buf + p->cap;
 	p->nrefn = 0;
+	NVLOG1("pushbuf_new cap", p->cap);
 	*ppush = &p->base;
 	return 0;
 }
