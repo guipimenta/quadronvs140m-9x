@@ -555,9 +555,11 @@ DRV with /home/guilherme/watcom-2025-08, nvprobe with `i686-w64-mingw32-gcc -O2 
 -DNVSHIM_STANDALONE tools/nvprobe.c nvshim.c -I. -o tools/nvprobe.exe` (the -D is
 REQUIRED since M5.3c - nvshim.c defaults to Mesa-header mode without it);
 run tools/nerelocs.py on the DRV; sh tools/make_dist.sh; bump NV_BUILD in
-vxd_nv.h + init.c. User flashes dist/driver to the T61, runs nvprobe, confirms;
-then commit + push + `gh release create vNNNN <zip> --title ... --notes-file ...
---target main`. Commit attribution: Co-Authored-By: Claude Opus 4.8.
+vxd_nv.h + init.c; `cd dist && zip -qr ../nvmini-NNNN.zip driver`; commit + push.
+User flashes dist/driver (or the local zip) to the T61, runs the test, confirms.
+RELEASE POLICY (user, 2026-10-28): `gh release create vNNNN <zip> --title ...
+--notes-file ... --target main` ONLY for builds confirmed working on the T61 or
+for milestones - never for untested/diagnostic builds. Commit attribution: Co-Authored-By: Claude Opus 4.8.
 
 ## Why it is big, and why it is feasible
 
