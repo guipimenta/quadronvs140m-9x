@@ -1974,6 +1974,27 @@ index a41df157..53ef5e57 100644
     if (pipe->stream_uploader)
        u_upload_destroy(pipe->stream_uploader);
     if (nv50->bufctx_3d)
+diff --git a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_vbo.c b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_vbo.c
+index 0a8230dd..1e6f36ca 100644
+--- a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_vbo.c
++++ b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_vbo.c
+@@ -947,7 +947,16 @@ nv50_draw_vbo(struct pipe_context *pipe, const struct pipe_draw_info *info,
+          drawid++;
+    }
+ 
++#ifndef WIN9X
+    PUSH_KICK(push);
++#else
++   /* Win9x nvshim (nvidia_reverse build 3095): every kick is a synchronous
++    * submit through the VxD = a GPU drain. The per-draw kick that came with
++    * the screen state lock turned Half-Life's ~1,160 draws a frame into
++    * ~1,160 drains (13 s per frame on build 3094). Draws accumulate until a
++    * flush, a fence wait, a map of a pending BO or a full pushbuffer - the
++    * pre-lock behaviour; single-threaded, so the lock is uncontended. */
++#endif
+    simple_mtx_unlock(&nv50->screen->state_lock);
+ 
+    nv50->base.kick_notify = nv50_default_kick_notify;
 diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c
 index 3ef71913..4cf9aff9 100644
 --- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_context.c
@@ -2347,7 +2368,7 @@ index d7db69a2..97b7426c 100644
     return bestindex;
  }
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..5800032d 100644
+index 8017cd00..246a8c26 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,12 @@
@@ -2452,7 +2473,7 @@ index 8017cd00..5800032d 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +289,165 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +289,169 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2575,12 +2596,16 @@ index 8017cd00..5800032d 100644
 +                  uint32_t now = GetTickCount();
 +                  if (t_last == 0) t_last = now;
 +                  if (now - t_last >= 2000) {
-+                     uint32_t st[8];
++                     uint32_t st[16];
 +                     nvshim_stats(st);
 +                     nvt("wgl: present frames/ms", NULL, 2, nframes, now - t_last);
 +                     nvt("wgl: stats kicks/kickdw", NULL, 2, st[0], st[4]);
 +                     nvt("wgl: stats flushdw/readdw", NULL, 2, st[1], st[2]);
 +                     nvt("wgl: stats traps/warns", NULL, 2, st[3], st[5]);   /* 3094: KICK WARN count */
++                     nvt("wgl: stats kicks mapwait/internal", NULL, 2, st[6], st[7]);   /* 3095: kicks the shim forced */
++                     nvt("wgl: stats submit ms", NULL, 1, st[8], 0);                      /* 3095: time inside OP_NV_SUBMIT */
++                     nvt("wgl: stats kcyc validate/kick", NULL, 2, st[9], st[10]);         /* 3095: shim CPU time, TSC kcycles */
++                     nvt("wgl: stats kcyc flush/bo", NULL, 2, st[11], st[12]);
 +                     nframes = 0; t_last = now;
 +                  }
 +               }
@@ -2618,7 +2643,7 @@ index 8017cd00..5800032d 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
-@@ -326,6 +537,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -326,6 +541,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  
        stw_init(&stw_winsys, hinstDLL);
        stw_init_thread();
@@ -2632,7 +2657,7 @@ index 8017cd00..5800032d 100644
        break;
  
     case DLL_THREAD_ATTACH:
-@@ -337,6 +555,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -337,6 +559,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
        break;
  
     case DLL_PROCESS_DETACH:
@@ -2755,10 +2780,10 @@ index 96f7ccaa..8efc4c31 100644
  _debug_vprintf(const char *format, va_list ap)
  {
 diff --git a/wgltest.c b/wgltest.c
-index 6c6d2fc1..fb966069 100644
+index 6c6d2fc1..132376e2 100644
 --- a/wgltest.c
 +++ b/wgltest.c
-@@ -1,979 +1,1160 @@
+@@ -1,979 +1,1280 @@
 -/******************************************************************************
 - * Copyright (c) 2023-2024 Jaroslav Hensl                                     *
 - *                                                                            *
@@ -3781,6 +3806,8 @@ index 6c6d2fc1..fb966069 100644
 +  "height <pixels>: set height of testing window\n"
 +  "window: run test in window\n"
 +  "fullscreen: run test on fullscreen\n"
++  "texture: textured scene (mipmaps, TexSubImage, depth, fog, blend)\n"
++  "stress: GoldSrc-like draw-call load (600 glBegin/glEnd quads, 72 textures, 32 lightmap patches, 50 indexed draws per frame)\n"
 +  "help: show this message";
 +
 +static void GUIError(const char *fmt, ...)
@@ -3844,6 +3871,11 @@ index 6c6d2fc1..fb966069 100644
 +typedef void (APIENTRY *glFogfv_f)(GLenum pname, const GLfloat *params);
 +typedef void (APIENTRY *glHint_f)(GLenum target, GLenum mode);
 +typedef GLenum (APIENTRY *glGetError_f)(void);
++typedef void (APIENTRY *glVertexPointer_f)(GLint size, GLenum type, GLsizei stride, const void *pointer);
++typedef void (APIENTRY *glTexCoordPointer_f)(GLint size, GLenum type, GLsizei stride, const void *pointer);
++typedef void (APIENTRY *glEnableClientState_f)(GLenum array);
++typedef void (APIENTRY *glDisableClientState_f)(GLenum array);
++typedef void (APIENTRY *glDrawElements_f)(GLenum mode, GLsizei count, GLenum type, const void *indices);
 +
 +typedef BOOL (WINAPI *wglMakeCurrent_f)(HDC hdc, HGLRC hglrc);
 +typedef HGLRC (WINAPI *wglCreateContext_f)(HDC hdc);
@@ -4153,7 +4185,7 @@ index 6c6d2fc1..fb966069 100644
 + * sprite, perspective projection. Runs on any renderer; under the fake GPU it
 + * produces the texture-upload (M2MF/SIFC, TIC/TSC) command streams for the
 + * validator before the real hardware sees them. */
-+static int    setup_scene = 0;          /* 0 = triangle, 1 = textured */
++static int    setup_scene = 0;          /* 0 = triangle, 1 = textured, 2 = stress (3095) */
 +static GLuint tex_checker = 0, tex_alpha = 0;
 +static unsigned char *tex_buf = NULL;
 +static GLenum scene_err = 0;
@@ -4280,6 +4312,113 @@ index 6c6d2fc1..fb966069 100644
 +	tex_quad(-0.5f,-0.5f,0, 0.5f,-0.5f,0, 0.5f,0.5f,0, -0.5f,0.5f,0, 1.0f);
 +	GL32.glDisable(GL_ALPHA_TEST);
 +	GL32.glDisable(GL_BLEND);
++	GL32.glDisable(GL_TEXTURE_2D);
++	GL32.glDisable(GL_DEPTH_TEST);
++	GL32.glFlush();
++}
++
++/* ---- "stress" scene (3095): the draw-call shape of a GoldSrc frame, so the
++ * fake GPU shows kicks-per-frame and flush volume before a game does. Per
++ * frame: 600 textured quads, one glBegin/glEnd each, alternating between 8
++ * mipmapped 256^2 world textures and 64 lightmap-style 128^2 textures; 32
++ * glTexSubImage2D 16x16 patches on the lightmaps; 50 small glDrawElements
++ * draws from client arrays (the index-data path). Half-Life on 3094 made
++ * ~1,160 kicks per frame from this kind of load. */
++static GLuint tex_world[8], tex_lm[64];
++static unsigned stress_seed = 12345;
++static unsigned stress_rnd(void) { stress_seed = stress_seed * 1103515245u + 12345u; return (stress_seed >> 16) & 0x7fff; }
++
++static void stress_init(void)
++{
++	int i, level, size;
++	GLfloat fogc[4] = {0.05f, 0.05f, 0.08f, 1.0f};
++	if(!tex_buf) tex_buf = (unsigned char*)malloc(256 * 256 * 4);
++	if(!tex_buf) return;
++	GL32.glGenTextures(8, tex_world);
++	for(i = 0; i < 8; i++)
++	{
++		GL32.glBindTexture(GL_TEXTURE_2D, tex_world[i]);
++		for(level = 0, size = 256; size >= 1; level++, size >>= 1)
++		{
++			tex_make_level(tex_buf, size, level + i);
++			GL32.glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
++		}
++		GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
++		GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++	}
++	GL32.glGenTextures(64, tex_lm);
++	for(i = 0; i < 64; i++)
++	{
++		int k; for(k = 0; k < 128 * 128 * 4; k += 4) { tex_buf[k] = (unsigned char)(i * 4); tex_buf[k + 1] = (unsigned char)(k >> 7); tex_buf[k + 2] = 200; tex_buf[k + 3] = 255; }
++		GL32.glBindTexture(GL_TEXTURE_2D, tex_lm[i]);
++		GL32.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
++		GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
++		GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++	}
++	GL32.glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
++	GL32.glMatrixMode(GL_PROJECTION);
++	GL32.glLoadIdentity();
++	GL32.glFrustum(-1.0, 1.0, -0.75, 0.75, 1.0, 40.0);
++	GL32.glMatrixMode(GL_MODELVIEW);
++	GL32.glDepthFunc(GL_LEQUAL);
++	GL32.glFogi(GL_FOG_MODE, GL_LINEAR);
++	GL32.glFogf(GL_FOG_START, 6.0f);
++	GL32.glFogf(GL_FOG_END, 24.0f);
++	GL32.glFogfv(GL_FOG_COLOR, fogc);
++	scene_err = GL32.glGetError();
++}
++
++void draw_stress(float rot, unsigned frame)
++{
++	static int inited = 0;
++	static const GLushort idx[6] = {0, 1, 2, 0, 2, 3};
++	static GLfloat vtx[12], tc[8] = {0,0, 1,0, 1,1, 0,1};
++	int i;
++	if(!inited) { stress_init(); inited = 1; }
++	GL32.glClearColor(0.05f, 0.05f, 0.08f, 1.0f);
++	GL32.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
++	GL32.glEnable(GL_DEPTH_TEST);
++	GL32.glEnable(GL_TEXTURE_2D);
++	GL32.glEnable(GL_FOG);
++	GL32.glLoadIdentity();
++	GL32.glTranslatef(0.0f, 0.0f, -14.0f);
++	GL32.glRotatef(rot * 0.3f, 0.0f, 1.0f, 0.0f);
++	GL32.glColor4f(1, 1, 1, 1);
++	/* 600 world/lightmap quads on a 30x20 grid, each its own glBegin/glEnd + bind */
++	for(i = 0; i < 600; i++)
++	{
++		float x = (float)(i % 30) * 0.5f - 7.25f, y = (float)(i / 30) * 0.5f - 4.75f;
++		float z = -0.5f * (float)((i * 7) % 5);
++		GL32.glBindTexture(GL_TEXTURE_2D, (i & 1) ? tex_lm[(i >> 1) & 63] : tex_world[(i >> 1) & 7]);
++		tex_quad(x, y, z, x + 0.48f, y, z, x + 0.48f, y + 0.48f, z, x, y + 0.48f, z, 1.0f);
++	}
++	/* 32 lightmap patches (16x16) per frame */
++	if(tex_buf)
++	{
++		unsigned char v = (unsigned char)(frame * 8);
++		for(i = 0; i < 16 * 16; i++) { tex_buf[i * 4] = v; tex_buf[i * 4 + 1] = (unsigned char)(255 - v); tex_buf[i * 4 + 2] = (unsigned char)(i & 255); tex_buf[i * 4 + 3] = 255; }
++		for(i = 0; i < 32; i++)
++		{
++			GL32.glBindTexture(GL_TEXTURE_2D, tex_lm[(frame * 32 + i) & 63]);
++			GL32.glTexSubImage2D(GL_TEXTURE_2D, 0, (int)(stress_rnd() % 7) * 16, (int)(stress_rnd() % 7) * 16, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
++		}
++	}
++	/* 50 indexed draws from client arrays (sprites/models): vertex + texcoord pointers, glDrawElements */
++	GL32.glDisable(GL_FOG);
++	GL32.glEnableClientState(GL_VERTEX_ARRAY);
++	GL32.glEnableClientState(GL_TEXTURE_COORD_ARRAY);
++	GL32.glVertexPointer(3, GL_FLOAT, 0, vtx);
++	GL32.glTexCoordPointer(2, GL_FLOAT, 0, tc);
++	for(i = 0; i < 50; i++)
++	{
++		float x = (float)(i % 10) * 1.4f - 6.3f, y = (float)(i / 10) * 1.6f - 3.2f, z = 2.0f + 0.1f * (float)i;
++		vtx[0] = x; vtx[1] = y; vtx[2] = z; vtx[3] = x + 0.6f; vtx[4] = y; vtx[5] = z;
++		vtx[6] = x + 0.6f; vtx[7] = y + 0.6f; vtx[8] = z; vtx[9] = x; vtx[10] = y + 0.6f; vtx[11] = z;
++		GL32.glBindTexture(GL_TEXTURE_2D, tex_world[i & 7]);
++		GL32.glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, idx);
++	}
++	GL32.glDisableClientState(GL_TEXTURE_COORD_ARRAY);
++	GL32.glDisableClientState(GL_VERTEX_ARRAY);
 +	GL32.glDisable(GL_TEXTURE_2D);
 +	GL32.glDisable(GL_DEPTH_TEST);
 +	GL32.glFlush();
@@ -4648,6 +4787,10 @@ index 6c6d2fc1..fb966069 100644
 +		{
 +			setup_scene = 1;
 +		}
++		else if(strcmp(argv[i], "stress") == 0)
++		{
++			setup_scene = 2;
++		}
 +		else
 +		{
 +			GUIError("Command line: unknown argument '%s'\n\nrun '%s help' to list supported command line arguments", argv[i], argv[0]);
@@ -4874,7 +5017,9 @@ index 6c6d2fc1..fb966069 100644
 +			TranslateMessage(&msg);
 +			DispatchMessage(&msg);
 +		}
-+		if(setup_scene)
++		if(setup_scene == 2)
++			draw_stress(0.5f * timer, (unsigned)timer);
++		else if(setup_scene)
 +			draw_textured(0.5f * timer, (unsigned)timer);
 +		else
 +			draw(0.2f * timer, (timer >> 2) & 0xFF);
@@ -4899,10 +5044,10 @@ index 6c6d2fc1..fb966069 100644
 +	return 0;
 +}
 diff --git a/wgltest_api.h b/wgltest_api.h
-index 52b80742..2892acc1 100644
+index 52b80742..8f199ce9 100644
 --- a/wgltest_api.h
 +++ b/wgltest_api.h
-@@ -1,41 +1,64 @@
+@@ -1,41 +1,69 @@
 -/*
 - - name
 - - GetProcAddress/wglGetProcAddress
@@ -4986,6 +5131,11 @@ index 52b80742..2892acc1 100644
 +GL_API_LOAD(glFogfv,           FUNC_GL, LIB_GL32)
 +GL_API_LOAD(glHint,            FUNC_GL, LIB_GL32)
 +GL_API_LOAD(glGetError,        FUNC_GL, LIB_GL32)
++GL_API_LOAD(glVertexPointer,   FUNC_GL, LIB_GL32)
++GL_API_LOAD(glTexCoordPointer, FUNC_GL, LIB_GL32)
++GL_API_LOAD(glEnableClientState,  FUNC_GL, LIB_GL32)
++GL_API_LOAD(glDisableClientState, FUNC_GL, LIB_GL32)
++GL_API_LOAD(glDrawElements,    FUNC_GL, LIB_GL32)
 +GL_API_LOAD(wglMakeCurrent,    FUNC_WGL, LIB_GL32)
 +GL_API_LOAD(wglCreateContext,  FUNC_WGL, LIB_GL32)
 +GL_API_LOAD(wglDeleteContext,  FUNC_WGL, LIB_GL32)

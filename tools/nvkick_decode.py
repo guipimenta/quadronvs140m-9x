@@ -149,7 +149,7 @@ def decode(kick, lookups, out):
             out(f"  ... stream truncated (header wants {count}, {len(data)} left)")
         i += 1 + count
 
-VM_BASE, HEAP_BASE, HEAP_END = 0x40000000, 0x04000000, 0x08000000
+VM_BASE, HEAP_BASE, HEAP_END = 0x40000000, 0x02010000, 0x08000000   # 3095: second heap region from 32 MiB + 64 KiB
 FIXED_HANDLES = {0xbeef502d, 0xbeef0002, 0xbeef0003}   # nv_chan_init's own RAMHT entries
 
 def bound_handles(logpath, tailpath):

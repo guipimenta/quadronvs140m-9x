@@ -522,6 +522,64 @@ T61 order: (1) `wgltest driver mesa3d.dll window texture` in the nvgl box - the 
 the log must show 'graph_units reg/used f3010001 f3010001' and 'stats traps/warns 0 0';
 (2) Half-Life via nvhl.bat.
 
+### 3094 on the T61 (2026-10-28): MILESTONE - Half-Life renders on the GPU; ~1 frame per 13 s
+Both tests passed: the textured cube, and Half-Life (640x480x16 fullscreen, front = B5G6R5
+surface 0 pitch 1280) rendering through Mesa's nv50 driver on the G86 under Windows 98 - the
+goal of M5. But in-game it was a slide show: 'wgl: present frames/ms' = 1 frame per 13-17 s,
+with ~1,163 kicks per frame (stats deltas), ~60k method dwords and ~1.2 MB of flushes per
+frame, zero traps, zero warnings. analysis/t61-logs/3094-*. Level load allocated ~1,900
+tiled textures (GoldSrc uploads each mip level with glTexImage2D, so Mesa reallocates the
+miptree per level), 61 MB of the 64 MB heap.
+Cause: upstream Mesa's nv50_draw_vbo ends EVERY draw with PUSH_KICK (added with the screen
+state lock for multi-context use). With libdrm a kick is an asynchronous queue operation;
+here every kick is a synchronous submit through the VxD that waits for the GPU to drain
+(~1-10 ms each: ioctl, method writes through BAR1, IB wait, PGRAPH idle poll, two ring
+lines, the shim's whole-BO dirty-diff of the 2 MB uploader). GoldSrc draws every world
+surface with its own glBegin/glEnd, so ~1,160 draws = ~1,160 drains = 13 s.
+
+### M5.5 step 4 (build 3095): game speed
+- Mesa patch, nv50_vbo.c (18th file): no PUSH_KICK at the end of nv50_draw_vbo under
+  WIN9X - draws accumulate until a flush/swap, a fence wait, a map of a pending BO or a
+  full pushbuffer (the pre-lock behaviour; single-threaded, the lock is uncontended).
+  Stress scene under the fake GPU: ~650 kicks/frame -> ~3.
+- Shim: libdrm map/wait semantics - nouveau_bo_map/bo_wait submit only when THAT BO is
+  kref'd by a pending pushbuf and access != 0 (3083's "libdrm kicks implicitly on map"
+  was wrong: it kicks only the pushbuf holding the BO); nouveau_pushbuf_data copies the
+  VB_ELEMENT index payload inline after its header (was two submits per indexed draw;
+  header re-emitted after a forced flush when the data does not fit); RANGE-DIRECTED
+  FLUSH - shim_kick_scan walks the stream before the flush and bounds what the engines
+  read per BO (VERTEX_ARRAY_FETCH enable|stride + START_LOW, VERTEX_BUFFER_FIRST/COUNT per
+  draw, LIMIT clip; CB_DEF_ADDRESS/SET; M2MF linear sources; indexed draws and 2D sources =
+  whole BO; an unseen reference = whole BO) and shim_bo_flush diffs only that window; the
+  3094 self-check is the verify pass of the same walk; second heap region [32 MiB+64 KiB,
+  48 MiB) between the EVO reservation and the GPU channel (88 MiB in all); kref list 2048
+  with O(1) dedup (push, gen stamp); BO registry sorted by phys + bisection (shim_bo_at was
+  a linear scan over ~2,000 BOs per vertex array per draw); pushbuf cap 0x3C000 dwords
+  (one submit must fit the VxD's 1 MiB region - Mesa's 512 KiB was read as dwords); kick
+  dump capped at 8 MB; log policy: FlushFileBuffers for the first 512 lines, then 1 in 64
+  and always for WARN/FAIL/DEAD/TRAP/WEDGE/kick/DETACH/stats lines (a per-line fsync cost
+  ~1 ms = 34 ms/frame in the stress scene; FAT write-through on the T61 likewise), bo_new/
+  bo_kind lines for the first 512 then 1 in 256.
+- Stats: 'wgl: stats kicks mapwait/internal' (kicks the shim forced), 'submit ms' (time
+  inside OP_NV_SUBMIT), 'kcyc validate/kick' and 'kcyc flush/bo' (shim CPU time, TSC
+  kcycles), one 'kick #/ms/cnt' sample per 256 kicks.
+- VxD: 'S> submit begin/end' only for the first 64 kicks and 1 in 256 (wedge/trap/fail
+  always); a submit larger than the 1 MiB region is refused ('too large') instead of
+  overrunning the IB ring. DRV unchanged bar the stamp.
+- wgltest 'stress' scene (GoldSrc-shaped: 600 glBegin/glEnd quads over 72 textures, 32
+  lightmap patches, 50 client-array glDrawElements per frame; wgltest_api.h gains
+  glVertexPointer/glTexCoordPointer/glEnable/DisableClientState/glDrawElements).
+- Fake GPU (analysis/fake-runs/3095-*): stress ~3 kicks/frame, ~70 ms/frame under Wine of
+  which the shim is ~4 ms (kick 3.5, validate 0.1, flush 0.2; llvmpipe takes 110 ms for the
+  same scene - the rest is Mesa's own per-draw cost), validator clean, 0 warnings; texture
+  and triangle scenes clean.
+T61: Half-Life via nvhl.bat (copy the new mesa3d.dll next to hl.exe again) - read 'present
+frames/ms' vs 'submit ms' and the kcyc lines to see what remains: GPU/VxD wait, shim CPU or
+Mesa CPU. Also `wgltest driver mesa3d.dll window stress` for a comparable number.
+Known: Mesa's per-draw CPU cost (~100 us per textured glBegin/glEnd under Wine) is now the
+likely ceiling; options later: the VxD writing methods with rep movsd / WC, ring-3 direct
+BAR1 access for fences and flushes (Win9x shares the system arena), fewer state atoms.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

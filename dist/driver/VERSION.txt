@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3094  (M5.5 step 3: two shim bugs from the 3093 T61 run fixed - textures were never flushed to VRAM (libdrm kref semantics added to the pushbuf) and nouveau_getparam returned uptime-derived garbage (Half-Life's screen create divided by zero: 'OpenGL mode not supported'); new pre-submit self-check 'KICK WARN'. VxD/DRV unchanged bar the stamp. Test: wgltest driver mesa3d.dll window texture (nvgl box), then Half-Life via nvhl.bat)
+Build: 3095  (M5.5 step 4: game speed. 3094 on the T61 = Half-Life renders on the GPU (milestone) but ~1 frame per 13 s from ~1,160 synchronous kicks per frame: the shim kicked on every buffer map. Now libdrm map/wait semantics, inline index payloads, range-directed flushes, 88 MiB heap, kick-source stats. VxD: per-kick ring lines gated. Test: Half-Life via nvhl.bat; wgltest driver mesa3d.dll window stress)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

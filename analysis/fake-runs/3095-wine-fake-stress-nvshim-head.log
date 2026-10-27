@@ -1,0 +1,316 @@
+[0] ==== shim log open, instance 79119274
+[0] wgl: DllMain ATTACH hinst 75b00000
+[24] wgl: screen_create ENTER lasterr/sw_only 0000007e 00000000
+[25] wgl: try driver 'nouveau' 00000000
+[26] wgl: nouveau_drm_screen_create enter lasterr 0000007e
+[26] winsys: nouveau_screen_create enter fd 00000000 00000000
+[27] drm_new fd 00000000
+[27] winsys: drm_new ret/drm 00000000 009e7130
+[28] device_new
+[28] winsys: device_new ret/dev 00000000 009e7a90
+[29] winsys: chipset 00000086 00000000
+[32] object_new handle/oclass 00000000 80000001
+[33] bind handle/class/engine beef0201 0000003d 00000000
+[33] bind handle/class/engine beef0202 0000003d 00000000
+[34] client_new ok
+[34] pushbuf_new cap 0003c000
+[38] bo_new sz/phys/vmoff 00001000 02010000 42010000
+[38] object_new handle/oclass beef0301 80000002
+[39] bind handle/class/engine beef0301 80000002 00000000
+[39] object_new handle/oclass beef5039 00005039
+[40] bind handle/class/engine beef5039 00005039 00000001
+[40] object_new handle/oclass beef502d 0000502d
+[41] bind handle/class/engine beef502d 0000502d 00000001
+[42] object_new handle/oclass beef5097 00008297
+[42] bind handle/class/engine beef5097 00008297 00000001
+[43] bo_new sz/phys/vmoff 00181000 02020000 42020000
+[43] graph_units reg/used f3010001 f3010001
+[44] bo_new sz/phys/vmoff 00008000 021b0000 421b0000
+[44] bo_new sz/phys/vmoff 00020000 021c0000 421c0000
+[45] bo_new sz/phys/vmoff 00050000 021e0000 421e0000
+[45] bo_new sz/phys/vmoff 00030000 02230000 42230000
+[47] object_new handle/oclass beef50c0 000050c0
+[48] bind handle/class/engine beef50c0 000050c0 00000001
+[48] kick > cnt/m0/m1 0000025c 0004a000 beef5039
+[50] kick ok cnt/put/pgi 0000025c 03200000 00000000
+[51] winsys: init(dev) screen 00a404a0 00000000
+[52] winsys: context_create fn 75b7a630 00000000
+[52] wgl: nouveau_drm_screen_create exit screen/lasterr 00a404a0 0000007e
+[53] wgl: result screen/lasterr 00a404a0 0000007e
+[112] stw: pixelformat_init count 000001e0 00000000
+[112] stw: init_screen done screen/max2d 00a404a0 00002000
+[113] stw: DescribePF count-query hdc/count 0b010054 000001e0
+[278] stw: SetPF enter ipf/count 00000001 000001e0
+[278] stw: fb_create hwnd/pfi 00020052 00a0f7c0
+[278] stw: SetPF fb_create ret/pfi 009eb280 00a0f7c0
+[278] stw: SetPF GDI GetPixelFormat ret/lasterr 00000000 00000008
+[292] stw: SetPF GDI SetPixelFormat ret/lasterr 00000001 00000578
+[292] stw: SetPF OK hwnd 00020052 00000000
+[292] stw: CreateLayerContext hdc/lasterr 0b010054 00000578
+[292] stw: get_info_from_hdc hdc/fb 0b010054 009eb280
+[292] stw: CreateLayerContext pfi 00a0f7c0 00000000
+[292] stw: create_context_attribs enter hdc/pfi 0b010054 00a0f7c0
+[292] stw: attribs profile/major 00000000 00000001
+[297] nv50: create enter 00a46da0 00000000
+[297] client_new ok
+[297] nouveau: context_init client_new ret 00000000 00000000
+[297] pushbuf_new cap 0003c000
+[297] nouveau: context_init pushbuf ret 00000000 00000000
+[297] nv50: nouveau_context_init ret 00000000 00000000
+[297] bufctx_new ok bins 00000002
+[297] bufctx_new ok bins 00000038
+[297] bufctx_new ok bins 00000016
+[297] nv50: bufctx_new x3 ret 00000000 00000000
+[297] nv50: stream_uploader 009d6510 00000000
+[304] bo_new sz/phys/vmoff 00001000 02011000 42011000
+[304] nv50: create OK pipe 00a46da0 00000000
+[304] st: screen->context_create pipe 00a46da0 00000000
+[324] st: st_create_context st 00a22840 00000000
+[324] stw: st_api_create_context st/err 00a22840 00000000
+[324] stw: CreateLayerContext ctx/dhglrc 009e6cb0 00000001
+[324] stw: SetContext hdc/dhglrc 0b010054 00000001
+[333] bo_new sz/phys/vmoff 00010000 02260000 42260000
+[333] bo_kind phys/size/kind 02260000 00010000 00000070
+[333] bo_new sz/phys/vmoff 00010000 02270000 42270000
+[333] bo_kind phys/size/kind 02270000 00010000 00000028
+[336] stw: ReleaseContext dhglrc 00000001 00000000
+[336] kick > cnt/m0/m1 00000022 00088200 000000f3
+[336] kick ok cnt/put/pgi 00000022 03200970 00000000
+[389] stw: SetPF enter ipf/count 00000001 000001e0
+[389] stw: fb_create hwnd/pfi 00030058 00a0f7c0
+[389] stw: SetPF fb_create ret/pfi 0196cdf0 00a0f7c0
+[389] stw: SetPF GDI GetPixelFormat ret/lasterr 00000000 00000000
+[411] stw: SetPF GDI SetPixelFormat ret/lasterr 00000001 00000578
+[411] stw: SetPF OK hwnd 00030058 00000000
+[411] stw: CreateLayerContext hdc/lasterr 1c010059 00000578
+[411] stw: get_info_from_hdc hdc/fb 1c010059 0196cdf0
+[411] stw: CreateLayerContext pfi 00a0f7c0 00000000
+[411] stw: create_context_attribs enter hdc/pfi 1c010059 00a0f7c0
+[411] stw: attribs profile/major 00000000 00000001
+[411] nv50: create enter 00a4f780 00000000
+[411] client_new ok
+[411] nouveau: context_init client_new ret 00000000 00000000
+[411] pushbuf_new cap 0003c000
+[411] nouveau: context_init pushbuf ret 00000000 00000000
+[411] nv50: nouveau_context_init ret 00000000 00000000
+[411] bufctx_new ok bins 00000002
+[411] bufctx_new ok bins 00000038
+[411] bufctx_new ok bins 00000016
+[411] nv50: bufctx_new x3 ret 00000000 00000000
+[411] nv50: stream_uploader 009d6660 00000000
+[423] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[423] nv50: create OK pipe 00a4f780 00000000
+[423] st: screen->context_create pipe 00a4f780 00000000
+[434] st: st_create_context st 01c920a0 00000000
+[434] stw: st_api_create_context st/err 01c920a0 00000000
+[434] stw: CreateLayerContext ctx/dhglrc 0196e540 00000002
+[434] stw: SetContext hdc/dhglrc 1c010059 00000002
+[443] bo_new sz/phys/vmoff 00120000 02280000 42280000
+[443] bo_kind phys/size/kind 02280000 00120000 00000070
+[443] bo_new sz/phys/vmoff 00120000 023a0000 423a0000
+[443] bo_kind phys/size/kind 023a0000 00120000 00000028
+[457] bo_new sz/phys/vmoff 00040000 024c0000 424c0000
+[457] bo_kind phys/size/kind 024c0000 00040000 00000070
+[457] bo_new sz/phys/vmoff 00040000 02500000 42500000
+[460] bo_new sz/phys/vmoff 00060000 02540000 42540000
+[460] bo_kind phys/size/kind 02540000 00060000 00000070
+[460] bo_new sz/phys/vmoff 00010000 025a0000 425a0000
+[461] bo_new sz/phys/vmoff 00004000 02013000 42013000
+[462] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[463] bo_new sz/phys/vmoff 00000400 02018000 42018000
+[463] bo_new sz/phys/vmoff 00000100 02018400 42018400
+[464] bo_new sz/phys/vmoff 00000040 02018500 42018500
+[465] bo_new sz/phys/vmoff 00000010 02018600 42018600
+[465] bo_new sz/phys/vmoff 00000004 02018700 42018700
+[466] bo_new sz/phys/vmoff 00040000 025b0000 425b0000
+[466] bo_kind phys/size/kind 025b0000 00040000 00000070
+[466] bo_new sz/phys/vmoff 00040000 025f0000 425f0000
+[469] bo_new sz/phys/vmoff 00060000 02630000 42630000
+[469] bo_kind phys/size/kind 02630000 00060000 00000070
+[469] bo_new sz/phys/vmoff 00010000 02690000 42690000
+[470] bo_new sz/phys/vmoff 00004000 02018800 42018800
+[471] bo_new sz/phys/vmoff 00001000 0201c800 4201c800
+[472] bo_new sz/phys/vmoff 00000400 0201d800 4201d800
+[472] bo_new sz/phys/vmoff 00000100 0201dc00 4201dc00
+[473] bo_new sz/phys/vmoff 00000040 0201dd00 4201dd00
+[474] bo_new sz/phys/vmoff 00000010 0201de00 4201de00
+[474] bo_new sz/phys/vmoff 00000004 0201df00 4201df00
+[475] bo_new sz/phys/vmoff 00040000 026a0000 426a0000
+[475] bo_kind phys/size/kind 026a0000 00040000 00000070
+[475] bo_new sz/phys/vmoff 00040000 026e0000 426e0000
+[477] bo_new sz/phys/vmoff 00060000 02720000 42720000
+[477] bo_kind phys/size/kind 02720000 00060000 00000070
+[477] bo_new sz/phys/vmoff 00010000 02780000 42780000
+[479] bo_new sz/phys/vmoff 00004000 021a1000 421a1000
+[480] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[480] bo_new sz/phys/vmoff 00000400 0201f000 4201f000
+[481] bo_new sz/phys/vmoff 00000100 0201f400 4201f400
+[482] bo_new sz/phys/vmoff 00000040 0201f500 4201f500
+[482] bo_new sz/phys/vmoff 00000010 0201f600 4201f600
+[483] bo_new sz/phys/vmoff 00000004 0201f700 4201f700
+[484] bo_new sz/phys/vmoff 00040000 02790000 42790000
+[484] bo_kind phys/size/kind 02790000 00040000 00000070
+[484] bo_new sz/phys/vmoff 00040000 027d0000 427d0000
+[486] bo_new sz/phys/vmoff 00060000 02810000 42810000
+[486] bo_kind phys/size/kind 02810000 00060000 00000070
+[486] bo_new sz/phys/vmoff 00010000 02870000 42870000
+[488] bo_new sz/phys/vmoff 00004000 021a5000 421a5000
+[489] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[489] bo_new sz/phys/vmoff 00000400 0201f800 4201f800
+[490] bo_new sz/phys/vmoff 00000100 0201fc00 4201fc00
+[491] bo_new sz/phys/vmoff 00000040 0201fd00 4201fd00
+[491] bo_new sz/phys/vmoff 00000010 0201fe00 4201fe00
+[492] bo_new sz/phys/vmoff 00000004 0201ff00 4201ff00
+[493] bo_new sz/phys/vmoff 00040000 02880000 42880000
+[493] bo_kind phys/size/kind 02880000 00040000 00000070
+[493] bo_new sz/phys/vmoff 00040000 028c0000 428c0000
+[495] bo_new sz/phys/vmoff 00060000 02900000 42900000
+[495] bo_kind phys/size/kind 02900000 00060000 00000070
+[495] bo_new sz/phys/vmoff 00010000 02960000 42960000
+[497] bo_new sz/phys/vmoff 00004000 021aa000 421aa000
+[497] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[498] bo_new sz/phys/vmoff 00000400 021af000 421af000
+[499] bo_new sz/phys/vmoff 00000100 021af400 421af400
+[499] bo_new sz/phys/vmoff 00000040 021af500 421af500
+[500] bo_new sz/phys/vmoff 00000010 021af600 421af600
+[501] bo_new sz/phys/vmoff 00000004 021af700 421af700
+[502] bo_new sz/phys/vmoff 00040000 02970000 42970000
+[502] bo_kind phys/size/kind 02970000 00040000 00000070
+[502] bo_new sz/phys/vmoff 00040000 029b0000 429b0000
+[504] bo_new sz/phys/vmoff 00060000 029f0000 429f0000
+[504] bo_kind phys/size/kind 029f0000 00060000 00000070
+[504] bo_new sz/phys/vmoff 00010000 02a50000 42a50000
+[506] bo_new sz/phys/vmoff 00004000 021b8000 421b8000
+[506] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[507] bo_new sz/phys/vmoff 00000400 021af800 421af800
+[508] bo_new sz/phys/vmoff 00000100 021afc00 421afc00
+[508] bo_new sz/phys/vmoff 00000040 021afd00 421afd00
+[509] bo_new sz/phys/vmoff 00000010 021afe00 421afe00
+[509] bo_new sz/phys/vmoff 00000004 021aff00 421aff00
+[510] bo_new sz/phys/vmoff 00040000 02a60000 42a60000
+[510] bo_kind phys/size/kind 02a60000 00040000 00000070
+[510] bo_new sz/phys/vmoff 00040000 02aa0000 42aa0000
+[512] bo_new sz/phys/vmoff 00060000 02ae0000 42ae0000
+[512] bo_kind phys/size/kind 02ae0000 00060000 00000070
+[512] bo_new sz/phys/vmoff 00010000 02b40000 42b40000
+[514] bo_new sz/phys/vmoff 00004000 02b50000 42b50000
+[515] bo_new sz/phys/vmoff 00001000 021bd000 421bd000
+[516] bo_new sz/phys/vmoff 00000400 021be000 421be000
+[516] bo_new sz/phys/vmoff 00000100 021be400 421be400
+[517] bo_new sz/phys/vmoff 00000040 021be500 421be500
+[518] bo_new sz/phys/vmoff 00000010 021be600 421be600
+[518] bo_new sz/phys/vmoff 00000004 021be700 421be700
+[519] bo_new sz/phys/vmoff 00040000 02b60000 42b60000
+[519] bo_kind phys/size/kind 02b60000 00040000 00000070
+[519] bo_new sz/phys/vmoff 00040000 02ba0000 42ba0000
+[521] bo_new sz/phys/vmoff 00060000 02be0000 42be0000
+[521] bo_kind phys/size/kind 02be0000 00060000 00000070
+[521] bo_new sz/phys/vmoff 00010000 02c40000 42c40000
+[523] kick > cnt/m0/m1 0000063f 00088200 000000f3
+[523] kick ok cnt/put/pgi 0000063f 032009f8 00000000
+[523] bo_new sz/phys/vmoff 00001000 021bf000 421bf000
+[531] bo_new sz/phys/vmoff 00004000 02012000 42012000
+[532] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[533] bo_new sz/phys/vmoff 00000400 02017000 42017000
+[533] bo_new sz/phys/vmoff 00000100 02017400 42017400
+[534] bo_new sz/phys/vmoff 00000040 02017500 42017500
+[535] bo_new sz/phys/vmoff 00000010 02017600 42017600
+[535] bo_new sz/phys/vmoff 00000004 02017700 42017700
+[539] bo_new sz/phys/vmoff 00010000 02500000 42500000
+[539] bo_kind phys/size/kind 02500000 00010000 00000070
+[539] bo_new sz/phys/vmoff 00010000 02510000 42510000
+[541] bo_new sz/phys/vmoff 00010000 02520000 42520000
+[541] bo_kind phys/size/kind 02520000 00010000 00000070
+[541] bo_new sz/phys/vmoff 00010000 02530000 42530000
+[543] bo_new sz/phys/vmoff 00010000 025a0000 425a0000
+[543] bo_kind phys/size/kind 025a0000 00010000 00000070
+[543] bo_new sz/phys/vmoff 00010000 025f0000 425f0000
+[545] bo_new sz/phys/vmoff 00010000 02600000 42600000
+[545] bo_kind phys/size/kind 02600000 00010000 00000070
+[545] bo_new sz/phys/vmoff 00010000 02610000 42610000
+[547] bo_new sz/phys/vmoff 00010000 02620000 42620000
+[547] bo_kind phys/size/kind 02620000 00010000 00000070
+[547] bo_new sz/phys/vmoff 00010000 02690000 42690000
+[549] bo_new sz/phys/vmoff 00010000 026e0000 426e0000
+[549] bo_kind phys/size/kind 026e0000 00010000 00000070
+[549] bo_new sz/phys/vmoff 00010000 026f0000 426f0000
+[550] bo_new sz/phys/vmoff 00010000 02700000 42700000
+[550] bo_kind phys/size/kind 02700000 00010000 00000070
+[550] bo_new sz/phys/vmoff 00010000 02710000 42710000
+[552] bo_new sz/phys/vmoff 00010000 02780000 42780000
+[552] bo_kind phys/size/kind 02780000 00010000 00000070
+[552] bo_new sz/phys/vmoff 00010000 027d0000 427d0000
+[554] bo_new sz/phys/vmoff 00010000 027e0000 427e0000
+[554] bo_kind phys/size/kind 027e0000 00010000 00000070
+[555] kick > cnt/m0/m1 00000168 0004a200 00000001
+[555] kick ok cnt/put/pgi 00000168 032022f4 00000000
+[555] bo_new sz/phys/vmoff 00001000 02018000 42018000
+[558] bo_new sz/phys/vmoff 00010000 027f0000 427f0000
+[559] bo_new sz/phys/vmoff 00010000 02800000 42800000
+[559] bo_kind phys/size/kind 02800000 00010000 00000070
+[559] bo_new sz/phys/vmoff 00010000 02870000 42870000
+[560] bo_new sz/phys/vmoff 00010000 028c0000 428c0000
+[560] bo_kind phys/size/kind 028c0000 00010000 00000070
+[560] bo_new sz/phys/vmoff 00010000 028d0000 428d0000
+[562] bo_new sz/phys/vmoff 00010000 028e0000 428e0000
+[562] bo_kind phys/size/kind 028e0000 00010000 00000070
+[562] bo_new sz/phys/vmoff 00010000 028f0000 428f0000
+[564] bo_new sz/phys/vmoff 00010000 02960000 42960000
+[564] bo_kind phys/size/kind 02960000 00010000 00000070
+[564] bo_new sz/phys/vmoff 00010000 029b0000 429b0000
+[566] bo_new sz/phys/vmoff 00010000 029c0000 429c0000
+[566] bo_kind phys/size/kind 029c0000 00010000 00000070
+[566] bo_new sz/phys/vmoff 00010000 029d0000 429d0000
+[568] bo_new sz/phys/vmoff 00010000 029e0000 429e0000
+[568] bo_kind phys/size/kind 029e0000 00010000 00000070
+[568] bo_new sz/phys/vmoff 00010000 02a50000 42a50000
+[570] bo_new sz/phys/vmoff 00010000 02aa0000 42aa0000
+[570] bo_kind phys/size/kind 02aa0000 00010000 00000070
+[570] bo_new sz/phys/vmoff 00010000 02ab0000 42ab0000
+[571] bo_new sz/phys/vmoff 00010000 02ac0000 42ac0000
+[571] bo_kind phys/size/kind 02ac0000 00010000 00000070
+[571] bo_new sz/phys/vmoff 00010000 02ad0000 42ad0000
+[573] bo_new sz/phys/vmoff 00010000 02b40000 42b40000
+[573] bo_kind phys/size/kind 02b40000 00010000 00000070
+[573] bo_new sz/phys/vmoff 00010000 02b50000 42b50000
+[575] bo_new sz/phys/vmoff 00010000 02ba0000 42ba0000
+[575] bo_kind phys/size/kind 02ba0000 00010000 00000070
+[575] bo_new sz/phys/vmoff 00010000 02bb0000 42bb0000
+[577] bo_new sz/phys/vmoff 00010000 02bc0000 42bc0000
+[577] bo_kind phys/size/kind 02bc0000 00010000 00000070
+[577] bo_new sz/phys/vmoff 00010000 02bd0000 42bd0000
+[579] bo_new sz/phys/vmoff 00010000 02c40000 42c40000
+[579] bo_kind phys/size/kind 02c40000 00010000 00000070
+[579] bo_new sz/phys/vmoff 00010000 02c50000 42c50000
+[581] bo_new sz/phys/vmoff 00010000 02c60000 42c60000
+[581] bo_kind phys/size/kind 02c60000 00010000 00000070
+[581] bo_new sz/phys/vmoff 00010000 02c70000 42c70000
+[583] bo_new sz/phys/vmoff 00010000 02c80000 42c80000
+[583] bo_kind phys/size/kind 02c80000 00010000 00000070
+[583] bo_new sz/phys/vmoff 00010000 02c90000 42c90000
+[584] bo_new sz/phys/vmoff 00010000 02ca0000 42ca0000
+[584] bo_kind phys/size/kind 02ca0000 00010000 00000070
+[584] bo_new sz/phys/vmoff 00010000 02cb0000 42cb0000
+[586] bo_new sz/phys/vmoff 00010000 02cc0000 42cc0000
+[586] bo_kind phys/size/kind 02cc0000 00010000 00000070
+[586] bo_new sz/phys/vmoff 00010000 02cd0000 42cd0000
+[588] bo_new sz/phys/vmoff 00010000 02ce0000 42ce0000
+[588] bo_kind phys/size/kind 02ce0000 00010000 00000070
+[588] bo_new sz/phys/vmoff 00010000 02cf0000 42cf0000
+[590] bo_new sz/phys/vmoff 00010000 02d00000 42d00000
+[8922] wgl: present frames/ms 0000001c 000007df
+[8922] wgl: stats kicks/kickdw 000001d1 002f501a
+[8922] wgl: stats flushdw/readdw 003e93a8 000001d8
+[8922] wgl: stats traps/warns 00000000 00000000
+[8922] wgl: stats kicks mapwait/internal 00000000 00000000
+[8922] wgl: stats submit ms 00000000
+[8922] wgl: stats kcyc validate/kick 00007844 00212625
+[8922] wgl: stats kcyc flush/bo 0000b416 000c780d
+[10924] wgl: present frames/ms 0000001d 000007d2
+[10924] wgl: stats kicks/kickdw 00000245 003b3724
+[10924] wgl: stats flushdw/readdw 0047a2a8 0000024c
+[10924] wgl: stats traps/warns 00000000 00000000
+[10924] wgl: stats kicks mapwait/internal 00000000 00000000
+[10924] wgl: stats submit ms 00000000
+[10924] wgl: stats kcyc validate/kick 000096c7 00219087
+[10924] wgl: stats kcyc flush/bo 0000c2b1 000c801a

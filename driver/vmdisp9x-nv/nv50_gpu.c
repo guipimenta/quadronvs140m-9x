@@ -692,6 +692,8 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 static int           g_chan_ready = 0;
 static unsigned long g_chan_put   = 0;    /* next free byte offset in the command region */
 static unsigned long g_ib_put     = 0;    /* next free IB ring entry index */
+static unsigned long g_nsub       = 0;    /* 3095: submits so far (log gating) */
+static int           nsub_verbose = 0;
 #define NVGPU_PUSHBUF_SIZE 0x00100000UL   /* 1 MiB command data region            */
 #define NVGPU_IB          0x03300000UL    /* IB ring (indirect-buffer entries)     */
 #define NVGPU_IB_ENTRIES  256UL           /* must be a power of two                 */
@@ -979,8 +981,15 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 		dbg_printf("S> submit REFUSED (wedged) cnt=%lu pgi=%08lX\n", count, out->pgraph_intr);
 		return 0;
 	}
-	dbg_printf("S> submit begin cnt=%lu m0=%08lX m1=%08lX ibput=%lu\n", count, methods[0],
-	           count > 1 ? methods[1] : 0, g_ib_put);
+	/* 3095: the per-kick begin/end lines are kept for the first 64 kicks and
+	 * then one in 256 - Half-Life makes hundreds of kicks a frame and the
+	 * ring + the nvprobe tail writer were a per-kick cost; wedges, traps and
+	 * failures are always logged. */
+	nsub_verbose = (g_nsub < 64UL || (g_nsub & 255UL) == 0) ? 1 : 0;
+	g_nsub++;
+	if(nsub_verbose)
+		dbg_printf("S> submit begin cnt=%lu m0=%08lX m1=%08lX ibput=%lu\n", count, methods[0],
+		           count > 1 ? methods[1] : 0, g_ib_put);
 
 	if(!g_chan_ready)
 	{
@@ -995,6 +1004,14 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 
 	/* IB mode: place the command stream in the data region (wrap if needed),
 	 * then post an indirect-buffer entry pointing at it and advance IB_PUT. */
+	if(bytes > NVGPU_PUSHBUF_SIZE)
+	{
+		/* 3095: a whole-frame kick larger than the region would run into the
+		 * IB ring behind it; refuse it instead (the shim caps its batches) */
+		out->ok = 0;
+		dbg_printf("S> submit REFUSED (too large) bytes=%lu\n", bytes);
+		return 0;
+	}
 	if(g_chan_put + bytes > NVGPU_PUSHBUF_SIZE)
 		g_chan_put = 0;
 	for(i = 0; i < count; i++)
@@ -1070,9 +1087,10 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 	out->ok          = 1;
 	if(out->traps)
 		dbg_printf("S> submit end with %lu TRAP(s) recovered, units=%08lX\n", out->traps, out->trap_units);
-	dbg_printf("S> submit end get=%lu pfi=%08lX loops=%lu gridle=%lu dmaget=%08lX c1put=%08lX c1get=%08lX pull0=%08lX\n",
-	           out->get, out->pfifo_intr, out->idle_loops, out->gr_idle, out->c1_get,
-	           NV_rd32(0x3210UL), NV_rd32(0x3270UL), out->pull0);
+	if(nsub_verbose)
+		dbg_printf("S> submit end get=%lu pfi=%08lX loops=%lu gridle=%lu dmaget=%08lX c1put=%08lX c1get=%08lX pull0=%08lX\n",
+		           out->get, out->pfifo_intr, out->idle_loops, out->gr_idle, out->c1_get,
+		           NV_rd32(0x3210UL), NV_rd32(0x3270UL), out->pull0);
 	return 1;
 }
 

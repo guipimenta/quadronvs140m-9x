@@ -98,11 +98,21 @@ game, Video options -> OpenGL, "Default" driver, 640x480 or 800x600.
 wgltest's "texture" scene (wgltest driver mesa3d.dll window texture) is the
 driver-side rehearsal of what a game needs (mipmapped textures, dynamic
 texture updates, depth, fog, blending, alpha test).
+wgltest's "stress" scene (build 3095+: wgltest driver mesa3d.dll window stress) is a
+GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patches,
+50 indexed draws) - its 'present frames/ms' is the driver's draw-call ceiling.
+The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
+the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
+and texture memory).
 Reading C:\nvshim.log (build 3094+): 'graph_units reg/used f3010001 f3010001'
 = the GPU's unit mask was read (1 TP x 2 MPs); 'wgl: stats traps/warns' every
 2 s must stay 0 0 - a 'KICK WARN' line means the engine was handed a buffer
 that is dead or not yet written to VRAM (the 3093 untextured-cube bug), and
 'kick TRAP' means the GPU faulted and the VxD recovered it.
+Build 3095+: 'stats kicks mapwait/internal' = kicks the shim forced (expect ~0),
+'stats submit ms' = time waiting on the GPU inside the VxD, 'stats kcyc
+validate/kick' and 'kcyc flush/bo' = the shim's own CPU time in thousands of
+TSC cycles; compare with 'present frames/ms' to see where a frame goes.
 
 OPENGL (build 3046+)
 --------------------
