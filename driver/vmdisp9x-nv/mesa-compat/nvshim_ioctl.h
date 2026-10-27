@@ -17,6 +17,7 @@
 #define OP_NV_VRAM_WRITE  0x5015  /* write a block of dwords into VRAM (BO flush) */
 #define OP_NV_BIND        0x5016  /* bind an object at a caller handle (RAMHT)   */
 #define OP_NV_DBG_PUTS    0x5018  /* append a trace string to the VxD debug ring */
+#define OP_NV_VM_KIND     0x5019  /* 3091: set the PTE storage kind of a BO's pages  */
 
 /* OP_NV_SUBMIT result (nv50_gpu.h: nv_gpu_submit_t). nvshim.c reads .ok only;
  * the rest keeps the layout identical to the VxD's so the ioctl memcpy fits. */
@@ -27,6 +28,7 @@ typedef struct nv_gpu_submit
 	unsigned long c1_push1, caches, c1_get, c1_put, ctxtable;
 	unsigned long dma_push, push0, pull0, dma_get_rb;
 	unsigned long wedged, idle_loops;   /* 3087: mirrors nv50_gpu.h (keep both in sync) */
+	unsigned long traps, trap_units;   /* 3091: PGRAPH traps recovered during this kick, OR of 0x400108 bits */
 } nv_gpu_submit_t;
 
 /* OP_NV_VRAM_READ result (nv50_gpu.h: nv_gpu_vread_t). */

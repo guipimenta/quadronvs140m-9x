@@ -1357,6 +1357,15 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			rc = 0;
 			break;
 		}
+		case OP_NV_VM_KIND:
+		{
+			/* 3091: inBuf[0] = VRAM byte offset, [1] = size, [2] = storage kind
+			 * (Mesa's nv50 memtype & 0x7f; 0 = linear). Tiled surfaces need it in
+			 * the PTEs or the ROP path (PROP) faults on the first tiled RT. */
+			outBuf[0] = NV_gpu_vmkind(inBuf[0], inBuf[1], inBuf[2]);
+			rc = 0;
+			break;
+		}
 		case OP_NV_BIND:
 		{
 			/* inBuf[0] = handle, inBuf[1] = object class */

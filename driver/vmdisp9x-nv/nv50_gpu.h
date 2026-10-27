@@ -61,6 +61,7 @@ typedef struct nv_gpu_submit
 	unsigned long c1_push1, caches, c1_get, c1_put, ctxtable;
 	unsigned long dma_push, push0, pull0, dma_get_rb;
 	unsigned long wedged, idle_loops;   /* 3087: 1 = GPU latched dead (trap/timeout), poll iterations */
+	unsigned long traps, trap_units;   /* 3091: PGRAPH traps recovered during this kick, OR of 0x400108 bits */
 } nv_gpu_submit_t;
 
 typedef struct nv_gpu_vread
@@ -79,5 +80,6 @@ typedef struct nv_gpu_bind
 } nv_gpu_bind_t;
 
 int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out);
+int NV_gpu_vmkind(unsigned long phys, unsigned long size, unsigned long kind);  /* 3091 */
 
 #endif /* NV50_GPU_H */

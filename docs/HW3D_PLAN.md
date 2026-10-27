@@ -385,6 +385,30 @@ VxD/DRV byte-identical to 3089 bar the stamp. The T61 run of 3090 answers what o
 silicon can: does the puller get through the init kick now that the compute object is
 bound, and does the clear land (present samples ff000000, triangle in the window).
 
+### M5.4 step 6 (build 3090 on the T61 -> 3091): the puller runs; the first tiled RT trips a PROP trap
+3090 on the T61 (analysis/t61-logs/3090-*): the init kick (604 dw) and the TSC upload (34 dw)
+complete (c1put == c1get, no interrupt) - 3089's compute bind was the puller stall. Kick 2
+(TSC upload + glClear) raises PGRAPH_INTR 0x00200000 (TRAP) with 0x400108 = 0x100 = PROP
+(nouveau nv50_gr_prop_trap: 2D-destination / render-target / CUDA-memory faults) while the
+dispatcher sits at RT_ARRAY_MODE (0x400704 = 0x80031224), i.e. right after RT_ADDRESS
+0x44270000 + RT_TILE_MODE 0x40 bound the first TILED render target. The stream itself is
+byte-identical to the Wine reference bar addresses (validator clean). Cause: nouveau writes a
+surface's storage KIND (memtype & 0x7f) into PTE bits 40-46 (vmmnv50.c: map->type |= kind
+<< 40; kernel: kind = (tile_flags & 0x7f00) >> 8); our 1:1 VM page table has 0 there
+(linear), and the ROP path refuses a tiled target on linear-kind pages.
+3091: OP_NV_VM_KIND (0x5019): the shim tags every tiled BO (tile_mode/memtype set; now
+64 KiB-aligned and 64 KiB-sized) with Mesa's kind (0x70 colour, 0x28 Z24S8, ...; no
+compression bits - nouveau drops comp when it has no tags) and the VxD writes the PTE high
+dwords + invalidates PGRAPH's TLB (0x100c80 = (0 << 16) | 1, wait bit 0); freed BOs go back to
+kind 0. NV_gpu_submit recovers PGRAPH traps like nouveau's nv50_gr_intr (per-unit dump:
+DISPATCH/M2MF/VFETCH/STRMOUT/CCACHE and per-TP TEXTURE/MP/PROP with PROP's fault address
+e10/e14 and the 2D(0x10)/RT(0x40)/CUDA(0x80) bits; clear unit status 0xc0000000; ack
+0x400108 + 0x400100; 0x400500 = 0x10001) and continues the kick (16 max), reporting
+traps/trap_units to the shim ('kick TRAP recovered'). So one T61 run now reports every
+fault with its address instead of stopping at the first. Fake-GPU/Wine run of 3091: clean.
+Expect on the T61: no trap, present samples ff000000, the triangle. If PROP still traps:
+the 'S> tp-prop' line gives the faulting address and which of 2D/RT/CUDA.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

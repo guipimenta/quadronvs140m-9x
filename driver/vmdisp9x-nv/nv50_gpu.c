@@ -806,6 +806,113 @@ static unsigned long nv_chan_init(void)
  * engine to drain and go idle, and fills diagnostics. */
 static unsigned long g_gpu_wedged = 0;   /* 3087: latched by a trap or an unconsumed kick */
 
+/* 3091: PGRAPH trap handling, after nouveau's nv50_gr_trap_handler. Dumps the
+ * faulting unit's registers (DISPATCH 0x400804.., M2MF 0x406800.., VFETCH
+ * 0x400c00.., STRMOUT 0x401800.., CCACHE 0x405000.., and per TP (0x1540 bits
+ * 16+): TEXTURE 0x408900, MP 0x408314, PROP 0x408e08 - PROP's e10/e14 are the
+ * fault address, ustatus 0x10 = 2D dst, 0x40 = render target, 0x80 = CUDA
+ * memory), clears each unit's status (0xc0000000), acks 0x400108/0x400100
+ * and restarts PGRAPH (0x400500 = 0x10001). The kick then continues, so one
+ * T61 run reports EVERY fault instead of stopping at the first. */
+static void gpu_dump8(const char *tag, unsigned long base, unsigned long n)
+{
+	unsigned long v[8], k;
+	for(k = 0; k < 8; k++) v[k] = (k < n) ? NV_rd32(base + k * 4) : 0;
+	dbg_printf("S> %s @%06lX %08lX %08lX %08lX %08lX %08lX %08lX %08lX %08lX\n", tag, base,
+	           v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+}
+static int gpu_trap_recover(unsigned long stat, unsigned long *units_acc)
+{
+	unsigned long trap = NV_rd32(0x400108UL), units = NV_rd32(0x001540UL), i;
+	dbg_printf("S> TRAP intr=%08lX trap=%08lX taddr=%08lX tdata=%08lX class=%08lX cur=%08lX units=%08lX\n",
+	           stat, trap, NV_rd32(0x400704UL), NV_rd32(0x400708UL), NV_rd32(0x400814UL),
+	           NV_rd32(PGRAPH_CTXCTL_CUR), units);
+	*units_acc |= trap;
+	if(!(stat & 0x00200000UL))
+	{
+		NV_wr32(PGRAPH_INTR, stat);          /* not a trap: just acknowledge */
+		return 1;
+	}
+	if(trap & 0x001UL)
+	{
+		gpu_dump8("dispatch", 0x400804UL, 5); gpu_dump8("dispatch2", 0x400848UL, 6);
+		NV_wr32(0x400500UL, 0); NV_wr32(0x400808UL, 0); NV_wr32(0x40084cUL, 0);
+		NV_wr32(0x400804UL, 0xc0000000UL); NV_wr32(0x400108UL, 0x001UL);
+	}
+	if(trap & 0x002UL)
+	{
+		gpu_dump8("m2mf", 0x406800UL, 5);
+		NV_wr32(0x400040UL, 2); NV_wr32(0x400040UL, 0);
+		NV_wr32(0x406800UL, 0xc0000000UL); NV_wr32(0x400108UL, 0x002UL);
+	}
+	if(trap & 0x004UL)
+	{
+		gpu_dump8("vfetch", 0x400c00UL, 5);
+		NV_wr32(0x400c04UL, 0xc0000000UL); NV_wr32(0x400108UL, 0x004UL);
+	}
+	if(trap & 0x008UL)
+	{
+		gpu_dump8("strmout", 0x401800UL, 5);
+		NV_wr32(0x400040UL, 0x80); NV_wr32(0x400040UL, 0);
+		NV_wr32(0x401800UL, 0xc0000000UL); NV_wr32(0x400108UL, 0x008UL);
+	}
+	if(trap & 0x010UL)
+	{
+		gpu_dump8("ccache", 0x405000UL, 8);
+		NV_wr32(0x405018UL, 0xc0000000UL); NV_wr32(0x400108UL, 0x010UL);
+	}
+	if(trap & 0x020UL)
+	{
+		gpu_dump8("unk402000", 0x402000UL, 1);
+		NV_wr32(0x402000UL, 0xc0000000UL); NV_wr32(0x400108UL, 0x020UL);
+	}
+	for(i = 0; i < 8; i++)
+	{
+		if(!(units & (1UL << (16 + i)))) continue;
+		if(trap & 0x040UL) { gpu_dump8("tp-texture", 0x408900UL + (i << 12), 5); NV_wr32(0x408900UL + (i << 12), 0xc0000000UL); }
+		if(trap & 0x080UL) { gpu_dump8("tp-mp",      0x408314UL + (i << 12), 6); NV_wr32(0x408314UL + (i << 12), 0xc0000000UL); }
+		if(trap & 0x100UL) { gpu_dump8("tp-prop",    0x408e08UL + (i << 12), 8); NV_wr32(0x408e08UL + (i << 12), 0xc0000000UL); }
+	}
+	if(trap & 0x040UL) NV_wr32(0x400108UL, 0x040UL);
+	if(trap & 0x080UL) NV_wr32(0x400108UL, 0x080UL);
+	if(trap & 0x100UL) NV_wr32(0x400108UL, 0x100UL);
+	if(trap & ~0x1ffUL) NV_wr32(0x400108UL, trap & ~0x1ffUL);
+	NV_wr32(PGRAPH_INTR, stat);
+	NV_wr32(0x400500UL, 0x00010001UL);
+	if(NV_rd32(0x400824UL) & 0x80000000UL)
+		NV_wr32(0x400824UL, NV_rd32(0x400824UL) & 0x7fffffffUL);
+	dbg_printf("S> TRAP acked; status=%08lX intr=%08lX trap=%08lX\n", NV_rd32(PGRAPH_STATUS), NV_rd32(PGRAPH_INTR), NV_rd32(0x400108UL));
+	return 1;
+}
+
+/* 3091: write the storage kind (nouveau's PTE bits 40-46 = high dword bits
+ * 8-14) into the 64 KiB PTEs covering [phys, phys+size), then invalidate
+ * PGRAPH's TLB (0x100c80, engine id 0, after nv50_vmm_flush). Tiled surfaces
+ * (RT_TILE_MODE/ZETA_TILE_MODE != 0) need the PTE kind that matches their
+ * format or the ROP path faults (3090 on the T61: PROP trap at the first RT). */
+int NV_gpu_vmkind(unsigned long phys, unsigned long size, unsigned long kind)
+{
+	unsigned long first, last, i, t;
+	if(!g_chan_ready)
+	{
+		if(!nv_chan_init()) return 0;
+		g_chan_ready = 1; g_chan_put = 0; g_ib_put = 0;
+	}
+	if(size == 0) return 0;
+	first = phys >> 16;
+	last  = (phys + size - 1) >> 16;
+	if(last >= 2048UL || first > last) return 0;
+	for(i = first; i <= last; i++)
+		NV_vram_wr32(NVGPU_VRAMPT + i * 8 + 4, (kind & 0x7fUL) << 8);
+	(void)NV_vram_rd32(NVGPU_VRAMPT + last * 8 + 4);
+	NV_wr32(0x100c80UL, (0UL << 16) | 1UL);
+	for(t = 0; t < 1000000UL; t++)
+		if(!(NV_rd32(0x100c80UL) & 1UL)) break;
+	dbg_printf("S> vmkind phys=%08lX size=%08lX kind=%02lX pages=%lu flushloops=%lu\n",
+	           phys, size, kind, last - first + 1, t);
+	return 1;
+}
+
 /* 3089: when a kick wedges, dump the PFIFO pusher/puller and PGRAPH state so the
  * stall point is visible: DMA GET/PUT (how far the pusher fetched), CACHE1
  * GET/PUT (cache fill; PUT-GET == cache size means the puller is stuck), PULL0
@@ -903,13 +1010,29 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 	NV_wr32(PFIFO_USER_IBPUT(chid), g_ib_put); /* kick: advance the IB put index */
 	for(i = 0; i < 2000000UL; i++)
 	{
+		unsigned long pgi;
 		if(NV_rd32(PFIFO_USER_IBGET(chid)) == g_ib_put)
 			break;
-		if(NV_rd32(PFIFO_INTR_0) || NV_rd32(PGRAPH_INTR))
+		if(NV_rd32(PFIFO_INTR_0))
 			break;
+		pgi = NV_rd32(PGRAPH_INTR);
+		if(pgi)
+		{
+			/* 3091: recover the trap and keep going (bounded) */
+			if(++out->traps > 16UL || !gpu_trap_recover(pgi, &out->trap_units))
+				break;
+		}
 	}
 	out->idle_loops = i;
 	out->gr_idle = gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 4000000UL);
+	for(i = 0; i < 4; i++)
+	{
+		unsigned long pgi = NV_rd32(PGRAPH_INTR);   /* traps raised while draining */
+		if(!pgi || out->traps >= 16UL) break;
+		out->traps++;
+		gpu_trap_recover(pgi, &out->trap_units);
+		out->gr_idle = gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 4000000UL);
+	}
 
 	out->get         = NV_rd32(PFIFO_USER_IBGET(chid));  /* IB get index */
 	out->put         = g_ib_put;                          /* IB put index */
@@ -930,7 +1053,7 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 	/* 3088: a graphics engine still busy after the idle wait (gr_idle hit its
 	 * bound) is a silent hang - 3087's T61 run showed the frame kick "consumed"
 	 * while the engine never finished, so the NEXT 3D method stalled the pusher. */
-	if(out->pgraph_intr || out->get != out->put || out->gr_idle >= 4000000UL)
+	if(out->pgraph_intr || out->get != out->put || out->gr_idle >= 4000000UL || out->traps >= 16UL)
 	{
 		g_gpu_wedged = 1;
 		out->wedged  = 1;
@@ -942,6 +1065,8 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 		return 1;
 	}
 	out->ok          = 1;
+	if(out->traps)
+		dbg_printf("S> submit end with %lu TRAP(s) recovered, units=%08lX\n", out->traps, out->trap_units);
 	dbg_printf("S> submit end get=%lu pfi=%08lX loops=%lu gridle=%lu dmaget=%08lX c1put=%08lX c1get=%08lX pull0=%08lX\n",
 	           out->get, out->pfifo_intr, out->idle_loops, out->gr_idle, out->c1_get,
 	           NV_rd32(0x3210UL), NV_rd32(0x3270UL), out->pull0);

@@ -1,0 +1,554 @@
+==== shim log open, instance 6cb15250
+wgl: DllMain ATTACH hinst 69500000
+wgl: screen_create ENTER lasterr/sw_only 00000000 00000000
+wgl: try driver 'nouveau' 00000000
+wgl: nouveau_drm_screen_create enter lasterr 00000000
+winsys: nouveau_screen_create enter fd 00000000 00000000
+drm_new fd 00000000
+winsys: drm_new ret/drm 00000000 00d40dd0
+device_new
+winsys: device_new ret/dev 00000000 00d141b0
+winsys: chipset 00000086 00000000
+object_new handle/oclass 00000000 80000001
+bind handle/class/engine beef0201 0000003d 00000000
+bind handle/class/engine beef0202 0000003d 00000000
+client_new ok
+pushbuf_new cap 00080000
+bo_new sz/phys/vmoff 00001000 04000000 44000000
+object_new handle/oclass beef0301 80000002
+bind handle/class/engine beef0301 80000002 00000000
+object_new handle/oclass beef5039 00005039
+bind handle/class/engine beef5039 00005039 00000001
+object_new handle/oclass beef502d 0000502d
+bind handle/class/engine beef502d 0000502d 00000001
+object_new handle/oclass beef5097 00008297
+bind handle/class/engine beef5097 00008297 00000001
+bo_new sz/phys/vmoff 00181000 04010000 44010000
+bo_new sz/phys/vmoff 00010000 041a0000 441a0000
+bo_new sz/phys/vmoff 00040000 041b0000 441b0000
+bo_new sz/phys/vmoff 00050000 041f0000 441f0000
+bo_new sz/phys/vmoff 00030000 04240000 44240000
+object_new handle/oclass beef50c0 000050c0
+bind handle/class/engine beef50c0 000050c0 00000001
+kick > cnt/m0/m1 0000025c 0004a000 beef5039
+kick ok cnt/put/pgi 0000025c 03200000 00000000
+winsys: init(dev) screen 00d62010 00000000
+winsys: context_create fn 69576920 00000000
+wgl: nouveau_drm_screen_create exit screen/lasterr 00d62010 00000000
+wgl: result screen/lasterr 00d62010 00000000
+stw: pixelformat_init count 000001e0 00000000
+stw: init_screen done screen/max2d 00d62010 00002000
+stw: DescribePF count-query hdc/count 0000120a 000001e0
+stw: ValidateVersion ver/stw_dev 00000001 6e023060
+stw: SetCallbackProcs n/stw_dev 00000003 6e023060
+stw: DescribePF count-query hdc/count 0000120a 000001e0
+stw: DescribePF i/cjpfd 00000001 00000028
+stw: DescribePF count-query hdc/count 0000120a 000001e0
+stw: DescribePF i/cjpfd 00000002 00000028
+stw: DescribePF count-query hdc/count 0000120a 000001e0
+stw: DescribePF i/cjpfd 00000064 00000028
+stw: DescribePF i/cjpfd 000000c8 00000028
+stw: DescribePF i/cjpfd 0000012c 00000028
+stw: DescribePF i/cjpfd 00000190 00000028
+stw: SetPF enter ipf/count 00000033 000001e0
+stw: fb_create hwnd/pfi 000002d0 00d84d58
+stw: SetPF fb_create ret/pfi 00d22280 00d84d58
+stw: SetPF GDI GetPixelFormat ret/lasterr 00000000 000007d0
+stw: SetPF enter ipf/count 00000033 000001e0
+stw: SetPF fb-exists owner/hwnd 00000000 000002d0
+stw: SetPF GDI SetPixelFormat ret/lasterr 00000000 000007d0
+stw: SetPF OK hwnd 000002d0 00000000
+stw: CreateLayerContext hdc/lasterr 0000120a 000007d0
+stw: get_info_from_hdc hdc/fb 0000120a 00d22280
+stw: CreateLayerContext pfi 00d84d58 00000000
+stw: create_context_attribs enter hdc/pfi 0000120a 00d84d58
+stw: attribs profile/major 00000000 00000001
+nv50: create enter 00d70010 00000000
+client_new ok
+nouveau: context_init client_new ret 00000000 00000000
+pushbuf_new cap 00080000
+nouveau: context_init pushbuf ret 00000000 00000000
+nv50: nouveau_context_init ret 00000000 00000000
+bufctx_new ok bins 00000002
+bufctx_new ok bins 00000038
+bufctx_new ok bins 00000016
+nv50: bufctx_new x3 ret 00000000 00000000
+nv50: stream_uploader 00d41dd0 00000000
+bo_new sz/phys/vmoff 00001000 04001000 44001000
+nv50: create OK pipe 00d70010 00000000
+st: screen->context_create pipe 00d70010 00000000
+st: st_create_context st 01536010 00000000
+stw: st_api_create_context st/err 01536010 00000000
+stw: CreateLayerContext ctx/dhglrc 00d6e3e0 00000001
+stw: SetContext hdc/dhglrc 0000120a 00000001
+bo_new sz/phys/vmoff 00000100 04002000 44002000
+bo_new sz/phys/vmoff 00000100 04003000 44003000
+stw: ReleaseContext dhglrc 00000001 00000000
+kick > cnt/m0/m1 00000022 00088200 000000f3
+kick ok cnt/put/pgi 00000022 03200970 00000000
+stw: DescribePF i/cjpfd 00000001 00000028
+stw: DescribePF i/cjpfd 00000002 00000028
+stw: DescribePF i/cjpfd 00000064 00000028
+stw: DescribePF i/cjpfd 000000c8 00000028
+stw: DescribePF i/cjpfd 0000012c 00000028
+stw: DescribePF i/cjpfd 00000190 00000028
+stw: SetPF enter ipf/count 00000033 000001e0
+stw: fb_create hwnd/pfi 000002d4 00d84d58
+stw: SetPF fb_create ret/pfi 00d22280 00d84d58
+stw: SetPF GDI GetPixelFormat ret/lasterr 00000000 000007d0
+stw: SetPF enter ipf/count 00000033 000001e0
+stw: SetPF fb-exists owner/hwnd 00000000 000002d4
+stw: SetPF GDI SetPixelFormat ret/lasterr 00000000 000007d0
+stw: SetPF OK hwnd 000002d4 00000000
+stw: CreateLayerContext hdc/lasterr 0000120a 000007d0
+stw: get_info_from_hdc hdc/fb 0000120a 00d22280
+stw: CreateLayerContext pfi 00d84d58 00000000
+stw: create_context_attribs enter hdc/pfi 0000120a 00d84d58
+stw: attribs profile/major 00000000 00000001
+nv50: create enter 0154f010 00000000
+client_new ok
+nouveau: context_init client_new ret 00000000 00000000
+pushbuf_new cap 00080000
+nouveau: context_init pushbuf ret 00000000 00000000
+nv50: nouveau_context_init ret 00000000 00000000
+bufctx_new ok bins 00000002
+bufctx_new ok bins 00000038
+bufctx_new ok bins 00000016
+nv50: bufctx_new x3 ret 00000000 00000000
+nv50: stream_uploader 01564050 00000000
+bo_new sz/phys/vmoff 00001000 04004000 44004000
+nv50: create OK pipe 0154f010 00000000
+st: screen->context_create pipe 0154f010 00000000
+st: st_create_context st 01a01010 00000000
+stw: st_api_create_context st/err 01a01010 00000000
+stw: CreateLayerContext ctx/dhglrc 00d6e750 00000002
+stw: SetContext hdc/dhglrc 0000120a 00000002
+bo_new sz/phys/vmoff 00140000 04270000 44270000
+bo_new sz/phys/vmoff 00140000 043b0000 443b0000
+kick > cnt/m0/m1 0000007e 00088200 000000f3
+kick FAIL cnt/get/put 0000007e 00000003 00000003
+kick FAIL pfi/pgi/wedged 00000000 00200000 00000001
+kick FAIL dmaget/dmaput/state 03200bf0 03200bf0 00007228
+kick FAIL pull0/dmapush/push0 70000001 00706111 00000001
+kick FAIL caches/ctxtab/putoff 00000001 80030020 032009f8
+GPU DEAD - submissions stopped, loops 00000001
+bo_new sz/phys/vmoff 00200000 044f0000 444f0000
+vram_read > off/dwords 044f0000 00080000
+vram_read < dwords 00080000
+kick refused: GPU dead, cnt 0000029c
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04005000 44005000
+kick refused: GPU dead, cnt 00000005
+bo_new sz/phys/vmoff 001165a0 046f0000 446f0000
+kick refused: GPU dead, cnt 00000018
+vram_read > off/dwords 046f0000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 8ec1edef a1bb1100
+wgl: present px(0,h-1)/px(w-1,0) 54820112 ff7ffe7e
+bo_new sz/phys/vmoff 00140000 046f0000 446f0000
+kick refused: GPU dead, cnt 0000005c
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04006000 44006000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04007000 44007000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04008000 44008000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04009000 44009000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0400a000 4400a000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0400b000 4400b000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0400c000 4400c000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0400d000 4400d000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0400e000 4400e000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0400f000 4400f000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04191000 44191000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04192000 44192000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04193000 44193000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04194000 44194000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04195000 44195000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04196000 44196000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04197000 44197000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04198000 44198000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04199000 44199000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0419a000 4419a000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0419b000 4419b000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0419c000 4419c000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0419d000 4419d000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0419e000 4419e000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0419f000 4419f000
+bo_new sz/phys/vmoff 001165a0 04830000 44830000
+vram_read > off/dwords 04830000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff 1d940900
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8e7
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04830000 44830000
+bo_new sz/phys/vmoff 001165a0 04831000 44831000
+vram_read > off/dwords 04831000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) f71f6b6e 53101115
+wgl: present px(0,h-1)/px(w-1,0) 809dffb7 f6ffde6b
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04831000 44831000
+bo_new sz/phys/vmoff 001165a0 04832000 44832000
+vram_read > off/dwords 04832000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 39b6fffe a1ab1100
+wgl: present px(0,h-1)/px(w-1,0) f4fffaff fffff592
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04832000 44832000
+bo_new sz/phys/vmoff 001165a0 04833000 44833000
+vram_read > off/dwords 04833000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 4abb3dbf 00b80004
+wgl: present px(0,h-1)/px(w-1,0) 00446703 fffff7f5
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04833000 44833000
+bo_new sz/phys/vmoff 001165a0 04834000 44834000
+vram_read > off/dwords 04834000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 8ec1edef 00240446
+wgl: present px(0,h-1)/px(w-1,0) 54820152 ff7ffe7e
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04834000 44834000
+bo_new sz/phys/vmoff 001165a0 04835000 44835000
+vram_read > off/dwords 04835000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) c6beceee 53001115
+wgl: present px(0,h-1)/px(w-1,0) 5fbb7fff ffff80fe
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04835000 44835000
+bo_new sz/phys/vmoff 001165a0 04836000 44836000
+vram_read > off/dwords 04836000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) e3fafbf7 a1bb1100
+wgl: present px(0,h-1)/px(w-1,0) 96c0fbf6 fffffbdf
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04836000 44836000
+bo_new sz/phys/vmoff 001165a0 04837000 44837000
+vram_read > off/dwords 04837000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) f9feffff 1b020122
+wgl: present px(0,h-1)/px(w-1,0) 8d67fbf7 8bfffe56
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04837000 44837000
+bo_new sz/phys/vmoff 001165a0 04838000 44838000
+vram_read > off/dwords 04838000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 1000d780 00920908
+wgl: present px(0,h-1)/px(w-1,0) 27bff3ff 44882500
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04838000 44838000
+bo_new sz/phys/vmoff 001165a0 04839000 44839000
+vram_read > off/dwords 04839000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 0209013d 00b80004
+wgl: present px(0,h-1)/px(w-1,0) 97dffff3 232c0400
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04839000 44839000
+bo_new sz/phys/vmoff 001165a0 0483a000 4483a000
+vram_read > off/dwords 0483a000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 96103948 00240446
+wgl: present px(0,h-1)/px(w-1,0) dcb36577 88201081
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0483a000 4483a000
+bo_new sz/phys/vmoff 001165a0 0483b000 4483b000
+vram_read > off/dwords 0483b000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 65112228 05041003
+wgl: present px(0,h-1)/px(w-1,0) 8d67fbf7 12300000
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0483b000 4483b000
+bo_new sz/phys/vmoff 001165a0 0483c000 4483c000
+vram_read > off/dwords 0483c000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) a2e2c3b1 1d940908
+wgl: present px(0,h-1)/px(w-1,0) 23bff3f7 33101000
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0483c000 4483c000
+bo_new sz/phys/vmoff 001165a0 0483d000 4483d000
+vram_read > off/dwords 0483d000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 010090c7 ffff7d3e
+wgl: present px(0,h-1)/px(w-1,0) 809dffb7 00d42040
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0483d000 4483d000
+bo_new sz/phys/vmoff 001165a0 0483e000 4483e000
+vram_read > off/dwords 0483e000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 1000d7c0 dfdfdbbc
+wgl: present px(0,h-1)/px(w-1,0) f4fbfafb 44883500
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0483e000 4483e000
+bo_new sz/phys/vmoff 001165a0 0483f000 4483f000
+vram_read > off/dwords 0483f000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 0209013d ff7fff7f
+wgl: present px(0,h-1)/px(w-1,0) 97dffff3 332e0400
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 0483f000 4483f000
+bo_new sz/phys/vmoff 001165a0 04840000 44840000
+vram_read > off/dwords 04840000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 080041c9 ffff51dd
+wgl: present px(0,h-1)/px(w-1,0) dcb36577 93420002
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04840000 44840000
+bo_new sz/phys/vmoff 001165a0 04841000 44841000
+vram_read > off/dwords 04841000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) c0168e88 fdfd964f
+wgl: present px(0,h-1)/px(w-1,0) 5fbb7fff 52380080
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04841000 44841000
+bo_new sz/phys/vmoff 001165a0 04842000 44842000
+vram_read > off/dwords 04842000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) a2e2cbf1 9ffe7f7d
+wgl: present px(0,h-1)/px(w-1,0) 96c0fbf6 33101000
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04842000 44842000
+bo_new sz/phys/vmoff 001165a0 04843000 44843000
+vram_read > off/dwords 04843000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 210291e7 ffff793e
+wgl: present px(0,h-1)/px(w-1,0) 00010812 00d42040
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04843000 44843000
+bo_new sz/phys/vmoff 001165a0 04844000 44844000
+vram_read > off/dwords 04844000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) b610394c 9fdf9bbc
+wgl: present px(0,h-1)/px(w-1,0) 140232c0 88201083
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04844000 44844000
+bo_new sz/phys/vmoff 001165a0 04845000 44845000
+vram_read > off/dwords 04845000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 65112228 efff79df
+wgl: present px(0,h-1)/px(w-1,0) 08200071 16301200
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04845000 44845000
+bo_new sz/phys/vmoff 001165a0 04846000 44846000
+vram_read > off/dwords 04846000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) 080045c9 efff676f
+wgl: present px(0,h-1)/px(w-1,0) 22008021 93420002
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04846000 44846000
+bo_new sz/phys/vmoff 001165a0 04847000 44847000
+vram_read > off/dwords 04847000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) c0168e88 fdfd964f
+wgl: present px(0,h-1)/px(w-1,0) 1e000399 52380080
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04847000 44847000
+bo_new sz/phys/vmoff 001165a0 04848000 44848000
+vram_read > off/dwords 04848000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) fef0ffff dfbe7f7d
+wgl: present px(0,h-1)/px(w-1,0) 0000a014 bfb5d8ef
+stw: SwapBuffers hdc 0000120a 00000000
+bo_new sz/phys/vmoff 00001000 04848000 44848000
+bo_new sz/phys/vmoff 001165a0 04849000 44849000
+vram_read > off/dwords 04849000 00045968
+vram_read < dwords 00045968
+wgl: present map/stride 01e00010 000009e0
+wgl: present px(0,0)/px(w/2,h/2) f71fef6e ff7ffb7f
+wgl: present px(0,h-1)/px(w-1,0) 00018812 f6ffde6f
+stw: SwapBuffers hdc 0000120a 00000000
+stw: SetContext hdc/dhglrc 00000000 00000000
+stw: ReleaseContext dhglrc 00000002 00000000
+wgl: DllMain DETACH hinst/lpvReserved 69500000 00000001

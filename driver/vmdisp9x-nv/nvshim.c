@@ -316,6 +316,9 @@ static BOOL fake_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, D
 		if(ret) *ret = sizeof(*sb);
 		return TRUE;
 	}
+	case OP_NV_VM_KIND:
+		if(out && outsz >= 4) *(uint32_t *)out = 1;   /* accepted (no page tables to tag) */
+		return TRUE;
 	default:
 		return TRUE;   /* OP_NV_DBG_PUTS and anything else: accepted, no effect */
 	}
@@ -407,6 +410,9 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 	}
 #ifndef NVSHIM_STANDALONE
 	if(nkick++ < 400) NVLOG3("kick ok cnt/put/pgi", count, sb.put_off, sb.pgraph_intr);
+	/* 3091: the VxD recovered PGRAPH trap(s) inside this kick and carried on;
+	 * the unit bits + the per-unit dump are in nvtail (S> TRAP ...). */
+	if(sb.traps) NVLOG3("kick TRAP recovered cnt/traps/units", count, sb.traps, sb.trap_units);
 #endif
 	/* 3089b: kicks are synchronous, so every 3D QUERY (fence) write in this
 	 * stream has landed in VRAM; pull those dwords into the owning BO's shadow
@@ -488,6 +494,19 @@ static void vxd_vram_write(uint32_t off, const uint32_t *src, uint32_t dwords)
 			return;
 		done += chunk;
 	}
+}
+
+/* 3091: tag the 64 KiB pages of [phys, phys+size) with a storage kind (Mesa's
+ * nv50 memtype & 0x7f, nouveau's PTE bits 40-46) so tiled surfaces render;
+ * kind 0 restores linear. The VxD flushes PGRAPH's TLB. */
+static void vxd_vmkind(uint32_t phys, uint32_t size, uint32_t kind)
+{
+	uint32_t in[3]; DWORD r = 0, ret = 0;
+	if(!nvshim_open())
+		return;
+	in[0] = phys; in[1] = size; in[2] = kind;
+	shim_ioctl(OP_NV_VM_KIND, in, sizeof(in), &r, sizeof(r), &ret);
+	NVLOG3("bo_kind phys/size/kind", phys, size, kind | (r ? 0 : 0x80000000UL));
 }
 
 /* ========================= VRAM heap ================================== */
@@ -604,6 +623,8 @@ struct shim_bo {
 	int      refcnt;
 	uint32_t phys;        /* VRAM byte offset */
 	uint32_t shadow_sz;   /* bytes backing base.map, 0 until first map */
+	uint32_t asize;       /* bytes actually allocated (tiled: rounded to 64 KiB) */
+	uint32_t kind;        /* 3091: PTE storage kind set for this BO (0 = linear) */
 };
 #define SHIM_MAXBO 4096
 static struct shim_bo *g_bos[SHIM_MAXBO];   /* live BOs, for address -> BO lookups */
@@ -836,8 +857,16 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 {
 	struct shim_bo *b;
 	uint32_t phys;
+	int tiled;
 	if(size == 0) size = 0x100;
-	if(config && config->nv50.tile_mode && align < 0x10000) align = 0x10000;   /* tiled: 64 KiB page */
+	/* 3091: a tiled surface (tile_mode / memtype set) gets whole 64 KiB pages
+	 * of its own, because its pages carry a storage kind in the PTEs. */
+	tiled = (config && (config->nv50.tile_mode || config->nv50.memtype)) ? 1 : 0;
+	if(tiled)
+	{
+		if(align < 0x10000) align = 0x10000;
+		size = ((uint32_t)size + 0xffffUL) & ~0xffffUL;
+	}
 	phys = heap_alloc((uint32_t)size, align);
 	if(!phys)
 	{
@@ -865,7 +894,11 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 	b->base.offset  = (uint64_t)phys + NVSHIM_VM_BASE; /* GPU (VM) address */
 	b->base.map     = NULL;
 	if(config) b->base.config = *config;
+	b->asize = ((uint32_t)size + 0xffUL) & ~0xffUL;
+	b->kind  = tiled ? (config->nv50.memtype & 0x7f) : 0;
 	NVLOG3("bo_new sz/phys/vmoff", (uint32_t)size, phys, (uint32_t)b->base.offset);
+	if(b->kind)
+		vxd_vmkind(phys, b->asize, b->kind);
 	if(g_nbos < SHIM_MAXBO) g_bos[g_nbos++] = b;
 	*pbo = &b->base;
 	return 0;
@@ -905,7 +938,8 @@ void nouveau_bo_ref(struct nouveau_bo *bo, struct nouveau_bo **pref)
 		for(i = 0; i < g_nbos; i++)
 			if(g_bos[i] == old) { g_bos[i] = g_bos[--g_nbos]; break; }
 		if(old->base.map) free(old->base.map);
-		heap_free(old->phys, (uint32_t)old->base.size);
+		if(old->kind) vxd_vmkind(old->phys, old->asize, 0);   /* back to linear */
+		heap_free(old->phys, old->asize);
 		free(old);
 	}
 	if(pref)

@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3090  (M5.4 step 5d: 3089 + simulate-first tooling. mesa3d.dll's shim: fake-GPU mode (set NVSHIM_FAKE=1) that validates every kick like the PFIFO puller would; a real VRAM allocator (the bump heap crashed Mesa after ~53 frames in the Wine fake run); fences now signal; every bound handle logged. VxD/DRV unchanged bar the stamp. Test: nvgl; send C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt)
+Build: 3091  (M5.4 step 6: 3090 on the T61 reached the clear and hit a PGRAPH PROP trap at the first tiled render target - the VM page tables carried no storage kind. New OP_NV_VM_KIND maps each tiled BO's pages with Mesa's memtype + TLB flush; PGRAPH traps are now recovered and dumped per unit (PROP fault address), so a run reports every fault. Test: nvgl; send C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
