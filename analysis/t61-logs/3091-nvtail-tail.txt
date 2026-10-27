@@ -1,0 +1,24 @@
+24343:V> S> submit end get=41 pfi=00000000 loops=1 gridle=1 dmaget=03203930 c1put=000007F0 c1get=000007F0 pull0=70000001
+24347:V> S> submit begin cnt=24 m0=0018A200 m1=00000000 ibput=41
+24348:V> S> TRAP intr=00200000 trap=00000002 taddr=80050328 tdata=00000000 class=00005039 cur=80003000 units=F3010001
+24349:V> S> m2mf @406800 80000001 00304041 00008200 00000000 06000800 00000000 00000000 00000000
+24350:V> S> TRAP acked; status=00000000 intr=00000000 trap=00000000
+24351:V> S> submit end with 1 TRAP(s) recovered, units=00000002
+24352:V> S> submit end get=42 pfi=00000000 loops=1 gridle=0 dmaget=03203990 c1put=00000834 c1get=00000834 pull0=70000001
+24362:V> S> submit begin cnt=92 m0=0004721C m1=0FAC6881 ibput=42
+24363:V> S> submit end get=43 pfi=00000000 loops=1 gridle=418 dmaget=03203B00 c1put=0000092C c1get=0000092C pull0=70000001
+24366:V> S> submit begin cnt=126 m0=0004721C m1=0FAC6881 ibput=43
+24367:V> S> submit end get=44 pfi=00000000 loops=1 gridle=136 dmaget=03203CF8 c1put=00000A90 c1get=00000A90 pull0=70000001
+24372:V> S> submit begin cnt=5 m0=00107B00 m1=00000000 ibput=44
+24373:V> S> submit end get=45 pfi=00000000 loops=1 gridle=1 dmaget=03203D0C c1put=00000AA0 c1get=00000AA0 pull0=70000001
+24377:V> S> submit begin cnt=24 m0=0018A200 m1=00000000 ibput=45
+24378:V> S> TRAP intr=00200000 trap=00000002 taddr=80050328 tdata=00000000 class=00005039 cur=80003000 units=F3010001
+24379:V> S> m2mf @406800 80000001 00304041 00008200 00000000 06000800 00000000 00000000 00000000
+24380:V> S> TRAP acked; status=00000000 intr=00000000 trap=00000000
+24381:V> S> submit end with 1 TRAP(s) recovered, units=00000002
+24382:V> S> submit end get=46 pfi=00000000 loops=1 gridle=0 dmaget=03203D6C c1put=00000AE4 c1get=00000AE4 pull0=70000001
+24392:V> S> submit begin cnt=92 m0=0004721C m1=0FAC6881 ibput=46
+24393:V> S> submit end get=47 pfi=00000000 loops=1 gridle=418 dmaget=03203EDC c1put=00000BDC c1get=00000BDC pull0=70000001
+24396:V> S> submit begin cnt=126 m0=0004721C m1=0FAC6881 ibput=47
+24397:V> S> submit end get=48 pfi=00000000 loops=1 gridle=136 dmaget=032040D4 c1put=00000D40 c1get=00000D40 pull0=70000001
+24402:V> S> vmkind phys=04280000 size=00140000 kind=00 pages=20 flushloops=2

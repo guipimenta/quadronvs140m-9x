@@ -1357,6 +1357,18 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			rc = 0;
 			break;
 		}
+		case OP_NV_VRAM_READ2:
+		{
+			/* 3092: inBuf[0] = VRAM byte offset, [1] = dword count (<= 1024); the
+			 * dwords go straight into outBuf (16x fewer ioctls than VRAM_READ). */
+			DWORD count = inBuf[1], i;
+			if(count > 1024) count = 1024;
+			if(params->cbOutBuffer < count * 4) count = params->cbOutBuffer / 4;
+			for(i = 0; i < count; i++)
+				outBuf[i] = NV_vram_rd32(inBuf[0] + i * 4);
+			rc = 0;
+			break;
+		}
 		case OP_NV_VM_KIND:
 		{
 			/* 3091: inBuf[0] = VRAM byte offset, [1] = size, [2] = storage kind

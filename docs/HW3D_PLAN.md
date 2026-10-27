@@ -409,6 +409,40 @@ fault with its address instead of stopping at the first. Fake-GPU/Wine run of 30
 Expect on the T61: no trap, present samples ff000000, the triangle. If PROP still traps:
 the 'S> tp-prop' line gives the faulting address and which of 2D/RT/CUDA.
 
+### MILESTONE 2026-10-28 (build 3091 on the T61): THE TRIANGLE. Mesa's nv50 driver renders on the G86 under Windows 98
+wgltest's triangle drawn by the GPU through Mesa's unmodified nv50 Gallium driver, the Win9x
+libdrm shim and the nvmini VxD (analysis/t61-logs/3091-nvshim-FIRST-TRIANGLE.log: no traps
+in the draw kicks, present samples ff000000 / ff3f407f). The PTE storage kind was the last
+blocker. What the run also showed: ~1 frame/s, and every frame's M2MF readback copy trapped
+on its notifier write (M2MF ustatus 0x80000001 = NOTIFY: our notifier ctxdma covered the VM
+window, so BUFFER_NOTIFY wrote to VM address 0; recovered each time).
+
+### M5.5 step 1 (build 3092): speed - GPU present, dirty-diff flushes, 1024-dword reads
+Per-frame cost in 3091: read the 1.1 MB colour buffer back through the uncached BAR in
+64-dword ioctls (~4500 ioctls), write it into the framebuffer, re-write EVERY mapped BO's
+whole shadow into VRAM before EVERY kick (the 2 MB vertex buffer, the code BO...), and on a
+BO's first map read it all back (32768 ioctls for the vertex buffer). 3092:
+- GPU PRESENT: wgl.c imports the FBHDA scanout surface (surface offset, pitch, bpp) as a
+  pipe_resource via resource_from_handle (shim: nouveau_bo_name_ref name 1 = the front
+  buffer, registered with nvshim_set_front) and blits the window buffer into the window's
+  client rect with pipe->blit + flush. Under the fake GPU Mesa chose the 2D engine: a 37-dword
+  kick (DST R5G6B5 linear pitch 1280 @ VM 0x40100000, SRC the tiled A8R8G8B8 window
+  buffer, BLIT_DST_X/Y = the window position) - reference in analysis/fake-runs/3092-*.
+  NVSHIM_CPU_PRESENT=1 restores the readback path. Clipping against other windows is not
+  done (vramcpy_top_window gate only).
+- Shim: DIRTY-DIFF flush (1 KiB chunks against a clean copy, only CPU-changed runs written;
+  GPU-written data in a mapped BO is no longer clobbered), no seed readback for write-only
+  maps, OP_NV_VRAM_READ2 (1024 dwords/ioctl), [ms] timestamps on every log line,
+  'wgl: present frames/ms' + kick/flush/read counters every 2 s.
+- VxD: the notifier class gets a real 4 KiB block (NVGPU_NOTIFY 0x03320000) -> no more
+  per-frame M2MF trap; NVGPU_PLAYLIST moved to 0x03310000 - it was at 0x03204000, INSIDE
+  the 1 MiB pushbuffer data region, overwritten after 16 KiB of commands (latent hang if
+  PFIFO ever re-reads the playlist).
+Fake-GPU/Wine: ~370 fps, flush ~1.4 KB/frame, validator clean. Expect on the T61: the
+triangle moving smoothly; the log's frames/ms line gives the real frame rate.
+NEXT (M5.5): per-frame readback of nothing; then Half-Life (fullscreen present = the same
+blit; textures through M2MF now that the notifier is real); window clipping/overlap.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

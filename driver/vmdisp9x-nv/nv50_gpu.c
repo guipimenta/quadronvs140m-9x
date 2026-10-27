@@ -92,7 +92,10 @@ extern nv_hwinfo_t nv_hwinfo;
 #define PFIFO_USER(c)       (0x00c00000UL + (c)*0x2000UL)
 #define PFIFO_USER_PUT(c)   (PFIFO_USER(c) + 0x40UL)
 #define PFIFO_USER_GET(c)   (PFIFO_USER(c) + 0x44UL)
-#define NVGPU_PLAYLIST 0x03204000UL  /* PFIFO playlist buffer */
+#define NVGPU_PLAYLIST 0x03310000UL  /* PFIFO playlist buffer (3092: was 0x03204000 = INSIDE the 1 MiB
+                                      * pushbuffer data region, overwritten after 16 KiB of commands) */
+#define NVGPU_NOTIFY   0x03320000UL  /* 3092: 4 KiB notifier block for Mesa's NOUVEAU_NOTIFIER_CLASS ctxdma
+                                      * (M2MF BUFFER_NOTIFY wrote to VM address 0 before -> PROP/M2MF trap) */
 
 /* append one (header,data...) batch to the pushbuffer; returns new dword index */
 static unsigned long gpu_push(unsigned long i, unsigned long method,
@@ -1141,7 +1144,17 @@ int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out)
 	out->inst  = inst;
 
 	NV_vram_fill(inst, 0x100 / 4, 0);
-	if(nv_class_is_gfx(oclass))
+	if(oclass == 0x80000002UL)
+	{
+		/* 3092: notifier object: a real linear ctxdma over a zeroed 4 KiB block
+		 * in physical VRAM (nouveau's notifier). The VM-window ctxdma used
+		 * before made M2MF's notify write land at VM address 0 (unmapped). */
+		NV_vram_fill(NVGPU_NOTIFY, 0x1000 / 4, 0);
+		gpu_ctxdma(inst, NVGPU_NOTIFY, 0x1000UL);
+		gpu_ramht(handle, inst - NVGPU_RAMIN, 0);
+		out->engine = 0;
+	}
+	else if(nv_class_is_gfx(oclass))
 	{
 		/* nv50 graphics object: obj[0]=class, obj[5]=0x00010000; engine GR=1 */
 		NV_vram_wr32(inst + 0,  oclass);

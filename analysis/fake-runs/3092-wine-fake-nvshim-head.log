@@ -1,0 +1,80 @@
+[0] ==== shim log open, instance 79127270
+[0] wgl: DllMain ATTACH hinst 75b10000
+[16] wgl: screen_create ENTER lasterr/sw_only 0000007e 00000000
+[16] wgl: try driver 'nouveau' 00000000
+[17] wgl: nouveau_drm_screen_create enter lasterr 0000007e
+[17] winsys: nouveau_screen_create enter fd 00000000 00000000
+[18] drm_new fd 00000000
+[18] winsys: drm_new ret/drm 00000000 009e7130
+[19] device_new
+[20] winsys: device_new ret/dev 00000000 009e7a90
+[20] winsys: chipset 00000086 00000000
+[24] object_new handle/oclass 00000000 80000001
+[25] bind handle/class/engine beef0201 0000003d 00000000
+[25] bind handle/class/engine beef0202 0000003d 00000000
+[26] client_new ok
+[26] pushbuf_new cap 00080000
+[31] object_new handle/oclass beef0301 80000002
+[31] bind handle/class/engine beef0301 80000002 00000000
+[32] object_new handle/oclass beef5039 00005039
+[33] bind handle/class/engine beef5039 00005039 00000001
+[33] object_new handle/oclass beef502d 0000502d
+[34] bind handle/class/engine beef502d 0000502d 00000001
+[34] object_new handle/oclass beef5097 00008297
+[35] bind handle/class/engine beef5097 00008297 00000001
+[39] object_new handle/oclass beef50c0 000050c0
+[40] bind handle/class/engine beef50c0 000050c0 00000001
+[44] winsys: init(dev) screen 00a404a0 00000000
+[44] winsys: context_create fn 75b88660 00000000
+[45] wgl: nouveau_drm_screen_create exit screen/lasterr 00a404a0 0000007e
+[46] wgl: result screen/lasterr 00a404a0 0000007e
+[104] stw: pixelformat_init count 000001e0 00000000
+[105] stw: init_screen done screen/max2d 00a404a0 00002000
+[314] stw: SetPF enter ipf/count 00000001 000001e0
+[314] stw: fb_create hwnd/pfi 00020052 00a0d760
+[314] stw: SetPF fb_create ret/pfi 009eb140 00a0d760
+[314] stw: SetPF GDI GetPixelFormat ret/lasterr 00000000 00000008
+[323] stw: SetPF GDI SetPixelFormat ret/lasterr 00000001 00000578
+[323] stw: SetPF OK hwnd 00020052 00000000
+[324] stw: CreateLayerContext hdc/lasterr 0b010054 00000578
+[324] stw: get_info_from_hdc hdc/fb 0b010054 009eb140
+[324] stw: CreateLayerContext pfi 00a0d760 00000000
+[324] stw: create_context_attribs enter hdc/pfi 0b010054 00a0d760
+[324] stw: attribs profile/major 00000000 00000001
+[329] nv50: create enter 00a475f0 00000000
+[329] client_new ok
+[329] nouveau: context_init client_new ret 00000000 00000000
+[329] pushbuf_new cap 00080000
+[329] nouveau: context_init pushbuf ret 00000000 00000000
+[329] nv50: nouveau_context_init ret 00000000 00000000
+[329] bufctx_new ok bins 00000002
+[329] bufctx_new ok bins 00000038
+[329] bufctx_new ok bins 00000016
+[329] nv50: bufctx_new x3 ret 00000000 00000000
+[329] nv50: stream_uploader 009d6510 00000000
+[336] nv50: create OK pipe 00a475f0 00000000
+[336] st: screen->context_create pipe 00a475f0 00000000
+[353] st: st_create_context st 01c70030 00000000
+[353] stw: st_api_create_context st/err 01c70030 00000000
+[353] stw: CreateLayerContext ctx/dhglrc 009e6cb0 00000001
+[361] bo_kind phys/size/kind 042c0000 00010000 00000070
+[361] bo_kind phys/size/kind 042d0000 00010000 00000028
+[419] stw: SetPF enter ipf/count 00000001 000001e0
+[419] stw: fb_create hwnd/pfi 00030058 00a0d760
+[419] stw: SetPF fb_create ret/pfi 01a8d8e0 00a0d760
+[419] stw: SetPF GDI GetPixelFormat ret/lasterr 00000000 00000000
+[439] stw: SetPF GDI SetPixelFormat ret/lasterr 00000001 00000578
+[439] stw: SetPF OK hwnd 00030058 00000000
+[439] stw: CreateLayerContext hdc/lasterr 1c010059 00000578
+[439] stw: get_info_from_hdc hdc/fb 1c010059 01a8d8e0
+[439] stw: CreateLayerContext pfi 00a0d760 00000000
+[439] stw: create_context_attribs enter hdc/pfi 1c010059 00a0d760
+[439] stw: attribs profile/major 00000000 00000001
+[439] nv50: create enter 00a50830 00000000
+[439] client_new ok
+[439] nouveau: context_init client_new ret 00000000 00000000
+[439] pushbuf_new cap 00080000
+[439] nouveau: context_init pushbuf ret 00000000 00000000
+[439] nv50: nouveau_context_init ret 00000000 00000000
+[439] bufctx_new ok bins 00000002
+[439] bufctx_new ok bins 00000038

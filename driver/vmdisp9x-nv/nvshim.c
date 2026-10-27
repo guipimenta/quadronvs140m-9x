@@ -88,12 +88,18 @@ static int nvshim_open(void)
  * sink so the shim lines still interleave with the VxD's own V>/D> events. */
 #ifndef NVSHIM_STANDALONE
 static HANDLE g_logf = INVALID_HANDLE_VALUE;
+static DWORD  g_log_t0 = 0;
 static void nvshim_logn(const char *label, unsigned n, const uint32_t *v)
 {
-	char buf[160];
+	char buf[176];
 	int p = 0, i; unsigned k;
-	DWORD ret;
-	for(i = 0; label[i] && p < 120; i++) buf[p++] = label[i];
+	DWORD ret, ms;
+	/* 3092: every line carries milliseconds since the first line (profiling) */
+	if(g_log_t0 == 0) g_log_t0 = GetTickCount() | 1;
+	ms = GetTickCount() - g_log_t0;
+	{ char d[12]; int nd = 0; do { d[nd++] = (char)('0' + ms % 10); ms /= 10; } while(ms && nd < 11);
+	  buf[p++] = '['; while(nd) buf[p++] = d[--nd]; buf[p++] = ']'; buf[p++] = ' '; }
+	for(i = 0; label[i] && p < 130; i++) buf[p++] = label[i];
 	for(k = 0; k < n; k++)
 	{
 		buf[p++] = ' ';
@@ -288,6 +294,16 @@ static BOOL fake_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, D
 		if(ret) *ret = sizeof(*vr);
 		return TRUE;
 	}
+	case OP_NV_VRAM_READ2:
+	{
+		uint32_t *o = (uint32_t *)out, i, n;
+		if(insz < 8 || !o) return FALSE;
+		n = w[1] > 1024 ? 1024 : w[1];
+		if(outsz < n * 4) n = outsz / 4;
+		for(i = 0; i < n; i++) o[i] = fake_rd32(w[0] + i * 4);
+		if(ret) *ret = n * 4;
+		return TRUE;
+	}
 	case OP_NV_VRAM_WRITE:
 	{
 		uint32_t i;
@@ -363,6 +379,12 @@ static void nvshim_dump_kick(int idx, const uint32_t *m, uint32_t count)
 	FlushFileBuffers(f);
 }
 #endif
+/* 3092: per-run counters, read by wgl.c's present stats line (nvshim_stats) */
+static uint32_t g_st_kicks = 0, g_st_flush_dw = 0, g_st_read_dw = 0, g_st_traps = 0, g_st_kick_dw = 0;
+void nvshim_stats(uint32_t *v)
+{
+	v[0] = g_st_kicks; v[1] = g_st_flush_dw; v[2] = g_st_read_dw; v[3] = g_st_traps; v[4] = g_st_kick_dw;
+}
 static void shim_refresh_queries(const uint32_t *m, uint32_t count);
 static int vxd_submit(const uint32_t *methods, uint32_t count)
 {
@@ -414,6 +436,7 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 	 * the unit bits + the per-unit dump are in nvtail (S> TRAP ...). */
 	if(sb.traps) NVLOG3("kick TRAP recovered cnt/traps/units", count, sb.traps, sb.trap_units);
 #endif
+	g_st_kicks++; g_st_kick_dw += count; g_st_traps += sb.traps;
 	/* 3089b: kicks are synchronous, so every 3D QUERY (fence) write in this
 	 * stream has landed in VRAM; pull those dwords into the owning BO's shadow
 	 * so Mesa's fence.update (which reads the screen fence BO's map directly,
@@ -435,17 +458,18 @@ static void vxd_vram_read(uint32_t off, uint32_t *dst, uint32_t dwords)
 #ifndef NVSHIM_STANDALONE
 	if(dwords > 4096) NVLOG2("vram_read > off/dwords", off, dwords);
 #endif
+	(void)vr;
+	g_st_read_dw += dwords;
 	while(done < dwords)
 	{
+		/* 3092: 1024 dwords per ioctl straight into the caller's buffer */
 		uint32_t chunk = dwords - done;
-		if(chunk > 64) chunk = 64;
+		if(chunk > 1024) chunk = 1024;
 		in[0] = off + done * 4;
 		in[1] = chunk;
-		memset(&vr, 0, sizeof(vr));
-		if(!shim_ioctl(OP_NV_VRAM_READ, in, sizeof(in),
-		               &vr, sizeof(vr), &ret))
+		if(!shim_ioctl(OP_NV_VRAM_READ2, in, sizeof(in),
+		               dst + done, chunk * 4, &ret))
 			return;
-		memcpy(dst + done, vr.data, chunk * 4);
 		done += chunk;
 	}
 #ifndef NVSHIM_STANDALONE
@@ -625,6 +649,8 @@ struct shim_bo {
 	uint32_t shadow_sz;   /* bytes backing base.map, 0 until first map */
 	uint32_t asize;       /* bytes actually allocated (tiled: rounded to 64 KiB) */
 	uint32_t kind;        /* 3091: PTE storage kind set for this BO (0 = linear) */
+	uint8_t *clean;       /* 3092: copy of the shadow as last flushed/refreshed (dirty diffing) */
+	int      external;    /* 3092: wraps memory that is not ours (the scanout front buffer) */
 };
 #define SHIM_MAXBO 4096
 static struct shim_bo *g_bos[SHIM_MAXBO];   /* live BOs, for address -> BO lookups */
@@ -655,7 +681,10 @@ static void shim_refresh_queries(const uint32_t *m, uint32_t count)
 					uint32_t phys = qaddr - NVSHIM_VM_BASE;
 					struct shim_bo *b = shim_bo_at(phys);
 					if(b && b->base.map && (phys - b->phys) + 16 <= b->shadow_sz)
+					{
 						vxd_vram_read(phys, (uint32_t*)((char*)b->base.map + (phys - b->phys)), 4);
+						if(b->clean) memcpy(b->clean + (phys - b->phys), (char*)b->base.map + (phys - b->phys), 16);
+					}
 				}
 			}
 		i += 1 + n;
@@ -914,15 +943,24 @@ int nouveau_bo_map(struct nouveau_bo *bo, uint32_t access, struct nouveau_client
 	if(!b->base.map)
 	{
 		b->shadow_sz = (uint32_t)b->base.size;
-		b->base.map  = malloc(b->shadow_sz);
-		if(!b->base.map) { b->shadow_sz = 0; return -1; }
-		/* Seed the shadow from VRAM so read-modify-write is correct. */
-		vxd_vram_read(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
+		b->base.map  = calloc(1, b->shadow_sz + 4);
+		b->clean     = calloc(1, b->shadow_sz + 4);
+		if(!b->base.map || !b->clean) { free(b->base.map); free(b->clean); b->base.map = NULL; b->clean = NULL; b->shadow_sz = 0; return -1; }
+		/* 3092: seed the shadow from VRAM only when the CPU will READ it; a
+		 * write-only map (uploads: vertex/index/constant data, the 2 MB vertex
+		 * buffer that cost 32768 ioctls per run) starts from zeros, and the
+		 * dirty-diff flush writes back only what the CPU touched. */
+		if(access & NOUVEAU_BO_RD)
+		{
+			vxd_vram_read(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
+			memcpy(b->clean, b->base.map, b->shadow_sz);
+		}
 	}
 	else if(access & NOUVEAU_BO_RD)
 	{
 		/* Refresh with whatever the GPU has written since the last map. */
 		vxd_vram_read(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
+		memcpy(b->clean, b->base.map, b->shadow_sz);
 	}
 	return 0;
 }
@@ -938,8 +976,12 @@ void nouveau_bo_ref(struct nouveau_bo *bo, struct nouveau_bo **pref)
 		for(i = 0; i < g_nbos; i++)
 			if(g_bos[i] == old) { g_bos[i] = g_bos[--g_nbos]; break; }
 		if(old->base.map) free(old->base.map);
-		if(old->kind) vxd_vmkind(old->phys, old->asize, 0);   /* back to linear */
-		heap_free(old->phys, old->asize);
+		if(old->clean) free(old->clean);
+		if(!old->external)
+		{
+			if(old->kind) vxd_vmkind(old->phys, old->asize, 0);   /* back to linear */
+			heap_free(old->phys, old->asize);
+		}
 		free(old);
 	}
 	if(pref)
@@ -955,13 +997,46 @@ int nouveau_bo_wait(struct nouveau_bo *bo, uint32_t access, struct nouveau_clien
 	 * wait, pull the latest VRAM contents into the shadow. */
 	shim_flush_pending();
 	if((access & NOUVEAU_BO_RD) && b->base.map)
+	{
 		vxd_vram_read(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
+		if(b->clean) memcpy(b->clean, b->base.map, b->shadow_sz);
+	}
 	return 0;
 }
 
-/* Sharing / import-export is unsupported on Win9x. */
+/* 3092: the scanout front buffer as an importable BO. wgl.c registers its
+ * physical VRAM range (FBHDA surface offset, pitch * height) and then imports
+ * it through resource_from_handle with name NVSHIM_FRONT_NAME; present is a
+ * GPU blit into it instead of a CPU readback + copy (1.1 MB through the
+ * uncached BAR per frame). The VM maps VRAM 1:1, so its address is known. */
+#define NVSHIM_FRONT_NAME 1
+static uint32_t g_front_phys = 0, g_front_size = 0;
+void nvshim_set_front(uint32_t phys, uint32_t size)
+{
+	g_front_phys = phys; g_front_size = size;
+	NVLOG2("front phys/size", phys, size);
+}
 int nouveau_bo_name_get(struct nouveau_bo *bo, uint32_t *name) { (void)bo; (void)name; return -1; }
-int nouveau_bo_name_ref(struct nouveau_device *dev, uint32_t name, struct nouveau_bo **pbo) { (void)dev; (void)name; (void)pbo; return -1; }
+int nouveau_bo_name_ref(struct nouveau_device *dev, uint32_t name, struct nouveau_bo **pbo)
+{
+	struct shim_bo *b;
+	if(name != NVSHIM_FRONT_NAME || !g_front_size)
+		return -1;
+	b = calloc(1, sizeof(*b));
+	if(!b) return -1;
+	b->refcnt      = 1;
+	b->phys        = g_front_phys;
+	b->asize       = g_front_size;
+	b->external    = 1;
+	b->base.device = dev;
+	b->base.handle = g_front_phys;
+	b->base.size   = g_front_size;
+	b->base.flags  = NOUVEAU_BO_VRAM;
+	b->base.offset = (uint64_t)g_front_phys + NVSHIM_VM_BASE;
+	NVLOG2("bo_front phys/vmoff", b->phys, (uint32_t)b->base.offset);
+	*pbo = &b->base;
+	return 0;
+}
 int nouveau_bo_prime_handle_ref(struct nouveau_device *dev, int fd, struct nouveau_bo **pbo) { (void)dev; (void)fd; (void)pbo; return -1; }
 int nouveau_bo_set_prime(struct nouveau_bo *bo, int *fd) { (void)bo; (void)fd; return -1; }
 int nouveau_bo_wrap(struct nouveau_device *dev, uint32_t handle, struct nouveau_bo **pbo) { (void)dev; (void)handle; (void)pbo; return -1; }
@@ -1086,6 +1161,39 @@ nouveau_pushbuf_bufctx(struct nouveau_pushbuf *push, struct nouveau_bufctx *bc)
 
 /* Flush every referenced BO that has a CPU shadow into VRAM (bounce), so the
  * GPU sees the latest CPU writes before it runs. */
+/* 3092: flush only what the CPU changed since the last flush: compare the
+ * shadow with its clean copy in 1 KiB chunks and write the changed runs.
+ * Before this every referenced mapped BO was written whole before EVERY kick
+ * (the 2 MB vertex buffer, ...), through the uncached BAR, several times per
+ * frame. Chunks the CPU never wrote are never flushed, so GPU-written data in
+ * a mapped BO is no longer clobbered by a stale shadow either. */
+#define SHIM_FLUSH_CHUNK 1024
+static void shim_bo_flush(struct shim_bo *b)
+{
+	uint32_t off, run_start = 0, run_len = 0;
+	if(!b->base.map || !b->shadow_sz || b->external) return;
+	if(!b->clean)
+	{
+		vxd_vram_write(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
+		g_st_flush_dw += (b->shadow_sz + 3) / 4;
+		return;
+	}
+	for(off = 0; off < b->shadow_sz; off += SHIM_FLUSH_CHUNK)
+	{
+		uint32_t len = b->shadow_sz - off; if(len > SHIM_FLUSH_CHUNK) len = SHIM_FLUSH_CHUNK;
+		if(memcmp((char*)b->base.map + off, b->clean + off, len) != 0)
+		{
+			memcpy(b->clean + off, (char*)b->base.map + off, len);
+			if(run_len && run_start + run_len == off) run_len += len;
+			else
+			{
+				if(run_len) { vxd_vram_write(b->phys + run_start, (uint32_t*)((char*)b->base.map + run_start), (run_len + 3) / 4); g_st_flush_dw += (run_len + 3) / 4; }
+				run_start = off; run_len = len;
+			}
+		}
+	}
+	if(run_len) { vxd_vram_write(b->phys + run_start, (uint32_t*)((char*)b->base.map + run_start), (run_len + 3) / 4); g_st_flush_dw += (run_len + 3) / 4; }
+}
 static void push_flush_refs(struct shim_push *p)
 {
 	int i;
@@ -1093,18 +1201,10 @@ static void push_flush_refs(struct shim_push *p)
 	{
 		struct shim_bufctx *bc = (struct shim_bufctx *)p->base.bufctx;
 		for(i = 0; i < bc->nref; i++)
-		{
-			struct shim_bo *b = (struct shim_bo *)bc->refs[i].bo;
-			if(b && b->base.map)
-				vxd_vram_write(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
-		}
+			if(bc->refs[i].bo) shim_bo_flush((struct shim_bo *)bc->refs[i].bo);
 	}
 	for(i = 0; i < p->nrefn; i++)
-	{
-		struct shim_bo *b = (struct shim_bo *)p->refn[i];
-		if(b && b->base.map)
-			vxd_vram_write(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
-	}
+		if(p->refn[i]) shim_bo_flush((struct shim_bo *)p->refn[i]);
 }
 
 int nouveau_pushbuf_kick(struct nouveau_pushbuf *push)

@@ -2347,21 +2347,23 @@ index d7db69a2..97b7426c 100644
     return bestindex;
  }
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..1eab3d12 100644
+index 8017cd00..edb59a23 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-@@ -41,6 +41,10 @@
+@@ -41,6 +41,12 @@
  #include "gdi/gdi_sw_winsys.h"
  #include "pipe/p_screen.h"
  #include "pipe/p_context.h"
 +#ifdef GALLIUM_NOUVEAU
 +#include "util/u_inlines.h"
 +#include "util/format/u_format.h"
++#include "frontend/winsys_handle.h"
++#include "pipe/p_state.h"
 +#endif
  
  #include "stw_context.h"
  
-@@ -73,6 +77,12 @@ static bool use_d3d12 = false;
+@@ -73,6 +79,12 @@ static bool use_d3d12 = false;
  #ifdef GALLIUM_ZINK
  static bool use_zink = false;
  #endif
@@ -2374,7 +2376,7 @@ index 8017cd00..1eab3d12 100644
  
  #ifdef WIN9X
  #include "3d_accel.h"
-@@ -92,6 +102,24 @@ void crt_locks_destroy();
+@@ -92,6 +104,26 @@ void crt_locks_destroy();
  
  static const char *created_driver_name = NULL;
  
@@ -2383,6 +2385,8 @@ index 8017cd00..1eab3d12 100644
 + * the shim's first trace point). Writes to C:\nvshim.log via the shim's logger. */
 +#include <stdlib.h>
 +extern void nvshim_trace(const char *label, unsigned n, const uint32_t *v);
++extern void nvshim_set_front(uint32_t phys, uint32_t size);
++extern void nvshim_stats(uint32_t *v);
 +extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
 +static void nvt(const char *pre, const char *str, unsigned n, uint32_t a0, uint32_t a1)
 +{
@@ -2399,7 +2403,7 @@ index 8017cd00..1eab3d12 100644
  static struct pipe_screen *
  wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  {
-@@ -99,6 +127,16 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
+@@ -99,6 +131,16 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  
     debug_printf("tried driver: %s\n", driver);
  
@@ -2416,7 +2420,7 @@ index 8017cd00..1eab3d12 100644
  #ifdef GALLIUM_LLVMPIPE
     if (strcmp(driver, "llvmpipe") == 0) {
  # ifdef HAVE_CRTEX
-@@ -138,6 +176,13 @@ wgl_screen_create(HDC hDC)
+@@ -138,6 +180,13 @@ wgl_screen_create(HDC hDC)
     struct sw_winsys *winsys;
     UNUSED bool sw_only = debug_get_bool_option("LIBGL_ALWAYS_SOFTWARE", false);
  
@@ -2430,7 +2434,7 @@ index 8017cd00..1eab3d12 100644
     winsys = gdi_create_sw_winsys(gdi_sw_acquire_hdc_by_value, gdi_sw_release_hdc_by_value);
     if (!winsys)
        return NULL;
-@@ -175,7 +220,9 @@ wgl_screen_create(HDC hDC)
+@@ -175,7 +224,9 @@ wgl_screen_create(HDC hDC)
     	  }
  #endif
     	
@@ -2440,7 +2444,7 @@ index 8017cd00..1eab3d12 100644
        if (screen) {
           created_driver_name = drivers[i];
           return screen;
-@@ -184,6 +231,7 @@ wgl_screen_create(HDC hDC)
+@@ -184,6 +235,7 @@ wgl_screen_create(HDC hDC)
           break;
     }
  
@@ -2448,20 +2452,134 @@ index 8017cd00..1eab3d12 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +285,37 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +289,151 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
 +#ifdef GALLIUM_NOUVEAU
 +   if (use_nouveau) {
-+      /* M5.4 present, first version: read the GPU colour buffer back and push
-+       * it into the framebuffer like the software path. The window buffer is a
-+       * tiled nv50 miptree, so pipe_texture_map de-tiles it with the M2MF
-+       * engine into a staging BO, which the shim maps by reading VRAM back. */
 +      struct pipe_transfer *xfer = NULL;
 +      void *map;
 +      if (!ctx || !res)
 +         return;
++# if defined(WIN9X) && !defined(NO_FBHDA)
++      /* 3092: GPU present. The scanout front buffer (FBHDA surface, linear
++       * 16/32 bpp) is imported once as a pipe_resource over its VRAM range and
++       * the window buffer is BLITTED into the window's client rectangle by the
++       * GPU (nv50 2D engine, or a textured quad when the formats differ). No
++       * CPU readback (1.1 MB through the uncached BAR per frame) any more.
++       * NVSHIM_CPU_PRESENT=1 keeps the old readback path. */
++      {
++         static struct pipe_resource *front = NULL;
++         static int front_tried = 0;
++         static uint32_t nframes = 0, t_last = 0;
++         static int cpu_present = -1;
++         FBHDA_t *hda;
++         if (cpu_present < 0) {
++            char b[8];
++            cpu_present = (GetEnvironmentVariableA("NVSHIM_CPU_PRESENT", b, sizeof(b)) > 0 && b[0] != '0') ? 1 : 0;
++         }
++         hda = cpu_present ? NULL : FBHDA_setup();
++         /* fake-GPU runs (NVSHIM_FAKE=1, no vmdisp9x VxD -> no FBHDA): a stand-in
++          * 640x480x16 surface so the blit path and its streams get exercised */
++         {
++            static FBHDA_t fake_hda;
++            static int fake = -1;
++            if (fake < 0) {
++               char b[8];
++               fake = (GetEnvironmentVariableA("NVSHIM_FAKE", b, sizeof(b)) > 0 && b[0] != '0') ? 1 : 0;
++               if (fake) {
++                  memset(&fake_hda, 0, sizeof(fake_hda));
++                  fake_hda.width = 640; fake_hda.height = 480; fake_hda.bpp = 16;
++                  fake_hda.pitch = 1280; fake_hda.surface = 0x00100000;
++                  fake_hda.flags = 0xfa4e;   /* marks the stand-in: skip the top-window test under Wine */
++               }
++            }
++            if (!hda && fake && !cpu_present) hda = &fake_hda;
++         }
++         if (hda && hda->bpp >= 16 && hda->overlay == 0) {
++            if (!front && !front_tried) {
++               struct pipe_resource templ;
++               struct winsys_handle wh;
++               front_tried = 1;
++               memset(&templ, 0, sizeof(templ));
++               memset(&wh, 0, sizeof(wh));
++               templ.target = PIPE_TEXTURE_2D;
++               templ.format = (hda->bpp == 16) ? PIPE_FORMAT_B5G6R5_UNORM : PIPE_FORMAT_B8G8R8X8_UNORM;
++               templ.width0 = hda->width;
++               templ.height0 = hda->height;
++               templ.depth0 = 1;
++               templ.array_size = 1;
++               templ.bind = PIPE_BIND_RENDER_TARGET | PIPE_BIND_DISPLAY_TARGET | PIPE_BIND_SAMPLER_VIEW;
++               templ.usage = PIPE_USAGE_DEFAULT;
++               wh.type = WINSYS_HANDLE_TYPE_SHARED;
++               wh.handle = 1;                 /* NVSHIM_FRONT_NAME */
++               wh.stride = hda->pitch;
++               nvshim_set_front(hda->surface, hda->pitch * hda->height);
++               front = screen->resource_from_handle(screen, &templ, &wh, PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE);
++               nvt("wgl: front resource/bpp", NULL, 2, (uint32_t)(uintptr_t)front, hda->bpp);
++               nvt("wgl: front surface/pitch", NULL, 2, hda->surface, hda->pitch);
++            }
++            if (front) {
++               HWND hwnd = WindowFromDC(hDC);
++               RECT wrect;
++               if (hwnd && (hda->flags == 0xfa4e || vramcpy_top_window(hwnd)) && GetClientRect(hwnd, &wrect)) {
++                  POINT p1 = {wrect.left, wrect.top};
++                  POINT p2 = {wrect.right, wrect.bottom};
++                  int view_x, view_y, view_w, view_h, src_x = 0, src_y = 0;
++                  ClientToScreen(hwnd, &p1);
++                  ClientToScreen(hwnd, &p2);
++                  view_x = p1.x; view_y = p1.y;
++                  view_w = p2.x - p1.x; view_h = p2.y - p1.y;
++                  if (view_x < 0) { src_x = -view_x; view_x = 0; view_w -= src_x; }
++                  if (view_y < 0) { src_y = -view_y; view_y = 0; view_h -= src_y; }
++                  if (view_w + src_x > (int)res->width0)  view_w = (int)res->width0  - src_x;
++                  if (view_h + src_y > (int)res->height0) view_h = (int)res->height0 - src_y;
++                  if (view_x + view_w > (int)hda->width)  view_w -= (view_x + view_w) - (int)hda->width;
++                  if (view_y + view_h > (int)hda->height) view_h -= (view_y + view_h) - (int)hda->height;
++                  if (view_w > 0 && view_h > 0) {
++                     struct pipe_blit_info blit;
++                     memset(&blit, 0, sizeof(blit));
++                     blit.dst.resource = front;
++                     blit.dst.format = front->format;
++                     blit.dst.level = 0;
++                     blit.dst.box.x = view_x; blit.dst.box.y = view_y; blit.dst.box.z = 0;
++                     blit.dst.box.width = view_w; blit.dst.box.height = view_h; blit.dst.box.depth = 1;
++                     blit.src.resource = res;
++                     blit.src.format = res->format;
++                     blit.src.level = 0;
++                     blit.src.box.x = src_x; blit.src.box.y = src_y; blit.src.box.z = 0;
++                     blit.src.box.width = view_w; blit.src.box.height = view_h; blit.src.box.depth = 1;
++                     blit.mask = PIPE_MASK_RGBA;
++                     blit.filter = PIPE_TEX_FILTER_NEAREST;
++                     ctx->blit(ctx, &blit);
++                     ctx->flush(ctx, NULL, 0);
++                  }
++               }
++               /* once per ~2 s: frame rate + shim counters (kicks, flushed/read dwords, traps) */
++               nframes++;
++               {
++                  uint32_t now = GetTickCount();
++                  if (t_last == 0) t_last = now;
++                  if (now - t_last >= 2000) {
++                     uint32_t st[5];
++                     nvshim_stats(st);
++                     nvt("wgl: present frames/ms", NULL, 2, nframes, now - t_last);
++                     nvt("wgl: stats kicks/kickdw", NULL, 2, st[0], st[4]);
++                     nvt("wgl: stats flushdw/readdw", NULL, 2, st[1], st[2]);
++                     nframes = 0; t_last = now;
++                  }
++               }
++               return;
++            }
++         }
++      }
++# endif
++      /* M5.4 present, first version (fallback): read the GPU colour buffer
++       * back and push it into the framebuffer like the software path. The
++       * window buffer is a tiled nv50 miptree, so pipe_texture_map de-tiles it
++       * with the M2MF engine into a staging BO, which the shim maps by reading
++       * VRAM back. */
 +      map = pipe_texture_map(ctx, res, 0, 0, PIPE_MAP_READ, 0, 0,
 +                             res->width0, res->height0, &xfer);
 +      nvt("wgl: present map/stride", NULL, 2, (uint32_t)(uintptr_t)map, xfer ? xfer->stride : 0);
@@ -2486,7 +2604,7 @@ index 8017cd00..1eab3d12 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
-@@ -326,6 +405,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -326,6 +523,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  
        stw_init(&stw_winsys, hinstDLL);
        stw_init_thread();
@@ -2500,7 +2618,7 @@ index 8017cd00..1eab3d12 100644
        break;
  
     case DLL_THREAD_ATTACH:
-@@ -337,6 +423,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -337,6 +541,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
        break;
  
     case DLL_PROCESS_DETACH:
