@@ -1,12 +1,1444 @@
 diff --git a/Makefile b/Makefile
-index 12b3e391..638cda2c 100644
+index 12b3e391..2e6d88e2 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -526,7 +526,29 @@ else
- 
-   endif
- 
+@@ -1,908 +1,944 @@
+-#
+-# This is GNU make file DON'T use it with nmake/wmake or whatever even if you
+-# plan to use MS compiler!
+-#
+-
+-################################################################################
+-# Copyright (c) 2022-2023 Jaroslav Hensl                                       #
+-#                                                                              #
+-# See LICENCE file for law informations                                        #
+-# See README.md file for more detailed build instructions                      #
+-#                                                                              #
+-################################################################################
+-
+-#
+-# Usage:
+-#   1) copy config.mk-sample to config.mk
+-#   2) edit config.mk
+-#   3) run make
+-#
+-
+-include config.mk
+-
+-MESA_VER ?= mesa-25.1.x
+-DEPS = Makefile config.mk $(MESA_VER).deps
+-#DEPS = $(MESA_VER).deps
+-
+-ifeq ($(MESA_VER),mesa-17.3.9)
+-  MESA_MAJOR := 17
+-endif
+-
+-ifeq ($(MESA_VER),mesa-21.3.x)
+-  MESA_MAJOR := 21
+-  MESA_GPU10 := 1
+-endif
+-
+-ifeq ($(MESA_VER),mesa-23.1.x)
+-  MESA_MAJOR := 23
+-  MESA_GPU10 := 1
+-endif
+-
+-ifeq ($(MESA_VER),mesa-24.0.x)
+-  MESA_MAJOR := 24
+-  MESA_GPU10 := 1
+-endif
+-
+-ifeq ($(MESA_VER),mesa-24.1.x)
+-  MESA_MAJOR := 24
+-  MESA_GPU10 := 1
+-endif
+-
+-ifeq ($(MESA_VER),mesa-25.1.x)
+-  MESA_MAJOR := 25
+-  MESA_GPU10 := 1
+-endif
+-
+-# new LLVM required newer C++ standard
+-ifdef LLVM_2024
+-  C_NEWER_STD := 1
+-endif
+-
+-# only usefull with gcc/mingw
+-CSTD=gnu99
+-ifdef MESA_GPU10
+-  ifdef C_NEWER_STD
+-    CXXSTD=gnu++17
+-    #CSTD=gnu17 # not yet!
+-  else
+-    CXXSTD=gnu++14
+-  endif
+-else
+-  CXXSTD=gnu++11
+-endif
+-
+-# base address from 98/NT opengl32.dll
+-BASE_opengl32.w95.dll   := 0x78A40000
+-BASE_opengl32.w98me.dll := 0x78A40000
+-
+-# base address from nvidia ICD driver
+-BASE_mesa3d.w95.dll     := 0x69500000
+-BASE_mesa3d.w98me.dll   := 0x69500000
+-
+-BASE_vmwsgl32.dll       := 0x69500000
+-BASE_virgl32.dll        := 0x69500000
+-BASE_svgagl32.dll   := 0x69500000
+-BASE_mesa99.dll         := 0x03860000
+-BASE_mesa89.dll         := 0x00A30000
+-BASE_mesad3d10.w95.dll  := 0x10000000
+-BASE_mesad3d10.w98me.dll  := 0x10000000
+-
+-NULLOUT=$(if $(filter $(OS),Windows_NT),NUL,/dev/null)
+-
+-RUNPATH=$(if $(filter $(OS),Windows_NT),.\,./)
+-
+-VERSION_BUILD := 0
+-
+-GIT      ?= git
+-GIT_IS   := $(shell $(GIT) rev-parse --is-inside-work-tree 2> $(NULLOUT))
+-ifeq ($(GIT_IS),true)
+-  VERSION_BUILD := $(shell $(GIT) rev-list --count main)
+-endif
+-
+-TARGETS = opengl32.w95.dll mesa3d.w95.dll vmwsgl32.dll glchecker.exe fbtest.exe icdtest.exe wgltest.exe gammaset.exe svgadump.exe mesa99.dll mesa89.dll
+-ifdef LLVM
+-  TARGETS += opengl32.w98me.dll mesa3d.w98me.dll
+-endif
+-
+-ifdef LLVM
+-  ifndef LLVM_VER
+-    $(error Define LLVM_VER in config.mk please!)
+-  endif
+-endif
+-
+-ifndef HOST_CC
+-  HOST_CC := gcc
+-  HOST_SUFFIX := .exe
+-endif
+-
+-$(MESA_VER).target:
+-
+-.PHONY: generator all clean distclean
+-
+-all: $(MESA_VER).target
+-
+-include $(MESA_VER).mk
+-include generator/$(MESA_VER)-gen.mk
+-
+-ifdef MesaGdiLibVirGL_SRC
+-  TARGETS += virgl32.dll
+-endif
+-
+-$(MESA_VER).target: $(DEPS) $(TARGETS)
+-	echo $(MESA_VER) > $@
+-
+-PACKAGE_VERSION := 9x $(MESA_DIST_VERSION).$(VERSION_BUILD)
+-
+-LLVM_modules := bitwriter engine mcdisassembler mcjit
+-ifdef LLVM_2024
+-  LLVM_modules += native passes
+-  ifdef LTO
+-    LLVM_modules += lto
+-  endif
+-endif
+-
+-RELEASE_BASE_OPT ?= -O3
+-
+-ifdef MSC
+-#
+-# MSC configuration
+-#
+-  OBJ := .obj
+-  LIBSUFFIX := .lib
+-  LIBPREFIX := 
+-
+-  CL_INCLUDE = /Iincmsc /I$(MESA_VER)/include /I$(MESA_VER)/include/GL /I$(MESA_VER)/src/mapi /I$(MESA_VER)/src/util /I$(MESA_VER)/src /I$(MESA_VER)/src/mesa /I$(MESA_VER)/src/mesa/main \
+-    /I$(MESA_VER)/src/compiler -I$(MESA_VER)/src/compiler/nir /I$(MESA_VER)/src/gallium/state_trackers/wgl /I$(MESA_VER)/src/gallium/auxiliary /I$(MESA_VER)/src/gallium/auxiliary/util /I$(MESA_VER)/src/gallium/include \
+-    /I$(MESA_VER)/src/gallium/drivers/svga /I$(MESA_VER)/src/gallium/drivers/svga/include /I$(MESA_VER)/src/gallium/winsys/sw  /I$(MESA_VER)/src/gallium/drivers /I$(MESA_VER)/src/gallium/winsys/svga/drm
+-
+-  # /DNDEBUG
+- CL_DEFS =  /D__i386__ /D_X86_ /D_USE_MATH_DEFINES /D_WIN32 /DWIN32 \
+-   /DMAPI_MODE_UTIL /D_GDI32_ /DBUILD_GL32 /DKHRONOS_DLL_EXPORTS /DGDI_DLL_EXPORTS /DGL_API=GLAPI /DGL_APIENTRY=GLAPIENTRY /D_GLAPI_NO_EXPORTS /DCOBJMACROS /DINC_OLE2 \
+-   /DPACKAGE_VERSION="\"$(PACKAGE_VERSION)\"" /DPACKAGE_BUGREPORT="\"$(PACKAGE_VERSION)\""
+-  
+-  ifdef DEBUG
+-    DD_DEFS = /DDEBUG
+-  else
+-    DD_DEFS = /DNDEBUG
+-  endif
+-  
+-  ifdef LLVM
+-    SIMD_DEFS = $(CL_DEFS) /DHAVE_LLVM=$(LLVM_VER) /DHAVE_GALLIUM_LLVMPIPE /DGALLIUM_LLVMPIPE /DHAVE_LLVMPIPE
+-    SIMD_INCLUDE += $(CL_INCLUDE) /I$(LLVM_DIR)/include
+-    
+-    opengl_simd_LIBS := MesaLibSimd.lib MesaUtilLibSimd.lib MesaGalliumLLVMPipe.lib MesaGalliumAuxLibSimd.lib
+-    opengl_simd_LIBS := $(opengl_simd_LIBS) $(shell $(LLVM_DIR)/bin/llvm-config --libs --link-static $(LLVM_modules))
+-    
+-    # LLVMpipe 6.x required zlib
+-    MESA_SIMD_LIBS = $(MESA_LIBS) psapi.lib ole32.lib
+-    
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaGalliumLLVMPipe$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaUtilLibSimd$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaLibSimd$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaGalliumAuxLibSimd$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibGLSimd$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibICDSimd$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaWglLibSimd$(LIBSUFFIX)
+-    
+-    # for LLVM we need same cflags as LLVM itself
+-    LLVM_CFLAGS = $(shell $(LLVM_DIR)/bin/llvm-config --cflags)
+-    LLVM_CXXFLAGS = $(shell $(LLVM_DIR)/bin/llvm-config --cxxflags)
+-    ifndef LP_DEBUG
+-      SIMD_CFLAGS   = /nologo $(filter-out /W4,$(LLVM_CFLAGS)) $(SIMD_INCLUDE) $(SIMD_DEFS)
+-      SIMD_CXXFLAGS = /nologo  $(filter-out /W4,$(LLVM_CXXFLAGS)) $(SIMD_INCLUDE) $(SIMD_DEFS)
+-    else
+-      SIMD_CFLAGS   = /nologo $(MSC_RUNTIME) /Od /Z7 $(SIMD_INCLUDE) $(SIMD_DEFS) $(DD_DEFS)
+-      SIMD_CXXFLAGS = /nologo $(MSC_RUNTIME) /Od /Z7 $(SIMD_INCLUDE) $(SIMD_DEFS) $(DD_DEFS)
+-    endif
+-    SIMD_LDFLAGS = /nologo
+-  endif
+-  
+-  ifdef SPEED
+-    CFLAGS   = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
+-    CXXFLAGS = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
+-    LDFLAGS  = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline
+-  else
+-    CFLAGS   = /nologo $(MSC_RUNTIME) /Z7 /Od $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
+-    CXXFLAGS = /nologo $(MSC_RUNTIME) /Z7 /Od $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
+-    LDFLAGS  = /nologo $(MSC_RUNTIME) /Z7 /Od
+-  endif
+-
+-  ifdef SPEED
+-    APP_CFLAGS   = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline /I. /Iglchecker $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
+-    APP_CXXFLAGS = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline /I. /Iglchecker $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
+-    APP_LDFLAGS  = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline
+-  else
+-    APP_CFLAGS   = /nologo $(MSC_RUNTIME) /Z7 /Od /I. /Iglchecker $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
+-    APP_CXXFLAGS = /nologo $(MSC_RUNTIME) /Z7 /Od /I. /Iglchecker $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
+-    APP_LDFLAGS  = /nologo $(MSC_RUNTIME) /Od
+-  endif
+-  
+-  ifdef SPEED
+-    ifdef LTO
+-      CFLAGS     += /GL
+-      CXXFLAGS   += /GL
+-      LDFLAGS    += /LTCG
+-
+-      APP_CFLAGS   += /GL
+-      APP_CXXFLAGS += /GL
+-      APP_LDFLAGS  += /LTCG
+-    endif
+-  endif
+-
+-  OPENGL_LIBS = MesaLib.lib MesaUtilLib.lib MesaGalliumAuxLib.lib
+-  SVGA_LIBS   = MesaLib.lib MesaUtilLib.lib MesaGalliumAuxLib.lib MesaSVGALib.lib
+-  MESA_LIBS = kernel32.lib user32.lib gdi32.lib
+-  
+-  app_LIBS  =  opengl32.lib gdi32.lib user32.lib
+-  EXEFLAGS_WIN = /link /OUT:$@ /PDB:$(@:exe=pdb) /SUBSYSTEM:WINDOWS
+-  EXEFLAGS_CMD = /link /OUT:$@ /PDB:$(@:exe=pdb) /SUBSYSTEM:CONSOLE
+-  
+-  %.c_gen.obj: %.c $(DEPS)
+-		$(CC) $(CFLAGS) /Fo"$@" /c $<
+-
+-  %.cpp_gen.obj: %.cpp $(DEPS)
+-		$(CXX) $(CXXFLAGS) /Fo"$@" /c $<
+-
+-  %.c_simd.obj: %.c $(DEPS)
+-		$(CC) $(SIMD_CFLAGS) /Fo"$@" /c $<
+-
+-  %.cpp_simd.obj: %.cpp $(DEPS)
+-		$(CXX) $(SIMD_CXXFLAGS) /Fo"$@" /c $<
+-	
+-  %.c_app.obj: %.c $(DEPS)
+-		$(CC) $(APP_CFLAGS) /Fo"$@" /c $<
+-
+-  %.cpp_app.obj: %.cpp $(DEPS)
+-		$(CXX) $(APP_CXXFLAGS) /Fo"$@" /c $<
+-
+-  %.res: %.rc $(DEPS)
+-		$(WINDRES) /nologo /fo $@ $<
+-
+-  LDLAGS = CXXFLAGS
+-  DLLFLAGS = /link /DLL /MACHINE:X86 /IMPLIB:$(@:dll=lib) /OUT:$@ /PDB:$(@:dll=pdb) /BASE:$(BASE_$@) /DEF:$(DEF_$@)
+-
+-  DEF_opengl32.w95.dll = $(MESA_VER)/src/gallium/state_trackers/wgl/opengl32.def
+-  DEF_opengl32.w98me.dll = $(DEF_opengl32.w95.dll)
+-  
+-  DEF_mesa3d.w95.dll = mesa3d.def
+-  DEF_mesa3d.w98me.dll = $(DEF_mesa3d.w95.dll)
+-
+-  LIBSTATIC = LIB.EXE /nologo /OUT:$@ 
+-
+-else
+-#
+-# MinGW configurationn
+-#
+-  OBJ := .o
+-  LIBSUFFIX := .a
+-  LIBPREFIX := lib
+-  
+-  LD_DEPS := winpthreads/libpthread.a
+-  # libkernel32.a
+-  
+-  DLLFLAGS = -o $@ -shared -Wl,--dll,--out-implib,lib$(@:dll=a),--exclude-all-symbols,--exclude-libs=pthread,--image-base,$(BASE_$@)$(TUNE_LD)
+-  
+-  OPENGL_DEF = opengl32.mingw.def
+-  MESA3D_DEF = mesa3d.mingw.def
+-  MESA99_DEF = mesa99.mingw.def
+-  MESA89_DEF = mesa89.mingw.def
+-  D3D10_DEF  = d3d10_sw.def
+-  SVGA_DEF   = svga.mingw.def
+-
+-  INCLUDE = -Iinclude -Iwinpthreads/include -I$(MESA_VER)/include -I$(MESA_VER)/include/GL -I$(MESA_VER)/src/mapi -I$(MESA_VER)/src/util -I$(MESA_VER)/src -I$(MESA_VER)/src/mesa -I$(MESA_VER)/src/mesa/main \
+-    -I$(MESA_VER)/src/compiler -I$(MESA_VER)/src/compiler/nir -I$(MESA_VER)/src/gallium/state_trackers/wgl -I$(MESA_VER)/src/gallium/auxiliary -I$(MESA_VER)/src/gallium/auxiliary/util -I$(MESA_VER)/src/gallium/include \
+-    -I$(MESA_VER)/src/gallium/drivers/svga -I$(MESA_VER)/src/gallium/drivers/svga/include -I$(MESA_VER)/src/gallium/winsys -I$(MESA_VER)/src/gallium/winsys/sw  -I$(MESA_VER)/src/gallium/drivers \
+-    -I$(MESA_VER)/src/gallium/winsys/svga/drm \
+-    -I$(MESA_VER)/src/util/format -I$(MESA_VER)/src/gallium/frontends/wgl -I$(MESA_VER)/include/D3D9 -I$(MESA_VER)/src/gallium/frontends -I$(MESA_VER)/src/gallium/frontends/wgl -I$(MESA_VER)/include/D3D9 \
+-    -I$(MESA_VER)/src/gallium/frontends/nine -I$(MESA_VER)/include/winddk -Iinclude/winddk -Iwin9x \
+-    -I$(MESA_VER)/src/virtio -I$(MESA_VER)/src/gallium/winsys/virgl/common
+-
+-  DEFS =  -D__i386__ -D_X86_ -D_WIN32 -DWIN32 -DWIN9X -DWINVER=0x0400 \
+-    -DBUILD_GL32 -D_GDI32_ -DGL_API=GLAPI -DGL_APIENTRY=GLAPIENTRY \
+-    -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE \
+-    -DMAPI_MODE_UTIL -D_GLAPI_NO_EXPORTS -DCOBJMACROS -DINC_OLE2 \
+-    -DPACKAGE_VERSION="\"$(PACKAGE_VERSION)\"" -DPACKAGE_BUGREPORT="\"$(PACKAGE_VERSION)\"" -DMALLOC_IS_ALIGNED -DHAVE_CRTEX \
+-    -DHAVE_OPENGL=1 -DHAVE_OPENGL_ES_2=1 -DHAVE_OPENGL_ES_1=1 -DWINDOWS_NO_FUTEX -DGALLIUM_SOFTPIPE \
+-    -DGLX_USE_WINDOWSGL -DTHREAD_SANITIZER=0 -DNO_REGEX -DWITH_XMLCONFIG=0 \
+-    -DBLAKE3_NO_SSE2 -DBLAKE3_NO_SSE41 -DBLAKE3_NO_AVX2 -DBLAKE3_NO_AVX512 \
+-    -DHAVE_PTHREAD
+-
+-  ifdef USE_ASM
+-    DEFS += -DUSE_X86_ASM -DGLX_X86_READONLY_TEXT
+-  endif
+-  
+-  ifdef NO_FBHDA
+-  	DEFS += -DNO_FBHDA
+-  endif
+-
+-  DEFS_AS = -DGNU_ASSEMBLER -DSTDCALL_API -D__MINGW32__
+-
+-#  VBOX_WITH_MESA3D_D3D_FROM_SYSTEMMEM Create D3DPOOL_SYSTEMMEM textures from provided system memory pointer.
+-#  VBOX_WITH_MESA3D_NINE_SVGA          Make the D3D state tracker to work together with VMSVGA.
+-#  VBOX_WITH_MESA3D_SVGA_GPU_FINISHED  PIPE_QUERY_GPU_FINISHED in VMSVGA driver.
+-#  VBOX_WITH_MESA3D_SVGA_HALFZ         D3D Z coord [0.0;1.0] in the Gallium SVGA driver (VGPU9 only).
+-#  VBOX_WITH_MESA3D_SVGA_INSTANCING    Instancing for DrawPrimitives in the Gallium SVGA driver
+-#                                      (VGPU9 only, VGPU10 has it).
+-  
+-  DEFS += -DVBOX_WITH_MESA3D_STENCIL_CLEAR -DVBOX_WITH_MESA3D_DXFIX
+-  #DEFS += -DVBOX_WITH_MESA3D_SVGA_HALFZ -DVBOX_WITH_MESA3D_NINE_SVGA -DVBOX_WITH_MESA3D_SVGA_INSTANCING -DVBOX_WITH_MESA3D_SVGA_GPU_FINISHED -DVBOX_WITH_MESA3D_HACKS
+-  
+-  ifdef MESA_GPU10
+-    DEFS += -DVBOX_WITH_MESA3D_SVGA_HALFZ
+-  else
+-    DEFS += -DVBOX_WITH_MESA3D_SVGA_INSTANCING
+-  endif
+-
+-  ifdef VERSION_BUILD
+-    DEFS  += -DMESA9X_BUILD=$(VERSION_BUILD)
+-  endif
+-  
+-  DEFS += -DMESA_MAJOR=$(MESA_MAJOR)
+-  
+-  ifdef WIN9XSMP
+-    DEFS += -DWIN9XSMP
+-  endif
+-
+-  OPENGL_LIBS = -L. -lMesaLib -lMesaUtilLib -lMesaGalliumAuxLib -lMesaUtilLib -lMesaLib
+-  SVGA_LIBS   = -L. -lMesaLib -lMesaUtilLib -lMesaGalliumAuxLib -lMesaSVGALib -lMesaLib
+-  MESA_LIBS  := winpthreads/crtfix.o -static -Lwinpthreads -lpthread -lkernel32 -luser32 -lgdi32 -lws2_32
+-  MESA99_LIBS := -lMesaUtilLib $(MESA_LIBS)
+-  MESA89_LIBS := $(MESA99_LIBS)
+-
+-  ifdef DEBUG
+-    DD_DEFS = -DDEBUG -DMESA_DEBUG=1
+-  else
+-    DD_DEFS = -DNDEBUG -DMESA_DEBUG=0 -DD3D8TO9NOLOG
+-  endif
+-
+-  ifdef GUI_ERRORS
+-  	TUNE += -DGUI_ERRORS
+-  endif
+-
+-  ifdef LLVM
+-    SIMD_DEFS = $(DEFS) -DHAVE_LLVM=$(LLVM_VER) -DHAVE_GALLIUM_LLVMPIPE -DGALLIUM_LLVMPIPE -DHAVE_LLVMPIPE -DDRAW_LLVM_AVAILABLE
+-    SIMD_INCLUDE += $(INCLUDE) -I$(LLVM_DIR)/include
+-
+-    # try guess LLVM config
+-    LLVM_LIBS := -lLLVMMCJIT -lLLVMMCDisassembler -lLLVMInterpreter -lLLVMExecutionEngine -lLLVMRuntimeDyld -lLLVMOrcTargetProcess -lLLVMOrcShared -lLLVMCodeGen -lLLVMTarget -lLLVMScalarOpts -lLLVMInstCombine -lLLVMAggressiveInstCombine -lLLVMObjCARCOpts -lLLVMTransformUtils -lLLVMCodeGenTypes -lLLVMBitWriter -lLLVMAnalysis -lLLVMProfileData -lLLVMSymbolize -lLLVMDebugInfoBTF -lLLVMDebugInfoPDB -lLLVMDebugInfoMSF -lLLVMDebugInfoDWARF -lLLVMObject -lLLVMTextAPI -lLLVMMCParser -lLLVMIRReader -lLLVMAsmParser -lLLVMMC -lLLVMDebugInfoCodeView -lLLVMBitReader -lLLVMCore -lLLVMRemarks -lLLVMBitstreamReader -lLLVMBinaryFormat -lLLVMTargetParser -lLLVMSupport -lLLVMDemangle
+-    ifdef LLVM_2024
+-    	LLVM_LIBS := -lLLVMPasses -lLLVMHipStdPar -lLLVMCoroutines -lLLVMipo -lLLVMVectorize -lLLVMLinker -lLLVMFrontendOpenMP -lLLVMFrontendOffloading -lLLVMX86TargetMCA -lLLVMMCA -lLLVMX86Disassembler -lLLVMX86AsmParser -lLLVMX86CodeGen -lLLVMX86Desc -lLLVMX86Info -lLLVMInstrumentation -lLLVMIRPrinter -lLLVMGlobalISel -lLLVMSelectionDAG -lLLVMCFGuard -lLLVMAsmPrinter $(LLVM_LIBS)
+-		endif
+-    ifdef LTO
+-		  LLVM_LIBS := -lLLVMLTO -lLLVMExtensions  $(LLVM_LIBS)
+-    endif
+-    LLVM_CFLAGS := -I$(LLVM_DIR)/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
+-    LLVM_CXXFLAGS := -I$(LLVM_DIR)/include -std=c++17   -fno-exceptions -funwind-tables -fno-rtti -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
+-    
+-    # native mode, call llvm-config.exe
+-    ifeq "$(PREFIX)" ""
+-      LLVM_CFLAGS := $(shell $(LLVM_DIR)/bin/llvm-config --cflags)
+-      LLVM_CXXFLAGS := $(shell $(LLVM_DIR)/bin/llvm-config --cxxflags)
+-      LLVM_LIBS := $(shell $(LLVM_DIR)/bin/llvm-config --libs --link-static $(LLVM_modules))
+-    endif
+-    
+-    opengl_simd_LIBS := -L. -L$(LLVM_DIR)/lib -lMesaLibSimd -lMesaUtilLibSimd -lMesaGalliumLLVMPipe -lMesaGalliumAuxLibSimd -lMesaLibSimd -lMesaUtilLibSimd
+-    opengl_simd_LIBS := $(opengl_simd_LIBS) $(filter-out -lshell32,$(LLVM_LIBS))
+-    
+-    # LLVMpipe 6.x required zlib
+-    MESA_SIMD_LIBS := $(MESA_LIBS) -lpsapi -lole32 -lz -lws2_32
+-    
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaGalliumLLVMPipe$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaUtilLibSimd$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaLibSimd$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaGalliumAuxLibSimd$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibGLSimd$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibICDSimd$(LIBSUFFIX)
+-    LIBS_TO_BUILD += $(LIBPREFIX)MesaWglLibSimd$(LIBSUFFIX)
+-    
+-    # for LLVM we need same cflags as LLVM itself
+-    ifndef LP_DEBUG
+-      SIMD_CFLAGS   = -std=$(CSTD) $(filter-out -pedantic -Wall -W -Wextra -march=westmere -march=core2,$(LLVM_CFLAGS)) $(TUNE) $(SIMD_INCLUDE) $(SIMD_DEFS) $(filter-out -DDEBUG -DNDEBUG,$(DD_DEFS))
+-      SIMD_CXXFLAGS = $(filter-out -pedantic -pedantic -Wall -W -Wextra -march=westmere -march=core2 -std=gnu++11 -std=c++17,$(LLVM_CXXFLAGS)) -std=$(CXXSTD) $(TUNE) $(SIMD_INCLUDE) $(SIMD_DEFS) $(filter-out -DDEBUG -DNDEBUG,$(DD_DEFS))
+-    else
+-      SIMD_CFLAGS = -std=$(CSTD) -O1 -g  $(TUNE) $(SIMD_INCLUDE) $(SIMD_DEFS) $(DD_DEFS)
+-      SIMD_CXXFLAGS = -std=$(CXXSTD) -O1 -g $(TUNE) $(SIMD_INCLUDE) $(SIMD_DEFS) $(DD_DEFS)
+-    endif
+-    
+-    ifdef LLVM_2024
+-      ifndef LP_DEBUG
+-        SIMD_CFLAGS += $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions -DNDEBUG
+-        SIMD_CXXFLAGS += $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions -fno-rtti -DNDEBUG
+-      else
+-        SIMD_CFLAGS += -DDEBUG
+-        SIMD_CXXFLAGS += -DDEBUG
+-      endif
+-    endif
+-    
+-    SIMD_LDFLAGS = -std=$(CXXSTD)
+-  endif
+-  
+-  ifdef SPEED
+-    CFLAGS = -std=$(CSTD) $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
+-    CXXFLAGS = -std=$(CXXSTD) $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions -fno-rtti $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
+-    LDFLAGS = -std=$(CXXSTD) $(RELEASE_BASE_OPT) -fno-exceptions
+-  else
+-    CFLAGS = -std=$(CSTD) -O0 -g $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
+-    CXXFLAGS = -std=$(CXXSTD) -O0 -g  $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
+-    LDFLAGS = -std=$(CXXSTD)
+-  endif
+-
+-  ifdef SPEED
+-    APP_CFLAGS   = -std=$(CSTD) $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions -I. -Iglchecker $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
+-    APP_CXXFLAGS = -std=$(CXXSTD) $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions -fno-rtti $(INCLUDE) $(DD_DEFS) $(DEFS)
+-    APP_LDFLAGS  = -std=$(CXXSTD) $(RELEASE_BASE_OPT) -fno-exceptions 
+-  else
+-    APP_CFLAGS   = -std=$(CSTD) -O0 -g -I. -Iglchecker $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
+-    APP_CXXFLAGS = -std=$(CXXSTD) -O0 -g $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
+-    APP_LDFLAGS  = -std=$(CXXSTD) -O0 -g
+-  endif
+-
+-  app_LIBS  = winpthreads/crtfix.o -static -Lwinpthreads -lpthread -lopengl32 -lgdi32
+-  EXEFLAGS_WIN = -o $@ -Wl,-subsystem,windows$(TUNE_LD)
+-  EXEFLAGS_CMD = -o $@ -Wl,-subsystem,console$(TUNE_LD)
+-  
+-  ifdef LTO
+-    CFLAGS        += -flto=auto -fno-fat-lto-objects -pipe -Werror=implicit-function-declaration
+-    CXXFLAGS      += -flto=auto -fno-fat-lto-objects -pipe -fno-declone-ctor-dtor
+-    CFLAGS        += -flto=auto -fno-fat-lto-objects -pipe -Werror=implicit-function-declaration
+-
+-    ifdef LLVM
+-      LDFLAGS       += $(LLVM_CXXFLAGS) -flto=auto -fno-fat-lto-objects -pipe -fno-strict-aliasing
+-      SIMD_LDFLAGS  += $(LLVM_CXXFLAGS) -flto=auto -fno-fat-lto-objects -pipe -fno-strict-aliasing
+-      SIMD_CXXFLAGS += -flto=auto -fno-fat-lto-objects -pipe -fno-declone-ctor-dtor
+-    else
+-      LDFLAGS    += -flto=auto -fno-fat-lto-objects -fno-strict-aliasing -pipe
+-    endif
+-    
+-    CFLAGS_APP   += -flto=auto -fno-fat-lto-objects -pipe
+-    CXXFLAGS_APP += -flto=auto -fno-fat-lto-objects -pipe -fno-declone-ctor-dtor
+-    LDFLAGS_APP  += -flto=auto -fno-fat-lto-objects -pipe
+-  endif
+-
+-  ifdef VERBOSE
+-  %.c_gen.o: %.c $(DEPS)
+-		$(CC) $(CFLAGS) -c -o $@ $<
+-
+-  %.cpp_gen.o: %.cpp $(DEPS)
+-		$(CXX) $(CXXFLAGS) -c -o $@ $<
+-
+-  %.c_simd.o: %.c $(DEPS)
+-		$(CC) $(SIMD_CFLAGS) -c -o $@ $<
+-
+-  %.cpp_simd.o: %.cpp $(DEPS)
+-		$(CXX) $(SIMD_CXXFLAGS) -c -o $@ $<
+-
+-  %.c_app.o: %.c $(DEPS)
+-		$(CC) $(APP_CFLAGS) -c -o $@ $<
+-
+-  %.cpp_app.o: %.cpp $(DEPS)
+-		$(CXX) $(APP_CXXFLAGS) -c -o $@ $<
+-
+-  %.res: %.rc $(DEPS)
+-		$(WINDRES) -DWINDRES $(DEFS) --input $< --output $@ --output-format=coff
+-
+-  %.S_gen.o: %.S $(DEPS)
+-		$(CC) $(CFLAGS) $(DEFS_AS) -c -o $@ $<
+-
+-  %.S_simd.o: %.S $(DEPS)
+-		$(CC) $(SIMD_CFLAGS) $(DEFS_AS) -c -o $@ $<
+-
+-  else
+-  %.c_gen.o: %.c $(DEPS)
+-		$(info CC (x87) $@)
+-		@$(CC) $(CFLAGS) -c -o $@ $<
+-
+-  %.cpp_gen.o: %.cpp $(DEPS)
+-		$(info CXX (x87) $@)
+-		@$(CXX) $(CXXFLAGS) -c -o $@ $<
+-
+-  %.c_simd.o: %.c $(DEPS)
+-		$(info CC (SIMD) $@)
+-		@$(CC) $(SIMD_CFLAGS) -c -o $@ $<
+-
+-  %.cpp_simd.o: %.cpp $(DEPS)
+-		$(info CXX (SIMD) $@)
+-		@$(CXX) $(SIMD_CXXFLAGS) -c -o $@ $<
+-
+-  %.c_app.o: %.c $(DEPS)
+-		$(info CC $@)
+-		@$(CC) $(APP_CFLAGS) -c -o $@ $<
+-
+-  %.cpp_app.o: %.cpp $(DEPS)
+-		$(info CXX $@)
+-		@$(CXX) $(APP_CXXFLAGS) -c -o $@ $<
+-
+-  %.res: %.rc $(DEPS)
+-		$(info RC $@)
+-		@$(WINDRES) -DWINDRES $(DEFS) --input $< --output $@ --output-format=coff
+-
+-  %.S_gen.o: %.S $(DEPS)
+-		$(info AS (x87) $@)
+-		@$(CC) $(CFLAGS) $(DEFS_AS) -c -o $@ $<
+-
+-  %.S_simd.o: %.S $(DEPS)
+-		$(info AS (SIMD) $@)
+-		@$(CC) $(SIMD_CFLAGS) $(DEFS_AS) -c -o $@ $<
+-
+-  endif
+-
 -  LIBSTATIC = $(AR) rcs -o $@ 
+-
+-endif
+-
+-%.asm:
+-
+-%.asm$(OBJ): %.asm $(DEPS)
+-	nasm $< -f win32 -o $@
+-
+-winpthreads.target: $(DEPS)
+-	cd winpthreads && $(MAKE)
+-	echo OK > $@
+-
+-winpthreads/crtfix$(OBJ): winpthreads.target
+-	
+-winpthreads/$(LIBPREFIX)pthread$(LIBSUFFIX): winpthreads.target
+-
+-LIBS_TO_BUILD += $(LIBPREFIX)MesaUtilLib$(LIBSUFFIX)
+-LIBS_TO_BUILD += $(LIBPREFIX)MesaLib$(LIBSUFFIX)
+-LIBS_TO_BUILD += $(LIBPREFIX)MesaGalliumAuxLib$(LIBSUFFIX)
+-LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibGL$(LIBSUFFIX)
+-LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibICD$(LIBSUFFIX)
+-LIBS_TO_BUILD += $(LIBPREFIX)MesaWglLib$(LIBSUFFIX)
+-
+-glchecked_SRC = \
+-  glchecker/src/benchmark.cpp \
+-  glchecker/src/CEngine.cpp \
+-  glchecker/src/CGUI.cpp \
+-  glchecker/src/COpenGL.cpp \
+-  glchecker/src/CSound.cpp \
+-  glchecker/src/CVector.cpp \
+-  glchecker/src/CWindow.cpp \
+-  glchecker/src/glchecker.cpp \
+-  glchecker/src/parser.cpp \
+-  glchecker/src/glchecker.res
+-
+-eight_SRC = \
+-  win9x/eight/d3d8to9.cpp \
+-  win9x/eight/d3d8to9_base.cpp \
+-  win9x/eight/d3d8to9_device.cpp \
+-  win9x/eight/d3d8to9_index_buffer.cpp \
+-  win9x/eight/d3d8to9_surface.cpp \
+-  win9x/eight/d3d8to9_swap_chain.cpp \
+-  win9x/eight/d3d8to9_texture.cpp \
+-  win9x/eight/d3d8to9_vertex_buffer.cpp \
+-  win9x/eight/d3d8to9_volume.cpp \
+-  win9x/eight/d3d8types.cpp \
+-  win9x/eight/interface_query.cpp
+-
+-MesaUtilLib_OBJS := $(MesaUtilLib_SRC:.c=.c_gen$(OBJ))
+-MesaUtilLib_OBJS := $(MesaUtilLib_OBJS:.cpp=.cpp_gen$(OBJ))
+-$(LIBPREFIX)MesaUtilLib$(LIBSUFFIX): $(MesaUtilLib_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaUtilLib_OBJS) 
+-	
+-MesaUtilLibSimd_OBJS := $(MesaUtilLib_SRC:.c=.c_simd$(OBJ))
+-MesaUtilLibSimd_OBJS := $(MesaUtilLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-$(LIBPREFIX)MesaUtilLibSimd$(LIBSUFFIX): $(MesaUtilLibSimd_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaUtilLibSimd_OBJS) 
+-
+-MesaLib_OBJS := $(MesaLib_SRC:.c=.c_gen$(OBJ))
+-MesaLib_OBJS := $(MesaLib_OBJS:.cpp=.cpp_gen$(OBJ))
+-MesaLib_OBJS := $(MesaLib_OBJS:.S=.S_gen$(OBJ))
+-$(LIBPREFIX)MesaLib$(LIBSUFFIX): $(MesaLib_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaLib_OBJS)
+-
+-MesaLibSimd_OBJS := $(MesaLib_SRC:.c=.c_simd$(OBJ))
+-MesaLibSimd_OBJS := $(MesaLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-MesaLibSimd_OBJS := $(MesaLibSimd_OBJS:.S=.S_simd$(OBJ))
+-$(LIBPREFIX)MesaLibSimd$(LIBSUFFIX): $(MesaLibSimd_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaLibSimd_OBJS)
+-
+-MesaGalliumAuxLib_OBJS := $(MesaGalliumAuxLib_SRC:.c=.c_gen$(OBJ))
+-MesaGalliumAuxLib_OBJS := $(MesaGalliumAuxLib_OBJS:.cpp=.cpp_gen$(OBJ))
+-$(LIBPREFIX)MesaGalliumAuxLib$(LIBSUFFIX): $(MesaGalliumAuxLib_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaGalliumAuxLib_OBJS)
+-
+-MesaGalliumAuxLibSimd_OBJS := $(MesaGalliumAuxLibSimd_SRC:.c=.c_simd$(OBJ))
+-MesaGalliumAuxLibSimd_OBJS := $(MesaGalliumAuxLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-$(LIBPREFIX)MesaGalliumAuxLibSimd$(LIBSUFFIX): $(MesaGalliumAuxLibSimd_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaGalliumAuxLibSimd_OBJS)
+-
+-MesaGalliumLLVMPipe_OBJS := $(MesaGalliumLLVMPipe_SRC:.c=.c_simd$(OBJ))
+-MesaGalliumLLVMPipe_OBJS := $(MesaGalliumLLVMPipe_OBJS:.cpp=.cpp_simd$(OBJ))
+-$(LIBPREFIX)MesaGalliumLLVMPipe$(LIBSUFFIX): $(MesaGalliumLLVMPipe_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaGalliumLLVMPipe_OBJS)
+-
+-MesaSVGALib_OBJS := $(MesaSVGALib_SRC:.c=.c_gen$(OBJ))
+-MesaSVGALib_OBJS := $(MesaSVGALib_OBJS:.cpp=.cpp_gen$(OBJ))
+-$(LIBPREFIX)MesaSVGALib$(LIBSUFFIX): $(MesaSVGALib_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaSVGALib_OBJS)
+-
+-MesaSVGALibSimd_OBJS := $(MesaSVGALib_SRC:.c=.c_simd$(OBJ))
+-MesaSVGALibSimd_OBJS := $(MesaSVGALibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-$(LIBPREFIX)MesaSVGALibSimd$(LIBSUFFIX): $(MesaSVGALibSimd_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaSVGALibSimd_OBJS)
+-
+-MesaVirGLLib_OBJS := $(MesaVirGLLib_SRC:.c=.c_gen$(OBJ))
+-MesaVirGLLib_OBJS := $(MesaVirGLLib_OBJS:.cpp=.cpp_gen$(OBJ))
+-$(LIBPREFIX)MesaVirGL$(LIBSUFFIX): $(MesaVirGL_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaVirGLLib_OBJS)
+-
+-MesaGdiLib_OBJS := $(MesaGdiLib_SRC:.c=.c_gen$(OBJ))
+-MesaGdiLib_OBJS := $(MesaGdiLib_OBJS:.cpp=.cpp_gen$(OBJ))
+-MesaGdiLibSimd_OBJS := $(MesaGdiLib_SRC:.c=.c_simd$(OBJ))
+-MesaGdiLibSimd_OBJS := $(MesaGdiLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-
+-MesaGdiLibGL_OBJS := $(MesaGdiLibGL_SRC:.c=.c_gen$(OBJ))
+-MesaGdiLibGL_OBJS := $(MesaGdiLibGL_OBJS:.cpp=.cpp_gen$(OBJ))
+-$(LIBPREFIX)MesaGdiLibGL$(LIBSUFFIX): $(MesaGdiLibGL_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaGdiLibGL_OBJS)
+-
+-MesaGdiLibGLSimd_OBJS := $(MesaGdiLibGL_SRC:.c=.c_simd$(OBJ))
+-MesaGdiLibGLSimd_OBJS := $(MesaGdiLibGLSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-$(LIBPREFIX)MesaGdiLibGLSimd$(LIBSUFFIX): $(MesaGdiLibGLSimd_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaGdiLibGLSimd_OBJS)
+-
+-MesaGdiLibICD_OBJS := $(MesaGdiLibICD_SRC:.c=.c_gen$(OBJ))
+-MesaGdiLibICD_OBJS := $(MesaGdiLibICD_OBJS:.cpp=.cpp_gen$(OBJ))
+-$(LIBPREFIX)MesaGdiLibICD$(LIBSUFFIX): $(MesaGdiLibICD_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaGdiLibICD_OBJS)
+-
+-MesaGdiLibICDSimd_OBJS := $(MesaGdiLibICD_SRC:.c=.c_simd$(OBJ))
+-MesaGdiLibICDSimd_OBJS := $(MesaGdiLibICDSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-$(LIBPREFIX)MesaGdiLibICDSimd$(LIBSUFFIX): $(MesaGdiLibICDSimd_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaGdiLibICDSimd_OBJS)
+-
+-MesaWglLib_OBJS := $(MesaWglLib_SRC:.c=.c_gen$(OBJ))
+-MesaWglLib_OBJS := $(MesaWglLib_OBJS:.cpp=.cpp_gen$(OBJ))
+-$(LIBPREFIX)MesaWglLib$(LIBSUFFIX): $(MesaWglLib_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaWglLib_OBJS)
+-
+-MesaWglLibSimd_OBJS := $(MesaWglLib_SRC:.c=.c_simd$(OBJ))
+-MesaWglLibSimd_OBJS := $(MesaWglLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-$(LIBPREFIX)MesaWglLibSimd$(LIBSUFFIX): $(MesaWglLibSimd_OBJS)
+-	-$(RM) $@
+-	$(LIBSTATIC) $(MesaWglLibSimd_OBJS)
+-
+-MesaGdiLibVMW_OBJS := $(MesaGdiLibVMW_SRC:.c=.c_gen$(OBJ))
+-MesaGdiLibVMW_OBJS := $(MesaGdiLibVMW_OBJS:.cpp=.cpp_gen$(OBJ))
+-
+-MesaGdiLibVMWSimd_OBJS := $(MesaGdiLibVMW_SRC:.c=.c_simd$(OBJ))
+-MesaGdiLibVMWSimd_OBJS := $(MesaGdiLibVMWSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-
+-MesaGdiLibVirGL_OBJS := $(MesaGdiLibVirGL_SRC:.c=.c_gen$(OBJ))
+-MesaGdiLibVirGL_OBJS := $(MesaGdiLibVirGL_OBJS:.cpp=.cpp_gen$(OBJ))
+-
+-MesaSVGAWinsysLib_OBJS := $(MesaSVGAWinsysLib_SRC:.c=.c_gen$(OBJ))
+-MesaSVGAWinsysLib_OBJS := $(MesaSVGAWinsysLib_OBJS:.cpp=.cpp_gen$(OBJ))
+-
+-MesaSVGAWinsysLibSimd_OBJS := $(MesaSVGAWinsysLib_SRC:.c=.c_simd$(OBJ))
+-MesaSVGAWinsysLibSimd_OBJS := $(MesaSVGAWinsysLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-
+-MesaNineLib_OBJS := $(MesaNineLib_SRC:.c=.c_gen$(OBJ))
+-MesaNineLib_OBJS := $(MesaNineLib_OBJS:.cpp=.cpp_gen$(OBJ))
+-
+-MesaD3D10Lib_OBJS := $(MesaD3D10Lib_SRC:.c=.c_gen$(OBJ))
+-MesaD3D10Lib_OBJS := $(MesaD3D10Lib_OBJS:.cpp=.cpp_gen$(OBJ))
+-
+-MesaD3D10LibSimd_OBJS := $(MesaD3D10Lib_SRC:.c=.c_simd$(OBJ))
+-MesaD3D10LibSimd_OBJS := $(MesaD3D10LibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-
+-eight_OBJS := $(eight_SRC:.c=.c_gen$(OBJ))
+-eight_OBJS := $(eight_OBJS:.cpp=.cpp_gen$(OBJ))
+-
+-MesaOS_OBJS := $(MesaOS_SRC:.c=.c_gen$(OBJ))
+-MesaOS_OBJS := $(MesaOS_OBJS:.cpp=.cpp_gen$(OBJ))
+-
+-MesaOSSimd_OBJS := $(MesaOS_SRC:.c=.c_simd$(OBJ))
+-MesaOSSimd_OBJS := $(MesaOSSimd_OBJS:.cpp=.cpp_simd$(OBJ))
+-
+-ifdef MesaSVGAOS_SRC
+-MesaSVGAOS_OBJS := $(MesaSVGAOS_SRC:.c=.c_gen$(OBJ))
+-MesaSVGAOS_OBJS := $(MesaSVGAOS_OBJS:.cpp=.cpp_gen$(OBJ))
+-endif
+-
+-ifdef WIN9XSMP
+-  FIXLINK_CMD=-relink
+-  FIXLINK_PARMS=mesasmp.dll kernel32.dll msvcrt.dll ws2_32.dll
+-else
+-  FIXLINK_CMD=-checksum
+-endif
+-
+-fixlink$(HOST_SUFFIX): fixlink/fixlink.c
+-	$(HOST_CC) -std=c89 fixlink/fixlink.c -o $@
+-
+-# software opengl32 replacement
+-opengl32.w95.dll: $(DEPS) $(LIBS_TO_BUILD) opengl32.res $(LD_DEPS) fixlink.exe
+-	$(LD) $(LDFLAGS) $(MesaWglLib_OBJS) $(MesaGdiLibGL_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) opengl32.res $(DLLFLAGS) $(OPENGL_DEF)
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $@ $(FIXLINK_PARMS)
+-
+-opengl32.w98me.dll: $(DEPS) $(LIBS_TO_BUILD) opengl32.res $(LD_DEPS) fixlink.exe
+-	$(LD) $(LDFLAGS) $(MesaWglLibSimd_OBJS) $(MesaGdiLibGLSimd_OBJS) $(opengl_simd_LIBS) $(MESA_SIMD_LIBS) opengl32.res $(DLLFLAGS) $(OPENGL_DEF)
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+-
+-# software ICD driver
+-mesa3d.w95.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaOS_OBJS) mesa3d.res $(LD_DEPS) fixlink.exe
+-	$(LD) $(LDFLAGS) $(MesaWglLib_OBJS) $(MesaGdiLibICD_OBJS) $(MesaOS_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) mesa3d.res $(DLLFLAGS) $(MESA3D_DEF)
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+-
+-mesa3d.w98me.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaOSSimd_OBJS) mesa3d.res $(LD_DEPS) fixlink.exe
+-	$(LD) $(SIMD_LDFLAGS) $(MesaWglLibSimd_OBJS) $(MesaGdiLibICDSimd_OBJS) $(MesaOSSimd_OBJS) $(opengl_simd_LIBS) $(MESA_SIMD_LIBS) mesa3d.res $(DLLFLAGS) $(MESA3D_DEF) 
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+-
+-# accelerated ICD driver (SVGA3D) fixlink.exe
+-vmwsgl32.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaWglLib_OBJS) $(MesaGdiLibVMW_OBJS) $(MesaSVGALib_OBJS) $(MesaSVGAWinsysLib_OBJS) $(MesaSVGAOS_OBJS) vmwsgl32.res $(LD_DEPS)
+-	$(LD) $(LDFLAGS) $(MesaWglLib_OBJS) $(MesaGdiLibVMW_OBJS) $(MesaSVGALib_OBJS) $(MesaSVGAWinsysLib_OBJS) $(MesaSVGAOS_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) vmwsgl32.res $(DLLFLAGS) $(SVGA_DEF)
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+-
+-svgagl32.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaWglLibSimd_OBJS) $(MesaGdiLibVMWSimd_OBJS) $(MesaSVGALibSimd_OBJS) $(MesaSVGAWinsysLibSimd_OBJS) vmwsgl32.res $(LD_DEPS) fixlink.exe
+-	$(LD) $(SIMD_LDFLAGS) $(MesaWglLibSimd_OBJS) $(MesaGdiLibVMWSimd_OBJS) $(MesaSVGALibSimd_OBJS) $(MesaSVGAWinsysLibSimd_OBJS) $(opengl_simd_LIBS) $(MESA_SIMD_LIBS) vmwsgl32.res $(DLLFLAGS) $(OPENGL_DEF)
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+-
+-# accelerated ICD driver (VirGL) fixlink.exe
+-virgl32.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaWglLib_OBJS) $(MesaGdiLibVirGL_OBJS) $(MesaVirGLLib_OBJS) vmwsgl32.res $(LD_DEPS)
+-	$(LD) $(LDFLAGS) $(MesaWglLib_OBJS) $(MesaGdiLibVirGL_OBJS) $(MesaVirGLLib_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) vmwsgl32.res $(DLLFLAGS) $(OPENGL_DEF)
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+-
+-mesa99.dll: mesa3d.w95.dll $(DEPS) $(LIBS_TO_BUILD) $(MesaNineLib_OBJS) mesa99.res fixlink.exe
+-	$(LD) $(LDFLAGS) $(MesaNineLib_OBJS) $(OPENGL_LIBS) mesa99.res $(MESA99_LIBS) $(DLLFLAGS) $(MESA99_DEF)
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+-
+-mesa89.dll: $(DEPS) mesa99.dll $(eight_OBJS) mesa89.res fixlink.exe
+-	$(LD) $(LDFLAGS) $(MesaNineLib_OBJS) $(OPENGL_LIBS) $(eight_OBJS) mesa89.res $(MESA89_LIBS) $(DLLFLAGS) $(MESA89_DEF)
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+-
+-mesad3d10.w95.dll: $(DEPS) $(LIBS_TO_BUILD) $(LD_DEPS) $(MesaD3D10Lib_OBJS) fixlink.exe
+-	$(LD) $(LDFLAGS) $(MesaD3D10Lib_OBJS) $(MesaGdiLib_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) $(DLLFLAGS) $(D3D10_DEF)
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+-	
+-mesad3d10.w98me.dll: $(DEPS) $(LIBS_TO_BUILD) $(LD_DEPS) $(MesaD3D10LibSimd_OBJS)
+-	$(LD) $(LDFLAGS) $(MesaD3D10LibSimd_OBJS) $(MesaGdiLibSimd_OBJS) $(opengl_simd_LIBS) $(MESA_SIMD_LIBS) $(DLLFLAGS) $(D3D10_DEF)
+-	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
+-
+-# benchmark
+-glchecked_OBJS := $(glchecked_SRC:.cpp=.cpp_app$(OBJ))
+-
+-ifdef DEBUG
+-glchecker.exe: $(DEPS) $(glchecked_OBJS) $(LD_DEPS)
+-	$(LD) $(APP_LDFLAGS) $(glchecked_OBJS) $(app_LIBS) $(EXEFLAGS_CMD)
+-
+-else
+-glchecker.exe: $(DEPS) $(glchecked_OBJS) $(LD_DEPS)
+-	$(LD) $(APP_LDFLAGS) $(glchecked_OBJS) $(app_LIBS) $(EXEFLAGS_WIN)
+-
+-endif
+-
+-# ICD tester
+-icdtest.exe: $(DEPS) icdtest.c_app$(OBJ) misctest.res $(LD_DEPS)
+-	$(LD) $(APP_LDFLAGS) icdtest.c_app$(OBJ) misctest.res $(app_LIBS) $(EXEFLAGS_CMD)
+-
+-# FB tester
+-fbtest.exe: $(DEPS) fbtest.c_app$(OBJ) misctest.res $(LD_DEPS)
+-	$(LD) $(APP_LDFLAGS) fbtest.c_app$(OBJ) misctest.res $(app_LIBS) $(EXEFLAGS_CMD)
+-
+-# gamma tester
+-gammaset.exe: $(DEPS) gammaset.c_app$(OBJ) misctest.res $(LD_DEPS)
+-	$(LD) $(APP_LDFLAGS) gammaset.c_app$(OBJ) misctest.res $(app_LIBS) $(EXEFLAGS_CMD)
+-
+-# svgadump
+-svgadump.exe: $(DEPS) svgadump.c_app$(OBJ) misctest.res $(LD_DEPS)
+-	$(LD) $(APP_LDFLAGS) svgadump.c_app$(OBJ) misctest.res $(app_LIBS) $(EXEFLAGS_CMD)
+-
+-# WGL tester
+-ifdef DEBUG
+-wgltest.exe: $(DEPS) wgltest.c_app$(OBJ) wgltest.res $(LD_DEPS)
+-	$(LD) $(APP_LDFLAGS) wgltest.c_app$(OBJ) wgltest.res $(app_LIBS) $(EXEFLAGS_CMD)
+-
+-else
+-wgltest.exe: $(DEPS) wgltest.c_app$(OBJ) wgltest.res $(LD_DEPS)
+-	$(LD) $(APP_LDFLAGS) wgltest.c_app$(OBJ) wgltest.res $(app_LIBS) $(EXEFLAGS_WIN)
+-
+-endif
+-
+-ifdef OBJ
+-clean:
+-	-$(RM) $(MESA_VER).target
+-	-$(RM) winpthreads.target
+-	-$(RM) $(MesaUtilLib_OBJS)
+-	-$(RM) $(MesaUtilLibSimd_OBJS)
+-	-$(RM) $(MesaLib_OBJS)
+-	-$(RM) $(MesaLibSimd_OBJS)
+-	-$(RM) $(MesaGalliumAuxLib_OBJS)
+-	-$(RM) $(MesaGalliumAuxLibSimd_OBJS)
+-	-$(RM) $(MesaGalliumLLVMPipe_OBJS)
+-	-$(RM) $(MesaSVGALib_OBJS)
+-	-$(RM) $(MesaVirGLLib_OBJS)
+-	-$(RM) $(MesaGdiLibGL_OBJS)
+-	-$(RM) $(MesaGdiLibGLSimd_OBJS)
+-	-$(RM) $(MesaGdiLibICD_OBJS)
+-	-$(RM) $(MesaGdiLibICDSimd_OBJS)
+-	-$(RM) $(MesaWglLib_OBJS)
+-	-$(RM) $(MesaWglLibSimd_OBJS)
+-	-$(RM) $(MesaWglLib_OBJS)
+-	-$(RM) $(glchecked_OBJS)
+-	-$(RM) $(MesaGdiLibVMW_OBJS)
+-	-$(RM) $(MesaGdiLibVirGL_OBJS)
+-	-$(RM) $(MesaSVGAWinsysLib_OBJS)
+-	-$(RM) $(MesaNineLib_OBJS)
+-	-$(RM) $(MesaD3D10Lib_OBJS)
+-	-$(RM) $(MesaD3D10LibSimd_OBJS)
+-	-$(RM) $(MesaOS_OBJS)
+-	-$(RM) $(MesaOSSimd_OBJS)
+-	-$(RM) $(eight_OBJS)
+-	-$(RM) icdtest.c_app$(OBJ)
+-	-$(RM) fbtest.c_app$(OBJ)
+-	-$(RM) wgltest.c_app$(OBJ)
+-	-$(RM) gammaset.c_app$(OBJ)
+-	-$(RM) svgadump.c_app$(OBJ)
+-	-$(RM) $(LIBPREFIX)MesaUtilLib$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaUtilLibSimd$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaLib$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaLibSimd$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaGalliumAuxLib$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaGalliumAuxLibSimd$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaGalliumLLVMPipe$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaSVGALib$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaGdiLibGL$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaGdiLibGLSimd$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaGdiLibICD$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaGdiLibICDSimd$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaGdiLib$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaGdiLibSimd$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaWglLib$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)MesaWglLibSimd$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)mesa99$(LIBSUFFIX)
+-	-$(RM) $(LIBPREFIX)mesa89$(LIBSUFFIX)
+-	-$(RM) vmwsgl32.res
+-	-$(RM) opengl32.res
+-	-$(RM) mesa3d.res
+-	-$(RM) mesa89.res
+-	-$(RM) mesa99.res
+-	-$(RM) wgltest.res
+-	-$(RM) misctest.res
+-	-$(RM) opengl32.w95.dll
+-	-$(RM) $(LIBPREFIX)opengl32.w95$(LIBSUFFIX)
+-	-$(RM) opengl32.w98me.dll
+-	-$(RM) $(LIBPREFIX)opengl32.w98me$(LIBSUFFIX)
+-	-$(RM) mesa3d.w95.dll
+-	-$(RM) $(LIBPREFIX)mesa3d.w95$(LIBSUFFIX)
+-	-$(RM) mesa3d.w98me.dll
+-	-$(RM) $(LIBPREFIX)mesa3d.w98me$(LIBSUFFIX)
+-	-$(RM) vmwsgl32.dll
+-	-$(RM) $(LIBPREFIX)vmwsgl32$(LIBSUFFIX)
+-	-$(RM) mesad3d10.w95.dll
+-	-$(RM) mesad3d10.w98me.dll
+-	-$(RM) mesa99.dll
+-	-$(RM) mesa89.dll
+-	-$(RM) glchecker.exe
+-	-$(RM) icdtest.exe
+-	-$(RM) gammaset.exe
+-	-$(RM) fbtest.exe
+-	-$(RM) wgltest.exe
+-	-$(RM) svgadump.exe
+-	-$(RM) $(LIBPREFIX)MesaSVGALibSimd$(LIBSUFFIX)
+-	-$(RM) $(MesaSVGALibSimd_OBJS)
+-	-$(RM) $(MesaGdiLibVMWSimd_OBJS)
+-	-$(RM) $(MesaSVGAWinsysLibSimd_OBJS)
+-	-$(RM) svgagl32.dll
+-	-$(RM) $(LIBPREFIX)svgagl32$(LIBSUFFIX)
+-	-cd winpthreads && $(MAKE) clean
+-	-$(RM) $(MESA_VER).deps
+-endif
+-
+-libkernel32.a: extra/kernel32.def
+-	$(DLLTOOL) -A -C -k -d $< -l $@
++#
++# This is GNU make file DON'T use it with nmake/wmake or whatever even if you
++# plan to use MS compiler!
++#
++
++################################################################################
++# Copyright (c) 2022-2023 Jaroslav Hensl                                       #
++#                                                                              #
++# See LICENCE file for law informations                                        #
++# See README.md file for more detailed build instructions                      #
++#                                                                              #
++################################################################################
++
++#
++# Usage:
++#   1) copy config.mk-sample to config.mk
++#   2) edit config.mk
++#   3) run make
++#
++
++include config.mk
++
++MESA_VER ?= mesa-25.1.x
++DEPS = Makefile config.mk $(MESA_VER).deps
++#DEPS = $(MESA_VER).deps
++
++ifeq ($(MESA_VER),mesa-17.3.9)
++  MESA_MAJOR := 17
++endif
++
++ifeq ($(MESA_VER),mesa-21.3.x)
++  MESA_MAJOR := 21
++  MESA_GPU10 := 1
++endif
++
++ifeq ($(MESA_VER),mesa-23.1.x)
++  MESA_MAJOR := 23
++  MESA_GPU10 := 1
++endif
++
++ifeq ($(MESA_VER),mesa-24.0.x)
++  MESA_MAJOR := 24
++  MESA_GPU10 := 1
++endif
++
++ifeq ($(MESA_VER),mesa-24.1.x)
++  MESA_MAJOR := 24
++  MESA_GPU10 := 1
++endif
++
++ifeq ($(MESA_VER),mesa-25.1.x)
++  MESA_MAJOR := 25
++  MESA_GPU10 := 1
++endif
++
++# new LLVM required newer C++ standard
++ifdef LLVM_2024
++  C_NEWER_STD := 1
++endif
++
++# only usefull with gcc/mingw
++CSTD=gnu99
++ifdef MESA_GPU10
++  ifdef C_NEWER_STD
++    CXXSTD=gnu++17
++    #CSTD=gnu17 # not yet!
++  else
++    CXXSTD=gnu++14
++  endif
++else
++  CXXSTD=gnu++11
++endif
++
++# base address from 98/NT opengl32.dll
++BASE_opengl32.w95.dll   := 0x78A40000
++BASE_opengl32.w98me.dll := 0x78A40000
++
++# base address from nvidia ICD driver
++BASE_mesa3d.w95.dll     := 0x69500000
++BASE_mesa3d.w98me.dll   := 0x69500000
++
++BASE_vmwsgl32.dll       := 0x69500000
++BASE_virgl32.dll        := 0x69500000
++BASE_svgagl32.dll   := 0x69500000
++BASE_mesa99.dll         := 0x03860000
++BASE_mesa89.dll         := 0x00A30000
++BASE_mesad3d10.w95.dll  := 0x10000000
++BASE_mesad3d10.w98me.dll  := 0x10000000
++
++NULLOUT=$(if $(filter $(OS),Windows_NT),NUL,/dev/null)
++
++RUNPATH=$(if $(filter $(OS),Windows_NT),.\,./)
++
++VERSION_BUILD := 0
++
++GIT      ?= git
++GIT_IS   := $(shell $(GIT) rev-parse --is-inside-work-tree 2> $(NULLOUT))
++ifeq ($(GIT_IS),true)
++  VERSION_BUILD := $(shell $(GIT) rev-list --count main)
++endif
++
++TARGETS = opengl32.w95.dll mesa3d.w95.dll vmwsgl32.dll glchecker.exe fbtest.exe icdtest.exe wgltest.exe gammaset.exe svgadump.exe mesa99.dll mesa89.dll
++ifdef LLVM
++  TARGETS += opengl32.w98me.dll mesa3d.w98me.dll
++endif
++
++ifdef LLVM
++  ifndef LLVM_VER
++    $(error Define LLVM_VER in config.mk please!)
++  endif
++endif
++
++ifndef HOST_CC
++  HOST_CC := gcc
++  HOST_SUFFIX := .exe
++endif
++
++$(MESA_VER).target:
++
++.PHONY: generator all clean distclean
++
++all: $(MESA_VER).target
++
++include $(MESA_VER).mk
++include generator/$(MESA_VER)-gen.mk
++
++ifdef MesaGdiLibVirGL_SRC
++  TARGETS += virgl32.dll
++endif
++
++$(MESA_VER).target: $(DEPS) $(TARGETS)
++	echo $(MESA_VER) > $@
++
++PACKAGE_VERSION := 9x $(MESA_DIST_VERSION).$(VERSION_BUILD)
++
++LLVM_modules := bitwriter engine mcdisassembler mcjit
++ifdef LLVM_2024
++  LLVM_modules += native passes
++  ifdef LTO
++    LLVM_modules += lto
++  endif
++endif
++
++RELEASE_BASE_OPT ?= -O3
++
++ifdef MSC
++#
++# MSC configuration
++#
++  OBJ := .obj
++  LIBSUFFIX := .lib
++  LIBPREFIX := 
++
++  CL_INCLUDE = /Iincmsc /I$(MESA_VER)/include /I$(MESA_VER)/include/GL /I$(MESA_VER)/src/mapi /I$(MESA_VER)/src/util /I$(MESA_VER)/src /I$(MESA_VER)/src/mesa /I$(MESA_VER)/src/mesa/main \
++    /I$(MESA_VER)/src/compiler -I$(MESA_VER)/src/compiler/nir /I$(MESA_VER)/src/gallium/state_trackers/wgl /I$(MESA_VER)/src/gallium/auxiliary /I$(MESA_VER)/src/gallium/auxiliary/util /I$(MESA_VER)/src/gallium/include \
++    /I$(MESA_VER)/src/gallium/drivers/svga /I$(MESA_VER)/src/gallium/drivers/svga/include /I$(MESA_VER)/src/gallium/winsys/sw  /I$(MESA_VER)/src/gallium/drivers /I$(MESA_VER)/src/gallium/winsys/svga/drm
++
++  # /DNDEBUG
++ CL_DEFS =  /D__i386__ /D_X86_ /D_USE_MATH_DEFINES /D_WIN32 /DWIN32 \
++   /DMAPI_MODE_UTIL /D_GDI32_ /DBUILD_GL32 /DKHRONOS_DLL_EXPORTS /DGDI_DLL_EXPORTS /DGL_API=GLAPI /DGL_APIENTRY=GLAPIENTRY /D_GLAPI_NO_EXPORTS /DCOBJMACROS /DINC_OLE2 \
++   /DPACKAGE_VERSION="\"$(PACKAGE_VERSION)\"" /DPACKAGE_BUGREPORT="\"$(PACKAGE_VERSION)\""
++  
++  ifdef DEBUG
++    DD_DEFS = /DDEBUG
++  else
++    DD_DEFS = /DNDEBUG
++  endif
++  
++  ifdef LLVM
++    SIMD_DEFS = $(CL_DEFS) /DHAVE_LLVM=$(LLVM_VER) /DHAVE_GALLIUM_LLVMPIPE /DGALLIUM_LLVMPIPE /DHAVE_LLVMPIPE
++    SIMD_INCLUDE += $(CL_INCLUDE) /I$(LLVM_DIR)/include
++    
++    opengl_simd_LIBS := MesaLibSimd.lib MesaUtilLibSimd.lib MesaGalliumLLVMPipe.lib MesaGalliumAuxLibSimd.lib
++    opengl_simd_LIBS := $(opengl_simd_LIBS) $(shell $(LLVM_DIR)/bin/llvm-config --libs --link-static $(LLVM_modules))
++    
++    # LLVMpipe 6.x required zlib
++    MESA_SIMD_LIBS = $(MESA_LIBS) psapi.lib ole32.lib
++    
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaGalliumLLVMPipe$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaUtilLibSimd$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaLibSimd$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaGalliumAuxLibSimd$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibGLSimd$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibICDSimd$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaWglLibSimd$(LIBSUFFIX)
++    
++    # for LLVM we need same cflags as LLVM itself
++    LLVM_CFLAGS = $(shell $(LLVM_DIR)/bin/llvm-config --cflags)
++    LLVM_CXXFLAGS = $(shell $(LLVM_DIR)/bin/llvm-config --cxxflags)
++    ifndef LP_DEBUG
++      SIMD_CFLAGS   = /nologo $(filter-out /W4,$(LLVM_CFLAGS)) $(SIMD_INCLUDE) $(SIMD_DEFS)
++      SIMD_CXXFLAGS = /nologo  $(filter-out /W4,$(LLVM_CXXFLAGS)) $(SIMD_INCLUDE) $(SIMD_DEFS)
++    else
++      SIMD_CFLAGS   = /nologo $(MSC_RUNTIME) /Od /Z7 $(SIMD_INCLUDE) $(SIMD_DEFS) $(DD_DEFS)
++      SIMD_CXXFLAGS = /nologo $(MSC_RUNTIME) /Od /Z7 $(SIMD_INCLUDE) $(SIMD_DEFS) $(DD_DEFS)
++    endif
++    SIMD_LDFLAGS = /nologo
++  endif
++  
++  ifdef SPEED
++    CFLAGS   = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
++    CXXFLAGS = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
++    LDFLAGS  = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline
++  else
++    CFLAGS   = /nologo $(MSC_RUNTIME) /Z7 /Od $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
++    CXXFLAGS = /nologo $(MSC_RUNTIME) /Z7 /Od $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
++    LDFLAGS  = /nologo $(MSC_RUNTIME) /Z7 /Od
++  endif
++
++  ifdef SPEED
++    APP_CFLAGS   = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline /I. /Iglchecker $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
++    APP_CXXFLAGS = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline /I. /Iglchecker $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
++    APP_LDFLAGS  = /nologo $(MSC_RUNTIME) /O2 /Oi /Zc:inline
++  else
++    APP_CFLAGS   = /nologo $(MSC_RUNTIME) /Z7 /Od /I. /Iglchecker $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
++    APP_CXXFLAGS = /nologo $(MSC_RUNTIME) /Z7 /Od /I. /Iglchecker $(CL_INCLUDE) $(DD_DEFS) $(CL_DEFS)
++    APP_LDFLAGS  = /nologo $(MSC_RUNTIME) /Od
++  endif
++  
++  ifdef SPEED
++    ifdef LTO
++      CFLAGS     += /GL
++      CXXFLAGS   += /GL
++      LDFLAGS    += /LTCG
++
++      APP_CFLAGS   += /GL
++      APP_CXXFLAGS += /GL
++      APP_LDFLAGS  += /LTCG
++    endif
++  endif
++
++  OPENGL_LIBS = MesaLib.lib MesaUtilLib.lib MesaGalliumAuxLib.lib
++  SVGA_LIBS   = MesaLib.lib MesaUtilLib.lib MesaGalliumAuxLib.lib MesaSVGALib.lib
++  MESA_LIBS = kernel32.lib user32.lib gdi32.lib
++  
++  app_LIBS  =  opengl32.lib gdi32.lib user32.lib
++  EXEFLAGS_WIN = /link /OUT:$@ /PDB:$(@:exe=pdb) /SUBSYSTEM:WINDOWS
++  EXEFLAGS_CMD = /link /OUT:$@ /PDB:$(@:exe=pdb) /SUBSYSTEM:CONSOLE
++  
++  %.c_gen.obj: %.c $(DEPS)
++		$(CC) $(CFLAGS) /Fo"$@" /c $<
++
++  %.cpp_gen.obj: %.cpp $(DEPS)
++		$(CXX) $(CXXFLAGS) /Fo"$@" /c $<
++
++  %.c_simd.obj: %.c $(DEPS)
++		$(CC) $(SIMD_CFLAGS) /Fo"$@" /c $<
++
++  %.cpp_simd.obj: %.cpp $(DEPS)
++		$(CXX) $(SIMD_CXXFLAGS) /Fo"$@" /c $<
++	
++  %.c_app.obj: %.c $(DEPS)
++		$(CC) $(APP_CFLAGS) /Fo"$@" /c $<
++
++  %.cpp_app.obj: %.cpp $(DEPS)
++		$(CXX) $(APP_CXXFLAGS) /Fo"$@" /c $<
++
++  %.res: %.rc $(DEPS)
++		$(WINDRES) /nologo /fo $@ $<
++
++  LDLAGS = CXXFLAGS
++  DLLFLAGS = /link /DLL /MACHINE:X86 /IMPLIB:$(@:dll=lib) /OUT:$@ /PDB:$(@:dll=pdb) /BASE:$(BASE_$@) /DEF:$(DEF_$@)
++
++  DEF_opengl32.w95.dll = $(MESA_VER)/src/gallium/state_trackers/wgl/opengl32.def
++  DEF_opengl32.w98me.dll = $(DEF_opengl32.w95.dll)
++  
++  DEF_mesa3d.w95.dll = mesa3d.def
++  DEF_mesa3d.w98me.dll = $(DEF_mesa3d.w95.dll)
++
++  LIBSTATIC = LIB.EXE /nologo /OUT:$@ 
++
++else
++#
++# MinGW configurationn
++#
++  OBJ := .o
++  LIBSUFFIX := .a
++  LIBPREFIX := lib
++  
++  LD_DEPS := winpthreads/libpthread.a
++  # libkernel32.a
++  
++  DLLFLAGS = -o $@ -shared -Wl,--dll,--out-implib,lib$(@:dll=a),--exclude-all-symbols,--exclude-libs=pthread,--image-base,$(BASE_$@)$(TUNE_LD)
++  
++  OPENGL_DEF = opengl32.mingw.def
++  MESA3D_DEF = mesa3d.mingw.def
++  MESA99_DEF = mesa99.mingw.def
++  MESA89_DEF = mesa89.mingw.def
++  D3D10_DEF  = d3d10_sw.def
++  SVGA_DEF   = svga.mingw.def
++
++  INCLUDE = -Iinclude -Iwinpthreads/include -I$(MESA_VER)/include -I$(MESA_VER)/include/GL -I$(MESA_VER)/src/mapi -I$(MESA_VER)/src/util -I$(MESA_VER)/src -I$(MESA_VER)/src/mesa -I$(MESA_VER)/src/mesa/main \
++    -I$(MESA_VER)/src/compiler -I$(MESA_VER)/src/compiler/nir -I$(MESA_VER)/src/gallium/state_trackers/wgl -I$(MESA_VER)/src/gallium/auxiliary -I$(MESA_VER)/src/gallium/auxiliary/util -I$(MESA_VER)/src/gallium/include \
++    -I$(MESA_VER)/src/gallium/drivers/svga -I$(MESA_VER)/src/gallium/drivers/svga/include -I$(MESA_VER)/src/gallium/winsys -I$(MESA_VER)/src/gallium/winsys/sw  -I$(MESA_VER)/src/gallium/drivers \
++    -I$(MESA_VER)/src/gallium/winsys/svga/drm \
++    -I$(MESA_VER)/src/util/format -I$(MESA_VER)/src/gallium/frontends/wgl -I$(MESA_VER)/include/D3D9 -I$(MESA_VER)/src/gallium/frontends -I$(MESA_VER)/src/gallium/frontends/wgl -I$(MESA_VER)/include/D3D9 \
++    -I$(MESA_VER)/src/gallium/frontends/nine -I$(MESA_VER)/include/winddk -Iinclude/winddk -Iwin9x \
++    -I$(MESA_VER)/src/virtio -I$(MESA_VER)/src/gallium/winsys/virgl/common
++
++  DEFS =  -D__i386__ -D_X86_ -D_WIN32 -DWIN32 -DWIN9X -DWINVER=0x0400 \
++    -DBUILD_GL32 -D_GDI32_ -DGL_API=GLAPI -DGL_APIENTRY=GLAPIENTRY \
++    -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE \
++    -DMAPI_MODE_UTIL -D_GLAPI_NO_EXPORTS -DCOBJMACROS -DINC_OLE2 \
++    -DPACKAGE_VERSION="\"$(PACKAGE_VERSION)\"" -DPACKAGE_BUGREPORT="\"$(PACKAGE_VERSION)\"" -DMALLOC_IS_ALIGNED -DHAVE_CRTEX \
++    -DHAVE_OPENGL=1 -DHAVE_OPENGL_ES_2=1 -DHAVE_OPENGL_ES_1=1 -DWINDOWS_NO_FUTEX -DGALLIUM_SOFTPIPE \
++    -DGLX_USE_WINDOWSGL -DTHREAD_SANITIZER=0 -DNO_REGEX -DWITH_XMLCONFIG=0 \
++    -DBLAKE3_NO_SSE2 -DBLAKE3_NO_SSE41 -DBLAKE3_NO_AVX2 -DBLAKE3_NO_AVX512 \
++    -DHAVE_PTHREAD
++
++  ifdef USE_ASM
++    DEFS += -DUSE_X86_ASM -DGLX_X86_READONLY_TEXT
++  endif
++  
++  ifdef NO_FBHDA
++  	DEFS += -DNO_FBHDA
++  endif
++
++  DEFS_AS = -DGNU_ASSEMBLER -DSTDCALL_API -D__MINGW32__
++
++#  VBOX_WITH_MESA3D_D3D_FROM_SYSTEMMEM Create D3DPOOL_SYSTEMMEM textures from provided system memory pointer.
++#  VBOX_WITH_MESA3D_NINE_SVGA          Make the D3D state tracker to work together with VMSVGA.
++#  VBOX_WITH_MESA3D_SVGA_GPU_FINISHED  PIPE_QUERY_GPU_FINISHED in VMSVGA driver.
++#  VBOX_WITH_MESA3D_SVGA_HALFZ         D3D Z coord [0.0;1.0] in the Gallium SVGA driver (VGPU9 only).
++#  VBOX_WITH_MESA3D_SVGA_INSTANCING    Instancing for DrawPrimitives in the Gallium SVGA driver
++#                                      (VGPU9 only, VGPU10 has it).
++  
++  DEFS += -DVBOX_WITH_MESA3D_STENCIL_CLEAR -DVBOX_WITH_MESA3D_DXFIX
++  #DEFS += -DVBOX_WITH_MESA3D_SVGA_HALFZ -DVBOX_WITH_MESA3D_NINE_SVGA -DVBOX_WITH_MESA3D_SVGA_INSTANCING -DVBOX_WITH_MESA3D_SVGA_GPU_FINISHED -DVBOX_WITH_MESA3D_HACKS
++  
++  ifdef MESA_GPU10
++    DEFS += -DVBOX_WITH_MESA3D_SVGA_HALFZ
++  else
++    DEFS += -DVBOX_WITH_MESA3D_SVGA_INSTANCING
++  endif
++
++  ifdef VERSION_BUILD
++    DEFS  += -DMESA9X_BUILD=$(VERSION_BUILD)
++  endif
++  
++  DEFS += -DMESA_MAJOR=$(MESA_MAJOR)
++  
++  ifdef WIN9XSMP
++    DEFS += -DWIN9XSMP
++  endif
++
++  OPENGL_LIBS = -L. -lMesaLib -lMesaUtilLib -lMesaGalliumAuxLib -lMesaUtilLib -lMesaLib
++  SVGA_LIBS   = -L. -lMesaLib -lMesaUtilLib -lMesaGalliumAuxLib -lMesaSVGALib -lMesaLib
++  MESA_LIBS  := winpthreads/crtfix.o -static -Lwinpthreads -lpthread -lkernel32 -luser32 -lgdi32 -lws2_32
++  MESA99_LIBS := -lMesaUtilLib $(MESA_LIBS)
++  MESA89_LIBS := $(MESA99_LIBS)
++
++  ifdef DEBUG
++    DD_DEFS = -DDEBUG -DMESA_DEBUG=1
++  else
++    DD_DEFS = -DNDEBUG -DMESA_DEBUG=0 -DD3D8TO9NOLOG
++  endif
++
++  ifdef GUI_ERRORS
++  	TUNE += -DGUI_ERRORS
++  endif
++
++  ifdef LLVM
++    SIMD_DEFS = $(DEFS) -DHAVE_LLVM=$(LLVM_VER) -DHAVE_GALLIUM_LLVMPIPE -DGALLIUM_LLVMPIPE -DHAVE_LLVMPIPE -DDRAW_LLVM_AVAILABLE
++    SIMD_INCLUDE += $(INCLUDE) -I$(LLVM_DIR)/include
++
++    # try guess LLVM config
++    LLVM_LIBS := -lLLVMMCJIT -lLLVMMCDisassembler -lLLVMInterpreter -lLLVMExecutionEngine -lLLVMRuntimeDyld -lLLVMOrcTargetProcess -lLLVMOrcShared -lLLVMCodeGen -lLLVMTarget -lLLVMScalarOpts -lLLVMInstCombine -lLLVMAggressiveInstCombine -lLLVMObjCARCOpts -lLLVMTransformUtils -lLLVMCodeGenTypes -lLLVMBitWriter -lLLVMAnalysis -lLLVMProfileData -lLLVMSymbolize -lLLVMDebugInfoBTF -lLLVMDebugInfoPDB -lLLVMDebugInfoMSF -lLLVMDebugInfoDWARF -lLLVMObject -lLLVMTextAPI -lLLVMMCParser -lLLVMIRReader -lLLVMAsmParser -lLLVMMC -lLLVMDebugInfoCodeView -lLLVMBitReader -lLLVMCore -lLLVMRemarks -lLLVMBitstreamReader -lLLVMBinaryFormat -lLLVMTargetParser -lLLVMSupport -lLLVMDemangle
++    ifdef LLVM_2024
++    	LLVM_LIBS := -lLLVMPasses -lLLVMHipStdPar -lLLVMCoroutines -lLLVMipo -lLLVMVectorize -lLLVMLinker -lLLVMFrontendOpenMP -lLLVMFrontendOffloading -lLLVMX86TargetMCA -lLLVMMCA -lLLVMX86Disassembler -lLLVMX86AsmParser -lLLVMX86CodeGen -lLLVMX86Desc -lLLVMX86Info -lLLVMInstrumentation -lLLVMIRPrinter -lLLVMGlobalISel -lLLVMSelectionDAG -lLLVMCFGuard -lLLVMAsmPrinter $(LLVM_LIBS)
++		endif
++    ifdef LTO
++		  LLVM_LIBS := -lLLVMLTO -lLLVMExtensions  $(LLVM_LIBS)
++    endif
++    LLVM_CFLAGS := -I$(LLVM_DIR)/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
++    LLVM_CXXFLAGS := -I$(LLVM_DIR)/include -std=c++17   -fno-exceptions -funwind-tables -fno-rtti -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
++    
++    # native mode, call llvm-config.exe
++    ifeq "$(PREFIX)" ""
++      LLVM_CFLAGS := $(shell $(LLVM_DIR)/bin/llvm-config --cflags)
++      LLVM_CXXFLAGS := $(shell $(LLVM_DIR)/bin/llvm-config --cxxflags)
++      LLVM_LIBS := $(shell $(LLVM_DIR)/bin/llvm-config --libs --link-static $(LLVM_modules))
++    endif
++    
++    opengl_simd_LIBS := -L. -L$(LLVM_DIR)/lib -lMesaLibSimd -lMesaUtilLibSimd -lMesaGalliumLLVMPipe -lMesaGalliumAuxLibSimd -lMesaLibSimd -lMesaUtilLibSimd
++    opengl_simd_LIBS := $(opengl_simd_LIBS) $(filter-out -lshell32,$(LLVM_LIBS))
++    
++    # LLVMpipe 6.x required zlib
++    MESA_SIMD_LIBS := $(MESA_LIBS) -lpsapi -lole32 -lz -lws2_32
++    
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaGalliumLLVMPipe$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaUtilLibSimd$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaLibSimd$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaGalliumAuxLibSimd$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibGLSimd$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibICDSimd$(LIBSUFFIX)
++    LIBS_TO_BUILD += $(LIBPREFIX)MesaWglLibSimd$(LIBSUFFIX)
++    
++    # for LLVM we need same cflags as LLVM itself
++    ifndef LP_DEBUG
++      SIMD_CFLAGS   = -std=$(CSTD) $(filter-out -pedantic -Wall -W -Wextra -march=westmere -march=core2,$(LLVM_CFLAGS)) $(TUNE) $(SIMD_INCLUDE) $(SIMD_DEFS) $(filter-out -DDEBUG -DNDEBUG,$(DD_DEFS))
++      SIMD_CXXFLAGS = $(filter-out -pedantic -pedantic -Wall -W -Wextra -march=westmere -march=core2 -std=gnu++11 -std=c++17,$(LLVM_CXXFLAGS)) -std=$(CXXSTD) $(TUNE) $(SIMD_INCLUDE) $(SIMD_DEFS) $(filter-out -DDEBUG -DNDEBUG,$(DD_DEFS))
++    else
++      SIMD_CFLAGS = -std=$(CSTD) -O1 -g  $(TUNE) $(SIMD_INCLUDE) $(SIMD_DEFS) $(DD_DEFS)
++      SIMD_CXXFLAGS = -std=$(CXXSTD) -O1 -g $(TUNE) $(SIMD_INCLUDE) $(SIMD_DEFS) $(DD_DEFS)
++    endif
++    
++    ifdef LLVM_2024
++      ifndef LP_DEBUG
++        SIMD_CFLAGS += $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions -DNDEBUG
++        SIMD_CXXFLAGS += $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions -fno-rtti -DNDEBUG
++      else
++        SIMD_CFLAGS += -DDEBUG
++        SIMD_CXXFLAGS += -DDEBUG
++      endif
++    endif
++    
++    SIMD_LDFLAGS = -std=$(CXXSTD)
++  endif
++  
++  ifdef SPEED
++    CFLAGS = -std=$(CSTD) $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
++    CXXFLAGS = -std=$(CXXSTD) $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions -fno-rtti $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
++    LDFLAGS = -std=$(CXXSTD) $(RELEASE_BASE_OPT) -fno-exceptions
++  else
++    CFLAGS = -std=$(CSTD) -O0 -g $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
++    CXXFLAGS = -std=$(CXXSTD) -O0 -g  $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
++    LDFLAGS = -std=$(CXXSTD)
++  endif
++
++  ifdef SPEED
++    APP_CFLAGS   = -std=$(CSTD) $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions -I. -Iglchecker $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
++    APP_CXXFLAGS = -std=$(CXXSTD) $(RELEASE_BASE_OPT) -fomit-frame-pointer -fno-exceptions -fno-rtti $(INCLUDE) $(DD_DEFS) $(DEFS)
++    APP_LDFLAGS  = -std=$(CXXSTD) $(RELEASE_BASE_OPT) -fno-exceptions 
++  else
++    APP_CFLAGS   = -std=$(CSTD) -O0 -g -I. -Iglchecker $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
++    APP_CXXFLAGS = -std=$(CXXSTD) -O0 -g $(TUNE) $(INCLUDE) $(DD_DEFS) $(DEFS)
++    APP_LDFLAGS  = -std=$(CXXSTD) -O0 -g
++  endif
++
++  app_LIBS  = winpthreads/crtfix.o -static -Lwinpthreads -lpthread -lopengl32 -lgdi32
++  EXEFLAGS_WIN = -o $@ -Wl,-subsystem,windows$(TUNE_LD)
++  EXEFLAGS_CMD = -o $@ -Wl,-subsystem,console$(TUNE_LD)
++  
++  ifdef LTO
++    CFLAGS        += -flto=auto -fno-fat-lto-objects -pipe -Werror=implicit-function-declaration
++    CXXFLAGS      += -flto=auto -fno-fat-lto-objects -pipe -fno-declone-ctor-dtor
++    CFLAGS        += -flto=auto -fno-fat-lto-objects -pipe -Werror=implicit-function-declaration
++
++    ifdef LLVM
++      LDFLAGS       += $(LLVM_CXXFLAGS) -flto=auto -fno-fat-lto-objects -pipe -fno-strict-aliasing
++      SIMD_LDFLAGS  += $(LLVM_CXXFLAGS) -flto=auto -fno-fat-lto-objects -pipe -fno-strict-aliasing
++      SIMD_CXXFLAGS += -flto=auto -fno-fat-lto-objects -pipe -fno-declone-ctor-dtor
++    else
++      LDFLAGS    += -flto=auto -fno-fat-lto-objects -fno-strict-aliasing -pipe
++    endif
++    
++    CFLAGS_APP   += -flto=auto -fno-fat-lto-objects -pipe
++    CXXFLAGS_APP += -flto=auto -fno-fat-lto-objects -pipe -fno-declone-ctor-dtor
++    LDFLAGS_APP  += -flto=auto -fno-fat-lto-objects -pipe
++  endif
++
++  ifdef VERBOSE
++  %.c_gen.o: %.c $(DEPS)
++		$(CC) $(CFLAGS) -c -o $@ $<
++
++  %.cpp_gen.o: %.cpp $(DEPS)
++		$(CXX) $(CXXFLAGS) -c -o $@ $<
++
++  %.c_simd.o: %.c $(DEPS)
++		$(CC) $(SIMD_CFLAGS) -c -o $@ $<
++
++  %.cpp_simd.o: %.cpp $(DEPS)
++		$(CXX) $(SIMD_CXXFLAGS) -c -o $@ $<
++
++  %.c_app.o: %.c $(DEPS)
++		$(CC) $(APP_CFLAGS) -c -o $@ $<
++
++  %.cpp_app.o: %.cpp $(DEPS)
++		$(CXX) $(APP_CXXFLAGS) -c -o $@ $<
++
++  %.res: %.rc $(DEPS)
++		$(WINDRES) -DWINDRES $(DEFS) --input $< --output $@ --output-format=coff
++
++  %.S_gen.o: %.S $(DEPS)
++		$(CC) $(CFLAGS) $(DEFS_AS) -c -o $@ $<
++
++  %.S_simd.o: %.S $(DEPS)
++		$(CC) $(SIMD_CFLAGS) $(DEFS_AS) -c -o $@ $<
++
++  else
++  %.c_gen.o: %.c $(DEPS)
++		$(info CC (x87) $@)
++		@$(CC) $(CFLAGS) -c -o $@ $<
++
++  %.cpp_gen.o: %.cpp $(DEPS)
++		$(info CXX (x87) $@)
++		@$(CXX) $(CXXFLAGS) -c -o $@ $<
++
++  %.c_simd.o: %.c $(DEPS)
++		$(info CC (SIMD) $@)
++		@$(CC) $(SIMD_CFLAGS) -c -o $@ $<
++
++  %.cpp_simd.o: %.cpp $(DEPS)
++		$(info CXX (SIMD) $@)
++		@$(CXX) $(SIMD_CXXFLAGS) -c -o $@ $<
++
++  %.c_app.o: %.c $(DEPS)
++		$(info CC $@)
++		@$(CC) $(APP_CFLAGS) -c -o $@ $<
++
++  %.cpp_app.o: %.cpp $(DEPS)
++		$(info CXX $@)
++		@$(CXX) $(APP_CXXFLAGS) -c -o $@ $<
++
++  %.res: %.rc $(DEPS)
++		$(info RC $@)
++		@$(WINDRES) -DWINDRES $(DEFS) --input $< --output $@ --output-format=coff
++
++  %.S_gen.o: %.S $(DEPS)
++		$(info AS (x87) $@)
++		@$(CC) $(CFLAGS) $(DEFS_AS) -c -o $@ $<
++
++  %.S_simd.o: %.S $(DEPS)
++		$(info AS (SIMD) $@)
++		@$(CC) $(SIMD_CFLAGS) $(DEFS_AS) -c -o $@ $<
++
++  endif
++
 +  LIBSTATIC = $(AR) rcs -o $@
 +
 +  # Native nouveau driver (M5.3c): its own include set (mesa-compat FIRST, to
@@ -30,13 +1462,110 @@ index 12b3e391..638cda2c 100644
 +  %.cpp_nv$(OBJ): %.cpp $(DEPS)
 +		$(info CXX (nv) $@)
 +		@$(CXX) $(NV_CXXFLAGS) -c -o $@ $<
- 
- endif
- 
-@@ -631,6 +653,13 @@ $(LIBPREFIX)MesaSVGALibSimd$(LIBSUFFIX): $(MesaSVGALibSimd_OBJS)
- 	-$(RM) $@
- 	$(LIBSTATIC) $(MesaSVGALibSimd_OBJS)
- 
++
++endif
++
++%.asm:
++
++%.asm$(OBJ): %.asm $(DEPS)
++	nasm $< -f win32 -o $@
++
++winpthreads.target: $(DEPS)
++	cd winpthreads && $(MAKE)
++	echo OK > $@
++
++winpthreads/crtfix$(OBJ): winpthreads.target
++	
++winpthreads/$(LIBPREFIX)pthread$(LIBSUFFIX): winpthreads.target
++
++LIBS_TO_BUILD += $(LIBPREFIX)MesaUtilLib$(LIBSUFFIX)
++LIBS_TO_BUILD += $(LIBPREFIX)MesaLib$(LIBSUFFIX)
++LIBS_TO_BUILD += $(LIBPREFIX)MesaGalliumAuxLib$(LIBSUFFIX)
++LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibGL$(LIBSUFFIX)
++LIBS_TO_BUILD += $(LIBPREFIX)MesaGdiLibICD$(LIBSUFFIX)
++LIBS_TO_BUILD += $(LIBPREFIX)MesaWglLib$(LIBSUFFIX)
++
++glchecked_SRC = \
++  glchecker/src/benchmark.cpp \
++  glchecker/src/CEngine.cpp \
++  glchecker/src/CGUI.cpp \
++  glchecker/src/COpenGL.cpp \
++  glchecker/src/CSound.cpp \
++  glchecker/src/CVector.cpp \
++  glchecker/src/CWindow.cpp \
++  glchecker/src/glchecker.cpp \
++  glchecker/src/parser.cpp \
++  glchecker/src/glchecker.res
++
++eight_SRC = \
++  win9x/eight/d3d8to9.cpp \
++  win9x/eight/d3d8to9_base.cpp \
++  win9x/eight/d3d8to9_device.cpp \
++  win9x/eight/d3d8to9_index_buffer.cpp \
++  win9x/eight/d3d8to9_surface.cpp \
++  win9x/eight/d3d8to9_swap_chain.cpp \
++  win9x/eight/d3d8to9_texture.cpp \
++  win9x/eight/d3d8to9_vertex_buffer.cpp \
++  win9x/eight/d3d8to9_volume.cpp \
++  win9x/eight/d3d8types.cpp \
++  win9x/eight/interface_query.cpp
++
++MesaUtilLib_OBJS := $(MesaUtilLib_SRC:.c=.c_gen$(OBJ))
++MesaUtilLib_OBJS := $(MesaUtilLib_OBJS:.cpp=.cpp_gen$(OBJ))
++$(LIBPREFIX)MesaUtilLib$(LIBSUFFIX): $(MesaUtilLib_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaUtilLib_OBJS) 
++	
++MesaUtilLibSimd_OBJS := $(MesaUtilLib_SRC:.c=.c_simd$(OBJ))
++MesaUtilLibSimd_OBJS := $(MesaUtilLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++$(LIBPREFIX)MesaUtilLibSimd$(LIBSUFFIX): $(MesaUtilLibSimd_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaUtilLibSimd_OBJS) 
++
++MesaLib_OBJS := $(MesaLib_SRC:.c=.c_gen$(OBJ))
++MesaLib_OBJS := $(MesaLib_OBJS:.cpp=.cpp_gen$(OBJ))
++MesaLib_OBJS := $(MesaLib_OBJS:.S=.S_gen$(OBJ))
++$(LIBPREFIX)MesaLib$(LIBSUFFIX): $(MesaLib_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaLib_OBJS)
++
++MesaLibSimd_OBJS := $(MesaLib_SRC:.c=.c_simd$(OBJ))
++MesaLibSimd_OBJS := $(MesaLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++MesaLibSimd_OBJS := $(MesaLibSimd_OBJS:.S=.S_simd$(OBJ))
++$(LIBPREFIX)MesaLibSimd$(LIBSUFFIX): $(MesaLibSimd_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaLibSimd_OBJS)
++
++MesaGalliumAuxLib_OBJS := $(MesaGalliumAuxLib_SRC:.c=.c_gen$(OBJ))
++MesaGalliumAuxLib_OBJS := $(MesaGalliumAuxLib_OBJS:.cpp=.cpp_gen$(OBJ))
++$(LIBPREFIX)MesaGalliumAuxLib$(LIBSUFFIX): $(MesaGalliumAuxLib_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaGalliumAuxLib_OBJS)
++
++MesaGalliumAuxLibSimd_OBJS := $(MesaGalliumAuxLibSimd_SRC:.c=.c_simd$(OBJ))
++MesaGalliumAuxLibSimd_OBJS := $(MesaGalliumAuxLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++$(LIBPREFIX)MesaGalliumAuxLibSimd$(LIBSUFFIX): $(MesaGalliumAuxLibSimd_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaGalliumAuxLibSimd_OBJS)
++
++MesaGalliumLLVMPipe_OBJS := $(MesaGalliumLLVMPipe_SRC:.c=.c_simd$(OBJ))
++MesaGalliumLLVMPipe_OBJS := $(MesaGalliumLLVMPipe_OBJS:.cpp=.cpp_simd$(OBJ))
++$(LIBPREFIX)MesaGalliumLLVMPipe$(LIBSUFFIX): $(MesaGalliumLLVMPipe_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaGalliumLLVMPipe_OBJS)
++
++MesaSVGALib_OBJS := $(MesaSVGALib_SRC:.c=.c_gen$(OBJ))
++MesaSVGALib_OBJS := $(MesaSVGALib_OBJS:.cpp=.cpp_gen$(OBJ))
++$(LIBPREFIX)MesaSVGALib$(LIBSUFFIX): $(MesaSVGALib_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaSVGALib_OBJS)
++
++MesaSVGALibSimd_OBJS := $(MesaSVGALib_SRC:.c=.c_simd$(OBJ))
++MesaSVGALibSimd_OBJS := $(MesaSVGALibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++$(LIBPREFIX)MesaSVGALibSimd$(LIBSUFFIX): $(MesaSVGALibSimd_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaSVGALibSimd_OBJS)
++
 +# Native nouveau (G86) driver lib - M5.3c (see NV_CFLAGS / MesaNouveauLib_SRC)
 +MesaNouveauLib_OBJS := $(MesaNouveauLib_SRC:.c=.c_nv$(OBJ))
 +MesaNouveauLib_OBJS := $(MesaNouveauLib_OBJS:.cpp=.cpp_nv$(OBJ))
@@ -44,25 +1573,288 @@ index 12b3e391..638cda2c 100644
 +	-$(RM) $@
 +	$(LIBSTATIC) $(MesaNouveauLib_OBJS)
 +
- MesaVirGLLib_OBJS := $(MesaVirGLLib_SRC:.c=.c_gen$(OBJ))
- MesaVirGLLib_OBJS := $(MesaVirGLLib_OBJS:.cpp=.cpp_gen$(OBJ))
- $(LIBPREFIX)MesaVirGL$(LIBSUFFIX): $(MesaVirGL_OBJS)
-@@ -740,8 +769,13 @@ mesa3d.w95.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaOS_OBJS) mesa3d.res $(LD_DEPS) fi
- 	$(LD) $(LDFLAGS) $(MesaWglLib_OBJS) $(MesaGdiLibICD_OBJS) $(MesaOS_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) mesa3d.res $(DLLFLAGS) $(MESA3D_DEF)
- 	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
- 
--mesa3d.w98me.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaOSSimd_OBJS) mesa3d.res $(LD_DEPS) fixlink.exe
--	$(LD) $(SIMD_LDFLAGS) $(MesaWglLibSimd_OBJS) $(MesaGdiLibICDSimd_OBJS) $(MesaOSSimd_OBJS) $(opengl_simd_LIBS) $(MESA_SIMD_LIBS) mesa3d.res $(DLLFLAGS) $(MESA3D_DEF) 
++MesaVirGLLib_OBJS := $(MesaVirGLLib_SRC:.c=.c_gen$(OBJ))
++MesaVirGLLib_OBJS := $(MesaVirGLLib_OBJS:.cpp=.cpp_gen$(OBJ))
++$(LIBPREFIX)MesaVirGL$(LIBSUFFIX): $(MesaVirGL_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaVirGLLib_OBJS)
++
++MesaGdiLib_OBJS := $(MesaGdiLib_SRC:.c=.c_gen$(OBJ))
++MesaGdiLib_OBJS := $(MesaGdiLib_OBJS:.cpp=.cpp_gen$(OBJ))
++MesaGdiLibSimd_OBJS := $(MesaGdiLib_SRC:.c=.c_simd$(OBJ))
++MesaGdiLibSimd_OBJS := $(MesaGdiLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++
++MesaGdiLibGL_OBJS := $(MesaGdiLibGL_SRC:.c=.c_gen$(OBJ))
++MesaGdiLibGL_OBJS := $(MesaGdiLibGL_OBJS:.cpp=.cpp_gen$(OBJ))
++$(LIBPREFIX)MesaGdiLibGL$(LIBSUFFIX): $(MesaGdiLibGL_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaGdiLibGL_OBJS)
++
++MesaGdiLibGLSimd_OBJS := $(MesaGdiLibGL_SRC:.c=.c_simd$(OBJ))
++MesaGdiLibGLSimd_OBJS := $(MesaGdiLibGLSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++$(LIBPREFIX)MesaGdiLibGLSimd$(LIBSUFFIX): $(MesaGdiLibGLSimd_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaGdiLibGLSimd_OBJS)
++
++MesaGdiLibICD_OBJS := $(MesaGdiLibICD_SRC:.c=.c_gen$(OBJ))
++MesaGdiLibICD_OBJS := $(MesaGdiLibICD_OBJS:.cpp=.cpp_gen$(OBJ))
++$(LIBPREFIX)MesaGdiLibICD$(LIBSUFFIX): $(MesaGdiLibICD_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaGdiLibICD_OBJS)
++
++MesaGdiLibICDSimd_OBJS := $(MesaGdiLibICD_SRC:.c=.c_simd$(OBJ))
++MesaGdiLibICDSimd_OBJS := $(MesaGdiLibICDSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++$(LIBPREFIX)MesaGdiLibICDSimd$(LIBSUFFIX): $(MesaGdiLibICDSimd_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaGdiLibICDSimd_OBJS)
++
++MesaWglLib_OBJS := $(MesaWglLib_SRC:.c=.c_gen$(OBJ))
++MesaWglLib_OBJS := $(MesaWglLib_OBJS:.cpp=.cpp_gen$(OBJ))
++$(LIBPREFIX)MesaWglLib$(LIBSUFFIX): $(MesaWglLib_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaWglLib_OBJS)
++
++MesaWglLibSimd_OBJS := $(MesaWglLib_SRC:.c=.c_simd$(OBJ))
++MesaWglLibSimd_OBJS := $(MesaWglLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++$(LIBPREFIX)MesaWglLibSimd$(LIBSUFFIX): $(MesaWglLibSimd_OBJS)
++	-$(RM) $@
++	$(LIBSTATIC) $(MesaWglLibSimd_OBJS)
++
++MesaGdiLibVMW_OBJS := $(MesaGdiLibVMW_SRC:.c=.c_gen$(OBJ))
++MesaGdiLibVMW_OBJS := $(MesaGdiLibVMW_OBJS:.cpp=.cpp_gen$(OBJ))
++
++MesaGdiLibVMWSimd_OBJS := $(MesaGdiLibVMW_SRC:.c=.c_simd$(OBJ))
++MesaGdiLibVMWSimd_OBJS := $(MesaGdiLibVMWSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++
++MesaGdiLibVirGL_OBJS := $(MesaGdiLibVirGL_SRC:.c=.c_gen$(OBJ))
++MesaGdiLibVirGL_OBJS := $(MesaGdiLibVirGL_OBJS:.cpp=.cpp_gen$(OBJ))
++
++MesaSVGAWinsysLib_OBJS := $(MesaSVGAWinsysLib_SRC:.c=.c_gen$(OBJ))
++MesaSVGAWinsysLib_OBJS := $(MesaSVGAWinsysLib_OBJS:.cpp=.cpp_gen$(OBJ))
++
++MesaSVGAWinsysLibSimd_OBJS := $(MesaSVGAWinsysLib_SRC:.c=.c_simd$(OBJ))
++MesaSVGAWinsysLibSimd_OBJS := $(MesaSVGAWinsysLibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++
++MesaNineLib_OBJS := $(MesaNineLib_SRC:.c=.c_gen$(OBJ))
++MesaNineLib_OBJS := $(MesaNineLib_OBJS:.cpp=.cpp_gen$(OBJ))
++
++MesaD3D10Lib_OBJS := $(MesaD3D10Lib_SRC:.c=.c_gen$(OBJ))
++MesaD3D10Lib_OBJS := $(MesaD3D10Lib_OBJS:.cpp=.cpp_gen$(OBJ))
++
++MesaD3D10LibSimd_OBJS := $(MesaD3D10Lib_SRC:.c=.c_simd$(OBJ))
++MesaD3D10LibSimd_OBJS := $(MesaD3D10LibSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++
++eight_OBJS := $(eight_SRC:.c=.c_gen$(OBJ))
++eight_OBJS := $(eight_OBJS:.cpp=.cpp_gen$(OBJ))
++
++MesaOS_OBJS := $(MesaOS_SRC:.c=.c_gen$(OBJ))
++MesaOS_OBJS := $(MesaOS_OBJS:.cpp=.cpp_gen$(OBJ))
++
++MesaOSSimd_OBJS := $(MesaOS_SRC:.c=.c_simd$(OBJ))
++MesaOSSimd_OBJS := $(MesaOSSimd_OBJS:.cpp=.cpp_simd$(OBJ))
++
++ifdef MesaSVGAOS_SRC
++MesaSVGAOS_OBJS := $(MesaSVGAOS_SRC:.c=.c_gen$(OBJ))
++MesaSVGAOS_OBJS := $(MesaSVGAOS_OBJS:.cpp=.cpp_gen$(OBJ))
++endif
++
++ifdef WIN9XSMP
++  FIXLINK_CMD=-relink
++  FIXLINK_PARMS=mesasmp.dll kernel32.dll msvcrt.dll ws2_32.dll
++else
++  FIXLINK_CMD=-checksum
++endif
++
++fixlink$(HOST_SUFFIX): fixlink/fixlink.c
++	$(HOST_CC) -std=c89 fixlink/fixlink.c -o $@
++
++# software opengl32 replacement
++opengl32.w95.dll: $(DEPS) $(LIBS_TO_BUILD) opengl32.res $(LD_DEPS) fixlink.exe
++	$(LD) $(LDFLAGS) $(MesaWglLib_OBJS) $(MesaGdiLibGL_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) opengl32.res $(DLLFLAGS) $(OPENGL_DEF)
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $@ $(FIXLINK_PARMS)
++
++opengl32.w98me.dll: $(DEPS) $(LIBS_TO_BUILD) opengl32.res $(LD_DEPS) fixlink.exe
++	$(LD) $(LDFLAGS) $(MesaWglLibSimd_OBJS) $(MesaGdiLibGLSimd_OBJS) $(opengl_simd_LIBS) $(MESA_SIMD_LIBS) opengl32.res $(DLLFLAGS) $(OPENGL_DEF)
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
++
++# software ICD driver
++mesa3d.w95.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaOS_OBJS) mesa3d.res $(LD_DEPS) fixlink.exe
++	$(LD) $(LDFLAGS) $(MesaWglLib_OBJS) $(MesaGdiLibICD_OBJS) $(MesaOS_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) mesa3d.res $(DLLFLAGS) $(MESA3D_DEF)
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
++
 +# M5.3c: wgl_icd.c (the ICD's screen-create) gets -DGALLIUM_NOUVEAU so it offers
 +# the nouveau driver (GALLIUM_DRIVER=nouveau); only this object, so the opengl32
 +# and SVGA DLLs that share wgl.c stay software and need not link MesaNouveauLib.
++# wgl_icd.c #includes wgl.c: declare it so wgl.c edits rebuild the ICD object (3082: that object had been stale since 10-24)
++$(MESA_VER)/src/gallium/targets/wgl/wgl_icd.c_simd$(OBJ): $(MESA_VER)/src/gallium/targets/wgl/wgl.c
 +$(MESA_VER)/src/gallium/targets/wgl/wgl_icd.c_simd$(OBJ): SIMD_CFLAGS += -DGALLIUM_NOUVEAU
 +
 +mesa3d.w98me.dll: $(DEPS) $(LIBS_TO_BUILD) $(LIBPREFIX)MesaNouveauLib$(LIBSUFFIX) $(MesaOSSimd_OBJS) mesa3d.res $(LD_DEPS) fixlink.exe
 +	$(LD) $(SIMD_LDFLAGS) $(MesaWglLibSimd_OBJS) $(MesaGdiLibICDSimd_OBJS) $(MesaOSSimd_OBJS) -Wl,--start-group $(LIBPREFIX)MesaNouveauLib$(LIBSUFFIX) $(opengl_simd_LIBS) -Wl,--end-group $(MESA_SIMD_LIBS) mesa3d.res $(DLLFLAGS) $(MESA3D_DEF)
- 	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
- 
- # accelerated ICD driver (SVGA3D) fixlink.exe
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
++
++# accelerated ICD driver (SVGA3D) fixlink.exe
++vmwsgl32.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaWglLib_OBJS) $(MesaGdiLibVMW_OBJS) $(MesaSVGALib_OBJS) $(MesaSVGAWinsysLib_OBJS) $(MesaSVGAOS_OBJS) vmwsgl32.res $(LD_DEPS)
++	$(LD) $(LDFLAGS) $(MesaWglLib_OBJS) $(MesaGdiLibVMW_OBJS) $(MesaSVGALib_OBJS) $(MesaSVGAWinsysLib_OBJS) $(MesaSVGAOS_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) vmwsgl32.res $(DLLFLAGS) $(SVGA_DEF)
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
++
++svgagl32.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaWglLibSimd_OBJS) $(MesaGdiLibVMWSimd_OBJS) $(MesaSVGALibSimd_OBJS) $(MesaSVGAWinsysLibSimd_OBJS) vmwsgl32.res $(LD_DEPS) fixlink.exe
++	$(LD) $(SIMD_LDFLAGS) $(MesaWglLibSimd_OBJS) $(MesaGdiLibVMWSimd_OBJS) $(MesaSVGALibSimd_OBJS) $(MesaSVGAWinsysLibSimd_OBJS) $(opengl_simd_LIBS) $(MESA_SIMD_LIBS) vmwsgl32.res $(DLLFLAGS) $(OPENGL_DEF)
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
++
++# accelerated ICD driver (VirGL) fixlink.exe
++virgl32.dll: $(DEPS) $(LIBS_TO_BUILD) $(MesaWglLib_OBJS) $(MesaGdiLibVirGL_OBJS) $(MesaVirGLLib_OBJS) vmwsgl32.res $(LD_DEPS)
++	$(LD) $(LDFLAGS) $(MesaWglLib_OBJS) $(MesaGdiLibVirGL_OBJS) $(MesaVirGLLib_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) vmwsgl32.res $(DLLFLAGS) $(OPENGL_DEF)
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
++
++mesa99.dll: mesa3d.w95.dll $(DEPS) $(LIBS_TO_BUILD) $(MesaNineLib_OBJS) mesa99.res fixlink.exe
++	$(LD) $(LDFLAGS) $(MesaNineLib_OBJS) $(OPENGL_LIBS) mesa99.res $(MESA99_LIBS) $(DLLFLAGS) $(MESA99_DEF)
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
++
++mesa89.dll: $(DEPS) mesa99.dll $(eight_OBJS) mesa89.res fixlink.exe
++	$(LD) $(LDFLAGS) $(MesaNineLib_OBJS) $(OPENGL_LIBS) $(eight_OBJS) mesa89.res $(MESA89_LIBS) $(DLLFLAGS) $(MESA89_DEF)
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
++
++mesad3d10.w95.dll: $(DEPS) $(LIBS_TO_BUILD) $(LD_DEPS) $(MesaD3D10Lib_OBJS) fixlink.exe
++	$(LD) $(LDFLAGS) $(MesaD3D10Lib_OBJS) $(MesaGdiLib_OBJS) $(OPENGL_LIBS) $(MESA_LIBS) $(DLLFLAGS) $(D3D10_DEF)
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
++	
++mesad3d10.w98me.dll: $(DEPS) $(LIBS_TO_BUILD) $(LD_DEPS) $(MesaD3D10LibSimd_OBJS)
++	$(LD) $(LDFLAGS) $(MesaD3D10LibSimd_OBJS) $(MesaGdiLibSimd_OBJS) $(opengl_simd_LIBS) $(MESA_SIMD_LIBS) $(DLLFLAGS) $(D3D10_DEF)
++	$(RUNPATH)fixlink$(HOST_SUFFIX) $(FIXLINK_CMD) $@ $(FIXLINK_PARMS)
++
++# benchmark
++glchecked_OBJS := $(glchecked_SRC:.cpp=.cpp_app$(OBJ))
++
++ifdef DEBUG
++glchecker.exe: $(DEPS) $(glchecked_OBJS) $(LD_DEPS)
++	$(LD) $(APP_LDFLAGS) $(glchecked_OBJS) $(app_LIBS) $(EXEFLAGS_CMD)
++
++else
++glchecker.exe: $(DEPS) $(glchecked_OBJS) $(LD_DEPS)
++	$(LD) $(APP_LDFLAGS) $(glchecked_OBJS) $(app_LIBS) $(EXEFLAGS_WIN)
++
++endif
++
++# ICD tester
++icdtest.exe: $(DEPS) icdtest.c_app$(OBJ) misctest.res $(LD_DEPS)
++	$(LD) $(APP_LDFLAGS) icdtest.c_app$(OBJ) misctest.res $(app_LIBS) $(EXEFLAGS_CMD)
++
++# FB tester
++fbtest.exe: $(DEPS) fbtest.c_app$(OBJ) misctest.res $(LD_DEPS)
++	$(LD) $(APP_LDFLAGS) fbtest.c_app$(OBJ) misctest.res $(app_LIBS) $(EXEFLAGS_CMD)
++
++# gamma tester
++gammaset.exe: $(DEPS) gammaset.c_app$(OBJ) misctest.res $(LD_DEPS)
++	$(LD) $(APP_LDFLAGS) gammaset.c_app$(OBJ) misctest.res $(app_LIBS) $(EXEFLAGS_CMD)
++
++# svgadump
++svgadump.exe: $(DEPS) svgadump.c_app$(OBJ) misctest.res $(LD_DEPS)
++	$(LD) $(APP_LDFLAGS) svgadump.c_app$(OBJ) misctest.res $(app_LIBS) $(EXEFLAGS_CMD)
++
++# WGL tester
++ifdef DEBUG
++wgltest.exe: $(DEPS) wgltest.c_app$(OBJ) wgltest.res $(LD_DEPS)
++	$(LD) $(APP_LDFLAGS) wgltest.c_app$(OBJ) wgltest.res $(app_LIBS) $(EXEFLAGS_CMD)
++
++else
++wgltest.exe: $(DEPS) wgltest.c_app$(OBJ) wgltest.res $(LD_DEPS)
++	$(LD) $(APP_LDFLAGS) wgltest.c_app$(OBJ) wgltest.res $(app_LIBS) $(EXEFLAGS_WIN)
++
++endif
++
++ifdef OBJ
++clean:
++	-$(RM) $(MESA_VER).target
++	-$(RM) winpthreads.target
++	-$(RM) $(MesaUtilLib_OBJS)
++	-$(RM) $(MesaUtilLibSimd_OBJS)
++	-$(RM) $(MesaLib_OBJS)
++	-$(RM) $(MesaLibSimd_OBJS)
++	-$(RM) $(MesaGalliumAuxLib_OBJS)
++	-$(RM) $(MesaGalliumAuxLibSimd_OBJS)
++	-$(RM) $(MesaGalliumLLVMPipe_OBJS)
++	-$(RM) $(MesaSVGALib_OBJS)
++	-$(RM) $(MesaVirGLLib_OBJS)
++	-$(RM) $(MesaGdiLibGL_OBJS)
++	-$(RM) $(MesaGdiLibGLSimd_OBJS)
++	-$(RM) $(MesaGdiLibICD_OBJS)
++	-$(RM) $(MesaGdiLibICDSimd_OBJS)
++	-$(RM) $(MesaWglLib_OBJS)
++	-$(RM) $(MesaWglLibSimd_OBJS)
++	-$(RM) $(MesaWglLib_OBJS)
++	-$(RM) $(glchecked_OBJS)
++	-$(RM) $(MesaGdiLibVMW_OBJS)
++	-$(RM) $(MesaGdiLibVirGL_OBJS)
++	-$(RM) $(MesaSVGAWinsysLib_OBJS)
++	-$(RM) $(MesaNineLib_OBJS)
++	-$(RM) $(MesaD3D10Lib_OBJS)
++	-$(RM) $(MesaD3D10LibSimd_OBJS)
++	-$(RM) $(MesaOS_OBJS)
++	-$(RM) $(MesaOSSimd_OBJS)
++	-$(RM) $(eight_OBJS)
++	-$(RM) icdtest.c_app$(OBJ)
++	-$(RM) fbtest.c_app$(OBJ)
++	-$(RM) wgltest.c_app$(OBJ)
++	-$(RM) gammaset.c_app$(OBJ)
++	-$(RM) svgadump.c_app$(OBJ)
++	-$(RM) $(LIBPREFIX)MesaUtilLib$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaUtilLibSimd$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaLib$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaLibSimd$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaGalliumAuxLib$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaGalliumAuxLibSimd$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaGalliumLLVMPipe$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaSVGALib$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaGdiLibGL$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaGdiLibGLSimd$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaGdiLibICD$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaGdiLibICDSimd$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaGdiLib$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaGdiLibSimd$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaWglLib$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)MesaWglLibSimd$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)mesa99$(LIBSUFFIX)
++	-$(RM) $(LIBPREFIX)mesa89$(LIBSUFFIX)
++	-$(RM) vmwsgl32.res
++	-$(RM) opengl32.res
++	-$(RM) mesa3d.res
++	-$(RM) mesa89.res
++	-$(RM) mesa99.res
++	-$(RM) wgltest.res
++	-$(RM) misctest.res
++	-$(RM) opengl32.w95.dll
++	-$(RM) $(LIBPREFIX)opengl32.w95$(LIBSUFFIX)
++	-$(RM) opengl32.w98me.dll
++	-$(RM) $(LIBPREFIX)opengl32.w98me$(LIBSUFFIX)
++	-$(RM) mesa3d.w95.dll
++	-$(RM) $(LIBPREFIX)mesa3d.w95$(LIBSUFFIX)
++	-$(RM) mesa3d.w98me.dll
++	-$(RM) $(LIBPREFIX)mesa3d.w98me$(LIBSUFFIX)
++	-$(RM) vmwsgl32.dll
++	-$(RM) $(LIBPREFIX)vmwsgl32$(LIBSUFFIX)
++	-$(RM) mesad3d10.w95.dll
++	-$(RM) mesad3d10.w98me.dll
++	-$(RM) mesa99.dll
++	-$(RM) mesa89.dll
++	-$(RM) glchecker.exe
++	-$(RM) icdtest.exe
++	-$(RM) gammaset.exe
++	-$(RM) fbtest.exe
++	-$(RM) wgltest.exe
++	-$(RM) svgadump.exe
++	-$(RM) $(LIBPREFIX)MesaSVGALibSimd$(LIBSUFFIX)
++	-$(RM) $(MesaSVGALibSimd_OBJS)
++	-$(RM) $(MesaGdiLibVMWSimd_OBJS)
++	-$(RM) $(MesaSVGAWinsysLibSimd_OBJS)
++	-$(RM) svgagl32.dll
++	-$(RM) $(LIBPREFIX)svgagl32$(LIBSUFFIX)
++	-cd winpthreads && $(MAKE) clean
++	-$(RM) $(MESA_VER).deps
++endif
++
++libkernel32.a: extra/kernel32.def
++	$(DLLTOOL) -A -C -k -d $< -l $@
 diff --git a/mesa-25.1.x.mk b/mesa-25.1.x.mk
 index 46cccbb9..48500104 100644
 --- a/mesa-25.1.x.mk
@@ -90,7 +1882,7 @@ index 46cccbb9..48500104 100644
    $(MESA_VER)/src/gallium/winsys/sw/gdi/gdi_sw_winsys.c \
    $(MESA_VER)/src/gallium/winsys/sw/wrapper/wrapper_sw_winsys.c \
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..30f83e96 100644
+index 8017cd00..7d5a1cc7 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -73,6 +73,12 @@ static bool use_d3d12 = false;
@@ -106,13 +1898,38 @@ index 8017cd00..30f83e96 100644
  
  #ifdef WIN9X
  #include "3d_accel.h"
-@@ -99,6 +105,13 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
+@@ -92,6 +98,22 @@ void crt_locks_destroy();
+ 
+ static const char *created_driver_name = NULL;
+ 
++#ifdef GALLIUM_NOUVEAU
++/* M5.4 step 3d: trace the path INTO screen creation (builds 3079-3081 died before
++ * the shim's first trace point). Writes to C:\nvshim.log via the shim's logger. */
++extern void nvshim_trace(const char *label, unsigned n, const uint32_t *v);
++static void nvt(const char *pre, const char *str, unsigned n, uint32_t a0, uint32_t a1)
++{
++   char lbl[128]; int k = 0; uint32_t v[2];
++   while (*pre && k < 100) lbl[k++] = *pre++;
++   if (str) { lbl[k++] = '\''; while (*str && k < 120) lbl[k++] = *str++; lbl[k++] = '\''; }
++   lbl[k] = 0; v[0] = a0; v[1] = a1;
++   nvshim_trace(lbl, n, v);
++}
++#else
++#define nvt(pre, str, n, a0, a1) ((void)0)
++#endif
++
+ static struct pipe_screen *
+ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
+ {
+@@ -99,6 +121,15 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  
     debug_printf("tried driver: %s\n", driver);
  
 +#ifdef GALLIUM_NOUVEAU
 +   if (strcmp(driver, "nouveau") == 0) {
++      nvt("wgl: nouveau_drm_screen_create enter lasterr", NULL, 1, GetLastError(), 0);
 +      screen = nouveau_drm_screen_create(0);   /* fd ignored; opens the VxD */
++      nvt("wgl: nouveau_drm_screen_create exit screen/lasterr", NULL, 2, (uint32_t)(uintptr_t)screen, GetLastError());
 +      if (screen)
 +         use_nouveau = true;
 +   }
@@ -120,7 +1937,33 @@ index 8017cd00..30f83e96 100644
  #ifdef GALLIUM_LLVMPIPE
     if (strcmp(driver, "llvmpipe") == 0) {
  # ifdef HAVE_CRTEX
-@@ -237,6 +250,15 @@ wgl_present(struct pipe_screen *screen,
+@@ -138,6 +169,7 @@ wgl_screen_create(HDC hDC)
+    struct sw_winsys *winsys;
+    UNUSED bool sw_only = debug_get_bool_option("LIBGL_ALWAYS_SOFTWARE", false);
+ 
++   nvt("wgl: screen_create ENTER lasterr/sw_only", NULL, 2, GetLastError(), (uint32_t)sw_only);
+    winsys = gdi_create_sw_winsys(gdi_sw_acquire_hdc_by_value, gdi_sw_release_hdc_by_value);
+    if (!winsys)
+       return NULL;
+@@ -175,7 +207,9 @@ wgl_screen_create(HDC hDC)
+    	  }
+ #endif
+    	
++      nvt("wgl: try driver ", drivers[i], 1, (uint32_t)i, 0);
+       struct pipe_screen* screen = wgl_screen_create_by_name(hDC, drivers[i], winsys);
++      nvt("wgl: result screen/lasterr", NULL, 2, (uint32_t)(uintptr_t)screen, GetLastError());
+       if (screen) {
+          created_driver_name = drivers[i];
+          return screen;
+@@ -184,6 +218,7 @@ wgl_screen_create(HDC hDC)
+          break;
+    }
+ 
++   nvt("wgl: NO SCREEN - all drivers failed, lasterr", NULL, 1, GetLastError(), 0);
+    winsys->destroy(winsys);
+    return NULL;
+ }
+@@ -237,6 +272,15 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -137,10 +1980,53 @@ index 8017cd00..30f83e96 100644
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
 diff --git a/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c b/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c
-index d2615102..1de8858a 100644
+index d2615102..57656890 100644
 --- a/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c
 +++ b/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c
-@@ -85,6 +85,15 @@ err_dev_new:
+@@ -12,6 +12,13 @@
+ #include "nouveau/nouveau_screen.h"
+ #include "nouveau/nouveau_winsys.h"
+ 
++#ifdef WIN9X
++extern void nvshim_trace(const char *label, unsigned n, const uint32_t *v);
++#define NVT(l,a0,a1) do{ uint32_t _v[2]={(uint32_t)(a0),(uint32_t)(a1)}; nvshim_trace((l),2,_v);}while(0)
++#else
++#define NVT(l,a0,a1) ((void)0)
++#endif
++
+ static struct pipe_screen *
+ nouveau_screen_create(int fd, const struct pipe_screen_config *config,
+                       struct renderonly *ro)
+@@ -22,13 +29,17 @@ nouveau_screen_create(int fd, const struct pipe_screen_config *config,
+    struct nouveau_screen *screen = NULL;
+    int ret;
+ 
++   NVT("winsys: nouveau_screen_create enter fd", fd, 0);
+    ret = nouveau_drm_new(fd, &drm);
++   NVT("winsys: drm_new ret/drm", ret, (uintptr_t)drm);
+    if (ret)
+       return NULL;
+ 
+    ret = nouveau_device_new(&drm->client, &dev);
++   NVT("winsys: device_new ret/dev", ret, (uintptr_t)dev);
+    if (ret)
+       goto err_dev_new;
++   NVT("winsys: chipset", dev->chipset, 0);
+ 
+    switch (dev->chipset & ~0xf) {
+    case 0x30:
+@@ -62,8 +73,10 @@ nouveau_screen_create(int fd, const struct pipe_screen_config *config,
+    }
+ 
+    screen = init(dev);
++   NVT("winsys: init(dev) screen", (uintptr_t)screen, 0);
+    if (!screen)
+       goto err_screen_create;
++   NVT("winsys: context_create fn", (uintptr_t)screen->base.context_create, 0);
+ 
+    if (!screen->base.context_create)
+       goto err_screen_init;
+@@ -85,6 +98,15 @@ err_dev_new:
  struct pipe_screen *
  nouveau_drm_screen_create(int fd)
  {

@@ -173,6 +173,17 @@ engine under this driver; the screen-init fence blocker is cleared.
   QEMU Win98 image (source of the export set) is gone. Awaiting the T61 run: expect
   C:\nvshim.log to exist and show how far nv50_screen_create gets.
 
+- 3081 on the T61: NO change (126, no log) -> the failure is upstream of the shim.
+- 3082 traces the CALLER CHAIN into C:\nvshim.log via an exported nvshim_trace():
+  wgl.c logs screen_create ENTER (+GetLastError), the GALLIUM_DRIVER name read, each
+  driver tried + result + GetLastError, nouveau_drm_screen_create enter/exit; the
+  winsys logs each nouveau_screen_create step. BUILD TRAP FOUND: wgl_icd.c #includes
+  wgl.c but make did not know, so wgl_icd.c_simd.o had been STALE since 10-24 23:29 -
+  every wgl.c edit after that (the nouveau case, the present guard, these traces) was
+  NOT in the shipped DLLs until the object was deleted and rebuilt. The Makefile now
+  declares wgl.c a prerequisite of that object (in nouveau-build-win9x.patch). After a
+  Mesa rebuild ALWAYS check: strings mesa3d.w98me.dll | grep 'wgl: try driver' (>0).
+
 ### NEXT (M5.4 continued): run nv50_screen_create on the T61, then draw
 Wire GALLIUM_DRIVER=nouveau and run nv50_screen_create on the T61 - its fence now
 lands. Then the BO-backed hwctx tail (VP/FP/GP code BO, TLS, stack, uniforms/CB with

@@ -106,6 +106,9 @@ static void nvshim_logn(const char *label, unsigned n, const uint32_t *v)
 	if(nvshim_open())
 		DeviceIoControl(g_vxd, OP_NV_DBG_PUTS, buf, (DWORD)p, NULL, 0, &ret, NULL);
 }
+/* Exported for the caller chain (wgl.c, nouveau_drm_winsys.c): trace into the
+ * same C:\nvshim.log so one file shows the whole path into screen creation. */
+void nvshim_trace(const char *label, unsigned n, const uint32_t *v) { nvshim_logn(label, n, v); }
 #define NVLOG0(l)         nvshim_logn((l), 0, NULL)
 #define NVLOG1(l,a)       do{ uint32_t _v[1]; _v[0]=(uint32_t)(a); nvshim_logn((l),1,_v);}while(0)
 #define NVLOG2(l,a,b)     do{ uint32_t _v[2]; _v[0]=(uint32_t)(a); _v[1]=(uint32_t)(b); nvshim_logn((l),2,_v);}while(0)
