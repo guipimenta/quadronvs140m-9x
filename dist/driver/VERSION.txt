@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3085  (M5.4 step 4c: ICD-surface trace - 3084 showed wglCreateContext never reaches context creation; mesa3d.dll now traces DescribePixelFormat/SetPixelFormat/CreateLayerContext/the opengl32 handshake/DllMain per instance into C:\nvshim.log, which is now append-mode. Per DOS box: del C:\nvshim.log; set GALLIUM_DRIVER=nouveau; wgltest driver mesa3d.dll window; type C:\nvshim.log)
+Build: 3086  (M5.4 step 4d: the CreateContext 126 was wgltest's driver mode, not the GPU - Win9x GDI's ChoosePixelFormat needs opengl32.dll already loaded in the process; wgltest fixed. nvgl.bat unchanged: run nvgl and send C:\nvshim.log - it should now show the nouveau CONTEXT creation and the first present)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring
@@ -84,6 +84,9 @@ Driver binaries unchanged apart from the build stamp. New diagnostics shipped:
   pftest.exe  [W H BPP]  - lists all pixel formats, repeats Half-Life's request
                            and says whether the game would accept it; appends
                            to pftest.txt in the current directory
+  pfprobe.exe [dll]      - 3086: repeats GDI ChoosePixelFormat() at each step a driver-mode
+                           test takes (fresh, opengl32 loaded, mesa3d loaded, screen
+                           created); shows the Win9x 'opengl32 must already be loaded' rule
   icdload.exe [dll]      - does by hand what opengl32.dll does to find/load the
                            ICD (escape, registry, LoadLibrary, DrvValidateVersion,
                            DrvDescribePixelFormat) and prints each step's result

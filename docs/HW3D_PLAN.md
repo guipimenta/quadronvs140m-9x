@@ -247,6 +247,30 @@ instance can neither truncate nor be locked out (delete C:\nvshim.log between ru
 Patch is now 15 files (+ stw_framebuffer.c, stw_getprocaddress.c, stw_device.c);
 import table +SetFilePointer only.
 
+### M5.4 step 4d (build 3086): ROOT CAUSE of "CreateContext 126" - it was never the GPU
+3085 on the T61 (nouveau AND `nvgl sw`): the trace ends `DescribePF count-query` ->
+`SetPF enter ipf 0` -> `SetPF FAIL index>=count` -> `CreateLayerContext lasterr 0x7e`,
+i.e. GDI's ChoosePixelFormat returned 0 with error 126 before any ICD call, for every
+renderer. Reproduced on this host in a QEMU Win98 SE VM (tools/qemu98/, raw copy of the
+VirtualBox disk, headless, QMP-driven, ~3 min/boot) on plain vga.drv with softpipe:
+identical log. pfprobe.exe (driver/vmdisp9x-nv/tools) then repeated GDI
+ChoosePixelFormat at each step: fresh process -> 0/126; after LoadLibrary("opengl32.dll")
+-> format 3; after FreeLibrary -> 0/126 again; mesa3d.dll load / screen create change
+nothing. **Windows 9x GDI32 forwards ChoosePixelFormat/SetPixelFormat/
+DescribePixelFormat to OPENGL32.DLL only if it is already loaded in the process; it
+does not load it.** Apps that import opengl32 (pftest, Half-Life) never see this;
+wgltest's `driver` mode loads only mesa3d.dll + gdi32, so every driver-mode run since
+3079 died there. Fix: wgltest.c driver mode LoadLibrary()s opengl32.dll (16th file in
+nouveau-build-win9x.patch). mesa3d.dll: NVSHIM_TRACE=1 routes the stw/st traces for any
+driver (nvgl.bat sets it) - no other change. Also learned: nvmini.vxd with Native=0
+deliberately skips the VBE path ("deadlocks on G86"), so nvmini cannot drive the VM's
+desktop; for an ICD-route test in the VM build the vesamini pair and bind that instead.
+Windows 98's opengl32 ICD loader (disassembled: OPENGL32.DLL 78ab021c) requires the
+OPENGL_GETINFO version field == 2, LoadLibraryA()s the registry value as-is, and needs
+DrvValidateVersion + 7 Drv entry points; 126 is what its LoadLibrary failure returns.
+Expected on the T61 with 3086: `nvgl` log continues into stw_create_context_attribs ->
+st_api_create_context -> nv50_create (the 3084 traces), then the first present.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into
