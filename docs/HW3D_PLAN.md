@@ -293,6 +293,23 @@ readbacks and heap exhaustion. Present logs 4 sample pixels (expected: the clear
 in the corners, triangle colour mid-frame). Next log answers: which kick wedges (its
 first methods), and whether the colour buffer ever received the clear.
 
+### M5.4 step 5b (build 3087 on the T61 -> 3088): the 3D engine hangs SILENTLY in the frame kick
+3087 did not freeze. Logs (analysis/t61-logs/3087-*): no trap anywhere. Kick sequence of the
+first frame: #1 hwctx init 604 dw (ok), #2 2D 34 dw + #3 2D 126 dw (DST_FORMAT 0xf3 on subch 4
+= nv50's 2D clears/blits, ok), #4 the frame 668 dw (3D subch 3, starts COLOR_MASK_COMMON
+0x0f90) "consumed", #5 the 4-dw QUERY fence (3D 0x1b00) NEVER consumed: IB get 4 / put 5,
+pfi=pgi=0 after 2M polls. So the 3D engine stopped inside #4 without a trap and the next 3D
+method stalled the pusher. Present samples random -> the clear never landed. The VxD passed
+#4 as ok because it never checked that PGRAPH went idle. Side facts: the T61 desktop is
+640x480x16 (scaled); Mesa maps the new 2 MB depth BO right after creating it (the shim seeds
+the shadow with a 2 MB VRAM readback, 32768 ioctls); the bump heap grows 1.3 MB per frame.
+3088: VxD latches wedged when PGRAPH is still busy after the idle wait (gridle + PGRAPH_STATUS
+logged); shim dumps the first 16 kicks' full method streams to C:\nvkick.txt. NEXT: decode
+kick #4 against nv50_3d.xml.h (which state/draw it carries, which BO addresses it
+references) and compare with a reference nouveau trace of the same frame; suspects: the
+hwctx tail Mesa expects (VP/FP code BO, TLS, stack, uniforms) vs what our channel provides,
+and vertex-fetch/shader addresses in the VM window.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

@@ -135,6 +135,37 @@ void nvshim_trace(const char *label, unsigned n, const uint32_t *v) { nvshim_log
 
 /* Submit a method-dword stream to the persistent channel (one kick). */
 static int g_gpu_dead = 0;   /* 3087: set after a wedged/failed kick; no more submits */
+#ifndef NVSHIM_STANDALONE
+/* 3088: dump the full method stream of the first kicks to C:\nvkick.txt so a
+ * silent engine hang can be decoded offline against the class headers. */
+static void nvshim_dump_kick(int idx, const uint32_t *m, uint32_t count)
+{
+	static HANDLE f = INVALID_HANDLE_VALUE;
+	char line[16 + 8 * 9 + 2]; int p; uint32_t i, k; DWORD ret;
+	if(f == INVALID_HANDLE_VALUE)
+		f = CreateFileA("C:\\nvkick.txt", GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+		                0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+	if(f == INVALID_HANDLE_VALUE) return;
+	SetFilePointer(f, 0, NULL, FILE_END);
+	p = 0; { const char *h = "---- kick "; while(*h) line[p++] = *h++; }
+	{ char d[12]; int n = 0, v = idx; do { d[n++] = (char)('0' + v % 10); v /= 10; } while(v); while(n) line[p++] = d[--n]; }
+	{ const char *h = " cnt="; while(*h) line[p++] = *h++; }
+	{ char d[12]; int n = 0; uint32_t v = count; do { d[n++] = (char)('0' + v % 10); v /= 10; } while(v); while(n) line[p++] = d[--n]; }
+	line[p++] = '\n'; WriteFile(f, line, (DWORD)p, &ret, NULL);
+	for(i = 0; i < count; i += 8)
+	{
+		p = 0;
+		for(k = i; k < i + 8 && k < count; k++)
+		{
+			int s; uint32_t v = m[k];
+			for(s = 28; s >= 0; s -= 4) { int d = (int)((v >> s) & 0xf); line[p++] = (char)(d < 10 ? '0' + d : 'a' + d - 10); }
+			line[p++] = ' ';
+		}
+		line[p++] = '\n'; WriteFile(f, line, (DWORD)p, &ret, NULL);
+	}
+	FlushFileBuffers(f);
+}
+#endif
 static int vxd_submit(const uint32_t *methods, uint32_t count)
 {
 	nv_gpu_submit_t sb;
@@ -156,6 +187,7 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 	/* 3087: log BEFORE the kick too (first 400), so a kick that never returns
 	 * from the VxD is identified by its count and first two methods. */
 	if(nkick < 400) NVLOG3("kick > cnt/m0/m1", count, methods[0], count > 1 ? methods[1] : 0);
+	if(nkick < 16) nvshim_dump_kick(nkick, methods, count);
 #endif
 	memset(&sb, 0, sizeof(sb));
 	if(!DeviceIoControl(g_vxd, OP_NV_SUBMIT, (void*)methods, count * 4,

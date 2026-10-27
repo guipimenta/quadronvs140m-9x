@@ -889,17 +889,22 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 	out->dma_get_rb  = NV_rd32(0x3244);
 	/* 3087: a PGRAPH trap or an IB entry the pusher never consumed latches the
 	 * GPU as wedged; the caller sees ok=0 (PFIFO_INTR alone is only reported). */
-	if(out->pgraph_intr || out->get != out->put)
+	/* 3088: a graphics engine still busy after the idle wait (gr_idle hit its
+	 * bound) is a silent hang - 3087's T61 run showed the frame kick "consumed"
+	 * while the engine never finished, so the NEXT 3D method stalled the pusher. */
+	if(out->pgraph_intr || out->get != out->put || out->gr_idle >= 4000000UL)
 	{
 		g_gpu_wedged = 1;
 		out->wedged  = 1;
 		out->ok      = 0;
-		dbg_printf("S> submit WEDGED get=%lu put=%lu pfi=%08lX pgi=%08lX loops=%lu\n",
-		           out->get, out->put, out->pfifo_intr, out->pgraph_intr, out->idle_loops);
+		dbg_printf("S> submit WEDGED get=%lu put=%lu pfi=%08lX pgi=%08lX loops=%lu gridle=%lu status=%08lX\n",
+		           out->get, out->put, out->pfifo_intr, out->pgraph_intr, out->idle_loops,
+		           out->gr_idle, NV_rd32(PGRAPH_STATUS));
 		return 1;
 	}
 	out->ok          = 1;
-	dbg_printf("S> submit end get=%lu pfi=%08lX loops=%lu\n", out->get, out->pfifo_intr, out->idle_loops);
+	dbg_printf("S> submit end get=%lu pfi=%08lX loops=%lu gridle=%lu\n", out->get, out->pfifo_intr,
+	           out->idle_loops, out->gr_idle);
 	return 1;
 }
 

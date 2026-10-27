@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3087  (M5.4 step 5: first GPU frames rendered on the T61 by Mesa's nv50 driver (3086 log); this build makes a wedged GPU survivable: VxD latches wedged + refuses further kicks instantly, shim stops submitting after a failed kick, every kick logged before/after, present logs sample pixels; nvgl.bat waits for wgltest and keeps C:\nvtail.txt. Run nvgl, then send C:\nvshim.log AND C:\nvtail.txt)
+Build: 3088  (M5.4 step 5b: 3087 logs show a SILENT 3D-engine hang inside the frame kick (no trap; the next 3D method stalls the pusher). VxD now latches wedged on a still-busy engine; the shim dumps the first 16 kicks' method streams to C:\nvkick.txt. Run nvgl, send C:\nvshim.log, C:\nvtail.txt and C:\nvkick.txt)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

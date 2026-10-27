@@ -1,5 +1,5 @@
 @echo off
-rem nvgl.bat - run the GPU (nouveau) OpenGL test and open the shim trace (build 3085+; 3087: waits + nvtail)
+rem nvgl.bat - run the GPU (nouveau) OpenGL test and open the shim trace (build 3085+; 3088: also dumps the first kicks to C:\nvkick.txt)
 rem
 rem   nvgl          wgltest window test on the nouveau driver, then Notepad with C:\nvshim.log
 rem   nvgl sw       same test on the software renderer (llvmpipe), for comparison
@@ -8,6 +8,7 @@ rem
 rem Run it from the folder that holds wgltest.exe and mesa3d.dll. GALLIUM_DRIVER stays
 rem set in this DOS box afterwards, so other GL programs started from here use the GPU too.
 if exist C:\nvshim.log del C:\nvshim.log
+if exist C:\nvkick.txt del C:\nvkick.txt
 set GALLIUM_DRIVER=nouveau
 if "%1"=="sw" set GALLIUM_DRIVER=
 if "%1"=="sw" echo [software renderer]
