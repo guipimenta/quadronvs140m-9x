@@ -1881,6 +1881,28 @@ index 46cccbb9..48500104 100644
  MesaGdiLib_SRC = \
    $(MESA_VER)/src/gallium/winsys/sw/gdi/gdi_sw_winsys.c \
    $(MESA_VER)/src/gallium/winsys/sw/wrapper/wrapper_sw_winsys.c \
+diff --git a/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_fence.c b/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_fence.c
+index c2b2ebc4..c3c4a2b2 100644
+--- a/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_fence.c
++++ b/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_fence.c
+@@ -287,7 +287,17 @@ _nouveau_fence_next(struct nouveau_context *nv)
+    simple_mtx_assert_locked(&fence_list->lock);
+ 
+    if (nv->fence->state < NOUVEAU_FENCE_STATE_EMITTING) {
++#ifdef WIN9X
++      /* 3097 (Win9x shim): work attached to the current fence - the staging
++       * buffers of texture uploads - holds no reference, so the fence was only
++       * emitted once 64 works piled up (nouveau_fence_work's kick threshold):
++       * up to 64 x 256 KiB of staging per fence, which the shim's heap (no
++       * eviction, no GART) cannot absorb during an upload burst. Emit a fence
++       * that carries work at every kick, so the next kick lets that work run. */
++      if (p_atomic_read(&nv->fence->ref) > 1 || nv->fence->work_count > 0)
++#else
+       if (p_atomic_read(&nv->fence->ref) > 1)
++#endif
+          _nouveau_fence_emit(nv->fence);
+       else
+          return;
 diff --git a/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_screen.c b/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_screen.c
 index fe105908..9be572bc 100644
 --- a/mesa-25.1.x/src/gallium/drivers/nouveau/nouveau_screen.c
@@ -2368,7 +2390,7 @@ index d7db69a2..97b7426c 100644
     return bestindex;
  }
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..c6d6ca36 100644
+index 8017cd00..0fc1772c 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,12 @@
@@ -2474,7 +2496,7 @@ index 8017cd00..c6d6ca36 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +290,176 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +290,177 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2602,7 +2624,7 @@ index 8017cd00..c6d6ca36 100644
 +                  uint32_t now = GetTickCount();
 +                  if (t_last == 0) t_last = now;
 +                  if (now - t_last >= 2000) {
-+                     uint32_t st[16];
++                     uint32_t st[20];
 +                     nvshim_stats(st);
 +                     nvt("wgl: present frames/ms", NULL, 2, nframes, now - t_last);
 +                     nvt("wgl: stats kicks/kickdw", NULL, 2, st[0], st[4]);
@@ -2614,6 +2636,7 @@ index 8017cd00..c6d6ca36 100644
 +                     nvt("wgl: stats kcyc flush/bo", NULL, 2, st[11], st[12]);
 +                     nvt("wgl: stats vsync waits/ms", NULL, 2, st[13], st[14]);          /* 3096: NVSHIM_VSYNC */
 +                     nvt("wgl: stats m2mf splits", NULL, 1, st[15], 0);                  /* 3096: copies cut across kicks (now handled) */
++                     nvt("wgl: stats vram checks/mismatches", NULL, 2, st[16], st[17]);   /* 3097: NVSHIM_VERIFYVRAM */
 +                     nframes = 0; t_last = now;
 +                  }
 +               }
@@ -2651,7 +2674,7 @@ index 8017cd00..c6d6ca36 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
-@@ -326,6 +549,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -326,6 +550,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  
        stw_init(&stw_winsys, hinstDLL);
        stw_init_thread();
@@ -2665,7 +2688,7 @@ index 8017cd00..c6d6ca36 100644
        break;
  
     case DLL_THREAD_ATTACH:
-@@ -337,6 +567,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -337,6 +568,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
        break;
  
     case DLL_PROCESS_DETACH:
@@ -2788,10 +2811,10 @@ index 96f7ccaa..8efc4c31 100644
  _debug_vprintf(const char *format, va_list ap)
  {
 diff --git a/wgltest.c b/wgltest.c
-index 6c6d2fc1..c71a66e7 100644
+index 6c6d2fc1..c175544b 100644
 --- a/wgltest.c
 +++ b/wgltest.c
-@@ -1,979 +1,1281 @@
+@@ -1,979 +1,1456 @@
 -/******************************************************************************
 - * Copyright (c) 2023-2024 Jaroslav Hensl                                     *
 - *                                                                            *
@@ -3815,6 +3838,7 @@ index 6c6d2fc1..c71a66e7 100644
 +  "window: run test in window\n"
 +  "fullscreen: run test on fullscreen\n"
 +  "texture: textured scene (mipmaps, TexSubImage, depth, fog, blend)\n"
++  "texcheck: texture DATA integrity on the GPU - 160 mipmapped textures (RGB + RGBA) uploaded, every level read back and compared, then drawn 1:1 and read back; results in wgltest_texcheck.txt\n"
 +  "stress: GoldSrc-like draw-call load (600 glBegin/glEnd quads, 72 textures, 32 lightmap patches of 64x16, 50 indexed draws per frame)\n"
 +  "help: show this message";
 +
@@ -3884,6 +3908,12 @@ index 6c6d2fc1..c71a66e7 100644
 +typedef void (APIENTRY *glEnableClientState_f)(GLenum array);
 +typedef void (APIENTRY *glDisableClientState_f)(GLenum array);
 +typedef void (APIENTRY *glDrawElements_f)(GLenum mode, GLsizei count, GLenum type, const void *indices);
++typedef void (APIENTRY *glGetTexImage_f)(GLenum target, GLint level, GLenum format, GLenum type, void *pixels);
++typedef void (APIENTRY *glReadPixels_f)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void *pixels);
++typedef void (APIENTRY *glFinish_f)(void);
++typedef void (APIENTRY *glPixelStorei_f)(GLenum pname, GLint param);
++typedef void (APIENTRY *glViewport_f)(GLint x, GLint y, GLsizei width, GLsizei height);
++typedef void (APIENTRY *glOrtho_f)(double l, double r, double b, double t, double n, double f);
 +
 +typedef BOOL (WINAPI *wglMakeCurrent_f)(HDC hdc, HGLRC hglrc);
 +typedef HGLRC (WINAPI *wglCreateContext_f)(HDC hdc);
@@ -4660,6 +4690,168 @@ index 6c6d2fc1..c71a66e7 100644
 +	return TRUE;
 +}
 +
++/* ---- "texcheck" (3097): texture DATA integrity on the real GPU. 3095/3096 on the
++ * T61 showed wrong texture patches in Half-Life at 1024x768 but not at 640x480
++ * (where the sampler rarely touches the big mip levels). This uploads 160
++ * mipmapped textures - GL_RGB (Mesa's 2D-engine conversion upload) and GL_RGBA
++ * (the M2MF upload) - with a per-texture/level pattern, ~45 MB like a GoldSrc
++ * level, reads EVERY level back with glGetTexImage and compares byte by byte,
++ * then draws level 0 of 13 of them 1:1 (ortho, nearest) and compares the
++ * framebuffer (the sampler's view). Results: wgltest_texcheck.txt in the
++ * current folder + a message box. llvmpipe must pass; under the fake GPU
++ * nothing copies, so its mismatches mean nothing. */
++#include <stdio.h>
++#include <stdarg.h>
++#ifndef GL_RGB
++#define GL_RGB 0x1907
++#endif
++#ifndef GL_NEAREST
++#define GL_NEAREST 0x2600
++#endif
++#ifndef GL_NEAREST_MIPMAP_NEAREST
++#define GL_NEAREST_MIPMAP_NEAREST 0x2700
++#endif
++#ifndef GL_UNPACK_ALIGNMENT
++#define GL_UNPACK_ALIGNMENT 0x0CF5
++#endif
++#ifndef GL_PACK_ALIGNMENT
++#define GL_PACK_ALIGNMENT 0x0D05
++#endif
++#ifndef GL_REPLACE
++#define GL_REPLACE 0x1E01
++#endif
++#define TC_NTEX 160
++static GLuint tc_tex[TC_NTEX];
++static int    tc_done = 0, tc_levels = 0, tc_bad_levels = 0, tc_draws = 0, tc_bad_draws = 0;
++static FILE  *tc_f = NULL;
++static unsigned char *tc_rb = NULL;
++
++static void tc_log(const char *fmt, ...)
++{
++	va_list ap;
++	if(!tc_f) tc_f = fopen("wgltest_texcheck.txt", "w");
++	if(!tc_f) return;
++	va_start(ap, fmt); vfprintf(tc_f, fmt, ap); va_end(ap);
++	fputc('\n', tc_f); fflush(tc_f);
++}
++static int    tc_size(int t) { return (t % 4 == 3) ? 128 : 256; }   /* 3/4 at 256^2: ~45 MB in all */
++static int    tc_bpp(int t)  { return (t & 1) ? 3 : 4; }
++static GLenum tc_fmt(int t)  { return (t & 1) ? GL_RGB : GL_RGBA; }
++static void tc_pattern(unsigned char *dst, int size, int bpp, unsigned seed)
++{
++	unsigned x = seed * 2654435761u + 12345u;
++	int n = size * size * bpp, i;
++	for(i = 0; i < n; i++) { x = x * 1103515245u + 12345u; dst[i] = (unsigned char)(x >> 16); }
++}
++static int tc_compare(int t, int level, int size, const char *how)
++{
++	int bpp = tc_bpp(t), n = size * size * bpp, i, bad = 0, first = -1;
++	int skip_alpha = (bpp == 4 && how[0] == 'd');   /* the window buffer has no alpha: reads back 0xff */
++	tc_pattern(tex_buf, size, bpp, (unsigned)(t * 64 + level));
++	for(i = 0; i < n; i++)
++	{
++		if(skip_alpha && (i & 3) == 3) continue;
++		if(tc_rb[i] != tex_buf[i]) { bad++; if(first < 0) first = i; }
++	}
++	if(bad)
++		tc_log("BAD %s tex %3d %s %dx%d level %d: %d of %d bytes differ, first at byte %d (row %d of %d), got %02x %02x %02x %02x want %02x %02x %02x %02x",
++		       how, t, tc_fmt(t) == GL_RGB ? "RGB " : "RGBA", size, size, level, bad, n, first, first / (size * bpp), size,
++		       tc_rb[first], tc_rb[first + 1], tc_rb[first + 2], tc_rb[first + 3],
++		       tex_buf[first], tex_buf[first + 1], tex_buf[first + 2], tex_buf[first + 3]);
++	return bad != 0;
++}
++static void tc_run(int win_w, int win_h)
++{
++	int t, level, size;
++	if(!tex_buf) tex_buf = (unsigned char*)malloc(256 * 256 * 4);
++	if(!tc_rb) tc_rb = (unsigned char*)malloc(256 * 256 * 4 + 16);
++	if(!tex_buf || !tc_rb) return;
++	tc_log("texcheck: %d textures, 3/4 at 256x256 and 1/4 at 128x128, mipmapped, odd ones GL_RGB (2D conversion upload), even GL_RGBA (M2MF upload)", TC_NTEX);
++	GL32.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
++	GL32.glPixelStorei(GL_PACK_ALIGNMENT, 1);
++	GL32.glGenTextures(TC_NTEX, tc_tex);
++	for(t = 0; t < TC_NTEX; t++)
++	{
++		GL32.glBindTexture(GL_TEXTURE_2D, tc_tex[t]);
++		for(level = 0, size = tc_size(t); size >= 1; level++, size >>= 1)
++		{
++			tc_pattern(tex_buf, size, tc_bpp(t), (unsigned)(t * 64 + level));
++			GL32.glTexImage2D(GL_TEXTURE_2D, level, tc_fmt(t), size, size, 0, tc_fmt(t), GL_UNSIGNED_BYTE, tex_buf);
++		}
++		GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
++		GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
++		/* a tiny draw per texture, as a game's loading screen does: Mesa's state
++		 * tracker keeps a separate level-0 copy of every texture uploaded with
++		 * the default filter until its first use (allocate_full_mipmap), and
++		 * 160 of those (64 KiB-rounded, tiled) exhausted the 88 MiB heap */
++		GL32.glEnable(GL_TEXTURE_2D);
++		GL32.glBegin(GL_QUADS);
++		GL32.glTexCoord2f(0, 0); GL32.glVertex3f(-1.0f, -1.0f, -2.0f);
++		GL32.glTexCoord2f(1, 0); GL32.glVertex3f(-0.99f, -1.0f, -2.0f);
++		GL32.glTexCoord2f(1, 1); GL32.glVertex3f(-0.99f, -0.99f, -2.0f);
++		GL32.glTexCoord2f(0, 1); GL32.glVertex3f(-1.0f, -0.99f, -2.0f);
++		GL32.glEnd();
++	}
++	GL32.glFinish();
++	tc_log("texcheck: uploaded, glGetError %04x", (unsigned)GL32.glGetError());
++	/* 1. every level back through the transfer path */
++	for(t = 0; t < TC_NTEX; t++)
++	{
++		GL32.glBindTexture(GL_TEXTURE_2D, tc_tex[t]);
++		for(level = 0, size = tc_size(t); size >= 1; level++, size >>= 1)
++		{
++			memset(tc_rb, 0xee, size * size * tc_bpp(t));
++			GL32.glGetTexImage(GL_TEXTURE_2D, level, tc_fmt(t), GL_UNSIGNED_BYTE, tc_rb);
++			tc_levels++; tc_bad_levels += tc_compare(t, level, size, "readback");
++		}
++	}
++	tc_log("texcheck: readback done - %d levels, %d bad, glGetError %04x", tc_levels, tc_bad_levels, (unsigned)GL32.glGetError());
++	/* 2. the sampler's view: level 0 drawn 1:1 into the window, read back */
++	GL32.glViewport(0, 0, win_w, win_h);
++	GL32.glMatrixMode(GL_PROJECTION); GL32.glLoadIdentity();
++	GL32.glOrtho(0, win_w, 0, win_h, -1, 1);
++	GL32.glMatrixMode(GL_MODELVIEW); GL32.glLoadIdentity();
++	GL32.glDisable(GL_DEPTH_TEST); GL32.glDisable(GL_FOG); GL32.glDisable(GL_BLEND); GL32.glDisable(GL_ALPHA_TEST);
++	GL32.glEnable(GL_TEXTURE_2D);
++	GL32.glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
++	GL32.glColor4f(1, 1, 1, 1);
++	GL32.glClearColor(0, 0, 0, 1);
++	for(t = 0; t < TC_NTEX; t += 13)
++	{
++		size = tc_size(t);
++		if(size > win_w || size > win_h) continue;
++		GL32.glClear(GL_COLOR_BUFFER_BIT);
++		GL32.glBindTexture(GL_TEXTURE_2D, tc_tex[t]);
++		GL32.glBegin(GL_QUADS);
++		GL32.glTexCoord2f(0, 0); GL32.glVertex3f(0, 0, 0);
++		GL32.glTexCoord2f(1, 0); GL32.glVertex3f((float)size, 0, 0);
++		GL32.glTexCoord2f(1, 1); GL32.glVertex3f((float)size, (float)size, 0);
++		GL32.glTexCoord2f(0, 1); GL32.glVertex3f(0, (float)size, 0);
++		GL32.glEnd();
++		GL32.glFinish();
++		memset(tc_rb, 0xee, size * size * tc_bpp(t));
++		GL32.glReadPixels(0, 0, size, size, tc_fmt(t), GL_UNSIGNED_BYTE, tc_rb);
++		tc_draws++; tc_bad_draws += tc_compare(t, 0, size, "drawn");
++	}
++	tc_log("texcheck: drawn %d, %d bad, glGetError %04x", tc_draws, tc_bad_draws, (unsigned)GL32.glGetError());
++	tc_log("texcheck: %s", (tc_bad_levels || tc_bad_draws) ? "FAILED" : "PASSED");
++	GUIError("texcheck %s: %d levels read back, %d bad; %d drawn, %d bad\n\nDetails: wgltest_texcheck.txt", (tc_bad_levels || tc_bad_draws) ? "FAILED" : "PASSED", tc_levels, tc_bad_levels, tc_draws, tc_bad_draws);
++}
++static void draw_texcheck(unsigned frame, int win_w, int win_h)
++{
++	int t, size;
++	if(!tc_done) { tc_done = 1; tc_run(win_w, win_h); }
++	t = (int)((frame / 60) % (unsigned)TC_NTEX); size = tc_size(t);
++	GL32.glClear(GL_COLOR_BUFFER_BIT);
++	GL32.glBindTexture(GL_TEXTURE_2D, tc_tex[t]);
++	GL32.glBegin(GL_QUADS);
++	GL32.glTexCoord2f(0, 0); GL32.glVertex3f(0, 0, 0);
++	GL32.glTexCoord2f(1, 0); GL32.glVertex3f((float)size, 0, 0);
++	GL32.glTexCoord2f(1, 1); GL32.glVertex3f((float)size, (float)size, 0);
++	GL32.glTexCoord2f(0, 1); GL32.glVertex3f(0, (float)size, 0);
++	GL32.glEnd();
++}
++
 +void gui_report()
 +{
 +	MSG msg          = {0};
@@ -4799,6 +4991,10 @@ index 6c6d2fc1..c71a66e7 100644
 +		else if(strcmp(argv[i], "stress") == 0)
 +		{
 +			setup_scene = 2;
++		}
++		else if(strcmp(argv[i], "texcheck") == 0)
++		{
++			setup_scene = 3;
 +		}
 +		else
 +		{
@@ -5026,7 +5222,9 @@ index 6c6d2fc1..c71a66e7 100644
 +			TranslateMessage(&msg);
 +			DispatchMessage(&msg);
 +		}
-+		if(setup_scene == 2)
++		if(setup_scene == 3)
++			draw_texcheck((unsigned)timer, setup_width, setup_height);
++		else if(setup_scene == 2)
 +			draw_stress(0.5f * timer, (unsigned)timer);
 +		else if(setup_scene)
 +			draw_textured(0.5f * timer, (unsigned)timer);
@@ -5053,10 +5251,10 @@ index 6c6d2fc1..c71a66e7 100644
 +	return 0;
 +}
 diff --git a/wgltest_api.h b/wgltest_api.h
-index 52b80742..8f199ce9 100644
+index 52b80742..cc514149 100644
 --- a/wgltest_api.h
 +++ b/wgltest_api.h
-@@ -1,41 +1,69 @@
+@@ -1,41 +1,75 @@
 -/*
 - - name
 - - GetProcAddress/wglGetProcAddress
@@ -5145,6 +5343,12 @@ index 52b80742..8f199ce9 100644
 +GL_API_LOAD(glEnableClientState,  FUNC_GL, LIB_GL32)
 +GL_API_LOAD(glDisableClientState, FUNC_GL, LIB_GL32)
 +GL_API_LOAD(glDrawElements,    FUNC_GL, LIB_GL32)
++GL_API_LOAD(glGetTexImage,     FUNC_GL, LIB_GL32)
++GL_API_LOAD(glReadPixels,      FUNC_GL, LIB_GL32)
++GL_API_LOAD(glFinish,          FUNC_GL, LIB_GL32)
++GL_API_LOAD(glPixelStorei,     FUNC_GL, LIB_GL32)
++GL_API_LOAD(glViewport,        FUNC_GL, LIB_GL32)
++GL_API_LOAD(glOrtho,           FUNC_GL, LIB_GL32)
 +GL_API_LOAD(wglMakeCurrent,    FUNC_WGL, LIB_GL32)
 +GL_API_LOAD(wglCreateContext,  FUNC_WGL, LIB_GL32)
 +GL_API_LOAD(wglDeleteContext,  FUNC_WGL, LIB_GL32)

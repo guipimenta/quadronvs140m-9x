@@ -617,6 +617,51 @@ T61: `nvhl` (artifacts as before?), `nvhl vsync` (gone = tearing), `nvhl fullflu
 = not the flush ranges). Please describe/photograph them: horizontal seam in fast turns vs a
 patch of wrong texture/lighting vs stray triangles. Logs as usual.
 
+### 3096 on the T61 (2026-10-28): the artifacts are wrong texture patches, only at 1024x768
+Neither switch changed anything (and 'nvhl vsync' did not cap the frame rate, so its wait
+probably timed out - the 3097 log will show the raster samples). At 640x480 (scaled by the
+display engine to the 1024x768 panel) the artifacts are gone. Wrong texture patches that
+depend on the mode fit a corruption confined to the big mip levels: at 640x480 nearby walls
+are sampled from level 1+, at 1024x768 from level 0. Audited and cleared: the VxD's VRAM map
+vs both heap regions (no overlap), the submit path (reads BAR1 back before the put write),
+the VRAM block-write chunking.
+
+### M5.5 step 6 (build 3097): decide the texture corruption on hardware
+- wgltest 'texcheck': 160 mipmapped textures (3/4 at 256^2, 1/4 at 128^2; odd ones GL_RGB =
+  Mesa's 2D-engine conversion upload, even GL_RGBA = the M2MF upload; ~50 MB like a level)
+  with a per-texture/level pattern, every level read back through glGetTexImage and compared
+  byte by byte, then 13 of them drawn 1:1 (ortho, nearest) and the framebuffer compared (the
+  sampler's view, alpha ignored: the window has none). A draw per texture like a loading
+  screen (see below). llvmpipe: 1400 levels + 13 draws pass. Results: wgltest_texcheck.txt.
+  Also at the game's mode: wgltest driver mesa3d.dll fullscreen width 1024 height 768 texcheck
+- NVSHIM_VERIFYVRAM=1 ('nvhl verify'): after every synchronous submit the shim reads the
+  ranges the walk marked back from VRAM (1 MiB/BO bound) and compares with the CPU shadow:
+  'VRAM WARN bo/off/vram/shadow' + 'wgl: stats vram checks/mismatches'. Fake stress: 4030
+  checks, 0 mismatches.
+- NVSHIM_HEAPHI=1 ('nvhl heaphi'): the 3094 single-region heap, an A/B for the low region.
+- nvhl.bat writes the clock PLL registers (0x4000-0x403c, 0xc040 MAST, 0x22000 crystal) to
+  C:\nvclk.txt - to be decoded with nouveau's nv50 clk code; the GPU runs at whatever the
+  VBIOS POSTed (mobile G86s boot at the lowest perf level), which would explain the 5-12 ms
+  GPU time per frame too.
+- Found by the fake texcheck (no draws between 1280 uploads): the 88 MiB heap ran dry.
+  Two causes. (1) Mesa's state tracker allocates only a level-0 resource when level 0 is
+  uploaded under the default GL_NEAREST_MIPMAP_LINEAR filter (allocate_full_mipmap calls
+  it rare), allocates the chain at level 1 and keeps the level-0 copy until the texture's
+  first use - 64 KiB-rounded tiled BOs, one per texture; a game's loading screen draws in
+  between, so it never shows there. (2) nouveau_fence_work holds no reference on the fence,
+  so _nouveau_fence_next never emitted a fence that only carried staging-buffer releases;
+  they waited for the 64-work kick threshold = 27 MB of staging per fence at 256^2. Fixes:
+  Mesa patch nouveau_fence.c (19th file) emits a fence with pending work at every kick
+  under WIN9X; nouveau_bo_new submits pending work (twice - the QUERY lands in the next
+  pushbuffer) and retries before failing; a failed allocation dumps who holds the heap
+  (live BOs by size/kind, kref'd, mapped - how (1) was found). Fake texcheck now: heap
+  steady at 57 MB, 0 warnings.
+- Vsync wait: also accepts the raster counter wrapping (a new frame) and logs the first
+  waits' polls/min/max line samples - the 3096 run's 'no difference' needs those.
+T61: (1) wgltest driver mesa3d.dll window texcheck and the same with fullscreen width 1024
+height 768; send wgltest_texcheck.txt. (2) nvhl verify (play until artifacts show, quit;
+send the logs + C:\nvclk.txt). (3) nvhl heaphi. (4) nvhl vsync once more for the samples.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

@@ -237,6 +237,32 @@ static int shim_fullflush(void)
 	}
 	return v;
 }
+/* 3097: NVSHIM_VERIFYVRAM=1 ('nvhl verify') - after every kick, read the ranges
+ * the walk marked (what the engines just read) back from VRAM and compare them
+ * with the CPU shadow: anything that overwrites or fails to receive the flushed
+ * data shows up as 'VRAM WARN' with the address */
+static int shim_verifyvram(void)
+{
+	static int v = -1;
+	if(v < 0)
+	{
+		char b[8]; DWORD n = GetEnvironmentVariableA("NVSHIM_VERIFYVRAM", b, sizeof(b));
+		v = (n > 0 && n < sizeof(b) && b[0] != '0') ? 1 : 0;
+	}
+	return v;
+}
+/* 3097: NVSHIM_HEAPHI=1 ('nvhl heaphi') - only the 64 MiB region above the GPU
+ * channel (the 3094 layout), an A/B for the low region added in 3095 */
+static int shim_heaphi(void)
+{
+	static int v = -1;
+	if(v < 0)
+	{
+		char b[8]; DWORD n = GetEnvironmentVariableA("NVSHIM_HEAPHI", b, sizeof(b));
+		v = (n > 0 && n < sizeof(b) && b[0] != '0') ? 1 : 0;
+	}
+	return v;
+}
 /* 3096: NVSHIM_SCANRESET=1 restores the 3095 kick walk (M2MF state forgotten at
  * every kick) in the MARK pass only, so the verify pass shows what it missed */
 static int shim_scanreset(void)
@@ -485,6 +511,7 @@ static uint32_t g_st_kicks = 0, g_st_flush_dw = 0, g_st_read_dw = 0, g_st_traps 
 static uint32_t g_st_warn = 0;   /* 3094: KICK WARN count (dead or unflushed DMA sources) */
 static uint32_t g_st_m2mf_split = 0;                    /* 3096: M2MF copies whose PITCH_IN came from an earlier kick */
 static uint32_t g_st_vsync_n = 0, g_st_vsync_ms = 0;    /* 3096: NVSHIM_VSYNC waits before the present blit, total ms */
+static uint32_t g_st_vchk = 0, g_st_vbad = 0;            /* 3097: NVSHIM_VERIFYVRAM readbacks, mismatching BOs */
 /* 3095: where the shim's own CPU time goes, in TSC cycles (reported /1000):
  * 0 validate (kref), 1 bufctx add/reset, 2 kick (whole), 3 of which flush,
  * 4 bo_new + bo_map. rdtsc: ~20 cycles, unlike Win9x's port-I/O QPC. */
@@ -500,7 +527,7 @@ void nvshim_stats(uint32_t *v)
 	v[0] = g_st_kicks; v[1] = g_st_flush_dw; v[2] = g_st_read_dw; v[3] = g_st_traps; v[4] = g_st_kick_dw;
 	v[5] = g_st_warn;
 	v[6] = g_st_kick_src[3] + g_st_kick_src[4];                       /* 3095: kicks forced by bo_map/bo_wait */
-	v[7] = g_st_kick_src[1] + g_st_kick_src[2] + g_st_kick_src[5];    /* pushbuf full / kref list full / data fallback */
+	v[7] = g_st_kick_src[1] + g_st_kick_src[2] + g_st_kick_src[5] + g_st_kick_src[6];    /* pushbuf full / kref list full / data fallback / heap full (3097) */
 	v[8] = g_st_submit_ms;
 	v[9]  = (uint32_t)((g_st_kc[0] + g_st_kc[1]) / 1000);   /* validate + bufctx kcycles */
 	v[10] = (uint32_t)(g_st_kc[2] / 1000);                  /* kick kcycles (incl. flush + submit) */
@@ -508,6 +535,7 @@ void nvshim_stats(uint32_t *v)
 	v[12] = (uint32_t)(g_st_kc[4] / 1000);                  /* bo_new + bo_map kcycles */
 	v[13] = g_st_vsync_n; v[14] = g_st_vsync_ms;            /* 3096 */
 	v[15] = g_st_m2mf_split;
+	v[16] = g_st_vchk; v[17] = g_st_vbad;                   /* 3097 */
 }
 static void shim_refresh_queries(const uint32_t *m, uint32_t count);
 static void shim_kick_scan(const uint32_t *m, uint32_t count, int verify);
@@ -704,6 +732,7 @@ static void heap_init(void)
 	g_free[1].start = NVSHIM_HEAP_BASE;
 	g_free[1].size  = NVSHIM_HEAP_END - NVSHIM_HEAP_BASE;
 	g_nfree = 2;
+	if(shim_heaphi()) { g_free[0] = g_free[1]; g_nfree = 1; NVLOG0("heap: high region only (NVSHIM_HEAPHI)"); }
 }
 static void heap_stats(uint32_t *free_total, uint32_t *largest)
 {
@@ -747,8 +776,10 @@ static uint32_t heap_alloc(uint32_t size, uint32_t align)
 	}
 	return 0;                                   /* out of VRAM */
 }
+static uint32_t g_heap_frees = 0;
 static void heap_free(uint32_t start, uint32_t size)
 {
+	g_heap_frees++;
 	int i;
 	size = (size + 0xff) & ~0xffUL;
 	if(g_nfree < 0 || size == 0) return;
@@ -1010,9 +1041,12 @@ static void shim_refresh_queries(const uint32_t *m, uint32_t count)
 					struct shim_bo *b = shim_bo_at(phys);
 					if(b && b->base.map && (phys - b->phys) + 16 <= b->shadow_sz)
 					{
+						static int nq = 0;
 						vxd_vram_read(phys, (uint32_t*)((char*)b->base.map + (phys - b->phys)), 4);
 						if(b->clean) memcpy(b->clean + (phys - b->phys), (char*)b->base.map + (phys - b->phys), 16);
+						if(nq++ < 24) NVLOG2("fence refresh phys/seq", phys, *(uint32_t*)((char*)b->base.map + (phys - b->phys)));
 					}
+					else { static int nb = 0; if(nb++ < 8) NVLOG2("fence refresh: QUERY target not a mapped BO phys/bo", phys, b ? b->phys : 0); }
 				}
 			}
 		i += 1 + n;
@@ -1035,6 +1069,7 @@ struct shim_push {
 	uint32_t  gen;        /* 3095: bumped when the list is dropped; BOs carry (push, gen) to dedup in O(1) */
 };
 static void push_unref_all(struct shim_push *p);
+static void push_kref_bufctx(struct shim_push *p);
 
 /* ========================= drm / device / client ====================== */
 int nouveau_drm_new(int fd, struct nouveau_drm **pdrm)
@@ -1179,15 +1214,26 @@ void nvshim_vsync_wait(uint32_t active_lines)
 	}
 	if(!on) return;
 	t0 = GetTickCount();
-	for(;;)
 	{
-		vline = shim_rd32(NV50_PDISPLAY_VLINE0);
-		if(vline == 0xffffffffUL) { on = 0; NVLOG0("vsync OFF - raster read failed"); return; }
-		vline &= 0xffff;
-		if(blanks ? (vline >= blanks || vline <= blanke) : (vline >= active_lines)) break;
-		polls++;
-		t1 = GetTickCount();
-		if(t1 - t0 > 40) { if(nlate++ < 8) NVLOG2("vsync wait timed out vline/polls", vline, polls); break; }
+		/* 3097: also accept the raster counter WRAPPING (a new frame began) - works
+		 * whatever the blank-window regs say - and log the first waits' samples */
+		static uint32_t nsample = 0;
+		uint32_t last = 0xffffffffUL, vmin = 0xffff, vmax = 0;
+		for(;;)
+		{
+			vline = shim_rd32(NV50_PDISPLAY_VLINE0);
+			if(vline == 0xffffffffUL) { on = 0; NVLOG0("vsync OFF - raster read failed"); return; }
+			vline &= 0xffff;
+			if(vline < vmin) vmin = vline;
+			if(vline > vmax) vmax = vline;
+			if(blanks ? (vline >= blanks || vline <= blanke) : (vline >= active_lines)) break;
+			if(last != 0xffffffffUL && vline + 64 < last) break;     /* wrapped: top of a new frame */
+			last = vline;
+			polls++;
+			t1 = GetTickCount();
+			if(t1 - t0 > 40) { if(nlate++ < 8) NVLOG2("vsync wait timed out vline/polls", vline, polls); break; }
+		}
+		if(nsample++ < 6) NVLOG3("vsync wait polls/vline min/max", polls, vmin, vmax);
 	}
 	t1 = GetTickCount();
 	g_st_vsync_n++; g_st_vsync_ms += t1 - t0;
@@ -1332,9 +1378,61 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 	phys = heap_alloc((uint32_t)size, align);
 	if(!phys)
 	{
+		/* 3097: nothing is evicted here, but pending work holds the staging BOs
+		 * that Mesa frees once its fences signal: submit it, re-validate the
+		 * bufctx the way a pushbuf-full kick does, and try again. Twice, because
+		 * Mesa's kick_notify emits the pending fence's QUERY into the NEXT
+		 * pushbuffer (fence_next after fence_update), so the work attached to it
+		 * runs after the kick after this one. A level load uploads thousands of
+		 * textures between two draws; wgltest's texcheck ran the heap dry. */
+		static int n = 0;
+		int tries;
+		uint32_t ft0, lg0; heap_stats(&ft0, &lg0);
+		for(tries = 0; !phys && tries < 2; tries++)
+		{
+			if(!g_cur_push || g_cur_push->cur == (uint32_t*)((struct shim_push_hdr*)g_cur_push)->buf) break;
+			g_kick_src = 6; nouveau_pushbuf_kick(g_cur_push); g_kick_src = 0;
+			push_kref_bufctx((struct shim_push *)g_cur_push);
+			phys = heap_alloc((uint32_t)size, align);
+		}
+		if(n++ < 16) NVLOG3("bo_new: heap full - kicked pending work; size/free before/phys after", (uint32_t)size, ft0, phys);
+	}
+	if(!phys)
+	{
 #ifndef NVSHIM_STANDALONE
+		static int ndump = 0;
 		uint32_t ft, lg; heap_stats(&ft, &lg);
 		NVLOG3("bo_new FAIL heap full sz/free/largest", (uint32_t)size, ft, lg);
+		if(ndump++ < 2)
+		{
+			/* 3097: who holds the heap - live BOs by class */
+			int i; uint32_t n = 0, nb = 0, nk = 0, kb = 0, nm = 0, mb = 0, nr = 0, rb = 0, nbig = 0, bigb = 0;
+			for(i = 0; i < g_nbos; i++)
+			{
+				struct shim_bo *x = g_bos[i];
+				n++; nb += x->asize;
+				if(x->nkref) { nk++; kb += x->asize; }
+				if(x->base.map) { nm++; mb += x->asize; }
+				if(x->refcnt > 1) { nr++; rb += x->asize; }
+				if(x->asize >= 0x40000) { nbig++; bigb += x->asize; }
+			}
+			NVLOG2("heap full: live BOs n/bytes", n, nb);
+			NVLOG2("heap full: kref'd (pending kick) n/bytes", nk, kb);
+			NVLOG2("heap full: CPU-mapped n/bytes", nm, mb);
+			NVLOG2("heap full: refcnt>1 n/bytes", nr, rb);
+			NVLOG2("heap full: >=256 KiB n/bytes", nbig, bigb);
+			{	/* every distinct (size, kind): count and bytes, 24 slots */
+				uint32_t sz[24], cnt[24], kd[24]; int j, ns = 0;
+				for(i = 0; i < g_nbos; i++)
+				{
+					struct shim_bo *x = g_bos[i];
+					for(j = 0; j < ns; j++) if(sz[j] == x->asize && kd[j] == x->kind) break;
+					if(j == ns && ns < 24) { sz[ns] = x->asize; kd[ns] = x->kind; cnt[ns] = 0; ns++; }
+					if(j < ns) cnt[j]++;
+				}
+				for(j = 0; j < ns; j++) NVLOG3("heap full: size/count/kind", sz[j], cnt[j], kd[j]);
+			}
+		}
 #endif
 		return -1;
 	}
@@ -1343,6 +1441,7 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 	{
 		uint32_t ft, lg; heap_stats(&ft, &lg);
 		NVLOG3("heap allocs/used/largest", g_heap_allocs, g_heap_used, lg);
+		NVLOG2("heap frees/kicks", g_heap_frees, g_st_kicks);
 	}
 #endif
 	b = calloc(1, sizeof(*b));
@@ -1666,6 +1765,59 @@ static void shim_bo_flush(struct shim_bo *b)
 	}
 	if(run_len) { vxd_vram_write(b->phys + run_start, (uint32_t*)((char*)b->base.map + run_start), (run_len + 3) / 4); g_st_flush_dw += (run_len + 3) / 4; }
 }
+/* 3097: NVSHIM_VERIFYVRAM - after a synchronous kick, read every range the walk
+ * marked back from VRAM and compare with the CPU shadow (the flush wrote it there
+ * just before the kick). A mismatch means the flush did not land or something
+ * else wrote that VRAM in between: 'VRAM WARN' with BO/offset/values. Bounded
+ * to 1 MiB per BO; GPU-written mapped BOs are not marked by the walk. */
+static void shim_verify_bo(struct shim_bo *b)
+{
+	static uint32_t *tmp = NULL;
+	static uint32_t nwarn = 0;
+	uint32_t lo, hi, off, n;
+	if(!b->base.map || !b->shadow_sz || b->external || b->kgen != g_kgen) return;
+	lo = 0; hi = b->shadow_sz;
+	if(!b->kwhole && b->klo < b->khi && b->klo < b->shadow_sz)
+	{
+		lo = b->klo & ~3u; hi = (b->khi + 3) & ~3u;
+		if(hi > b->shadow_sz) hi = b->shadow_sz;
+	}
+	if(hi - lo > 0x100000) hi = lo + 0x100000;
+	if(!tmp) tmp = (uint32_t *)malloc(0x100000);
+	if(!tmp || hi <= lo + 3) return;
+	n = (hi - lo) / 4;
+	vxd_vram_read(b->phys + lo, tmp, n);
+	g_st_vchk++;
+	for(off = 0; off < n; off++)
+	{
+		uint32_t want = ((const uint32_t *)((const char *)b->base.map + lo))[off];
+		if(tmp[off] != want)
+		{
+			uint32_t last = off;
+			while(last + 1 < n && tmp[last + 1] != ((const uint32_t *)((const char *)b->base.map + lo))[last + 1]) last++;
+			g_st_vbad++;
+			if(nwarn++ < 32)
+			{
+				NVLOG3("VRAM WARN bo phys/size/kind-whole", b->phys, b->shadow_sz, (uint32_t)b->kwhole);
+				NVLOG3("VRAM WARN first bad off/run bytes/checked", lo + off * 4, (last - off + 1) * 4, hi - lo);
+				NVLOG2("VRAM WARN vram/shadow", tmp[off], want);
+			}
+			break;
+		}
+	}
+}
+static void push_verify_refs(struct shim_push *p)
+{
+	int i;
+	if(p->base.bufctx)
+	{
+		struct shim_bufctx *bc = (struct shim_bufctx *)p->base.bufctx;
+		for(i = 0; i < bc->nref; i++)
+			if(bc->refs[i].bo) shim_verify_bo((struct shim_bo *)bc->refs[i].bo);
+	}
+	for(i = 0; i < p->nrefn; i++)
+		if(p->refn[i]) shim_verify_bo((struct shim_bo *)p->refn[i]);
+}
 static void push_flush_refs(struct shim_push *p)
 {
 	int i;
@@ -1733,6 +1885,8 @@ int nouveau_pushbuf_kick(struct nouveau_pushbuf *push)
 	g_st_kc[3] += shim_tsc() - tf;
 	if(count)
 		ret = vxd_submit(p->buf, count);
+	if(count && ret == 0 && shim_verifyvram())
+		push_verify_refs(p);                         /* 3097: what the engines just read, back from VRAM */
 
 	/* reset the command buffer for the next batch */
 	push->cur = p->buf;

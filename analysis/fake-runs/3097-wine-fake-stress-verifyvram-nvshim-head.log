@@ -1,0 +1,2000 @@
+[4294967295] ==== shim log open, instance 7911a38c
+[4294967295] wgl: DllMain ATTACH hinst 75b00000
+[14] wgl: screen_create ENTER lasterr/sw_only 0000007e 00000000
+[15] wgl: try driver 'nouveau' 00000000
+[17] wgl: nouveau_drm_screen_create enter lasterr 0000007e
+[18] winsys: nouveau_screen_create enter fd 00000000 00000000
+[18] drm_new fd 00000000
+[19] winsys: drm_new ret/drm 00000000 009e7130
+[19] device_new
+[20] winsys: device_new ret/dev 00000000 009e7a90
+[20] winsys: chipset 00000086 00000000
+[24] object_new handle/oclass 00000000 80000001
+[24] bind handle/class/engine beef0201 0000003d 00000000
+[25] bind handle/class/engine beef0202 0000003d 00000000
+[25] client_new ok
+[26] pushbuf_new cap 0003c000
+[30] bo_new sz/phys/vmoff 00001000 02010000 42010000
+[30] object_new handle/oclass beef0301 80000002
+[31] bind handle/class/engine beef0301 80000002 00000000
+[32] object_new handle/oclass beef5039 00005039
+[32] bind handle/class/engine beef5039 00005039 00000001
+[33] object_new handle/oclass beef502d 0000502d
+[33] bind handle/class/engine beef502d 0000502d 00000001
+[34] object_new handle/oclass beef5097 00008297
+[34] bind handle/class/engine beef5097 00008297 00000001
+[35] bo_new sz/phys/vmoff 00181000 02020000 42020000
+[36] graph_units reg/used f3010001 f3010001
+[36] bo_new sz/phys/vmoff 00008000 021b0000 421b0000
+[37] bo_new sz/phys/vmoff 00020000 021c0000 421c0000
+[37] bo_new sz/phys/vmoff 00050000 021e0000 421e0000
+[38] bo_new sz/phys/vmoff 00030000 02230000 42230000
+[40] object_new handle/oclass beef50c0 000050c0
+[40] bind handle/class/engine beef50c0 000050c0 00000001
+[41] kick > cnt/m0/m1 0000025c 0004a000 beef5039
+[42] kick ok cnt/put/pgi 0000025c 03200000 00000000
+[44] winsys: init(dev) screen 00a404a0 00000000
+[44] winsys: context_create fn 75b7b820 00000000
+[45] wgl: nouveau_drm_screen_create exit screen/lasterr 00a404a0 0000007e
+[45] wgl: result screen/lasterr 00a404a0 0000007e
+[108] stw: pixelformat_init count 000001e0 00000000
+[109] stw: init_screen done screen/max2d 00a404a0 00002000
+[110] stw: DescribePF count-query hdc/count 0b010054 000001e0
+[267] stw: SetPF enter ipf/count 00000001 000001e0
+[283] stw: fb_create hwnd/pfi 00020052 00a0f7c0
+[283] stw: SetPF fb_create ret/pfi 009eb280 00a0f7c0
+[283] stw: SetPF GDI GetPixelFormat ret/lasterr 00000000 00000008
+[287] stw: SetPF GDI SetPixelFormat ret/lasterr 00000001 00000578
+[287] stw: SetPF OK hwnd 00020052 00000000
+[287] stw: CreateLayerContext hdc/lasterr 0b010054 00000578
+[287] stw: get_info_from_hdc hdc/fb 0b010054 009eb280
+[287] stw: CreateLayerContext pfi 00a0f7c0 00000000
+[287] stw: create_context_attribs enter hdc/pfi 0b010054 00a0f7c0
+[287] stw: attribs profile/major 00000000 00000001
+[292] nv50: create enter 00a46da0 00000000
+[292] client_new ok
+[292] nouveau: context_init client_new ret 00000000 00000000
+[292] pushbuf_new cap 0003c000
+[292] nouveau: context_init pushbuf ret 00000000 00000000
+[292] nv50: nouveau_context_init ret 00000000 00000000
+[292] bufctx_new ok bins 00000002
+[292] bufctx_new ok bins 00000038
+[292] bufctx_new ok bins 00000016
+[292] nv50: bufctx_new x3 ret 00000000 00000000
+[292] nv50: stream_uploader 009d6510 00000000
+[300] bo_new sz/phys/vmoff 00001000 02011000 42011000
+[300] nv50: create OK pipe 00a46da0 00000000
+[300] st: screen->context_create pipe 00a46da0 00000000
+[318] st: st_create_context st 00a22840 00000000
+[318] stw: st_api_create_context st/err 00a22840 00000000
+[318] stw: CreateLayerContext ctx/dhglrc 009e6cb0 00000001
+[318] stw: SetContext hdc/dhglrc 0b010054 00000001
+[327] bo_new sz/phys/vmoff 00010000 02260000 42260000
+[327] bo_kind phys/size/kind 02260000 00010000 00000070
+[327] bo_new sz/phys/vmoff 00010000 02270000 42270000
+[327] bo_kind phys/size/kind 02270000 00010000 00000028
+[330] stw: ReleaseContext dhglrc 00000001 00000000
+[330] kick > cnt/m0/m1 00000022 00088200 000000f3
+[330] kick ok cnt/put/pgi 00000022 03200970 00000000
+[385] stw: SetPF enter ipf/count 00000001 000001e0
+[385] stw: fb_create hwnd/pfi 00030058 00a0f7c0
+[385] stw: SetPF fb_create ret/pfi 0196cdf0 00a0f7c0
+[385] stw: SetPF GDI GetPixelFormat ret/lasterr 00000000 00000000
+[405] stw: SetPF GDI SetPixelFormat ret/lasterr 00000001 00000578
+[405] stw: SetPF OK hwnd 00030058 00000000
+[405] stw: CreateLayerContext hdc/lasterr 1c010059 00000578
+[405] stw: get_info_from_hdc hdc/fb 1c010059 0196cdf0
+[405] stw: CreateLayerContext pfi 00a0f7c0 00000000
+[405] stw: create_context_attribs enter hdc/pfi 1c010059 00a0f7c0
+[405] stw: attribs profile/major 00000000 00000001
+[405] nv50: create enter 00a4f780 00000000
+[405] client_new ok
+[405] nouveau: context_init client_new ret 00000000 00000000
+[405] pushbuf_new cap 0003c000
+[405] nouveau: context_init pushbuf ret 00000000 00000000
+[405] nv50: nouveau_context_init ret 00000000 00000000
+[405] bufctx_new ok bins 00000002
+[405] bufctx_new ok bins 00000038
+[405] bufctx_new ok bins 00000016
+[405] nv50: bufctx_new x3 ret 00000000 00000000
+[405] nv50: stream_uploader 009d6660 00000000
+[416] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[416] nv50: create OK pipe 00a4f780 00000000
+[416] st: screen->context_create pipe 00a4f780 00000000
+[427] st: st_create_context st 01c920a0 00000000
+[427] stw: st_api_create_context st/err 01c920a0 00000000
+[427] stw: CreateLayerContext ctx/dhglrc 0196e540 00000002
+[427] stw: SetContext hdc/dhglrc 1c010059 00000002
+[436] bo_new sz/phys/vmoff 00120000 02280000 42280000
+[436] bo_kind phys/size/kind 02280000 00120000 00000070
+[436] bo_new sz/phys/vmoff 00120000 023a0000 423a0000
+[436] bo_kind phys/size/kind 023a0000 00120000 00000028
+[450] bo_new sz/phys/vmoff 00040000 024c0000 424c0000
+[450] bo_kind phys/size/kind 024c0000 00040000 00000070
+[451] bo_new sz/phys/vmoff 00040000 02500000 42500000
+[452] bo_new sz/phys/vmoff 00060000 02540000 42540000
+[452] bo_kind phys/size/kind 02540000 00060000 00000070
+[452] bo_new sz/phys/vmoff 00010000 025a0000 425a0000
+[453] bo_new sz/phys/vmoff 00004000 02013000 42013000
+[454] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[455] bo_new sz/phys/vmoff 00000400 02018000 42018000
+[455] bo_new sz/phys/vmoff 00000100 02018400 42018400
+[456] bo_new sz/phys/vmoff 00000040 02018500 42018500
+[457] bo_new sz/phys/vmoff 00000010 02018600 42018600
+[457] bo_new sz/phys/vmoff 00000004 02018700 42018700
+[458] bo_new sz/phys/vmoff 00040000 025b0000 425b0000
+[458] bo_kind phys/size/kind 025b0000 00040000 00000070
+[458] bo_new sz/phys/vmoff 00040000 025f0000 425f0000
+[460] bo_new sz/phys/vmoff 00060000 02630000 42630000
+[460] bo_kind phys/size/kind 02630000 00060000 00000070
+[460] bo_new sz/phys/vmoff 00010000 02690000 42690000
+[462] bo_new sz/phys/vmoff 00004000 02018800 42018800
+[463] bo_new sz/phys/vmoff 00001000 0201c800 4201c800
+[463] bo_new sz/phys/vmoff 00000400 0201d800 4201d800
+[464] bo_new sz/phys/vmoff 00000100 0201dc00 4201dc00
+[465] bo_new sz/phys/vmoff 00000040 0201dd00 4201dd00
+[465] bo_new sz/phys/vmoff 00000010 0201de00 4201de00
+[466] bo_new sz/phys/vmoff 00000004 0201df00 4201df00
+[467] bo_new sz/phys/vmoff 00040000 026a0000 426a0000
+[467] bo_kind phys/size/kind 026a0000 00040000 00000070
+[467] bo_new sz/phys/vmoff 00040000 026e0000 426e0000
+[469] bo_new sz/phys/vmoff 00060000 02720000 42720000
+[469] bo_kind phys/size/kind 02720000 00060000 00000070
+[469] bo_new sz/phys/vmoff 00010000 02780000 42780000
+[471] bo_new sz/phys/vmoff 00004000 021a1000 421a1000
+[472] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[472] bo_new sz/phys/vmoff 00000400 0201f000 4201f000
+[473] bo_new sz/phys/vmoff 00000100 0201f400 4201f400
+[473] bo_new sz/phys/vmoff 00000040 0201f500 4201f500
+[474] bo_new sz/phys/vmoff 00000010 0201f600 4201f600
+[475] bo_new sz/phys/vmoff 00000004 0201f700 4201f700
+[476] bo_new sz/phys/vmoff 00040000 02790000 42790000
+[476] bo_kind phys/size/kind 02790000 00040000 00000070
+[476] bo_new sz/phys/vmoff 00040000 027d0000 427d0000
+[478] bo_new sz/phys/vmoff 00060000 02810000 42810000
+[478] bo_kind phys/size/kind 02810000 00060000 00000070
+[478] bo_new sz/phys/vmoff 00010000 02870000 42870000
+[479] bo_new sz/phys/vmoff 00004000 021a5000 421a5000
+[480] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[481] bo_new sz/phys/vmoff 00000400 0201f800 4201f800
+[481] bo_new sz/phys/vmoff 00000100 0201fc00 4201fc00
+[482] bo_new sz/phys/vmoff 00000040 0201fd00 4201fd00
+[483] bo_new sz/phys/vmoff 00000010 0201fe00 4201fe00
+[483] bo_new sz/phys/vmoff 00000004 0201ff00 4201ff00
+[484] bo_new sz/phys/vmoff 00040000 02880000 42880000
+[484] bo_kind phys/size/kind 02880000 00040000 00000070
+[484] bo_new sz/phys/vmoff 00040000 028c0000 428c0000
+[486] bo_new sz/phys/vmoff 00060000 02900000 42900000
+[486] bo_kind phys/size/kind 02900000 00060000 00000070
+[486] bo_new sz/phys/vmoff 00010000 02960000 42960000
+[488] bo_new sz/phys/vmoff 00004000 021aa000 421aa000
+[489] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[489] bo_new sz/phys/vmoff 00000400 021af000 421af000
+[490] bo_new sz/phys/vmoff 00000100 021af400 421af400
+[491] bo_new sz/phys/vmoff 00000040 021af500 421af500
+[491] bo_new sz/phys/vmoff 00000010 021af600 421af600
+[492] bo_new sz/phys/vmoff 00000004 021af700 421af700
+[493] bo_new sz/phys/vmoff 00040000 02970000 42970000
+[493] bo_kind phys/size/kind 02970000 00040000 00000070
+[493] bo_new sz/phys/vmoff 00040000 029b0000 429b0000
+[495] bo_new sz/phys/vmoff 00060000 029f0000 429f0000
+[495] bo_kind phys/size/kind 029f0000 00060000 00000070
+[495] bo_new sz/phys/vmoff 00010000 02a50000 42a50000
+[497] bo_new sz/phys/vmoff 00004000 021b8000 421b8000
+[497] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[498] bo_new sz/phys/vmoff 00000400 021af800 421af800
+[499] bo_new sz/phys/vmoff 00000100 021afc00 421afc00
+[499] bo_new sz/phys/vmoff 00000040 021afd00 421afd00
+[500] bo_new sz/phys/vmoff 00000010 021afe00 421afe00
+[501] bo_new sz/phys/vmoff 00000004 021aff00 421aff00
+[501] bo_new sz/phys/vmoff 00040000 02a60000 42a60000
+[501] bo_kind phys/size/kind 02a60000 00040000 00000070
+[501] bo_new sz/phys/vmoff 00040000 02aa0000 42aa0000
+[503] bo_new sz/phys/vmoff 00060000 02ae0000 42ae0000
+[503] bo_kind phys/size/kind 02ae0000 00060000 00000070
+[503] bo_new sz/phys/vmoff 00010000 02b40000 42b40000
+[505] bo_new sz/phys/vmoff 00004000 02b50000 42b50000
+[506] bo_new sz/phys/vmoff 00001000 021bd000 421bd000
+[507] bo_new sz/phys/vmoff 00000400 021be000 421be000
+[507] bo_new sz/phys/vmoff 00000100 021be400 421be400
+[508] bo_new sz/phys/vmoff 00000040 021be500 421be500
+[509] bo_new sz/phys/vmoff 00000010 021be600 421be600
+[509] bo_new sz/phys/vmoff 00000004 021be700 421be700
+[510] bo_new sz/phys/vmoff 00040000 02b60000 42b60000
+[510] bo_kind phys/size/kind 02b60000 00040000 00000070
+[510] bo_new sz/phys/vmoff 00040000 02ba0000 42ba0000
+[512] bo_new sz/phys/vmoff 00060000 02be0000 42be0000
+[512] bo_kind phys/size/kind 02be0000 00060000 00000070
+[512] bo_new sz/phys/vmoff 00010000 02c40000 42c40000
+[514] kick > cnt/m0/m1 0000063f 00088200 000000f3
+[514] kick ok cnt/put/pgi 0000063f 032009f8 00000000
+[514] vram_read > off/dwords 02500000 00010000
+[514] vram_read < dwords 00010000
+[514] vram_read > off/dwords 025a0000 00004000
+[514] vram_read < dwords 00004000
+[514] vram_read > off/dwords 025f0000 00010000
+[514] vram_read < dwords 00010000
+[514] vram_read > off/dwords 02690000 00004000
+[514] vram_read < dwords 00004000
+[514] vram_read > off/dwords 026e0000 00010000
+[514] vram_read < dwords 00010000
+[514] vram_read > off/dwords 02780000 00004000
+[514] vram_read < dwords 00004000
+[514] vram_read > off/dwords 027d0000 00010000
+[514] vram_read < dwords 00010000
+[514] vram_read > off/dwords 02870000 00004000
+[514] vram_read < dwords 00004000
+[530] vram_read > off/dwords 028c0000 00010000
+[530] vram_read < dwords 00010000
+[530] vram_read > off/dwords 02960000 00004000
+[530] vram_read < dwords 00004000
+[530] vram_read > off/dwords 029b0000 00010000
+[530] vram_read < dwords 00010000
+[530] vram_read > off/dwords 02a50000 00004000
+[530] vram_read < dwords 00004000
+[530] vram_read > off/dwords 02aa0000 00010000
+[530] vram_read < dwords 00010000
+[530] vram_read > off/dwords 02b40000 00004000
+[530] vram_read < dwords 00004000
+[530] vram_read > off/dwords 02ba0000 00010000
+[530] vram_read < dwords 00010000
+[530] vram_read > off/dwords 02c40000 00004000
+[530] vram_read < dwords 00004000
+[530] bo_new sz/phys/vmoff 00001000 021bf000 421bf000
+[541] bo_new sz/phys/vmoff 00004000 02012000 42012000
+[541] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[542] bo_new sz/phys/vmoff 00000400 02017000 42017000
+[543] bo_new sz/phys/vmoff 00000100 02017400 42017400
+[543] bo_new sz/phys/vmoff 00000040 02017500 42017500
+[544] bo_new sz/phys/vmoff 00000010 02017600 42017600
+[545] bo_new sz/phys/vmoff 00000004 02017700 42017700
+[549] bo_new sz/phys/vmoff 00010000 02500000 42500000
+[549] bo_kind phys/size/kind 02500000 00010000 00000070
+[549] bo_new sz/phys/vmoff 00010000 02510000 42510000
+[551] bo_new sz/phys/vmoff 00010000 02520000 42520000
+[551] bo_kind phys/size/kind 02520000 00010000 00000070
+[551] bo_new sz/phys/vmoff 00010000 02530000 42530000
+[553] bo_new sz/phys/vmoff 00010000 025a0000 425a0000
+[553] bo_kind phys/size/kind 025a0000 00010000 00000070
+[553] bo_new sz/phys/vmoff 00010000 025f0000 425f0000
+[555] bo_new sz/phys/vmoff 00010000 02600000 42600000
+[555] bo_kind phys/size/kind 02600000 00010000 00000070
+[555] bo_new sz/phys/vmoff 00010000 02610000 42610000
+[557] bo_new sz/phys/vmoff 00010000 02620000 42620000
+[557] bo_kind phys/size/kind 02620000 00010000 00000070
+[557] bo_new sz/phys/vmoff 00010000 02690000 42690000
+[559] bo_new sz/phys/vmoff 00010000 026e0000 426e0000
+[559] bo_kind phys/size/kind 026e0000 00010000 00000070
+[559] bo_new sz/phys/vmoff 00010000 026f0000 426f0000
+[561] bo_new sz/phys/vmoff 00010000 02700000 42700000
+[561] bo_kind phys/size/kind 02700000 00010000 00000070
+[561] bo_new sz/phys/vmoff 00010000 02710000 42710000
+[563] bo_new sz/phys/vmoff 00010000 02780000 42780000
+[563] bo_kind phys/size/kind 02780000 00010000 00000070
+[563] bo_new sz/phys/vmoff 00010000 027d0000 427d0000
+[565] bo_new sz/phys/vmoff 00010000 027e0000 427e0000
+[565] bo_kind phys/size/kind 027e0000 00010000 00000070
+[566] kick > cnt/m0/m1 00000168 0004a200 00000001
+[566] kick ok cnt/put/pgi 00000168 032022f4 00000000
+[566] vram_read > off/dwords 02510000 00004000
+[566] vram_read < dwords 00004000
+[566] vram_read > off/dwords 02530000 00004000
+[566] vram_read < dwords 00004000
+[566] vram_read > off/dwords 025f0000 00004000
+[566] vram_read < dwords 00004000
+[566] vram_read > off/dwords 02610000 00004000
+[566] vram_read < dwords 00004000
+[566] vram_read > off/dwords 02690000 00004000
+[566] vram_read < dwords 00004000
+[566] vram_read > off/dwords 026f0000 00004000
+[566] vram_read < dwords 00004000
+[566] vram_read > off/dwords 02710000 00004000
+[566] vram_read < dwords 00004000
+[566] vram_read > off/dwords 027d0000 00004000
+[566] vram_read < dwords 00004000
+[566] bo_new sz/phys/vmoff 00001000 02018000 42018000
+[578] bo_new sz/phys/vmoff 00010000 027f0000 427f0000
+[578] bo_new sz/phys/vmoff 00010000 02800000 42800000
+[578] bo_kind phys/size/kind 02800000 00010000 00000070
+[578] bo_new sz/phys/vmoff 00010000 02870000 42870000
+[580] bo_new sz/phys/vmoff 00010000 028c0000 428c0000
+[580] bo_kind phys/size/kind 028c0000 00010000 00000070
+[580] bo_new sz/phys/vmoff 00010000 028d0000 428d0000
+[582] bo_new sz/phys/vmoff 00010000 028e0000 428e0000
+[582] bo_kind phys/size/kind 028e0000 00010000 00000070
+[582] bo_new sz/phys/vmoff 00010000 028f0000 428f0000
+[584] bo_new sz/phys/vmoff 00010000 02960000 42960000
+[584] bo_kind phys/size/kind 02960000 00010000 00000070
+[584] bo_new sz/phys/vmoff 00010000 029b0000 429b0000
+[586] bo_new sz/phys/vmoff 00010000 029c0000 429c0000
+[586] bo_kind phys/size/kind 029c0000 00010000 00000070
+[586] bo_new sz/phys/vmoff 00010000 029d0000 429d0000
+[588] bo_new sz/phys/vmoff 00010000 029e0000 429e0000
+[588] bo_kind phys/size/kind 029e0000 00010000 00000070
+[588] bo_new sz/phys/vmoff 00010000 02a50000 42a50000
+[590] bo_new sz/phys/vmoff 00010000 02aa0000 42aa0000
+[590] bo_kind phys/size/kind 02aa0000 00010000 00000070
+[590] bo_new sz/phys/vmoff 00010000 02ab0000 42ab0000
+[592] bo_new sz/phys/vmoff 00010000 02ac0000 42ac0000
+[592] bo_kind phys/size/kind 02ac0000 00010000 00000070
+[592] bo_new sz/phys/vmoff 00010000 02ad0000 42ad0000
+[593] bo_new sz/phys/vmoff 00010000 02b40000 42b40000
+[593] bo_kind phys/size/kind 02b40000 00010000 00000070
+[593] bo_new sz/phys/vmoff 00010000 02b50000 42b50000
+[595] bo_new sz/phys/vmoff 00010000 02ba0000 42ba0000
+[595] bo_kind phys/size/kind 02ba0000 00010000 00000070
+[595] bo_new sz/phys/vmoff 00010000 02bb0000 42bb0000
+[597] bo_new sz/phys/vmoff 00010000 02bc0000 42bc0000
+[597] bo_kind phys/size/kind 02bc0000 00010000 00000070
+[597] bo_new sz/phys/vmoff 00010000 02bd0000 42bd0000
+[599] bo_new sz/phys/vmoff 00010000 02c40000 42c40000
+[599] bo_kind phys/size/kind 02c40000 00010000 00000070
+[599] bo_new sz/phys/vmoff 00010000 02c50000 42c50000
+[601] bo_new sz/phys/vmoff 00010000 02c60000 42c60000
+[601] bo_kind phys/size/kind 02c60000 00010000 00000070
+[601] bo_new sz/phys/vmoff 00010000 02c70000 42c70000
+[603] bo_new sz/phys/vmoff 00010000 02c80000 42c80000
+[603] bo_kind phys/size/kind 02c80000 00010000 00000070
+[603] bo_new sz/phys/vmoff 00010000 02c90000 42c90000
+[605] bo_new sz/phys/vmoff 00010000 02ca0000 42ca0000
+[605] bo_kind phys/size/kind 02ca0000 00010000 00000070
+[605] bo_new sz/phys/vmoff 00010000 02cb0000 42cb0000
+[607] bo_new sz/phys/vmoff 00010000 02cc0000 42cc0000
+[607] bo_kind phys/size/kind 02cc0000 00010000 00000070
+[607] bo_new sz/phys/vmoff 00010000 02cd0000 42cd0000
+[609] bo_new sz/phys/vmoff 00010000 02ce0000 42ce0000
+[609] bo_kind phys/size/kind 02ce0000 00010000 00000070
+[609] bo_new sz/phys/vmoff 00010000 02cf0000 42cf0000
+[611] bo_new sz/phys/vmoff 00010000 02d00000 42d00000
+[611] bo_kind phys/size/kind 02d00000 00010000 00000070
+[611] bo_new sz/phys/vmoff 00010000 02d10000 42d10000
+[613] bo_new sz/phys/vmoff 00010000 02d20000 42d20000
+[613] bo_kind phys/size/kind 02d20000 00010000 00000070
+[613] bo_new sz/phys/vmoff 00010000 02d30000 42d30000
+[615] bo_new sz/phys/vmoff 00010000 02d40000 42d40000
+[615] bo_kind phys/size/kind 02d40000 00010000 00000070
+[615] bo_new sz/phys/vmoff 00010000 02d50000 42d50000
+[617] bo_new sz/phys/vmoff 00010000 02d60000 42d60000
+[617] bo_kind phys/size/kind 02d60000 00010000 00000070
+[617] bo_new sz/phys/vmoff 00010000 02d70000 42d70000
+[618] bo_new sz/phys/vmoff 00010000 02d80000 42d80000
+[618] bo_kind phys/size/kind 02d80000 00010000 00000070
+[618] bo_new sz/phys/vmoff 00010000 02d90000 42d90000
+[620] bo_new sz/phys/vmoff 00010000 02da0000 42da0000
+[620] bo_kind phys/size/kind 02da0000 00010000 00000070
+[620] bo_new sz/phys/vmoff 00010000 02db0000 42db0000
+[622] bo_new sz/phys/vmoff 00010000 02dc0000 42dc0000
+[622] bo_kind phys/size/kind 02dc0000 00010000 00000070
+[622] bo_new sz/phys/vmoff 00010000 02dd0000 42dd0000
+[624] bo_new sz/phys/vmoff 00010000 02de0000 42de0000
+[624] bo_kind phys/size/kind 02de0000 00010000 00000070
+[624] bo_new sz/phys/vmoff 00010000 02df0000 42df0000
+[626] bo_new sz/phys/vmoff 00010000 02e00000 42e00000
+[626] bo_kind phys/size/kind 02e00000 00010000 00000070
+[626] bo_new sz/phys/vmoff 00010000 02e10000 42e10000
+[628] bo_new sz/phys/vmoff 00010000 02e20000 42e20000
+[628] bo_kind phys/size/kind 02e20000 00010000 00000070
+[628] bo_new sz/phys/vmoff 00010000 02e30000 42e30000
+[630] bo_new sz/phys/vmoff 00010000 02e40000 42e40000
+[630] bo_kind phys/size/kind 02e40000 00010000 00000070
+[630] bo_new sz/phys/vmoff 00010000 02e50000 42e50000
+[632] bo_new sz/phys/vmoff 00010000 02e60000 42e60000
+[632] bo_kind phys/size/kind 02e60000 00010000 00000070
+[632] bo_new sz/phys/vmoff 00010000 02e70000 42e70000
+[633] bo_new sz/phys/vmoff 00010000 02e80000 42e80000
+[633] bo_kind phys/size/kind 02e80000 00010000 00000070
+[633] bo_new sz/phys/vmoff 00010000 02e90000 42e90000
+[635] bo_new sz/phys/vmoff 00010000 02ea0000 42ea0000
+[635] bo_kind phys/size/kind 02ea0000 00010000 00000070
+[635] bo_new sz/phys/vmoff 00010000 02eb0000 42eb0000
+[637] bo_new sz/phys/vmoff 00010000 02ec0000 42ec0000
+[637] bo_kind phys/size/kind 02ec0000 00010000 00000070
+[637] bo_new sz/phys/vmoff 00010000 02ed0000 42ed0000
+[639] bo_new sz/phys/vmoff 00010000 02ee0000 42ee0000
+[639] bo_kind phys/size/kind 02ee0000 00010000 00000070
+[639] bo_new sz/phys/vmoff 00010000 02ef0000 42ef0000
+[641] bo_new sz/phys/vmoff 00010000 02f00000 42f00000
+[641] bo_kind phys/size/kind 02f00000 00010000 00000070
+[641] bo_new sz/phys/vmoff 00010000 02f10000 42f10000
+[643] bo_new sz/phys/vmoff 00010000 02f20000 42f20000
+[643] bo_kind phys/size/kind 02f20000 00010000 00000070
+[643] bo_new sz/phys/vmoff 00010000 02f30000 42f30000
+[645] bo_new sz/phys/vmoff 00010000 02f40000 42f40000
+[645] bo_kind phys/size/kind 02f40000 00010000 00000070
+[645] bo_new sz/phys/vmoff 00010000 02f50000 42f50000
+[647] bo_new sz/phys/vmoff 00010000 02f60000 42f60000
+[647] bo_kind phys/size/kind 02f60000 00010000 00000070
+[647] bo_new sz/phys/vmoff 00010000 02f70000 42f70000
+[649] bo_new sz/phys/vmoff 00010000 02f80000 42f80000
+[649] bo_kind phys/size/kind 02f80000 00010000 00000070
+[649] bo_new sz/phys/vmoff 00010000 02f90000 42f90000
+[650] bo_new sz/phys/vmoff 00010000 02fa0000 42fa0000
+[650] bo_kind phys/size/kind 02fa0000 00010000 00000070
+[650] bo_new sz/phys/vmoff 00010000 02fb0000 42fb0000
+[652] bo_new sz/phys/vmoff 00010000 02fc0000 42fc0000
+[652] bo_kind phys/size/kind 02fc0000 00010000 00000070
+[652] bo_new sz/phys/vmoff 00010000 02fd0000 42fd0000
+[654] bo_new sz/phys/vmoff 00010000 02fe0000 42fe0000
+[654] bo_kind phys/size/kind 02fe0000 00010000 00000070
+[654] bo_new sz/phys/vmoff 00010000 02ff0000 42ff0000
+[656] bo_new sz/phys/vmoff 00010000 04000000 44000000
+[656] bo_kind phys/size/kind 04000000 00010000 00000070
+[656] bo_new sz/phys/vmoff 00010000 04010000 44010000
+[658] bo_new sz/phys/vmoff 00010000 04020000 44020000
+[658] bo_kind phys/size/kind 04020000 00010000 00000070
+[658] bo_new sz/phys/vmoff 00010000 04030000 44030000
+[660] bo_new sz/phys/vmoff 00010000 04040000 44040000
+[660] bo_kind phys/size/kind 04040000 00010000 00000070
+[660] bo_new sz/phys/vmoff 00010000 04050000 44050000
+[662] bo_new sz/phys/vmoff 00010000 04060000 44060000
+[662] bo_kind phys/size/kind 04060000 00010000 00000070
+[662] bo_new sz/phys/vmoff 00010000 04070000 44070000
+[664] bo_new sz/phys/vmoff 00010000 04080000 44080000
+[664] bo_kind phys/size/kind 04080000 00010000 00000070
+[664] bo_new sz/phys/vmoff 00010000 04090000 44090000
+[666] bo_new sz/phys/vmoff 00010000 040a0000 440a0000
+[666] bo_kind phys/size/kind 040a0000 00010000 00000070
+[666] bo_new sz/phys/vmoff 00010000 040b0000 440b0000
+[668] bo_new sz/phys/vmoff 00010000 040c0000 440c0000
+[668] bo_kind phys/size/kind 040c0000 00010000 00000070
+[668] bo_new sz/phys/vmoff 00010000 040d0000 440d0000
+[669] bo_new sz/phys/vmoff 00010000 040e0000 440e0000
+[669] bo_kind phys/size/kind 040e0000 00010000 00000070
+[669] bo_new sz/phys/vmoff 00010000 040f0000 440f0000
+[671] bo_new sz/phys/vmoff 00010000 04100000 44100000
+[671] bo_kind phys/size/kind 04100000 00010000 00000070
+[671] bo_new sz/phys/vmoff 00010000 04110000 44110000
+[673] bo_new sz/phys/vmoff 00010000 04120000 44120000
+[673] bo_kind phys/size/kind 04120000 00010000 00000070
+[675] kick > cnt/m0/m1 000004cd 00107b00 00000000
+[675] kick ok cnt/put/pgi 000004cd 03202894 00000000
+[675] vram_read > off/dwords 027f0000 00004000
+[675] vram_read < dwords 00004000
+[675] vram_read > off/dwords 02870000 00004000
+[675] vram_read < dwords 00004000
+[675] vram_read > off/dwords 028d0000 00004000
+[675] vram_read < dwords 00004000
+[675] vram_read > off/dwords 028f0000 00004000
+[675] vram_read < dwords 00004000
+[675] vram_read > off/dwords 029b0000 00004000
+[675] vram_read < dwords 00004000
+[675] vram_read > off/dwords 029d0000 00004000
+[675] vram_read < dwords 00004000
+[675] vram_read > off/dwords 02a50000 00004000
+[675] vram_read < dwords 00004000
+[675] vram_read > off/dwords 02ab0000 00004000
+[675] vram_read < dwords 00004000
+[675] vram_read > off/dwords 02ad0000 00004000
+[675] vram_read < dwords 00004000
+[675] vram_read > off/dwords 02b50000 00004000
+[675] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02bb0000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02bd0000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02c50000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02c70000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02c90000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02cb0000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02cd0000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02cf0000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02d10000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02d30000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02d50000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02d70000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02d90000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02db0000 00004000
+[691] vram_read < dwords 00004000
+[691] vram_read > off/dwords 02dd0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02df0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02e10000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02e30000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02e50000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02e70000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02e90000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02eb0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02ed0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02ef0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02f10000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02f30000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02f50000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02f70000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02f90000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02fb0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02fd0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 02ff0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 04010000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 04030000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 04050000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 04070000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 04090000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 040b0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 040d0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 040f0000 00004000
+[707] vram_read < dwords 00004000
+[707] vram_read > off/dwords 04110000 00004000
+[707] vram_read < dwords 00004000
+[707] bo_new sz/phys/vmoff 00001000 02019000 42019000
+[715] bo_new sz/phys/vmoff 00010000 02510000 42510000
+[715] bo_new sz/phys/vmoff 00010000 02530000 42530000
+[715] bo_kind phys/size/kind 02530000 00010000 00000070
+[715] bo_new sz/phys/vmoff 00010000 025f0000 425f0000
+[715] bo_new sz/phys/vmoff 00010000 02610000 42610000
+[715] bo_kind phys/size/kind 02610000 00010000 00000070
+[715] bo_new sz/phys/vmoff 00010000 02690000 42690000
+[715] bo_new sz/phys/vmoff 00010000 026f0000 426f0000
+[715] bo_kind phys/size/kind 026f0000 00010000 00000070
+[715] bo_new sz/phys/vmoff 00010000 02710000 42710000
+[716] bo_new sz/phys/vmoff 00010000 027d0000 427d0000
+[716] bo_kind phys/size/kind 027d0000 00010000 00000070
+[716] bo_new sz/phys/vmoff 00010000 04130000 44130000
+[716] kick > cnt/m0/m1 000000db 00107b00 00000000
+[716] kick ok cnt/put/pgi 000000db 03203bc8 00000000
+[716] vram_read > off/dwords 02510000 00004000
+[716] vram_read < dwords 00004000
+[716] vram_read > off/dwords 025f0000 00004000
+[716] vram_read < dwords 00004000
+[716] vram_read > off/dwords 02690000 00004000
+[716] vram_read < dwords 00004000
+[716] vram_read > off/dwords 02710000 00004000
+[716] vram_read < dwords 00004000
+[716] vram_read > off/dwords 04130000 00004000
+[716] vram_read < dwords 00004000
+[719] bo_new sz/phys/vmoff 00200000 04140000 44140000
+[786] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[786] bo_new sz/phys/vmoff 00001000 02013000 42013000
+[786] bo_new sz/phys/vmoff 00001000 02014000 42014000
+[786] bo_new sz/phys/vmoff 00001000 02015000 42015000
+[786] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[786] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[786] bo_new sz/phys/vmoff 00001000 0201a000 4201a000
+[787] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[787] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[787] bo_new sz/phys/vmoff 00001000 0201d000 4201d000
+[787] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[787] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[787] bo_new sz/phys/vmoff 00001000 021a1000 421a1000
+[787] bo_new sz/phys/vmoff 00001000 021a2000 421a2000
+[787] bo_new sz/phys/vmoff 00001000 021a3000 421a3000
+[787] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[788] bo_new sz/phys/vmoff 00001000 021a5000 421a5000
+[788] bo_new sz/phys/vmoff 00001000 021a6000 421a6000
+[788] bo_new sz/phys/vmoff 00001000 021a7000 421a7000
+[788] bo_new sz/phys/vmoff 00001000 021a8000 421a8000
+[788] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[788] bo_new sz/phys/vmoff 00001000 021aa000 421aa000
+[788] bo_new sz/phys/vmoff 00001000 021ab000 421ab000
+[789] heap allocs/used/largest 00000100 00ff6000 03cc0000
+[789] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[789] bo_new sz/phys/vmoff 00001000 021ad000 421ad000
+[789] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[789] bo_new sz/phys/vmoff 00001000 021af000 421af000
+[789] bo_new sz/phys/vmoff 00001000 021b8000 421b8000
+[789] bo_new sz/phys/vmoff 00001000 021b9000 421b9000
+[789] bo_new sz/phys/vmoff 00001000 021ba000 421ba000
+[789] bo_new sz/phys/vmoff 00001000 021bb000 421bb000
+[789] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[795] kick > cnt/m0/m1 0000761f 0018a200 00000000
+[795] kick ok cnt/put/pgi 0000761f 03203f34 00000000
+[795] vram_read > off/dwords 04140000 00002ee2
+[795] vram_read < dwords 00002ee2
+[795] bo_kind phys/size/kind 024c0000 00040000 00000000
+[795] bo_kind phys/size/kind 025b0000 00040000 00000000
+[795] bo_kind phys/size/kind 026a0000 00040000 00000000
+[795] bo_kind phys/size/kind 02790000 00040000 00000000
+[795] bo_kind phys/size/kind 02880000 00040000 00000000
+[795] bo_kind phys/size/kind 02970000 00040000 00000000
+[795] bo_kind phys/size/kind 02a60000 00040000 00000000
+[795] bo_kind phys/size/kind 02b60000 00040000 00000000
+[801] front phys/size 00100000 00096000
+[801] bo_front phys/vmoff 00100000 40100000
+[801] wgl: front resource/bpp 01ab4610 00000010
+[801] wgl: front surface/pitch 00100000 00000500
+[803] kick > cnt/m0/m1 00000025 00088200 000000e8
+[803] kick ok cnt/put/pgi 00000025 032217b0 00000000
+[804] stw: SwapBuffers hdc 1c010059 00000000
+[804] bo_new sz/phys/vmoff 00001000 021bd000 421bd000
+[804] kick > cnt/m0/m1 00000005 00107b00 00000000
+[804] kick ok cnt/put/pgi 00000005 03221844 00000000
+[806] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[806] kick ok cnt/put/pgi 0000005e 03221858 00000000
+[863] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[863] bo_new sz/phys/vmoff 00001000 02013000 42013000
+[863] bo_new sz/phys/vmoff 00001000 02014000 42014000
+[863] bo_new sz/phys/vmoff 00001000 02015000 42015000
+[864] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[864] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[864] bo_new sz/phys/vmoff 00001000 02019000 42019000
+[864] bo_new sz/phys/vmoff 00001000 0201a000 4201a000
+[864] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[864] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[864] bo_new sz/phys/vmoff 00001000 0201d000 4201d000
+[865] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[865] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[865] bo_new sz/phys/vmoff 00001000 021a1000 421a1000
+[865] bo_new sz/phys/vmoff 00001000 021a2000 421a2000
+[865] bo_new sz/phys/vmoff 00001000 021a3000 421a3000
+[865] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[865] bo_new sz/phys/vmoff 00001000 021a5000 421a5000
+[865] bo_new sz/phys/vmoff 00001000 021a6000 421a6000
+[865] bo_new sz/phys/vmoff 00001000 021a7000 421a7000
+[865] bo_new sz/phys/vmoff 00001000 021a8000 421a8000
+[865] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[866] bo_new sz/phys/vmoff 00001000 021aa000 421aa000
+[866] bo_new sz/phys/vmoff 00001000 021ab000 421ab000
+[866] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[866] bo_new sz/phys/vmoff 00001000 021ad000 421ad000
+[866] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[866] bo_new sz/phys/vmoff 00001000 021af000 421af000
+[866] bo_new sz/phys/vmoff 00001000 021b8000 421b8000
+[866] bo_new sz/phys/vmoff 00001000 021b9000 421b9000
+[866] bo_new sz/phys/vmoff 00001000 021ba000 421ba000
+[866] bo_new sz/phys/vmoff 00001000 021bb000 421bb000
+[871] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[871] kick ok cnt/put/pgi 0000688a 032219d0 00000000
+[871] vram_read > off/dwords 0414bb80 00002ee2
+[871] vram_read < dwords 00002ee2
+[877] kick > cnt/m0/m1 00000025 00088200 000000e8
+[877] kick ok cnt/put/pgi 00000025 0323bbf8 00000000
+[879] stw: SwapBuffers hdc 1c010059 00000000
+[879] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[879] kick > cnt/m0/m1 00000005 00107b00 00000000
+[879] kick ok cnt/put/pgi 00000005 0323bc8c 00000000
+[881] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[881] kick ok cnt/put/pgi 0000005e 0323bca0 00000000
+[937] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[937] bo_new sz/phys/vmoff 00001000 02013000 42013000
+[937] bo_new sz/phys/vmoff 00001000 02014000 42014000
+[937] bo_new sz/phys/vmoff 00001000 02015000 42015000
+[937] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[937] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[937] bo_new sz/phys/vmoff 00001000 02019000 42019000
+[937] bo_new sz/phys/vmoff 00001000 0201a000 4201a000
+[938] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[938] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[938] bo_new sz/phys/vmoff 00001000 0201d000 4201d000
+[938] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[938] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[938] bo_new sz/phys/vmoff 00001000 021a1000 421a1000
+[938] bo_new sz/phys/vmoff 00001000 021a2000 421a2000
+[938] bo_new sz/phys/vmoff 00001000 021a3000 421a3000
+[938] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[938] bo_new sz/phys/vmoff 00001000 021a5000 421a5000
+[939] bo_new sz/phys/vmoff 00001000 021a6000 421a6000
+[939] bo_new sz/phys/vmoff 00001000 021a7000 421a7000
+[939] bo_new sz/phys/vmoff 00001000 021a8000 421a8000
+[939] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[939] bo_new sz/phys/vmoff 00001000 021aa000 421aa000
+[939] bo_new sz/phys/vmoff 00001000 021ab000 421ab000
+[940] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[940] bo_new sz/phys/vmoff 00001000 021ad000 421ad000
+[940] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[940] bo_new sz/phys/vmoff 00001000 021af000 421af000
+[940] bo_new sz/phys/vmoff 00001000 021b8000 421b8000
+[940] bo_new sz/phys/vmoff 00001000 021b9000 421b9000
+[940] bo_new sz/phys/vmoff 00001000 021ba000 421ba000
+[940] bo_new sz/phys/vmoff 00001000 021bb000 421bb000
+[945] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[945] kick ok cnt/put/pgi 0000688a 0323be18 00000000
+[945] vram_read > off/dwords 04157700 00002ee2
+[945] vram_read < dwords 00002ee2
+[951] kick > cnt/m0/m1 00000025 00088200 000000e8
+[951] kick ok cnt/put/pgi 00000025 03256040 00000000
+[953] stw: SwapBuffers hdc 1c010059 00000000
+[953] bo_new sz/phys/vmoff 00001000 021bd000 421bd000
+[953] kick > cnt/m0/m1 00000005 00107b00 00000000
+[953] kick ok cnt/put/pgi 00000005 032560d4 00000000
+[954] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[954] kick ok cnt/put/pgi 0000005e 032560e8 00000000
+[1014] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[1015] bo_new sz/phys/vmoff 00001000 02013000 42013000
+[1015] bo_new sz/phys/vmoff 00001000 02014000 42014000
+[1015] bo_new sz/phys/vmoff 00001000 02015000 42015000
+[1015] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[1015] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[1015] bo_new sz/phys/vmoff 00001000 02019000 42019000
+[1015] bo_new sz/phys/vmoff 00001000 0201a000 4201a000
+[1015] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[1015] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[1016] bo_new sz/phys/vmoff 00001000 0201d000 4201d000
+[1016] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[1016] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[1016] bo_new sz/phys/vmoff 00001000 021a1000 421a1000
+[1016] bo_new sz/phys/vmoff 00001000 021a2000 421a2000
+[1016] bo_new sz/phys/vmoff 00001000 021a3000 421a3000
+[1016] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[1016] bo_new sz/phys/vmoff 00001000 021a5000 421a5000
+[1016] bo_new sz/phys/vmoff 00001000 021a6000 421a6000
+[1017] bo_new sz/phys/vmoff 00001000 021a7000 421a7000
+[1017] bo_new sz/phys/vmoff 00001000 021a8000 421a8000
+[1017] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[1017] bo_new sz/phys/vmoff 00001000 021aa000 421aa000
+[1017] bo_new sz/phys/vmoff 00001000 021ab000 421ab000
+[1017] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[1017] bo_new sz/phys/vmoff 00001000 021ad000 421ad000
+[1017] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[1018] bo_new sz/phys/vmoff 00001000 021af000 421af000
+[1018] bo_new sz/phys/vmoff 00001000 021b8000 421b8000
+[1018] bo_new sz/phys/vmoff 00001000 021b9000 421b9000
+[1018] bo_new sz/phys/vmoff 00001000 021ba000 421ba000
+[1018] bo_new sz/phys/vmoff 00001000 021bb000 421bb000
+[1023] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1023] kick ok cnt/put/pgi 0000688a 03256260 00000000
+[1023] vram_read > off/dwords 04163280 00002ee2
+[1023] vram_read < dwords 00002ee2
+[1030] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1030] kick ok cnt/put/pgi 00000025 03270488 00000000
+[1031] stw: SwapBuffers hdc 1c010059 00000000
+[1031] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[1031] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1031] kick ok cnt/put/pgi 00000005 0327051c 00000000
+[1033] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1033] kick ok cnt/put/pgi 0000005e 03270530 00000000
+[1098] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[1098] bo_new sz/phys/vmoff 00001000 02013000 42013000
+[1098] bo_new sz/phys/vmoff 00001000 02014000 42014000
+[1098] bo_new sz/phys/vmoff 00001000 02015000 42015000
+[1098] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[1098] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[1098] bo_new sz/phys/vmoff 00001000 02019000 42019000
+[1098] bo_new sz/phys/vmoff 00001000 0201a000 4201a000
+[1098] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[1099] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[1099] bo_new sz/phys/vmoff 00001000 0201d000 4201d000
+[1099] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[1099] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[1099] bo_new sz/phys/vmoff 00001000 021a1000 421a1000
+[1099] bo_new sz/phys/vmoff 00001000 021a2000 421a2000
+[1099] bo_new sz/phys/vmoff 00001000 021a3000 421a3000
+[1099] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[1099] bo_new sz/phys/vmoff 00001000 021a5000 421a5000
+[1100] bo_new sz/phys/vmoff 00001000 021a6000 421a6000
+[1100] bo_new sz/phys/vmoff 00001000 021a7000 421a7000
+[1100] bo_new sz/phys/vmoff 00001000 021a8000 421a8000
+[1100] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[1100] bo_new sz/phys/vmoff 00001000 021aa000 421aa000
+[1100] bo_new sz/phys/vmoff 00001000 021ab000 421ab000
+[1100] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[1100] bo_new sz/phys/vmoff 00001000 021ad000 421ad000
+[1100] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[1101] bo_new sz/phys/vmoff 00001000 021af000 421af000
+[1101] bo_new sz/phys/vmoff 00001000 021b8000 421b8000
+[1101] bo_new sz/phys/vmoff 00001000 021b9000 421b9000
+[1101] bo_new sz/phys/vmoff 00001000 021ba000 421ba000
+[1101] bo_new sz/phys/vmoff 00001000 021bb000 421bb000
+[1106] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1106] kick ok cnt/put/pgi 0000688a 032706a8 00000000
+[1106] vram_read > off/dwords 0416ee00 00002ee2
+[1106] vram_read < dwords 00002ee2
+[1112] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1112] kick ok cnt/put/pgi 00000025 0328a8d0 00000000
+[1114] stw: SwapBuffers hdc 1c010059 00000000
+[1114] bo_new sz/phys/vmoff 00001000 021bd000 421bd000
+[1114] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1114] kick ok cnt/put/pgi 00000005 0328a964 00000000
+[1116] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1116] kick ok cnt/put/pgi 0000005e 0328a978 00000000
+[1180] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[1181] bo_new sz/phys/vmoff 00001000 02013000 42013000
+[1181] bo_new sz/phys/vmoff 00001000 02014000 42014000
+[1181] bo_new sz/phys/vmoff 00001000 02015000 42015000
+[1181] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[1181] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[1181] bo_new sz/phys/vmoff 00001000 02019000 42019000
+[1181] bo_new sz/phys/vmoff 00001000 0201a000 4201a000
+[1181] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[1181] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[1182] bo_new sz/phys/vmoff 00001000 0201d000 4201d000
+[1182] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[1182] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[1182] bo_new sz/phys/vmoff 00001000 021a1000 421a1000
+[1182] bo_new sz/phys/vmoff 00001000 021a2000 421a2000
+[1182] bo_new sz/phys/vmoff 00001000 021a3000 421a3000
+[1182] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[1182] bo_new sz/phys/vmoff 00001000 021a5000 421a5000
+[1182] bo_new sz/phys/vmoff 00001000 021a6000 421a6000
+[1183] bo_new sz/phys/vmoff 00001000 021a7000 421a7000
+[1183] bo_new sz/phys/vmoff 00001000 021a8000 421a8000
+[1183] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[1183] bo_new sz/phys/vmoff 00001000 021aa000 421aa000
+[1184] bo_new sz/phys/vmoff 00001000 021ab000 421ab000
+[1184] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[1184] bo_new sz/phys/vmoff 00001000 021ad000 421ad000
+[1184] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[1184] bo_new sz/phys/vmoff 00001000 021af000 421af000
+[1184] bo_new sz/phys/vmoff 00001000 021b8000 421b8000
+[1184] bo_new sz/phys/vmoff 00001000 021b9000 421b9000
+[1184] bo_new sz/phys/vmoff 00001000 021ba000 421ba000
+[1185] bo_new sz/phys/vmoff 00001000 021bb000 421bb000
+[1190] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1190] kick ok cnt/put/pgi 0000688a 0328aaf0 00000000
+[1190] vram_read > off/dwords 0417a980 00002ee2
+[1190] vram_read < dwords 00002ee2
+[1196] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1196] kick ok cnt/put/pgi 00000025 032a4d18 00000000
+[1198] stw: SwapBuffers hdc 1c010059 00000000
+[1198] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[1198] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1198] kick ok cnt/put/pgi 00000005 032a4dac 00000000
+[1199] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1200] kick ok cnt/put/pgi 0000005e 032a4dc0 00000000
+[1263] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[1263] bo_new sz/phys/vmoff 00001000 02013000 42013000
+[1263] bo_new sz/phys/vmoff 00001000 02014000 42014000
+[1263] bo_new sz/phys/vmoff 00001000 02015000 42015000
+[1263] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[1263] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[1264] bo_new sz/phys/vmoff 00001000 02019000 42019000
+[1264] bo_new sz/phys/vmoff 00001000 0201a000 4201a000
+[1264] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[1264] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[1264] bo_new sz/phys/vmoff 00001000 0201d000 4201d000
+[1264] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[1264] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[1264] bo_new sz/phys/vmoff 00001000 021a1000 421a1000
+[1264] bo_new sz/phys/vmoff 00001000 021a2000 421a2000
+[1264] bo_new sz/phys/vmoff 00001000 021a3000 421a3000
+[1265] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[1265] bo_new sz/phys/vmoff 00001000 021a5000 421a5000
+[1265] bo_new sz/phys/vmoff 00001000 021a6000 421a6000
+[1265] bo_new sz/phys/vmoff 00001000 021a7000 421a7000
+[1265] bo_new sz/phys/vmoff 00001000 021a8000 421a8000
+[1265] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[1265] bo_new sz/phys/vmoff 00001000 021aa000 421aa000
+[1265] bo_new sz/phys/vmoff 00001000 021ab000 421ab000
+[1265] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[1265] bo_new sz/phys/vmoff 00001000 021ad000 421ad000
+[1265] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[1266] bo_new sz/phys/vmoff 00001000 021af000 421af000
+[1266] bo_new sz/phys/vmoff 00001000 021b8000 421b8000
+[1266] bo_new sz/phys/vmoff 00001000 021b9000 421b9000
+[1266] bo_new sz/phys/vmoff 00001000 021ba000 421ba000
+[1266] bo_new sz/phys/vmoff 00001000 021bb000 421bb000
+[1271] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1271] kick ok cnt/put/pgi 0000688a 032a4f38 00000000
+[1271] vram_read > off/dwords 04186500 00002ee2
+[1271] vram_read < dwords 00002ee2
+[1277] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1277] kick ok cnt/put/pgi 00000025 032bf160 00000000
+[1278] stw: SwapBuffers hdc 1c010059 00000000
+[1278] bo_new sz/phys/vmoff 00001000 021bd000 421bd000
+[1279] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1279] kick ok cnt/put/pgi 00000005 032bf1f4 00000000
+[1281] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1281] kick ok cnt/put/pgi 0000005e 032bf208 00000000
+[1338] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[1338] bo_new sz/phys/vmoff 00001000 02013000 42013000
+[1338] bo_new sz/phys/vmoff 00001000 02014000 42014000
+[1338] bo_new sz/phys/vmoff 00001000 02015000 42015000
+[1338] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[1338] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[1339] bo_new sz/phys/vmoff 00001000 02019000 42019000
+[1339] bo_new sz/phys/vmoff 00001000 0201a000 4201a000
+[1339] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[1339] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[1339] bo_new sz/phys/vmoff 00001000 0201d000 4201d000
+[1339] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[1339] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[1339] bo_new sz/phys/vmoff 00001000 021a1000 421a1000
+[1340] bo_new sz/phys/vmoff 00001000 021a2000 421a2000
+[1340] bo_new sz/phys/vmoff 00001000 021a3000 421a3000
+[1340] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[1340] bo_new sz/phys/vmoff 00001000 021a5000 421a5000
+[1340] bo_new sz/phys/vmoff 00001000 021a6000 421a6000
+[1340] bo_new sz/phys/vmoff 00001000 021a7000 421a7000
+[1340] bo_new sz/phys/vmoff 00001000 021a8000 421a8000
+[1340] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[1340] bo_new sz/phys/vmoff 00001000 021aa000 421aa000
+[1341] bo_new sz/phys/vmoff 00001000 021ab000 421ab000
+[1341] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[1341] bo_new sz/phys/vmoff 00001000 021ad000 421ad000
+[1341] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[1341] bo_new sz/phys/vmoff 00001000 021af000 421af000
+[1341] bo_new sz/phys/vmoff 00001000 021b8000 421b8000
+[1341] bo_new sz/phys/vmoff 00001000 021b9000 421b9000
+[1341] bo_new sz/phys/vmoff 00001000 021ba000 421ba000
+[1341] bo_new sz/phys/vmoff 00001000 021bb000 421bb000
+[1347] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1347] kick ok cnt/put/pgi 0000688a 032bf380 00000000
+[1347] vram_read > off/dwords 04192080 00002ee2
+[1347] vram_read < dwords 00002ee2
+[1353] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1353] kick ok cnt/put/pgi 00000025 032d95a8 00000000
+[1355] stw: SwapBuffers hdc 1c010059 00000000
+[1355] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[1355] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1355] kick ok cnt/put/pgi 00000005 032d963c 00000000
+[1356] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1356] kick ok cnt/put/pgi 0000005e 032d9650 00000000
+[1419] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[1419] bo_new sz/phys/vmoff 00001000 02013000 42013000
+[1419] bo_new sz/phys/vmoff 00001000 02014000 42014000
+[1419] bo_new sz/phys/vmoff 00001000 02015000 42015000
+[1419] bo_new sz/phys/vmoff 00001000 02016000 42016000
+[1420] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[1420] bo_new sz/phys/vmoff 00001000 02019000 42019000
+[1420] bo_new sz/phys/vmoff 00001000 0201a000 4201a000
+[1420] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[1420] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[1420] bo_new sz/phys/vmoff 00001000 0201d000 4201d000
+[1420] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[1420] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[1420] bo_new sz/phys/vmoff 00001000 021a1000 421a1000
+[1420] bo_new sz/phys/vmoff 00001000 021a2000 421a2000
+[1421] heap allocs/used/largest 00000200 00d9e000 03cc0000
+[1421] bo_new sz/phys/vmoff 00001000 021a3000 421a3000
+[1421] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[1427] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1427] kick ok cnt/put/pgi 0000688a 032d97c8 00000000
+[1427] vram_read > off/dwords 0419dc00 00002ee2
+[1427] vram_read < dwords 00002ee2
+[1433] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1433] kick ok cnt/put/pgi 00000025 032f39f0 00000000
+[1435] stw: SwapBuffers hdc 1c010059 00000000
+[1435] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1435] kick ok cnt/put/pgi 00000005 032f3a84 00000000
+[1437] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1437] kick ok cnt/put/pgi 0000005e 032f3a98 00000000
+[1505] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1505] kick ok cnt/put/pgi 0000688a 032f3c10 00000000
+[1505] vram_read > off/dwords 041a9780 00002ee2
+[1505] vram_read < dwords 00002ee2
+[1511] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1511] kick ok cnt/put/pgi 00000025 0320de38 00000000
+[1513] stw: SwapBuffers hdc 1c010059 00000000
+[1513] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1513] kick ok cnt/put/pgi 00000005 0320decc 00000000
+[1515] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1515] kick ok cnt/put/pgi 0000005e 0320dee0 00000000
+[1587] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1587] kick ok cnt/put/pgi 0000688a 0320e058 00000000
+[1587] vram_read > off/dwords 04140000 0001ff06
+[1587] vram_read < dwords 0001ff06
+[1594] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1594] kick ok cnt/put/pgi 00000025 03228280 00000000
+[1595] stw: SwapBuffers hdc 1c010059 00000000
+[1595] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1595] kick ok cnt/put/pgi 00000005 03228314 00000000
+[1597] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1597] kick ok cnt/put/pgi 0000005e 03228328 00000000
+[1670] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1670] kick ok cnt/put/pgi 0000688a 032284a0 00000000
+[1670] vram_read > off/dwords 04141270 00002ee2
+[1670] vram_read < dwords 00002ee2
+[1676] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1676] kick ok cnt/put/pgi 00000025 032426c8 00000000
+[1678] stw: SwapBuffers hdc 1c010059 00000000
+[1678] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1678] kick ok cnt/put/pgi 00000005 0324275c 00000000
+[1680] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1680] kick ok cnt/put/pgi 0000005e 03242770 00000000
+[1751] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1751] kick ok cnt/put/pgi 0000688a 032428e8 00000000
+[1751] vram_read > off/dwords 0414cdf0 00002ee2
+[1751] vram_read < dwords 00002ee2
+[1757] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1757] kick ok cnt/put/pgi 00000025 0325cb10 00000000
+[1759] stw: SwapBuffers hdc 1c010059 00000000
+[1759] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1759] kick ok cnt/put/pgi 00000005 0325cba4 00000000
+[1760] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1760] kick ok cnt/put/pgi 0000005e 0325cbb8 00000000
+[1828] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1828] kick ok cnt/put/pgi 0000688a 0325cd30 00000000
+[1828] vram_read > off/dwords 04158970 00002ee2
+[1828] vram_read < dwords 00002ee2
+[1834] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1834] kick ok cnt/put/pgi 00000025 03276f58 00000000
+[1835] stw: SwapBuffers hdc 1c010059 00000000
+[1836] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1836] kick ok cnt/put/pgi 00000005 03276fec 00000000
+[1838] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1838] kick ok cnt/put/pgi 0000005e 03277000 00000000
+[1904] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1904] kick ok cnt/put/pgi 0000688a 03277178 00000000
+[1904] vram_read > off/dwords 041644f0 00002ee2
+[1904] vram_read < dwords 00002ee2
+[1910] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1910] kick ok cnt/put/pgi 00000025 032913a0 00000000
+[1912] stw: SwapBuffers hdc 1c010059 00000000
+[1912] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1912] kick ok cnt/put/pgi 00000005 03291434 00000000
+[1913] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1913] kick ok cnt/put/pgi 0000005e 03291448 00000000
+[1975] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[1975] kick ok cnt/put/pgi 0000688a 032915c0 00000000
+[1975] vram_read > off/dwords 04170070 00002ee2
+[1975] vram_read < dwords 00002ee2
+[1977] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1977] kick ok cnt/put/pgi 00000025 032ab7e8 00000000
+[1978] stw: SwapBuffers hdc 1c010059 00000000
+[1978] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1978] kick ok cnt/put/pgi 00000005 032ab87c 00000000
+[1979] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[1979] kick ok cnt/put/pgi 0000005e 032ab890 00000000
+[2043] heap allocs/used/largest 00000300 00d96000 03cc0000
+[2043] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[2051] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2051] kick ok cnt/put/pgi 0000688a 032aba08 00000000
+[2051] vram_read > off/dwords 0417bbf0 00002ee2
+[2051] vram_read < dwords 00002ee2
+[2052] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2052] kick ok cnt/put/pgi 00000025 032c5c30 00000000
+[2053] stw: SwapBuffers hdc 1c010059 00000000
+[2053] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2053] kick ok cnt/put/pgi 00000005 032c5cc4 00000000
+[2055] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2055] kick ok cnt/put/pgi 0000005e 032c5cd8 00000000
+[2123] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2123] kick ok cnt/put/pgi 0000688a 032c5e50 00000000
+[2123] vram_read > off/dwords 04187770 00002ee2
+[2123] vram_read < dwords 00002ee2
+[2124] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2124] kick ok cnt/put/pgi 00000025 032e0078 00000000
+[2125] stw: SwapBuffers hdc 1c010059 00000000
+[2125] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2125] kick ok cnt/put/pgi 00000005 032e010c 00000000
+[2127] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2127] kick ok cnt/put/pgi 0000005e 032e0120 00000000
+[2197] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2197] kick ok cnt/put/pgi 0000688a 032e0298 00000000
+[2197] vram_read > off/dwords 041932f0 00002ee2
+[2197] vram_read < dwords 00002ee2
+[2199] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2199] kick ok cnt/put/pgi 00000025 032fa4c0 00000000
+[2200] stw: SwapBuffers hdc 1c010059 00000000
+[2200] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2200] kick ok cnt/put/pgi 00000005 032fa554 00000000
+[2201] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2201] kick ok cnt/put/pgi 0000005e 032fa568 00000000
+[2266] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2266] kick ok cnt/put/pgi 0000688a 032fa6e0 00000000
+[2266] vram_read > off/dwords 0419ee70 00002ee2
+[2266] vram_read < dwords 00002ee2
+[2268] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2268] kick ok cnt/put/pgi 00000025 03214908 00000000
+[2269] stw: SwapBuffers hdc 1c010059 00000000
+[2269] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2269] kick ok cnt/put/pgi 00000005 0321499c 00000000
+[2271] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2271] kick ok cnt/put/pgi 0000005e 032149b0 00000000
+[2338] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2338] kick ok cnt/put/pgi 0000688a 03214b28 00000000
+[2338] vram_read > off/dwords 041aa9f0 00002ee2
+[2338] vram_read < dwords 00002ee2
+[2339] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2339] kick ok cnt/put/pgi 00000025 0322ed50 00000000
+[2340] stw: SwapBuffers hdc 1c010059 00000000
+[2340] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2340] kick ok cnt/put/pgi 00000005 0322ede4 00000000
+[2342] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2342] kick ok cnt/put/pgi 0000005e 0322edf8 00000000
+[2409] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2409] kick ok cnt/put/pgi 0000688a 0322ef70 00000000
+[2409] vram_read > off/dwords 04140000 0001ff06
+[2409] vram_read < dwords 0001ff06
+[2411] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2411] kick ok cnt/put/pgi 00000025 03249198 00000000
+[2412] stw: SwapBuffers hdc 1c010059 00000000
+[2412] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2412] kick ok cnt/put/pgi 00000005 0324922c 00000000
+[2413] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2413] kick ok cnt/put/pgi 0000005e 03249240 00000000
+[2478] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2478] kick ok cnt/put/pgi 0000688a 032493b8 00000000
+[2478] vram_read > off/dwords 041424e0 00002ee2
+[2478] vram_read < dwords 00002ee2
+[2479] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2479] kick ok cnt/put/pgi 00000025 032635e0 00000000
+[2481] stw: SwapBuffers hdc 1c010059 00000000
+[2481] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2481] kick ok cnt/put/pgi 00000005 03263674 00000000
+[2482] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2482] kick ok cnt/put/pgi 0000005e 03263688 00000000
+[2540] kick > cnt/m0/m1 00005c1a 00087650 000000ff
+[2540] kick ok cnt/put/pgi 00005c1a 03263800 00000000
+[2540] vram_read > off/dwords 0414e060 00002ee2
+[2540] vram_read < dwords 00002ee2
+[2545] heap allocs/used/largest 00000400 00daf000 03cc0000
+[2550] kick > cnt/m0/m1 00000c75 00107b00 00000000
+[2550] kick ok cnt/put/pgi 00000c75 0327a868 00000000
+[2551] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2551] kick ok cnt/put/pgi 00000025 0327da3c 00000000
+[2552] stw: SwapBuffers hdc 1c010059 00000000
+[2552] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[2553] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2553] kick ok cnt/put/pgi 00000005 0327dad0 00000000
+[2554] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2554] kick ok cnt/put/pgi 0000005e 0327dae4 00000000
+[2618] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2618] kick ok cnt/put/pgi 0000688a 0327dc5c 00000000
+[2618] vram_read > off/dwords 04159be0 00002ee2
+[2618] vram_read < dwords 00002ee2
+[2619] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2619] kick ok cnt/put/pgi 00000025 03297e84 00000000
+[2621] stw: SwapBuffers hdc 1c010059 00000000
+[2621] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2621] kick ok cnt/put/pgi 00000005 03297f18 00000000
+[2622] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2622] kick ok cnt/put/pgi 0000005e 03297f2c 00000000
+[2690] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2690] kick ok cnt/put/pgi 0000688a 032980a4 00000000
+[2690] vram_read > off/dwords 04165760 00002ee2
+[2690] vram_read < dwords 00002ee2
+[2692] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2692] kick ok cnt/put/pgi 00000025 032b22cc 00000000
+[2693] stw: SwapBuffers hdc 1c010059 00000000
+[2693] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2693] kick ok cnt/put/pgi 00000005 032b2360 00000000
+[2694] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2694] kick ok cnt/put/pgi 0000005e 032b2374 00000000
+[2759] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2759] kick ok cnt/put/pgi 0000688a 032b24ec 00000000
+[2759] vram_read > off/dwords 041712e0 00002ee2
+[2759] vram_read < dwords 00002ee2
+[2760] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2760] kick ok cnt/put/pgi 00000025 032cc714 00000000
+[2761] stw: SwapBuffers hdc 1c010059 00000000
+[2761] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2761] kick ok cnt/put/pgi 00000005 032cc7a8 00000000
+[2763] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2763] kick ok cnt/put/pgi 0000005e 032cc7bc 00000000
+[2826] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2826] kick ok cnt/put/pgi 0000688a 032cc934 00000000
+[2826] vram_read > off/dwords 0417ce60 00002ee2
+[2826] vram_read < dwords 00002ee2
+[2828] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2828] kick ok cnt/put/pgi 00000025 032e6b5c 00000000
+[2829] wgl: present frames/ms 0000001c 000007e9
+[2829] wgl: stats kicks/kickdw 00000075 000b9afc
+[2829] wgl: stats flushdw/readdw 002de7a8 00316c24
+[2829] wgl: stats traps/warns 00000000 00000000
+[2829] wgl: stats kicks mapwait/internal 00000000 00000000
+[2829] wgl: stats submit ms 00000000
+[2829] wgl: stats kcyc validate/kick 000022e4 001188a0
+[2829] wgl: stats kcyc flush/bo 00008fc0 000a102b
+[2829] wgl: stats vsync waits/ms 00000000 00000000
+[2829] wgl: stats m2mf splits 00000000
+[2829] wgl: stats vram checks/mismatches 00000424 00000000
+[2829] stw: SwapBuffers hdc 1c010059 00000000
+[2835] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2835] kick ok cnt/put/pgi 00000005 032e6bf0 00000000
+[2836] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2836] kick ok cnt/put/pgi 0000005e 032e6c04 00000000
+[2900] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2900] kick ok cnt/put/pgi 0000688a 032e6d7c 00000000
+[2900] vram_read > off/dwords 041889e0 00002ee2
+[2900] vram_read < dwords 00002ee2
+[2901] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2901] kick ok cnt/put/pgi 00000025 03200fa4 00000000
+[2902] stw: SwapBuffers hdc 1c010059 00000000
+[2902] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2902] kick ok cnt/put/pgi 00000005 03201038 00000000
+[2903] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2903] kick ok cnt/put/pgi 0000005e 0320104c 00000000
+[2967] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[2967] kick ok cnt/put/pgi 0000688a 032011c4 00000000
+[2967] vram_read > off/dwords 04194560 00002ee2
+[2967] vram_read < dwords 00002ee2
+[2969] kick > cnt/m0/m1 00000025 00088200 000000e8
+[2969] kick ok cnt/put/pgi 00000025 0321b3ec 00000000
+[2970] stw: SwapBuffers hdc 1c010059 00000000
+[2970] kick > cnt/m0/m1 00000005 00107b00 00000000
+[2970] kick ok cnt/put/pgi 00000005 0321b480 00000000
+[2971] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[2971] kick ok cnt/put/pgi 0000005e 0321b494 00000000
+[3035] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3035] kick ok cnt/put/pgi 0000688a 0321b60c 00000000
+[3035] vram_read > off/dwords 041a00e0 00002ee2
+[3035] vram_read < dwords 00002ee2
+[3037] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3037] kick ok cnt/put/pgi 00000025 03235834 00000000
+[3038] stw: SwapBuffers hdc 1c010059 00000000
+[3038] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3038] kick ok cnt/put/pgi 00000005 032358c8 00000000
+[3039] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3039] kick ok cnt/put/pgi 0000005e 032358dc 00000000
+[3097] heap allocs/used/largest 00000500 00da7000 03cc0000
+[3097] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[3103] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3103] kick ok cnt/put/pgi 0000688a 03235a54 00000000
+[3103] vram_read > off/dwords 041abc60 00002ee2
+[3103] vram_read < dwords 00002ee2
+[3104] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3104] kick ok cnt/put/pgi 00000025 0324fc7c 00000000
+[3105] stw: SwapBuffers hdc 1c010059 00000000
+[3105] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3105] kick ok cnt/put/pgi 00000005 0324fd10 00000000
+[3107] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3107] kick ok cnt/put/pgi 0000005e 0324fd24 00000000
+[3171] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3171] kick ok cnt/put/pgi 0000688a 0324fe9c 00000000
+[3171] vram_read > off/dwords 04140000 0001ff06
+[3171] vram_read < dwords 0001ff06
+[3172] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3172] kick ok cnt/put/pgi 00000025 0326a0c4 00000000
+[3174] stw: SwapBuffers hdc 1c010059 00000000
+[3174] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3174] kick ok cnt/put/pgi 00000005 0326a158 00000000
+[3175] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3175] kick ok cnt/put/pgi 0000005e 0326a16c 00000000
+[3239] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3239] kick ok cnt/put/pgi 0000688a 0326a2e4 00000000
+[3239] vram_read > off/dwords 04143750 00002ee2
+[3239] vram_read < dwords 00002ee2
+[3241] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3241] kick ok cnt/put/pgi 00000025 0328450c 00000000
+[3242] stw: SwapBuffers hdc 1c010059 00000000
+[3242] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3242] kick ok cnt/put/pgi 00000005 032845a0 00000000
+[3243] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3243] kick ok cnt/put/pgi 0000005e 032845b4 00000000
+[3309] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3309] kick ok cnt/put/pgi 0000688a 0328472c 00000000
+[3309] vram_read > off/dwords 0414f2d0 00002ee2
+[3309] vram_read < dwords 00002ee2
+[3310] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3310] kick ok cnt/put/pgi 00000025 0329e954 00000000
+[3311] stw: SwapBuffers hdc 1c010059 00000000
+[3311] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3311] kick ok cnt/put/pgi 00000005 0329e9e8 00000000
+[3313] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3313] kick ok cnt/put/pgi 0000005e 0329e9fc 00000000
+[3377] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3377] kick ok cnt/put/pgi 0000688a 0329eb74 00000000
+[3377] vram_read > off/dwords 0415ae50 00002ee2
+[3377] vram_read < dwords 00002ee2
+[3378] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3378] kick ok cnt/put/pgi 00000025 032b8d9c 00000000
+[3379] stw: SwapBuffers hdc 1c010059 00000000
+[3379] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3379] kick ok cnt/put/pgi 00000005 032b8e30 00000000
+[3381] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3381] kick ok cnt/put/pgi 0000005e 032b8e44 00000000
+[3444] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3444] kick ok cnt/put/pgi 0000688a 032b8fbc 00000000
+[3444] vram_read > off/dwords 041669d0 00002ee2
+[3444] vram_read < dwords 00002ee2
+[3446] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3446] kick ok cnt/put/pgi 00000025 032d31e4 00000000
+[3447] stw: SwapBuffers hdc 1c010059 00000000
+[3447] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3447] kick ok cnt/put/pgi 00000005 032d3278 00000000
+[3448] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3448] kick ok cnt/put/pgi 0000005e 032d328c 00000000
+[3513] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3513] kick ok cnt/put/pgi 0000688a 032d3404 00000000
+[3513] vram_read > off/dwords 04172550 00002ee2
+[3513] vram_read < dwords 00002ee2
+[3514] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3514] kick ok cnt/put/pgi 00000025 032ed62c 00000000
+[3516] stw: SwapBuffers hdc 1c010059 00000000
+[3516] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3516] kick ok cnt/put/pgi 00000005 032ed6c0 00000000
+[3517] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3517] kick ok cnt/put/pgi 0000005e 032ed6d4 00000000
+[3580] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3580] kick ok cnt/put/pgi 0000688a 032ed84c 00000000
+[3580] vram_read > off/dwords 0417e0d0 00002ee2
+[3580] vram_read < dwords 00002ee2
+[3582] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3582] kick ok cnt/put/pgi 00000025 03207a74 00000000
+[3583] stw: SwapBuffers hdc 1c010059 00000000
+[3583] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3583] kick ok cnt/put/pgi 00000005 03207b08 00000000
+[3584] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3584] kick ok cnt/put/pgi 0000005e 03207b1c 00000000
+[3642] heap allocs/used/largest 00000600 00d9f000 03cc0000
+[3642] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[3648] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3648] kick ok cnt/put/pgi 0000688a 03207c94 00000000
+[3648] vram_read > off/dwords 04189c50 00002ee2
+[3648] vram_read < dwords 00002ee2
+[3649] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3649] kick ok cnt/put/pgi 00000025 03221ebc 00000000
+[3650] stw: SwapBuffers hdc 1c010059 00000000
+[3650] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3650] kick ok cnt/put/pgi 00000005 03221f50 00000000
+[3652] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3652] kick ok cnt/put/pgi 0000005e 03221f64 00000000
+[3715] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3715] kick ok cnt/put/pgi 0000688a 032220dc 00000000
+[3715] vram_read > off/dwords 041957d0 00002ee2
+[3715] vram_read < dwords 00002ee2
+[3717] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3717] kick ok cnt/put/pgi 00000025 0323c304 00000000
+[3718] stw: SwapBuffers hdc 1c010059 00000000
+[3718] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3718] kick ok cnt/put/pgi 00000005 0323c398 00000000
+[3719] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3719] kick ok cnt/put/pgi 0000005e 0323c3ac 00000000
+[3783] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3783] kick ok cnt/put/pgi 0000688a 0323c524 00000000
+[3783] vram_read > off/dwords 041a1350 00002ee2
+[3783] vram_read < dwords 00002ee2
+[3784] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3784] kick ok cnt/put/pgi 00000025 0325674c 00000000
+[3785] stw: SwapBuffers hdc 1c010059 00000000
+[3785] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3785] kick ok cnt/put/pgi 00000005 032567e0 00000000
+[3786] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3786] kick ok cnt/put/pgi 0000005e 032567f4 00000000
+[3851] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3851] kick ok cnt/put/pgi 0000688a 0325696c 00000000
+[3851] vram_read > off/dwords 041aced0 00002ee2
+[3851] vram_read < dwords 00002ee2
+[3852] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3852] kick ok cnt/put/pgi 00000025 03270b94 00000000
+[3853] stw: SwapBuffers hdc 1c010059 00000000
+[3853] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3853] kick ok cnt/put/pgi 00000005 03270c28 00000000
+[3855] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3855] kick ok cnt/put/pgi 0000005e 03270c3c 00000000
+[3918] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3918] kick ok cnt/put/pgi 0000688a 03270db4 00000000
+[3918] vram_read > off/dwords 04140000 0001ff06
+[3918] vram_read < dwords 0001ff06
+[3920] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3920] kick ok cnt/put/pgi 00000025 0328afdc 00000000
+[3921] stw: SwapBuffers hdc 1c010059 00000000
+[3921] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3921] kick ok cnt/put/pgi 00000005 0328b070 00000000
+[3922] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3922] kick ok cnt/put/pgi 0000005e 0328b084 00000000
+[3987] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[3987] kick ok cnt/put/pgi 0000688a 0328b1fc 00000000
+[3987] vram_read > off/dwords 041449c0 00002ee2
+[3987] vram_read < dwords 00002ee2
+[3988] kick > cnt/m0/m1 00000025 00088200 000000e8
+[3988] kick ok cnt/put/pgi 00000025 032a5424 00000000
+[3989] stw: SwapBuffers hdc 1c010059 00000000
+[3989] kick > cnt/m0/m1 00000005 00107b00 00000000
+[3989] kick ok cnt/put/pgi 00000005 032a54b8 00000000
+[3990] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[3990] kick ok cnt/put/pgi 0000005e 032a54cc 00000000
+[4055] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4055] kick ok cnt/put/pgi 0000688a 032a5644 00000000
+[4055] vram_read > off/dwords 04150540 00002ee2
+[4055] vram_read < dwords 00002ee2
+[4057] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4057] kick ok cnt/put/pgi 00000025 032bf86c 00000000
+[4058] stw: SwapBuffers hdc 1c010059 00000000
+[4058] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4058] kick ok cnt/put/pgi 00000005 032bf900 00000000
+[4059] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4059] kick ok cnt/put/pgi 0000005e 032bf914 00000000
+[4124] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4124] kick ok cnt/put/pgi 0000688a 032bfa8c 00000000
+[4124] vram_read > off/dwords 0415c0c0 00002ee2
+[4124] vram_read < dwords 00002ee2
+[4126] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4126] kick ok cnt/put/pgi 00000025 032d9cb4 00000000
+[4127] stw: SwapBuffers hdc 1c010059 00000000
+[4127] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4127] kick ok cnt/put/pgi 00000005 032d9d48 00000000
+[4129] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4129] kick ok cnt/put/pgi 0000005e 032d9d5c 00000000
+[4186] heap allocs/used/largest 00000700 00d97000 03cc0000
+[4186] bo_new sz/phys/vmoff 00001000 0201b000 4201b000
+[4192] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4192] kick ok cnt/put/pgi 0000688a 032d9ed4 00000000
+[4192] vram_read > off/dwords 04167c40 00002ee2
+[4192] vram_read < dwords 00002ee2
+[4194] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4194] kick ok cnt/put/pgi 00000025 032f40fc 00000000
+[4195] stw: SwapBuffers hdc 1c010059 00000000
+[4195] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4195] kick ok cnt/put/pgi 00000005 032f4190 00000000
+[4196] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4196] kick ok cnt/put/pgi 0000005e 032f41a4 00000000
+[4256] kick > cnt/m0/m1 00005de2 00087650 000000ff
+[4256] kick ok cnt/put/pgi 00005de2 032f431c 00000000
+[4256] vram_read > off/dwords 041737c0 00002ee2
+[4256] vram_read < dwords 00002ee2
+[4263] kick > cnt/m0/m1 00000aad 00107b00 00000000
+[4263] kick ok cnt/put/pgi 00000aad 0320baa4 00000000
+[4265] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4265] kick ok cnt/put/pgi 00000025 0320e558 00000000
+[4266] stw: SwapBuffers hdc 1c010059 00000000
+[4266] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4266] kick ok cnt/put/pgi 00000005 0320e5ec 00000000
+[4267] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4267] kick ok cnt/put/pgi 0000005e 0320e600 00000000
+[4331] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4331] kick ok cnt/put/pgi 0000688a 0320e778 00000000
+[4331] vram_read > off/dwords 0417f340 00002ee2
+[4331] vram_read < dwords 00002ee2
+[4333] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4333] kick ok cnt/put/pgi 00000025 032289a0 00000000
+[4334] stw: SwapBuffers hdc 1c010059 00000000
+[4334] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4334] kick ok cnt/put/pgi 00000005 03228a34 00000000
+[4335] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4335] kick ok cnt/put/pgi 0000005e 03228a48 00000000
+[4399] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4399] kick ok cnt/put/pgi 0000688a 03228bc0 00000000
+[4399] vram_read > off/dwords 0418aec0 00002ee2
+[4399] vram_read < dwords 00002ee2
+[4400] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4400] kick ok cnt/put/pgi 00000025 03242de8 00000000
+[4402] stw: SwapBuffers hdc 1c010059 00000000
+[4402] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4402] kick ok cnt/put/pgi 00000005 03242e7c 00000000
+[4403] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4403] kick ok cnt/put/pgi 0000005e 03242e90 00000000
+[4466] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4466] kick ok cnt/put/pgi 0000688a 03243008 00000000
+[4466] vram_read > off/dwords 04196a40 00002ee2
+[4466] vram_read < dwords 00002ee2
+[4467] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4467] kick ok cnt/put/pgi 00000025 0325d230 00000000
+[4468] stw: SwapBuffers hdc 1c010059 00000000
+[4468] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4468] kick ok cnt/put/pgi 00000005 0325d2c4 00000000
+[4470] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4470] kick ok cnt/put/pgi 0000005e 0325d2d8 00000000
+[4535] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4535] kick ok cnt/put/pgi 0000688a 0325d450 00000000
+[4535] vram_read > off/dwords 041a25c0 00002ee2
+[4535] vram_read < dwords 00002ee2
+[4537] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4537] kick ok cnt/put/pgi 00000025 03277678 00000000
+[4538] stw: SwapBuffers hdc 1c010059 00000000
+[4538] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4538] kick ok cnt/put/pgi 00000005 0327770c 00000000
+[4539] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4539] kick ok cnt/put/pgi 0000005e 03277720 00000000
+[4610] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4610] kick ok cnt/put/pgi 0000688a 03277898 00000000
+[4610] vram_read > off/dwords 041ae140 00002ee2
+[4610] vram_read < dwords 00002ee2
+[4611] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4611] kick ok cnt/put/pgi 00000025 03291ac0 00000000
+[4613] stw: SwapBuffers hdc 1c010059 00000000
+[4613] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4613] kick ok cnt/put/pgi 00000005 03291b54 00000000
+[4614] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4614] kick ok cnt/put/pgi 0000005e 03291b68 00000000
+[4674] heap allocs/used/largest 00000800 00db0000 03cc0000
+[4679] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4679] kick ok cnt/put/pgi 0000688a 03291ce0 00000000
+[4679] vram_read > off/dwords 04140000 0001ff06
+[4679] vram_read < dwords 0001ff06
+[4681] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4681] kick ok cnt/put/pgi 00000025 032abf08 00000000
+[4682] stw: SwapBuffers hdc 1c010059 00000000
+[4682] bo_new sz/phys/vmoff 00001000 021be000 421be000
+[4682] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4682] kick ok cnt/put/pgi 00000005 032abf9c 00000000
+[4683] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4683] kick ok cnt/put/pgi 0000005e 032abfb0 00000000
+[4747] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4747] kick ok cnt/put/pgi 0000688a 032ac128 00000000
+[4747] vram_read > off/dwords 04145c30 00002ee2
+[4747] vram_read < dwords 00002ee2
+[4748] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4748] kick ok cnt/put/pgi 00000025 032c6350 00000000
+[4749] stw: SwapBuffers hdc 1c010059 00000000
+[4749] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4749] kick ok cnt/put/pgi 00000005 032c63e4 00000000
+[4751] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4751] kick ok cnt/put/pgi 0000005e 032c63f8 00000000
+[4814] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4814] kick ok cnt/put/pgi 0000688a 032c6570 00000000
+[4814] vram_read > off/dwords 041517b0 00002ee2
+[4814] vram_read < dwords 00002ee2
+[4815] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4815] kick ok cnt/put/pgi 00000025 032e0798 00000000
+[4816] stw: SwapBuffers hdc 1c010059 00000000
+[4816] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4816] kick ok cnt/put/pgi 00000005 032e082c 00000000
+[4818] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4818] kick ok cnt/put/pgi 0000005e 032e0840 00000000
+[4880] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4880] kick ok cnt/put/pgi 0000688a 032e09b8 00000000
+[4880] vram_read > off/dwords 0415d330 00002ee2
+[4880] vram_read < dwords 00002ee2
+[4882] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4882] kick ok cnt/put/pgi 00000025 032fabe0 00000000
+[4883] wgl: present frames/ms 0000001e 00000806
+[4883] wgl: stats kicks/kickdw 000000ee 0017eb1d
+[4883] wgl: stats flushdw/readdw 004286a8 004b5b88
+[4883] wgl: stats traps/warns 00000000 00000000
+[4883] wgl: stats kicks mapwait/internal 00000000 00000000
+[4883] wgl: stats submit ms 00000000
+[4883] wgl: stats kcyc validate/kick 0000447b 0019a609
+[4883] wgl: stats kcyc flush/bo 0000a9c6 000a1aa8
+[4883] wgl: stats vsync waits/ms 00000000 00000000
+[4883] wgl: stats m2mf splits 00000000
+[4883] wgl: stats vram checks/mismatches 00000802 00000000
+[4883] stw: SwapBuffers hdc 1c010059 00000000
+[4888] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4888] kick ok cnt/put/pgi 00000005 032fac74 00000000
+[4889] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4889] kick ok cnt/put/pgi 0000005e 032fac88 00000000
+[4951] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[4951] kick ok cnt/put/pgi 0000688a 032fae00 00000000
+[4951] vram_read > off/dwords 04168eb0 00002ee2
+[4951] vram_read < dwords 00002ee2
+[4953] kick > cnt/m0/m1 00000025 00088200 000000e8
+[4953] kick ok cnt/put/pgi 00000025 03215028 00000000
+[4954] stw: SwapBuffers hdc 1c010059 00000000
+[4954] kick > cnt/m0/m1 00000005 00107b00 00000000
+[4954] kick ok cnt/put/pgi 00000005 032150bc 00000000
+[4955] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[4955] kick ok cnt/put/pgi 0000005e 032150d0 00000000
+[5019] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5019] kick ok cnt/put/pgi 0000688a 03215248 00000000
+[5019] vram_read > off/dwords 04174a30 00002ee2
+[5019] vram_read < dwords 00002ee2
+[5020] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5020] kick ok cnt/put/pgi 00000025 0322f470 00000000
+[5021] stw: SwapBuffers hdc 1c010059 00000000
+[5021] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5021] kick ok cnt/put/pgi 00000005 0322f504 00000000
+[5023] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5023] kick ok cnt/put/pgi 0000005e 0322f518 00000000
+[5086] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5086] kick ok cnt/put/pgi 0000688a 0322f690 00000000
+[5086] vram_read > off/dwords 041805b0 00002ee2
+[5086] vram_read < dwords 00002ee2
+[5087] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5087] kick ok cnt/put/pgi 00000025 032498b8 00000000
+[5089] stw: SwapBuffers hdc 1c010059 00000000
+[5089] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5089] kick ok cnt/put/pgi 00000005 0324994c 00000000
+[5090] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5090] kick ok cnt/put/pgi 0000005e 03249960 00000000
+[5153] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5153] kick ok cnt/put/pgi 0000688a 03249ad8 00000000
+[5153] vram_read > off/dwords 0418c130 00002ee2
+[5153] vram_read < dwords 00002ee2
+[5155] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5155] kick ok cnt/put/pgi 00000025 03263d00 00000000
+[5156] stw: SwapBuffers hdc 1c010059 00000000
+[5156] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5156] kick ok cnt/put/pgi 00000005 03263d94 00000000
+[5157] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5157] kick ok cnt/put/pgi 0000005e 03263da8 00000000
+[5216] heap allocs/used/largest 00000900 00da8000 03cc0000
+[5216] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[5222] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5222] kick ok cnt/put/pgi 0000688a 03263f20 00000000
+[5222] vram_read > off/dwords 04197cb0 00002ee2
+[5222] vram_read < dwords 00002ee2
+[5224] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5224] kick ok cnt/put/pgi 00000025 0327e148 00000000
+[5225] stw: SwapBuffers hdc 1c010059 00000000
+[5225] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5225] kick ok cnt/put/pgi 00000005 0327e1dc 00000000
+[5226] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5226] kick ok cnt/put/pgi 0000005e 0327e1f0 00000000
+[5289] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5289] kick ok cnt/put/pgi 0000688a 0327e368 00000000
+[5289] vram_read > off/dwords 041a3830 00002ee2
+[5289] vram_read < dwords 00002ee2
+[5291] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5291] kick ok cnt/put/pgi 00000025 03298590 00000000
+[5292] stw: SwapBuffers hdc 1c010059 00000000
+[5292] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5292] kick ok cnt/put/pgi 00000005 03298624 00000000
+[5293] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5293] kick ok cnt/put/pgi 0000005e 03298638 00000000
+[5357] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5357] kick ok cnt/put/pgi 0000688a 032987b0 00000000
+[5357] vram_read > off/dwords 041af3b0 00002ee2
+[5357] vram_read < dwords 00002ee2
+[5358] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5358] kick ok cnt/put/pgi 00000025 032b29d8 00000000
+[5359] stw: SwapBuffers hdc 1c010059 00000000
+[5359] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5359] kick ok cnt/put/pgi 00000005 032b2a6c 00000000
+[5361] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5361] kick ok cnt/put/pgi 0000005e 032b2a80 00000000
+[5423] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5423] kick ok cnt/put/pgi 0000688a 032b2bf8 00000000
+[5423] vram_read > off/dwords 04140000 0001ff06
+[5423] vram_read < dwords 0001ff06
+[5425] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5425] kick ok cnt/put/pgi 00000025 032cce20 00000000
+[5426] stw: SwapBuffers hdc 1c010059 00000000
+[5426] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5426] kick ok cnt/put/pgi 00000005 032cceb4 00000000
+[5427] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5427] kick ok cnt/put/pgi 0000005e 032ccec8 00000000
+[5489] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5489] kick ok cnt/put/pgi 0000688a 032cd040 00000000
+[5489] vram_read > off/dwords 04146ea0 00002ee2
+[5489] vram_read < dwords 00002ee2
+[5491] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5491] kick ok cnt/put/pgi 00000025 032e7268 00000000
+[5492] stw: SwapBuffers hdc 1c010059 00000000
+[5492] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5492] kick ok cnt/put/pgi 00000005 032e72fc 00000000
+[5493] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5493] kick ok cnt/put/pgi 0000005e 032e7310 00000000
+[5556] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5556] kick ok cnt/put/pgi 0000688a 032e7488 00000000
+[5556] vram_read > off/dwords 04152a20 00002ee2
+[5556] vram_read < dwords 00002ee2
+[5558] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5558] kick ok cnt/put/pgi 00000025 032016b0 00000000
+[5559] stw: SwapBuffers hdc 1c010059 00000000
+[5559] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5559] kick ok cnt/put/pgi 00000005 03201744 00000000
+[5560] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5560] kick ok cnt/put/pgi 0000005e 03201758 00000000
+[5624] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5624] kick ok cnt/put/pgi 0000688a 032018d0 00000000
+[5624] vram_read > off/dwords 0415e5a0 00002ee2
+[5624] vram_read < dwords 00002ee2
+[5626] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5626] kick ok cnt/put/pgi 00000025 0321baf8 00000000
+[5627] stw: SwapBuffers hdc 1c010059 00000000
+[5627] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5627] kick ok cnt/put/pgi 00000005 0321bb8c 00000000
+[5628] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5628] kick ok cnt/put/pgi 0000005e 0321bba0 00000000
+[5692] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5692] kick ok cnt/put/pgi 0000688a 0321bd18 00000000
+[5692] vram_read > off/dwords 0416a120 00002ee2
+[5692] vram_read < dwords 00002ee2
+[5693] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5693] kick ok cnt/put/pgi 00000025 03235f40 00000000
+[5695] stw: SwapBuffers hdc 1c010059 00000000
+[5695] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5695] kick ok cnt/put/pgi 00000005 03235fd4 00000000
+[5696] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5696] kick ok cnt/put/pgi 0000005e 03235fe8 00000000
+[5753] heap allocs/used/largest 00000a00 00da0000 03cc0000
+[5754] bo_new sz/phys/vmoff 00001000 021a4000 421a4000
+[5760] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5760] kick ok cnt/put/pgi 0000688a 03236160 00000000
+[5760] vram_read > off/dwords 04175ca0 00002ee2
+[5760] vram_read < dwords 00002ee2
+[5761] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5761] kick ok cnt/put/pgi 00000025 03250388 00000000
+[5762] stw: SwapBuffers hdc 1c010059 00000000
+[5762] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5762] kick ok cnt/put/pgi 00000005 0325041c 00000000
+[5764] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5764] kick ok cnt/put/pgi 0000005e 03250430 00000000
+[5829] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5829] kick ok cnt/put/pgi 0000688a 032505a8 00000000
+[5829] vram_read > off/dwords 04181820 00002ee2
+[5829] vram_read < dwords 00002ee2
+[5830] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5830] kick ok cnt/put/pgi 00000025 0326a7d0 00000000
+[5832] stw: SwapBuffers hdc 1c010059 00000000
+[5832] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5832] kick ok cnt/put/pgi 00000005 0326a864 00000000
+[5833] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5833] kick ok cnt/put/pgi 0000005e 0326a878 00000000
+[5900] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5900] kick ok cnt/put/pgi 0000688a 0326a9f0 00000000
+[5900] vram_read > off/dwords 0418d3a0 00002ee2
+[5900] vram_read < dwords 00002ee2
+[5902] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5902] kick ok cnt/put/pgi 00000025 03284c18 00000000
+[5903] stw: SwapBuffers hdc 1c010059 00000000
+[5903] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5903] kick ok cnt/put/pgi 00000005 03284cac 00000000
+[5904] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5904] kick ok cnt/put/pgi 0000005e 03284cc0 00000000
+[5969] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[5969] kick ok cnt/put/pgi 0000688a 03284e38 00000000
+[5969] vram_read > off/dwords 04198f20 00002ee2
+[5969] vram_read < dwords 00002ee2
+[5970] kick > cnt/m0/m1 00000025 00088200 000000e8
+[5970] kick ok cnt/put/pgi 00000025 0329f060 00000000
+[5971] stw: SwapBuffers hdc 1c010059 00000000
+[5971] kick > cnt/m0/m1 00000005 00107b00 00000000
+[5971] kick ok cnt/put/pgi 00000005 0329f0f4 00000000
+[5973] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[5973] kick ok cnt/put/pgi 0000005e 0329f108 00000000
+[6030] kick > cnt/m0/m1 00005caa 00087650 000000ff
+[6030] kick ok cnt/put/pgi 00005caa 0329f280 00000000
+[6030] vram_read > off/dwords 041a4aa0 00002ee2
+[6030] vram_read < dwords 00002ee2
+[6038] kick > cnt/m0/m1 00000be5 00107b00 00000000
+[6038] kick ok cnt/put/pgi 00000be5 032b6528 00000000
+[6039] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6039] kick ok cnt/put/pgi 00000025 032b94bc 00000000
+[6040] stw: SwapBuffers hdc 1c010059 00000000
+[6040] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6040] kick ok cnt/put/pgi 00000005 032b9550 00000000
+[6041] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6041] kick ok cnt/put/pgi 0000005e 032b9564 00000000
+[6110] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6110] kick ok cnt/put/pgi 0000688a 032b96dc 00000000
+[6110] vram_read > off/dwords 041b0620 00002ee2
+[6110] vram_read < dwords 00002ee2
+[6112] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6112] kick ok cnt/put/pgi 00000025 032d3904 00000000
+[6113] stw: SwapBuffers hdc 1c010059 00000000
+[6113] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6113] kick ok cnt/put/pgi 00000005 032d3998 00000000
+[6114] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6114] kick ok cnt/put/pgi 0000005e 032d39ac 00000000
+[6182] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6182] kick ok cnt/put/pgi 0000688a 032d3b24 00000000
+[6182] vram_read > off/dwords 04140000 0001ff06
+[6182] vram_read < dwords 0001ff06
+[6184] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6184] kick ok cnt/put/pgi 00000025 032edd4c 00000000
+[6185] stw: SwapBuffers hdc 1c010059 00000000
+[6185] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6185] kick ok cnt/put/pgi 00000005 032edde0 00000000
+[6186] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6186] kick ok cnt/put/pgi 0000005e 032eddf4 00000000
+[6255] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6255] kick ok cnt/put/pgi 0000688a 032edf6c 00000000
+[6255] vram_read > off/dwords 04148110 00002ee2
+[6255] vram_read < dwords 00002ee2
+[6257] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6257] kick ok cnt/put/pgi 00000025 03208194 00000000
+[6258] stw: SwapBuffers hdc 1c010059 00000000
+[6258] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6258] kick ok cnt/put/pgi 00000005 03208228 00000000
+[6259] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6259] kick ok cnt/put/pgi 0000005e 0320823c 00000000
+[6325] heap allocs/used/largest 00000b00 00d97000 03cc0000
+[6325] bo_new sz/phys/vmoff 00001000 0201a000 4201a000
+[6333] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6333] kick ok cnt/put/pgi 0000688a 032083b4 00000000
+[6333] vram_read > off/dwords 04153c90 00002ee2
+[6333] vram_read < dwords 00002ee2
+[6334] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6334] kick ok cnt/put/pgi 00000025 032225dc 00000000
+[6335] stw: SwapBuffers hdc 1c010059 00000000
+[6335] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6335] kick ok cnt/put/pgi 00000005 03222670 00000000
+[6337] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6337] kick ok cnt/put/pgi 0000005e 03222684 00000000
+[6406] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6406] kick ok cnt/put/pgi 0000688a 032227fc 00000000
+[6406] vram_read > off/dwords 0415f810 00002ee2
+[6406] vram_read < dwords 00002ee2
+[6408] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6408] kick ok cnt/put/pgi 00000025 0323ca24 00000000
+[6409] stw: SwapBuffers hdc 1c010059 00000000
+[6409] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6409] kick ok cnt/put/pgi 00000005 0323cab8 00000000
+[6410] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6410] kick ok cnt/put/pgi 0000005e 0323cacc 00000000
+[6478] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6478] kick ok cnt/put/pgi 0000688a 0323cc44 00000000
+[6478] vram_read > off/dwords 0416b390 00002ee2
+[6478] vram_read < dwords 00002ee2
+[6480] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6480] kick ok cnt/put/pgi 00000025 03256e6c 00000000
+[6481] stw: SwapBuffers hdc 1c010059 00000000
+[6481] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6481] kick ok cnt/put/pgi 00000005 03256f00 00000000
+[6482] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6482] kick ok cnt/put/pgi 0000005e 03256f14 00000000
+[6551] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6551] kick ok cnt/put/pgi 0000688a 0325708c 00000000
+[6551] vram_read > off/dwords 04176f10 00002ee2
+[6551] vram_read < dwords 00002ee2
+[6553] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6553] kick ok cnt/put/pgi 00000025 032712b4 00000000
+[6554] stw: SwapBuffers hdc 1c010059 00000000
+[6554] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6554] kick ok cnt/put/pgi 00000005 03271348 00000000
+[6556] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6556] kick ok cnt/put/pgi 0000005e 0327135c 00000000
+[6619] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6619] kick ok cnt/put/pgi 0000688a 032714d4 00000000
+[6619] vram_read > off/dwords 04182a90 00002ee2
+[6619] vram_read < dwords 00002ee2
+[6620] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6620] kick ok cnt/put/pgi 00000025 0328b6fc 00000000
+[6621] stw: SwapBuffers hdc 1c010059 00000000
+[6621] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6621] kick ok cnt/put/pgi 00000005 0328b790 00000000
+[6623] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6623] kick ok cnt/put/pgi 0000005e 0328b7a4 00000000
+[6686] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6686] kick ok cnt/put/pgi 0000688a 0328b91c 00000000
+[6686] vram_read > off/dwords 0418e610 00002ee2
+[6686] vram_read < dwords 00002ee2
+[6687] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6687] kick ok cnt/put/pgi 00000025 032a5b44 00000000
+[6689] stw: SwapBuffers hdc 1c010059 00000000
+[6689] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6689] kick ok cnt/put/pgi 00000005 032a5bd8 00000000
+[6690] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6690] kick ok cnt/put/pgi 0000005e 032a5bec 00000000
+[6753] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6753] kick ok cnt/put/pgi 0000688a 032a5d64 00000000
+[6753] vram_read > off/dwords 0419a190 00002ee2
+[6753] vram_read < dwords 00002ee2
+[6754] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6754] kick ok cnt/put/pgi 00000025 032bff8c 00000000
+[6755] stw: SwapBuffers hdc 1c010059 00000000
+[6755] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6755] kick ok cnt/put/pgi 00000005 032c0020 00000000
+[6757] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6757] kick ok cnt/put/pgi 0000005e 032c0034 00000000
+[6814] heap allocs/used/largest 00000c00 00db0000 03cc0000
+[6819] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6819] kick ok cnt/put/pgi 0000688a 032c01ac 00000000
+[6819] vram_read > off/dwords 041a5d10 00002ee2
+[6819] vram_read < dwords 00002ee2
+[6821] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6821] kick ok cnt/put/pgi 00000025 032da3d4 00000000
+[6822] stw: SwapBuffers hdc 1c010059 00000000
+[6822] bo_new sz/phys/vmoff 00001000 021bf000 421bf000
+[6822] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6822] kick ok cnt/put/pgi 00000005 032da468 00000000
+[6823] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6823] kick ok cnt/put/pgi 0000005e 032da47c 00000000
+[6889] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6889] kick ok cnt/put/pgi 0000688a 032da5f4 00000000
+[6889] vram_read > off/dwords 041b1890 00002ee2
+[6889] vram_read < dwords 00002ee2
+[6891] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6891] kick ok cnt/put/pgi 00000025 032f481c 00000000
+[6892] wgl: present frames/ms 0000001d 000007d9
+[6892] wgl: stats kicks/kickdw 00000163 0023d22c
+[6892] wgl: stats flushdw/readdw 005675a8 0062cbe2
+[6892] wgl: stats traps/warns 00000000 00000000
+[6892] wgl: stats kicks mapwait/internal 00000000 00000000
+[6892] wgl: stats submit ms 00000000
+[6892] wgl: stats kcyc validate/kick 0000654b 0021cdb6
+[6892] wgl: stats kcyc flush/bo 0000c217 000a2d98
+[6892] wgl: stats vsync waits/ms 00000000 00000000
+[6892] wgl: stats m2mf splits 00000000
+[6892] wgl: stats vram checks/mismatches 00000bbf 00000000
+[6892] stw: SwapBuffers hdc 1c010059 00000000
+[6897] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6897] kick ok cnt/put/pgi 00000005 032f48b0 00000000
+[6898] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6898] kick ok cnt/put/pgi 0000005e 032f48c4 00000000
+[6962] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[6962] kick ok cnt/put/pgi 0000688a 032f4a3c 00000000
+[6962] vram_read > off/dwords 04140000 0001ff06
+[6962] vram_read < dwords 0001ff06
+[6964] kick > cnt/m0/m1 00000025 00088200 000000e8
+[6964] kick ok cnt/put/pgi 00000025 0320ec64 00000000
+[6965] stw: SwapBuffers hdc 1c010059 00000000
+[6965] kick > cnt/m0/m1 00000005 00107b00 00000000
+[6965] kick ok cnt/put/pgi 00000005 0320ecf8 00000000
+[6966] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[6966] kick ok cnt/put/pgi 0000005e 0320ed0c 00000000
+[7030] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[7030] kick ok cnt/put/pgi 0000688a 0320ee84 00000000
+[7030] vram_read > off/dwords 04149380 00002ee2
+[7030] vram_read < dwords 00002ee2
+[7032] kick > cnt/m0/m1 00000025 00088200 000000e8
+[7032] kick ok cnt/put/pgi 00000025 032290ac 00000000
+[7033] stw: SwapBuffers hdc 1c010059 00000000
+[7033] kick > cnt/m0/m1 00000005 00107b00 00000000
+[7033] kick ok cnt/put/pgi 00000005 03229140 00000000
+[7034] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[7034] kick ok cnt/put/pgi 0000005e 03229154 00000000
+[7098] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[7098] kick ok cnt/put/pgi 0000688a 032292cc 00000000
+[7098] vram_read > off/dwords 04154f00 00002ee2
+[7098] vram_read < dwords 00002ee2
+[7100] kick > cnt/m0/m1 00000025 00088200 000000e8
+[7100] kick ok cnt/put/pgi 00000025 032434f4 00000000
+[7101] stw: SwapBuffers hdc 1c010059 00000000
+[7101] kick > cnt/m0/m1 00000005 00107b00 00000000
+[7101] kick ok cnt/put/pgi 00000005 03243588 00000000
+[7102] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[7102] kick ok cnt/put/pgi 0000005e 0324359c 00000000
+[7166] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[7166] kick ok cnt/put/pgi 0000688a 03243714 00000000
+[7166] vram_read > off/dwords 04160a80 00002ee2
+[7166] vram_read < dwords 00002ee2
+[7167] kick > cnt/m0/m1 00000025 00088200 000000e8
+[7167] kick ok cnt/put/pgi 00000025 0325d93c 00000000
+[7168] stw: SwapBuffers hdc 1c010059 00000000
+[7168] kick > cnt/m0/m1 00000005 00107b00 00000000
+[7168] kick ok cnt/put/pgi 00000005 0325d9d0 00000000
+[7170] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[7170] kick ok cnt/put/pgi 0000005e 0325d9e4 00000000
+[7233] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[7233] kick ok cnt/put/pgi 0000688a 0325db5c 00000000
+[7233] vram_read > off/dwords 0416c600 00002ee2
+[7233] vram_read < dwords 00002ee2
+[7235] kick > cnt/m0/m1 00000025 00088200 000000e8
+[7235] kick ok cnt/put/pgi 00000025 03277d84 00000000
+[7236] stw: SwapBuffers hdc 1c010059 00000000
+[7236] kick > cnt/m0/m1 00000005 00107b00 00000000
+[7236] kick ok cnt/put/pgi 00000005 03277e18 00000000
+[7237] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[7237] kick ok cnt/put/pgi 0000005e 03277e2c 00000000
+[7301] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[7301] kick ok cnt/put/pgi 0000688a 03277fa4 00000000
+[7301] vram_read > off/dwords 04178180 00002ee2
+[7301] vram_read < dwords 00002ee2
+[7303] kick > cnt/m0/m1 00000025 00088200 000000e8
+[7303] kick ok cnt/put/pgi 00000025 032921cc 00000000
+[7304] stw: SwapBuffers hdc 1c010059 00000000
+[7304] kick > cnt/m0/m1 00000005 00107b00 00000000
+[7304] kick ok cnt/put/pgi 00000005 03292260 00000000
+[7305] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[7305] kick ok cnt/put/pgi 0000005e 03292274 00000000
+[7363] heap allocs/used/largest 00000d00 00da8000 03cc0000
+[7363] bo_new sz/phys/vmoff 00001000 021ac000 421ac000
+[7368] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[7368] kick ok cnt/put/pgi 0000688a 032923ec 00000000
+[7368] vram_read > off/dwords 04183d00 00002ee2
+[7368] vram_read < dwords 00002ee2
+[7370] kick > cnt/m0/m1 00000025 00088200 000000e8
+[7370] kick ok cnt/put/pgi 00000025 032ac614 00000000
+[7371] stw: SwapBuffers hdc 1c010059 00000000
+[7371] kick > cnt/m0/m1 00000005 00107b00 00000000
+[7371] kick ok cnt/put/pgi 00000005 032ac6a8 00000000
+[7372] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[7372] kick ok cnt/put/pgi 0000005e 032ac6bc 00000000
+[7437] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[7437] kick ok cnt/put/pgi 0000688a 032ac834 00000000
+[7437] vram_read > off/dwords 0418f880 00002ee2
+[7437] vram_read < dwords 00002ee2
+[7438] kick > cnt/m0/m1 00000025 00088200 000000e8
+[7438] kick ok cnt/put/pgi 00000025 032c6a5c 00000000
+[7440] stw: SwapBuffers hdc 1c010059 00000000
+[7440] kick > cnt/m0/m1 00000005 00107b00 00000000
+[7440] kick ok cnt/put/pgi 00000005 032c6af0 00000000
+[7441] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[7441] kick ok cnt/put/pgi 0000005e 032c6b04 00000000
+[7504] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[7504] kick ok cnt/put/pgi 0000688a 032c6c7c 00000000
+[7504] vram_read > off/dwords 0419b400 00002ee2
+[7504] vram_read < dwords 00002ee2
+[7506] kick > cnt/m0/m1 00000025 00088200 000000e8
+[7506] kick ok cnt/put/pgi 00000025 032e0ea4 00000000
+[7507] stw: SwapBuffers hdc 1c010059 00000000
+[7507] kick > cnt/m0/m1 00000005 00107b00 00000000
+[7507] kick ok cnt/put/pgi 00000005 032e0f38 00000000
+[7508] kick > cnt/m0/m1 0000005e 0004721c 0fac6881
+[7508] kick ok cnt/put/pgi 0000005e 032e0f4c 00000000
+[7572] kick > cnt/m0/m1 0000688a 00087650 000000ff
+[7572] kick ok cnt/put/pgi 0000688a 032e10c4 00000000
+[7572] vram_read > off/dwords 041a6f80 00002ee2
+[7572] vram_read < dwords 00002ee2
+[7574] kick > cnt/m0/m1 00000025 00088200 000000e8
+[7574] kick ok cnt/put/pgi 00000025 032fb2ec 00000000
+[7575] stw: SwapBuffers hdc 1c010059 00000000
+[7575] kick > cnt/m0/m1 00000005 00107b00 00000000
+[7575] kick ok cnt/put/pgi 00000005 032fb380 00000000

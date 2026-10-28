@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3096  (M5.5 step 5: 3095 on the T61 = Half-Life playable, 30-68 fps at native resolution, occasional on-screen artifacts. A/B switches for the T61: 'nvhl vsync' (NVSHIM_VSYNC=1, present waits for the panel's vertical blank - no tearing, capped at 60 Hz) and 'nvhl fullflush' (NVSHIM_FULLFLUSH=1, whole-buffer flush). Shim kick-walk state persists across kicks, verify pass replays from the kick's start state; 'wgl: stats vsync waits/ms' and 'stats m2mf splits' log lines. wgltest stress patches 64x16. VxD/DRV byte-identical to 3095 bar the stamp.)
+Build: 3097  (M5.5 step 6: the 1024x768-only wrong texture patches - decide on hardware: wgltest 'texcheck' (texture data integrity, wgltest_texcheck.txt), 'nvhl verify' (VRAM readback self-check), 'nvhl heaphi' (3094 heap layout), C:\nvclk.txt clock registers. Shim: submit-and-retry when the heap is full, who-holds-the-heap dump; Mesa: fences with pending cleanup work emitted at every kick (texture-upload bursts no longer hold 27 MB of staging per fence). VxD/DRV byte-identical to 3096 bar the stamp.)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

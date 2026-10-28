@@ -1,0 +1,2000 @@
+[0] ==== shim log open, instance 7911b38c
+[0] wgl: DllMain ATTACH hinst 75b00000
+[19] wgl: screen_create ENTER lasterr/sw_only 0000007e 00000000
+[19] wgl: try driver 'nouveau' 00000000
+[19] wgl: nouveau_drm_screen_create enter lasterr 0000007e
+[19] winsys: nouveau_screen_create enter fd 00000000 00000000
+[19] drm_new fd 00000000
+[23] winsys: drm_new ret/drm 00000000 009e7130
+[23] device_new
+[23] winsys: device_new ret/dev 00000000 009e7a90
+[23] winsys: chipset 00000086 00000000
+[26] object_new handle/oclass 00000000 80000001
+[26] bind handle/class/engine beef0201 0000003d 00000000
+[26] bind handle/class/engine beef0202 0000003d 00000000
+[26] client_new ok
+[30] pushbuf_new cap 0003c000
+[32] bo_new sz/phys/vmoff 00001000 02010000 42010000
+[34] object_new handle/oclass beef0301 80000002
+[34] bind handle/class/engine beef0301 80000002 00000000
+[34] object_new handle/oclass beef5039 00005039
+[34] bind handle/class/engine beef5039 00005039 00000001
+[34] object_new handle/oclass beef502d 0000502d
+[34] bind handle/class/engine beef502d 0000502d 00000001
+[34] object_new handle/oclass beef5097 00008297
+[34] bind handle/class/engine beef5097 00008297 00000001
+[34] bo_new sz/phys/vmoff 00181000 02020000 42020000
+[34] graph_units reg/used f3010001 f3010001
+[34] bo_new sz/phys/vmoff 00008000 021b0000 421b0000
+[40] bo_new sz/phys/vmoff 00020000 021c0000 421c0000
+[40] bo_new sz/phys/vmoff 00050000 021e0000 421e0000
+[40] bo_new sz/phys/vmoff 00030000 02230000 42230000
+[42] object_new handle/oclass beef50c0 000050c0
+[42] bind handle/class/engine beef50c0 000050c0 00000001
+[44] kick > cnt/m0/m1 0000025c 0004a000 beef5039
+[45] kick ok cnt/put/pgi 0000025c 03200000 00000000
+[46] winsys: init(dev) screen 00a404a0 00000000
+[46] winsys: context_create fn 75b7bec0 00000000
+[46] wgl: nouveau_drm_screen_create exit screen/lasterr 00a404a0 0000007e
+[46] wgl: result screen/lasterr 00a404a0 0000007e
+[106] stw: pixelformat_init count 000001e0 00000000
+[106] stw: init_screen done screen/max2d 00a404a0 00002000
+[106] stw: DescribePF count-query hdc/count 0b010054 000001e0
+[273] stw: SetPF enter ipf/count 00000001 000001e0
+[273] stw: fb_create hwnd/pfi 0010006a 00a0f7c0
+[273] stw: SetPF fb_create ret/pfi 009eb280 00a0f7c0
+[273] stw: SetPF GDI GetPixelFormat ret/lasterr 00000000 00000008
+[278] stw: SetPF GDI SetPixelFormat ret/lasterr 00000001 00000578
+[278] stw: SetPF OK hwnd 0010006a 00000000
+[278] stw: CreateLayerContext hdc/lasterr 0b010054 00000578
+[278] stw: get_info_from_hdc hdc/fb 0b010054 009eb280
+[280] stw: CreateLayerContext pfi 00a0f7c0 00000000
+[280] stw: create_context_attribs enter hdc/pfi 0b010054 00a0f7c0
+[280] stw: attribs profile/major 00000000 00000001
+[283] nv50: create enter 00a46da0 00000000
+[283] client_new ok
+[283] nouveau: context_init client_new ret 00000000 00000000
+[283] pushbuf_new cap 0003c000
+[283] nouveau: context_init pushbuf ret 00000000 00000000
+[283] nv50: nouveau_context_init ret 00000000 00000000
+[283] bufctx_new ok bins 00000002
+[283] bufctx_new ok bins 00000038
+[283] bufctx_new ok bins 00000016
+[283] nv50: bufctx_new x3 ret 00000000 00000000
+[283] nv50: stream_uploader 009d6510 00000000
+[290] bo_new sz/phys/vmoff 00001000 02011000 42011000
+[290] nv50: create OK pipe 00a46da0 00000000
+[290] st: screen->context_create pipe 00a46da0 00000000
+[308] st: st_create_context st 00a22840 00000000
+[308] stw: st_api_create_context st/err 00a22840 00000000
+[311] stw: CreateLayerContext ctx/dhglrc 009e6cb0 00000001
+[311] stw: SetContext hdc/dhglrc 0b010054 00000001
+[317] bo_new sz/phys/vmoff 00010000 02260000 42260000
+[317] bo_kind phys/size/kind 02260000 00010000 00000070
+[317] bo_new sz/phys/vmoff 00010000 02270000 42270000
+[317] bo_kind phys/size/kind 02270000 00010000 00000028
+[319] stw: ReleaseContext dhglrc 00000001 00000000
+[320] kick > cnt/m0/m1 00000022 00088200 000000f3
+[320] kick ok cnt/put/pgi 00000022 03200970 00000000
+[380] stw: SetPF enter ipf/count 00000001 000001e0
+[380] stw: fb_create hwnd/pfi 0017005c 00a0f7c0
+[380] stw: SetPF fb_create ret/pfi 0196cdf0 00a0f7c0
+[380] stw: SetPF GDI GetPixelFormat ret/lasterr 00000000 00000000
+[400] stw: SetPF GDI SetPixelFormat ret/lasterr 00000001 00000578
+[400] stw: SetPF OK hwnd 0017005c 00000000
+[400] stw: CreateLayerContext hdc/lasterr 1c010059 00000578
+[400] stw: get_info_from_hdc hdc/fb 1c010059 0196cdf0
+[402] stw: CreateLayerContext pfi 00a0f7c0 00000000
+[402] stw: create_context_attribs enter hdc/pfi 1c010059 00a0f7c0
+[402] stw: attribs profile/major 00000000 00000001
+[402] nv50: create enter 00a4f780 00000000
+[402] client_new ok
+[402] nouveau: context_init client_new ret 00000000 00000000
+[402] pushbuf_new cap 0003c000
+[402] nouveau: context_init pushbuf ret 00000000 00000000
+[402] nv50: nouveau_context_init ret 00000000 00000000
+[402] bufctx_new ok bins 00000002
+[402] bufctx_new ok bins 00000038
+[402] bufctx_new ok bins 00000016
+[402] nv50: bufctx_new x3 ret 00000000 00000000
+[402] nv50: stream_uploader 009d6660 00000000
+[411] bo_new sz/phys/vmoff 00001000 02012000 42012000
+[411] nv50: create OK pipe 00a4f780 00000000
+[411] st: screen->context_create pipe 00a4f780 00000000
+[422] st: st_create_context st 01c920a0 00000000
+[422] stw: st_api_create_context st/err 01c920a0 00000000
+[423] stw: CreateLayerContext ctx/dhglrc 0196e540 00000002
+[423] stw: SetContext hdc/dhglrc 1c010059 00000002
+[430] bo_new sz/phys/vmoff 00120000 02280000 42280000
+[430] bo_kind phys/size/kind 02280000 00120000 00000070
+[430] bo_new sz/phys/vmoff 00120000 023a0000 423a0000
+[430] bo_kind phys/size/kind 023a0000 00120000 00000028
+[453] bo_new sz/phys/vmoff 00040000 024c0000 424c0000
+[453] bo_kind phys/size/kind 024c0000 00040000 00000070
+[453] bo_new sz/phys/vmoff 00040000 02500000 42500000
+[456] bo_new sz/phys/vmoff 00060000 02540000 42540000
+[456] bo_kind phys/size/kind 02540000 00060000 00000070
+[456] bo_new sz/phys/vmoff 00010000 025a0000 425a0000
+[457] bo_new sz/phys/vmoff 00004000 02013000 42013000
+[458] bo_new sz/phys/vmoff 00001000 02017000 42017000
+[459] bo_new sz/phys/vmoff 00000400 02018000 42018000
+[459] bo_new sz/phys/vmoff 00000100 02018400 42018400
+[460] bo_new sz/phys/vmoff 00000040 02018500 42018500
+[461] bo_new sz/phys/vmoff 00000010 02018600 42018600
+[461] bo_new sz/phys/vmoff 00000004 02018700 42018700
+[463] bo_new sz/phys/vmoff 00200000 025b0000 425b0000
+[466] bo_new sz/phys/vmoff 00040000 027b0000 427b0000
+[466] bo_kind phys/size/kind 027b0000 00040000 00000070
+[467] bo_new sz/phys/vmoff 00040000 027f0000 427f0000
+[468] bo_new sz/phys/vmoff 00060000 02830000 42830000
+[468] bo_kind phys/size/kind 02830000 00060000 00000070
+[468] bo_new sz/phys/vmoff 00010000 02890000 42890000
+[470] bo_new sz/phys/vmoff 00004000 02018800 42018800
+[471] bo_new sz/phys/vmoff 00001000 0201c800 4201c800
+[472] bo_new sz/phys/vmoff 00000400 0201d800 4201d800
+[472] bo_new sz/phys/vmoff 00000100 0201dc00 4201dc00
+[473] bo_new sz/phys/vmoff 00000040 0201dd00 4201dd00
+[474] bo_new sz/phys/vmoff 00000010 0201de00 4201de00
+[474] bo_new sz/phys/vmoff 00000004 0201df00 4201df00
+[476] bo_new sz/phys/vmoff 00040000 028a0000 428a0000
+[476] bo_kind phys/size/kind 028a0000 00040000 00000070
+[476] bo_new sz/phys/vmoff 00040000 028e0000 428e0000
+[478] bo_new sz/phys/vmoff 00060000 02920000 42920000
+[478] bo_kind phys/size/kind 02920000 00060000 00000070
+[479] bo_new sz/phys/vmoff 00010000 02980000 42980000
+[480] bo_new sz/phys/vmoff 00004000 021a1000 421a1000
+[481] bo_new sz/phys/vmoff 00001000 0201e000 4201e000
+[482] bo_new sz/phys/vmoff 00000400 0201f000 4201f000
+[482] bo_new sz/phys/vmoff 00000100 0201f400 4201f400
+[483] bo_new sz/phys/vmoff 00000040 0201f500 4201f500
+[483] bo_new sz/phys/vmoff 00000010 0201f600 4201f600
+[484] bo_new sz/phys/vmoff 00000004 0201f700 4201f700
+[485] bo_new sz/phys/vmoff 00010000 02990000 42990000
+[485] bo_kind phys/size/kind 02990000 00010000 00000070
+[485] bo_new sz/phys/vmoff 00010000 029a0000 429a0000
+[487] bo_new sz/phys/vmoff 00020000 029b0000 429b0000
+[487] bo_kind phys/size/kind 029b0000 00020000 00000070
+[487] bo_new sz/phys/vmoff 00004000 021a5000 421a5000
+[489] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[489] bo_new sz/phys/vmoff 00000400 0201f800 4201f800
+[490] bo_new sz/phys/vmoff 00000100 0201fc00 4201fc00
+[491] bo_new sz/phys/vmoff 00000040 0201fd00 4201fd00
+[491] bo_new sz/phys/vmoff 00000010 0201fe00 4201fe00
+[492] bo_new sz/phys/vmoff 00000004 0201ff00 4201ff00
+[493] bo_new sz/phys/vmoff 00040000 029d0000 429d0000
+[493] bo_kind phys/size/kind 029d0000 00040000 00000070
+[493] bo_new sz/phys/vmoff 00040000 02a10000 42a10000
+[495] bo_new sz/phys/vmoff 00060000 02a50000 42a50000
+[495] bo_kind phys/size/kind 02a50000 00060000 00000070
+[495] bo_new sz/phys/vmoff 00010000 02ab0000 42ab0000
+[497] bo_new sz/phys/vmoff 00004000 021aa000 421aa000
+[498] bo_new sz/phys/vmoff 00001000 021ae000 421ae000
+[498] bo_new sz/phys/vmoff 00000400 021af000 421af000
+[499] bo_new sz/phys/vmoff 00000100 021af400 421af400
+[500] bo_new sz/phys/vmoff 00000040 021af500 421af500
+[500] bo_new sz/phys/vmoff 00000010 021af600 421af600
+[501] bo_new sz/phys/vmoff 00000004 021af700 421af700
+[502] bo_new sz/phys/vmoff 00040000 02ac0000 42ac0000
+[502] bo_kind phys/size/kind 02ac0000 00040000 00000070
+[502] bo_new sz/phys/vmoff 00040000 02b00000 42b00000
+[504] bo_new sz/phys/vmoff 00060000 02b40000 42b40000
+[504] bo_kind phys/size/kind 02b40000 00060000 00000070
+[504] bo_new sz/phys/vmoff 00010000 02ba0000 42ba0000
+[506] bo_new sz/phys/vmoff 00004000 021b8000 421b8000
+[507] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[507] bo_new sz/phys/vmoff 00000400 021af800 421af800
+[508] bo_new sz/phys/vmoff 00000100 021afc00 421afc00
+[509] bo_new sz/phys/vmoff 00000040 021afd00 421afd00
+[509] bo_new sz/phys/vmoff 00000010 021afe00 421afe00
+[510] bo_new sz/phys/vmoff 00000004 021aff00 421aff00
+[511] bo_new sz/phys/vmoff 00040000 02bb0000 42bb0000
+[511] bo_kind phys/size/kind 02bb0000 00040000 00000070
+[511] bo_new sz/phys/vmoff 00040000 02bf0000 42bf0000
+[513] bo_new sz/phys/vmoff 00060000 02c30000 42c30000
+[513] bo_kind phys/size/kind 02c30000 00060000 00000070
+[513] bo_new sz/phys/vmoff 00010000 02c90000 42c90000
+[515] bo_new sz/phys/vmoff 00004000 02ca0000 42ca0000
+[516] bo_new sz/phys/vmoff 00001000 021bd000 421bd000
+[516] bo_new sz/phys/vmoff 00000400 021be000 421be000
+[517] bo_new sz/phys/vmoff 00000100 021be400 421be400
+[518] bo_new sz/phys/vmoff 00000040 021be500 421be500
+[518] bo_new sz/phys/vmoff 00000010 021be600 421be600
+[519] bo_new sz/phys/vmoff 00000004 021be700 421be700
+[520] bo_new sz/phys/vmoff 00010000 02cb0000 42cb0000
+[520] bo_kind phys/size/kind 02cb0000 00010000 00000070
+[520] bo_new sz/phys/vmoff 00010000 02cc0000 42cc0000
+[522] bo_new sz/phys/vmoff 00020000 02cd0000 42cd0000
+[522] bo_kind phys/size/kind 02cd0000 00020000 00000070
+[523] bo_new sz/phys/vmoff 00004000 02ca4000 42ca4000
+[524] bo_new sz/phys/vmoff 00001000 021be800 421be800
+[524] kick > cnt/m0/m1 00000d13 00088200 000000f3
+[529] kick ok cnt/put/pgi 00000d13 032009f8 00000000
+[529] fence refresh phys/seq 02010000 00000001
+[529] bo_kind phys/size/kind 024c0000 00040000 00000000
+[529] bo_kind phys/size/kind 027b0000 00040000 00000000
+[529] bo_kind phys/size/kind 028a0000 00040000 00000000
+[529] bo_kind phys/size/kind 02990000 00010000 00000000
+[529] bo_kind phys/size/kind 029d0000 00040000 00000000
+[529] bo_kind phys/size/kind 02ac0000 00040000 00000000
+[529] bo_kind phys/size/kind 02bb0000 00040000 00000000
+[529] bo_new sz/phys/vmoff 00001000 024c0000 424c0000
+[536] bo_new sz/phys/vmoff 00000400 02012000 42012000
+[537] bo_new sz/phys/vmoff 00000100 02012400 42012400
+[538] bo_new sz/phys/vmoff 00000040 02012500 42012500
+[538] bo_new sz/phys/vmoff 00000010 02012600 42012600
+[539] bo_new sz/phys/vmoff 00000004 02012700 42012700
+[540] bo_new sz/phys/vmoff 00040000 024d0000 424d0000
+[540] bo_kind phys/size/kind 024d0000 00040000 00000070
+[540] bo_new sz/phys/vmoff 00040000 027b0000 427b0000
+[542] bo_new sz/phys/vmoff 00060000 02890000 42890000
+[542] bo_kind phys/size/kind 02890000 00060000 00000070
+[542] bo_new sz/phys/vmoff 00010000 02510000 42510000
+[544] bo_new sz/phys/vmoff 00004000 02012800 42012800
+[544] bo_new sz/phys/vmoff 00001000 02016800 42016800
+[545] bo_new sz/phys/vmoff 00000400 02017800 42017800
+[546] bo_new sz/phys/vmoff 00000100 02017c00 42017c00
+[546] bo_new sz/phys/vmoff 00000040 02017d00 42017d00
+[547] bo_new sz/phys/vmoff 00000010 02017e00 42017e00
+[548] bo_new sz/phys/vmoff 00000004 02017f00 42017f00
+[549] bo_new sz/phys/vmoff 00040000 027f0000 427f0000
+[549] bo_kind phys/size/kind 027f0000 00040000 00000070
+[549] bo_new sz/phys/vmoff 00040000 029d0000 429d0000
+[551] bo_new sz/phys/vmoff 00060000 02ab0000 42ab0000
+[551] bo_kind phys/size/kind 02ab0000 00060000 00000070
+[551] bo_new sz/phys/vmoff 00010000 02520000 42520000
+[553] bo_new sz/phys/vmoff 00004000 02018000 42018000
+[554] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[554] bo_new sz/phys/vmoff 00000400 0201d000 4201d000
+[555] bo_new sz/phys/vmoff 00000100 0201d400 4201d400
+[556] bo_new sz/phys/vmoff 00000040 0201d500 4201d500
+[556] bo_new sz/phys/vmoff 00000010 0201d600 4201d600
+[557] bo_new sz/phys/vmoff 00000004 0201d700 4201d700
+[558] bo_new sz/phys/vmoff 00040000 02a10000 42a10000
+[558] bo_kind phys/size/kind 02a10000 00040000 00000070
+[558] bo_new sz/phys/vmoff 00040000 02ba0000 42ba0000
+[560] bo_new sz/phys/vmoff 00060000 02cf0000 42cf0000
+[560] bo_kind phys/size/kind 02cf0000 00060000 00000070
+[561] bo_new sz/phys/vmoff 00010000 02530000 42530000
+[562] bo_new sz/phys/vmoff 00004000 021a1000 421a1000
+[563] bo_new sz/phys/vmoff 00001000 0201d800 4201d800
+[563] bo_new sz/phys/vmoff 00000400 0201e800 4201e800
+[564] bo_new sz/phys/vmoff 00000100 0201ec00 4201ec00
+[565] bo_new sz/phys/vmoff 00000040 0201ed00 4201ed00
+[565] bo_new sz/phys/vmoff 00000010 0201ee00 4201ee00
+[566] bo_new sz/phys/vmoff 00000004 0201ef00 4201ef00
+[567] bo_new sz/phys/vmoff 00010000 025a0000 425a0000
+[567] bo_kind phys/size/kind 025a0000 00010000 00000070
+[568] kick > cnt/m0/m1 0000054c 0004a200 00000001
+[568] kick ok cnt/put/pgi 0000054c 03203e44 00000000
+[568] bo_kind phys/size/kind 02cb0000 00010000 00000000
+[568] bo_kind phys/size/kind 024d0000 00040000 00000000
+[568] bo_kind phys/size/kind 027f0000 00040000 00000000
+[568] bo_kind phys/size/kind 02a10000 00040000 00000000
+[568] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[573] bo_new sz/phys/vmoff 00010000 024c1000 424c1000
+[574] bo_new sz/phys/vmoff 00020000 024e0000 424e0000
+[574] bo_kind phys/size/kind 024e0000 00020000 00000070
+[574] bo_new sz/phys/vmoff 00004000 021a5000 421a5000
+[576] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[576] bo_new sz/phys/vmoff 00000400 021aa000 421aa000
+[577] bo_new sz/phys/vmoff 00000100 021aa400 421aa400
+[578] bo_new sz/phys/vmoff 00000040 021aa500 421aa500
+[578] bo_new sz/phys/vmoff 00000010 021aa600 421aa600
+[579] bo_new sz/phys/vmoff 00000004 021aa700 421aa700
+[580] bo_new sz/phys/vmoff 00040000 027f0000 427f0000
+[580] bo_kind phys/size/kind 027f0000 00040000 00000070
+[580] bo_new sz/phys/vmoff 00040000 02a10000 42a10000
+[582] bo_new sz/phys/vmoff 00060000 02d50000 42d50000
+[582] bo_kind phys/size/kind 02d50000 00060000 00000070
+[582] bo_new sz/phys/vmoff 00010000 02500000 42500000
+[584] bo_new sz/phys/vmoff 00004000 021aa800 421aa800
+[584] bo_new sz/phys/vmoff 00001000 021ae800 421ae800
+[585] bo_new sz/phys/vmoff 00000400 021af800 421af800
+[586] bo_new sz/phys/vmoff 00000100 021afc00 421afc00
+[586] bo_new sz/phys/vmoff 00000040 021afd00 421afd00
+[587] bo_new sz/phys/vmoff 00000010 021afe00 421afe00
+[588] bo_new sz/phys/vmoff 00000004 021aff00 421aff00
+[589] bo_new sz/phys/vmoff 00040000 02be0000 42be0000
+[589] bo_kind phys/size/kind 02be0000 00040000 00000070
+[590] bo_new sz/phys/vmoff 00040000 02c90000 42c90000
+[591] bo_new sz/phys/vmoff 00060000 02db0000 42db0000
+[591] bo_kind phys/size/kind 02db0000 00060000 00000070
+[591] bo_new sz/phys/vmoff 00010000 028f0000 428f0000
+[593] bo_new sz/phys/vmoff 00004000 021b8000 421b8000
+[593] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[594] bo_new sz/phys/vmoff 00000400 021bd000 421bd000
+[595] bo_new sz/phys/vmoff 00000100 021bd400 421bd400
+[595] bo_new sz/phys/vmoff 00000040 021bd500 421bd500
+[596] bo_new sz/phys/vmoff 00000010 021bd600 421bd600
+[597] bo_new sz/phys/vmoff 00000004 021bd700 421bd700
+[598] bo_new sz/phys/vmoff 00040000 02e10000 42e10000
+[598] bo_kind phys/size/kind 02e10000 00040000 00000070
+[598] bo_new sz/phys/vmoff 00040000 02e50000 42e50000
+[600] bo_new sz/phys/vmoff 00060000 02e90000 42e90000
+[600] bo_kind phys/size/kind 02e90000 00060000 00000070
+[600] bo_new sz/phys/vmoff 00010000 02900000 42900000
+[602] bo_new sz/phys/vmoff 00004000 024d1000 424d1000
+[602] bo_new sz/phys/vmoff 00001000 021bd800 421bd800
+[603] bo_new sz/phys/vmoff 00000400 021be800 421be800
+[604] bo_new sz/phys/vmoff 00000100 021bec00 421bec00
+[604] bo_new sz/phys/vmoff 00000040 021bed00 421bed00
+[605] bo_new sz/phys/vmoff 00000010 021bee00 421bee00
+[606] bo_new sz/phys/vmoff 00000004 021bef00 421bef00
+[606] bo_new sz/phys/vmoff 00010000 02910000 42910000
+[606] bo_kind phys/size/kind 02910000 00010000 00000070
+[606] bo_new sz/phys/vmoff 00010000 02980000 42980000
+[608] bo_new sz/phys/vmoff 00020000 02990000 42990000
+[608] bo_kind phys/size/kind 02990000 00020000 00000070
+[608] bo_new sz/phys/vmoff 00004000 024d5000 424d5000
+[610] bo_new sz/phys/vmoff 00001000 021bf000 421bf000
+[611] bo_new sz/phys/vmoff 00000400 024d9000 424d9000
+[612] bo_new sz/phys/vmoff 00000100 024d9400 424d9400
+[612] bo_new sz/phys/vmoff 00000040 024d9500 424d9500
+[613] bo_new sz/phys/vmoff 00000010 024d9600 424d9600
+[614] bo_new sz/phys/vmoff 00000004 024d9700 424d9700
+[615] bo_new sz/phys/vmoff 00040000 02ef0000 42ef0000
+[615] bo_kind phys/size/kind 02ef0000 00040000 00000070
+[615] bo_new sz/phys/vmoff 00040000 02f30000 42f30000
+[617] bo_new sz/phys/vmoff 00060000 02f70000 42f70000
+[617] bo_kind phys/size/kind 02f70000 00060000 00000070
+[617] bo_new sz/phys/vmoff 00010000 02b10000 42b10000
+[619] bo_new sz/phys/vmoff 00004000 024d9800 424d9800
+[619] bo_new sz/phys/vmoff 00001000 024dd800 424dd800
+[620] bo_new sz/phys/vmoff 00000400 024de800 424de800
+[621] bo_new sz/phys/vmoff 00000100 024dec00 424dec00
+[621] bo_new sz/phys/vmoff 00000040 024ded00 424ded00
+[622] bo_new sz/phys/vmoff 00000010 024dee00 424dee00
+[623] bo_new sz/phys/vmoff 00000004 024def00 424def00
+[624] bo_new sz/phys/vmoff 00040000 04000000 44000000
+[624] bo_kind phys/size/kind 04000000 00040000 00000070
+[624] bo_new sz/phys/vmoff 00040000 04040000 44040000
+[626] bo_new sz/phys/vmoff 00060000 04080000 44080000
+[626] bo_kind phys/size/kind 04080000 00060000 00000070
+[626] bo_new sz/phys/vmoff 00010000 02b20000 42b20000
+[628] bo_new sz/phys/vmoff 00004000 02b30000 42b30000
+[628] bo_new sz/phys/vmoff 00001000 024df000 424df000
+[629] bo_new sz/phys/vmoff 00000400 02b34000 42b34000
+[630] bo_new sz/phys/vmoff 00000100 02b34400 42b34400
+[631] bo_new sz/phys/vmoff 00000040 02b34500 42b34500
+[631] bo_new sz/phys/vmoff 00000010 02b34600 42b34600
+[632] bo_new sz/phys/vmoff 00000004 02b34700 42b34700
+[633] bo_new sz/phys/vmoff 00040000 040e0000 440e0000
+[633] bo_kind phys/size/kind 040e0000 00040000 00000070
+[633] bo_new sz/phys/vmoff 00040000 04120000 44120000
+[635] bo_new sz/phys/vmoff 00060000 04160000 44160000
+[635] bo_kind phys/size/kind 04160000 00060000 00000070
+[635] bo_new sz/phys/vmoff 00010000 02c20000 42c20000
+[637] bo_new sz/phys/vmoff 00004000 02b34800 42b34800
+[637] bo_new sz/phys/vmoff 00001000 02b38800 42b38800
+[640] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[640] kick ok cnt/put/pgi 00000a27 03205374 00000000
+[640] fence refresh phys/seq 02010000 00000003
+[640] fence refresh phys/seq 02010000 00000003
+[640] bo_kind phys/size/kind 025a0000 00010000 00000000
+[640] bo_kind phys/size/kind 027f0000 00040000 00000000
+[640] bo_kind phys/size/kind 02be0000 00040000 00000000
+[640] bo_kind phys/size/kind 02e10000 00040000 00000000
+[640] bo_kind phys/size/kind 02910000 00010000 00000000
+[640] bo_kind phys/size/kind 02ef0000 00040000 00000000
+[640] bo_kind phys/size/kind 04000000 00040000 00000000
+[640] bo_new sz/phys/vmoff 00001000 025a0000 425a0000
+[649] bo_new sz/phys/vmoff 00000400 02012000 42012000
+[650] bo_new sz/phys/vmoff 00000100 02012400 42012400
+[650] bo_new sz/phys/vmoff 00000040 02012500 42012500
+[651] bo_new sz/phys/vmoff 00000010 02012600 42012600
+[652] bo_new sz/phys/vmoff 00000004 02012700 42012700
+[652] bo_new sz/phys/vmoff 00010000 024d0000 424d0000
+[652] bo_kind phys/size/kind 024d0000 00010000 00000070
+[652] bo_new sz/phys/vmoff 00010000 02500000 42500000
+[654] bo_new sz/phys/vmoff 00020000 02510000 42510000
+[654] bo_kind phys/size/kind 02510000 00020000 00000070
+[654] bo_new sz/phys/vmoff 00004000 02012800 42012800
+[656] bo_new sz/phys/vmoff 00001000 02016800 42016800
+[657] bo_new sz/phys/vmoff 00000400 02017800 42017800
+[657] bo_new sz/phys/vmoff 00000100 02017c00 42017c00
+[658] bo_new sz/phys/vmoff 00000040 02017d00 42017d00
+[659] bo_new sz/phys/vmoff 00000010 02017e00 42017e00
+[659] bo_new sz/phys/vmoff 00000004 02017f00 42017f00
+[660] bo_new sz/phys/vmoff 00040000 027b0000 427b0000
+[660] bo_kind phys/size/kind 027b0000 00040000 00000070
+[661] bo_new sz/phys/vmoff 00040000 027f0000 427f0000
+[663] bo_new sz/phys/vmoff 00060000 029d0000 429d0000
+[663] bo_kind phys/size/kind 029d0000 00060000 00000070
+[663] bo_new sz/phys/vmoff 00010000 02530000 42530000
+[664] bo_new sz/phys/vmoff 00004000 02018000 42018000
+[665] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[666] bo_new sz/phys/vmoff 00000400 0201d000 4201d000
+[666] bo_new sz/phys/vmoff 00000100 0201d400 4201d400
+[667] bo_new sz/phys/vmoff 00000040 0201d500 4201d500
+[668] bo_new sz/phys/vmoff 00000010 0201d600 4201d600
+[668] bo_new sz/phys/vmoff 00000004 0201d700 4201d700
+[669] bo_new sz/phys/vmoff 00040000 02ba0000 42ba0000
+[669] bo_kind phys/size/kind 02ba0000 00040000 00000070
+[669] bo_new sz/phys/vmoff 00040000 02be0000 42be0000
+[671] bo_new sz/phys/vmoff 00060000 02e10000 42e10000
+[671] bo_kind phys/size/kind 02e10000 00060000 00000070
+[673] bo_new sz/phys/vmoff 00010000 028f0000 428f0000
+[673] bo_new sz/phys/vmoff 00004000 021a1000 421a1000
+[674] bo_new sz/phys/vmoff 00001000 0201d800 4201d800
+[675] bo_new sz/phys/vmoff 00000400 0201e800 4201e800
+[675] bo_new sz/phys/vmoff 00000100 0201ec00 4201ec00
+[676] bo_new sz/phys/vmoff 00000040 0201ed00 4201ed00
+[677] bo_new sz/phys/vmoff 00000010 0201ee00 4201ee00
+[677] bo_new sz/phys/vmoff 00000004 0201ef00 4201ef00
+[678] bo_new sz/phys/vmoff 00040000 02c90000 42c90000
+[678] bo_kind phys/size/kind 02c90000 00040000 00000070
+[679] bo_new sz/phys/vmoff 00040000 02ef0000 42ef0000
+[680] heap allocs/used/largest 00000100 00ffe000 03e40000
+[680] heap frees/kicks 000000b6 00000005
+[680] bo_new sz/phys/vmoff 00060000 04000000 44000000
+[680] bo_kind phys/size/kind 04000000 00060000 00000070
+[683] kick > cnt/m0/m1 0000054c 0004a200 00000001
+[683] kick ok cnt/put/pgi 0000054c 03207c10 00000000
+[683] bo_kind phys/size/kind 040e0000 00040000 00000000
+[683] bo_kind phys/size/kind 024d0000 00010000 00000000
+[683] bo_kind phys/size/kind 027b0000 00040000 00000000
+[683] bo_kind phys/size/kind 02ba0000 00040000 00000000
+[683] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[688] bo_new sz/phys/vmoff 00010000 024c1000 424c1000
+[688] bo_new sz/phys/vmoff 00004000 021a5000 421a5000
+[689] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[690] bo_new sz/phys/vmoff 00000400 021aa000 421aa000
+[690] bo_new sz/phys/vmoff 00000100 021aa400 421aa400
+[691] bo_new sz/phys/vmoff 00000040 021aa500 421aa500
+[692] bo_new sz/phys/vmoff 00000010 021aa600 421aa600
+[692] bo_new sz/phys/vmoff 00000004 021aa700 421aa700
+[693] bo_new sz/phys/vmoff 00010000 027b0000 427b0000
+[693] bo_kind phys/size/kind 027b0000 00010000 00000070
+[693] bo_new sz/phys/vmoff 00010000 027c0000 427c0000
+[695] bo_new sz/phys/vmoff 00020000 027d0000 427d0000
+[695] bo_kind phys/size/kind 027d0000 00020000 00000070
+[695] bo_new sz/phys/vmoff 00004000 021aa800 421aa800
+[697] bo_new sz/phys/vmoff 00001000 021ae800 421ae800
+[698] bo_new sz/phys/vmoff 00000400 021af800 421af800
+[698] bo_new sz/phys/vmoff 00000100 021afc00 421afc00
+[699] bo_new sz/phys/vmoff 00000040 021afd00 421afd00
+[699] bo_new sz/phys/vmoff 00000010 021afe00 421afe00
+[700] bo_new sz/phys/vmoff 00000004 021aff00 421aff00
+[701] bo_new sz/phys/vmoff 00040000 02ba0000 42ba0000
+[701] bo_kind phys/size/kind 02ba0000 00040000 00000070
+[701] bo_new sz/phys/vmoff 00040000 02f30000 42f30000
+[703] bo_new sz/phys/vmoff 00060000 040e0000 440e0000
+[703] bo_kind phys/size/kind 040e0000 00060000 00000070
+[703] bo_new sz/phys/vmoff 00010000 02900000 42900000
+[705] bo_new sz/phys/vmoff 00004000 021b8000 421b8000
+[706] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[706] bo_new sz/phys/vmoff 00000400 021bd000 421bd000
+[707] bo_new sz/phys/vmoff 00000100 021bd400 421bd400
+[708] bo_new sz/phys/vmoff 00000040 021bd500 421bd500
+[708] bo_new sz/phys/vmoff 00000010 021bd600 421bd600
+[709] bo_new sz/phys/vmoff 00000004 021bd700 421bd700
+[710] bo_new sz/phys/vmoff 00040000 041c0000 441c0000
+[710] bo_kind phys/size/kind 041c0000 00040000 00000070
+[711] bo_new sz/phys/vmoff 00040000 04200000 44200000
+[712] bo_new sz/phys/vmoff 00060000 04240000 44240000
+[712] bo_kind phys/size/kind 04240000 00060000 00000070
+[712] bo_new sz/phys/vmoff 00010000 02910000 42910000
+[714] bo_new sz/phys/vmoff 00004000 024d1000 424d1000
+[715] bo_new sz/phys/vmoff 00001000 021bd800 421bd800
+[715] bo_new sz/phys/vmoff 00000400 021be800 421be800
+[716] bo_new sz/phys/vmoff 00000100 021bec00 421bec00
+[717] bo_new sz/phys/vmoff 00000040 021bed00 421bed00
+[717] bo_new sz/phys/vmoff 00000010 021bee00 421bee00
+[718] bo_new sz/phys/vmoff 00000004 021bef00 421bef00
+[719] bo_new sz/phys/vmoff 00040000 042a0000 442a0000
+[719] bo_kind phys/size/kind 042a0000 00040000 00000070
+[719] bo_new sz/phys/vmoff 00040000 042e0000 442e0000
+[721] bo_new sz/phys/vmoff 00060000 04320000 44320000
+[721] bo_kind phys/size/kind 04320000 00060000 00000070
+[721] bo_new sz/phys/vmoff 00010000 02980000 42980000
+[723] bo_new sz/phys/vmoff 00004000 024d5000 424d5000
+[723] bo_new sz/phys/vmoff 00001000 021bf000 421bf000
+[724] bo_new sz/phys/vmoff 00000400 024d9000 424d9000
+[725] bo_new sz/phys/vmoff 00000100 024d9400 424d9400
+[725] bo_new sz/phys/vmoff 00000040 024d9500 424d9500
+[726] bo_new sz/phys/vmoff 00000010 024d9600 424d9600
+[727] bo_new sz/phys/vmoff 00000004 024d9700 424d9700
+[728] bo_new sz/phys/vmoff 00010000 02a30000 42a30000
+[728] bo_kind phys/size/kind 02a30000 00010000 00000070
+[728] bo_new sz/phys/vmoff 00010000 02a40000 42a40000
+[729] bo_new sz/phys/vmoff 00020000 02b10000 42b10000
+[729] bo_kind phys/size/kind 02b10000 00020000 00000070
+[729] bo_new sz/phys/vmoff 00004000 024d9800 424d9800
+[731] bo_new sz/phys/vmoff 00001000 024dd800 424dd800
+[732] bo_new sz/phys/vmoff 00000400 024de800 424de800
+[733] bo_new sz/phys/vmoff 00000100 024dec00 424dec00
+[733] bo_new sz/phys/vmoff 00000040 024ded00 424ded00
+[734] bo_new sz/phys/vmoff 00000010 024dee00 424dee00
+[735] bo_new sz/phys/vmoff 00000004 024def00 424def00
+[736] bo_new sz/phys/vmoff 00040000 04380000 44380000
+[736] bo_kind phys/size/kind 04380000 00040000 00000070
+[736] bo_new sz/phys/vmoff 00040000 043c0000 443c0000
+[738] bo_new sz/phys/vmoff 00060000 04400000 44400000
+[738] bo_kind phys/size/kind 04400000 00060000 00000070
+[738] bo_new sz/phys/vmoff 00010000 02b30000 42b30000
+[738] bo_new sz/phys/vmoff 00004000 025a1000 425a1000
+[738] bo_new sz/phys/vmoff 00001000 024df000 424df000
+[739] bo_new sz/phys/vmoff 00000400 025a5000 425a5000
+[739] bo_new sz/phys/vmoff 00000100 025a5400 425a5400
+[739] bo_new sz/phys/vmoff 00000040 025a5500 425a5500
+[739] bo_new sz/phys/vmoff 00000010 025a5600 425a5600
+[739] bo_new sz/phys/vmoff 00000004 025a5700 425a5700
+[739] bo_new sz/phys/vmoff 00040000 04460000 44460000
+[739] bo_kind phys/size/kind 04460000 00040000 00000070
+[739] bo_new sz/phys/vmoff 00040000 044a0000 444a0000
+[740] bo_new sz/phys/vmoff 00060000 044e0000 444e0000
+[740] bo_kind phys/size/kind 044e0000 00060000 00000070
+[740] bo_new sz/phys/vmoff 00010000 02c20000 42c20000
+[740] bo_new sz/phys/vmoff 00004000 025a5800 425a5800
+[740] bo_new sz/phys/vmoff 00001000 025a9800 425a9800
+[740] bo_new sz/phys/vmoff 00000400 025aa800 425aa800
+[740] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[740] kick ok cnt/put/pgi 00000a27 03209140 00000000
+[740] fence refresh phys/seq 02010000 00000005
+[740] fence refresh phys/seq 02010000 00000005
+[740] bo_kind phys/size/kind 02c90000 00040000 00000000
+[740] bo_kind phys/size/kind 027b0000 00010000 00000000
+[740] bo_kind phys/size/kind 02ba0000 00040000 00000000
+[740] bo_kind phys/size/kind 041c0000 00040000 00000000
+[740] bo_kind phys/size/kind 042a0000 00040000 00000000
+[740] bo_kind phys/size/kind 02a30000 00010000 00000000
+[740] bo_kind phys/size/kind 04380000 00040000 00000000
+[740] bo_new sz/phys/vmoff 00001000 025ab000 425ab000
+[745] bo_new sz/phys/vmoff 00000100 02012000 42012000
+[745] bo_new sz/phys/vmoff 00000040 02012100 42012100
+[745] bo_new sz/phys/vmoff 00000010 02012200 42012200
+[745] bo_new sz/phys/vmoff 00000004 02012300 42012300
+[746] bo_new sz/phys/vmoff 00040000 027f0000 427f0000
+[746] bo_kind phys/size/kind 027f0000 00040000 00000070
+[746] bo_new sz/phys/vmoff 00040000 02ba0000 42ba0000
+[746] bo_new sz/phys/vmoff 00060000 02ef0000 42ef0000
+[746] bo_kind phys/size/kind 02ef0000 00060000 00000070
+[746] bo_new sz/phys/vmoff 00010000 024c1000 424c1000
+[746] bo_new sz/phys/vmoff 00004000 02012400 42012400
+[746] bo_new sz/phys/vmoff 00001000 02016400 42016400
+[746] bo_new sz/phys/vmoff 00000400 02017400 42017400
+[746] bo_new sz/phys/vmoff 00000100 02017800 42017800
+[747] bo_new sz/phys/vmoff 00000040 02017900 42017900
+[747] bo_new sz/phys/vmoff 00000010 02017a00 42017a00
+[747] bo_new sz/phys/vmoff 00000004 02017b00 42017b00
+[747] bo_new sz/phys/vmoff 00010000 02500000 42500000
+[747] bo_kind phys/size/kind 02500000 00010000 00000070
+[747] bo_new sz/phys/vmoff 00010000 02530000 42530000
+[747] bo_new sz/phys/vmoff 00020000 027b0000 427b0000
+[747] bo_kind phys/size/kind 027b0000 00020000 00000070
+[747] bo_new sz/phys/vmoff 00004000 02017c00 42017c00
+[747] bo_new sz/phys/vmoff 00001000 0201bc00 4201bc00
+[747] bo_new sz/phys/vmoff 00000400 0201cc00 4201cc00
+[748] bo_new sz/phys/vmoff 00000100 0201d000 4201d000
+[748] bo_new sz/phys/vmoff 00000040 0201d100 4201d100
+[748] bo_new sz/phys/vmoff 00000010 0201d200 4201d200
+[748] bo_new sz/phys/vmoff 00000004 0201d300 4201d300
+[748] bo_new sz/phys/vmoff 00040000 02be0000 42be0000
+[748] bo_kind phys/size/kind 02be0000 00040000 00000070
+[748] bo_new sz/phys/vmoff 00040000 02c90000 42c90000
+[749] bo_new sz/phys/vmoff 00060000 041c0000 441c0000
+[749] bo_kind phys/size/kind 041c0000 00060000 00000070
+[749] bo_new sz/phys/vmoff 00010000 028f0000 428f0000
+[749] bo_new sz/phys/vmoff 00004000 021a1000 421a1000
+[750] bo_new sz/phys/vmoff 00001000 0201d400 4201d400
+[750] bo_new sz/phys/vmoff 00000400 0201e400 4201e400
+[750] bo_new sz/phys/vmoff 00000100 0201e800 4201e800
+[750] bo_new sz/phys/vmoff 00000040 0201e900 4201e900
+[750] bo_new sz/phys/vmoff 00000010 0201ea00 4201ea00
+[750] bo_new sz/phys/vmoff 00000004 0201eb00 4201eb00
+[750] bo_new sz/phys/vmoff 00040000 042a0000 442a0000
+[750] bo_kind phys/size/kind 042a0000 00040000 00000070
+[750] bo_new sz/phys/vmoff 00040000 042e0000 442e0000
+[751] bo_new sz/phys/vmoff 00060000 04380000 44380000
+[751] bo_kind phys/size/kind 04380000 00060000 00000070
+[751] bo_new sz/phys/vmoff 00010000 02900000 42900000
+[751] bo_new sz/phys/vmoff 00004000 021a5000 421a5000
+[751] bo_new sz/phys/vmoff 00001000 0201ec00 4201ec00
+[751] bo_new sz/phys/vmoff 00000400 0201fc00 4201fc00
+[751] bo_new sz/phys/vmoff 00000100 021a9000 421a9000
+[751] bo_new sz/phys/vmoff 00000040 021a9100 421a9100
+[751] bo_new sz/phys/vmoff 00000010 021a9200 421a9200
+[752] bo_new sz/phys/vmoff 00000004 021a9300 421a9300
+[752] bo_new sz/phys/vmoff 00040000 044a0000 444a0000
+[752] bo_kind phys/size/kind 044a0000 00040000 00000070
+[752] kick > cnt/m0/m1 00000687 0004a200 00000001
+[752] kick ok cnt/put/pgi 00000687 0320b9dc 00000000
+[752] bo_kind phys/size/kind 04460000 00040000 00000000
+[752] bo_kind phys/size/kind 027f0000 00040000 00000000
+[752] bo_kind phys/size/kind 02500000 00010000 00000000
+[752] bo_kind phys/size/kind 02be0000 00040000 00000000
+[752] bo_kind phys/size/kind 042a0000 00040000 00000000
+[752] bo_new sz/phys/vmoff 00001000 021aa000 421aa000
+[754] bo_new sz/phys/vmoff 00040000 027f0000 427f0000
+[755] bo_new sz/phys/vmoff 00060000 04540000 44540000
+[755] bo_kind phys/size/kind 04540000 00060000 00000070
+[755] bo_new sz/phys/vmoff 00010000 02500000 42500000
+[755] bo_new sz/phys/vmoff 00004000 021ab000 421ab000
+[755] bo_new sz/phys/vmoff 00001000 021af000 421af000
+[755] bo_new sz/phys/vmoff 00000400 021a9400 421a9400
+[755] bo_new sz/phys/vmoff 00000100 021a9800 421a9800
+[755] bo_new sz/phys/vmoff 00000040 021a9900 421a9900
+[756] bo_new sz/phys/vmoff 00000010 021a9a00 421a9a00
+[756] bo_new sz/phys/vmoff 00000004 021a9b00 421a9b00
+[756] bo_new sz/phys/vmoff 00010000 02910000 42910000
+[756] bo_kind phys/size/kind 02910000 00010000 00000070
+[756] bo_new sz/phys/vmoff 00010000 02980000 42980000
+[756] bo_new sz/phys/vmoff 00020000 02a30000 42a30000
+[756] bo_kind phys/size/kind 02a30000 00020000 00000070
+[756] bo_new sz/phys/vmoff 00004000 021b8000 421b8000
+[756] bo_new sz/phys/vmoff 00001000 021bc000 421bc000
+[756] bo_new sz/phys/vmoff 00000400 021a9c00 421a9c00
+[757] bo_new sz/phys/vmoff 00000100 021bd000 421bd000
+[757] bo_new sz/phys/vmoff 00000040 021bd100 421bd100
+[757] bo_new sz/phys/vmoff 00000010 021bd200 421bd200
+[757] bo_new sz/phys/vmoff 00000004 021bd300 421bd300
+[757] bo_new sz/phys/vmoff 00040000 02be0000 42be0000
+[757] bo_kind phys/size/kind 02be0000 00040000 00000070
+[757] bo_new sz/phys/vmoff 00040000 042a0000 442a0000
+[758] bo_new sz/phys/vmoff 00060000 045a0000 445a0000
+[758] bo_kind phys/size/kind 045a0000 00060000 00000070
+[758] bo_new sz/phys/vmoff 00010000 02b30000 42b30000
+[758] bo_new sz/phys/vmoff 00004000 024d1000 424d1000
+[758] bo_new sz/phys/vmoff 00001000 021bd400 421bd400
+[758] bo_new sz/phys/vmoff 00000400 021be400 421be400
+[758] bo_new sz/phys/vmoff 00000100 021be800 421be800
+[759] bo_new sz/phys/vmoff 00000040 021be900 421be900
+[759] bo_new sz/phys/vmoff 00000010 021bea00 421bea00
+[759] bo_new sz/phys/vmoff 00000004 021beb00 421beb00
+[759] bo_new sz/phys/vmoff 00040000 04460000 44460000
+[759] bo_kind phys/size/kind 04460000 00040000 00000070
+[759] bo_new sz/phys/vmoff 00040000 04600000 44600000
+[760] bo_new sz/phys/vmoff 00060000 04640000 44640000
+[760] bo_kind phys/size/kind 04640000 00060000 00000070
+[760] bo_new sz/phys/vmoff 00010000 02c20000 42c20000
+[760] bo_new sz/phys/vmoff 00004000 024d5000 424d5000
+[760] bo_new sz/phys/vmoff 00001000 021bec00 421bec00
+[760] bo_new sz/phys/vmoff 00000400 021bfc00 421bfc00
+[760] bo_new sz/phys/vmoff 00000100 024d9000 424d9000
+[760] bo_new sz/phys/vmoff 00000040 024d9100 424d9100
+[761] bo_new sz/phys/vmoff 00000010 024d9200 424d9200
+[761] bo_new sz/phys/vmoff 00000004 024d9300 424d9300
+[761] bo_new sz/phys/vmoff 00040000 046a0000 446a0000
+[761] bo_kind phys/size/kind 046a0000 00040000 00000070
+[761] bo_new sz/phys/vmoff 00040000 046e0000 446e0000
+[761] bo_new sz/phys/vmoff 00060000 04720000 44720000
+[761] bo_kind phys/size/kind 04720000 00060000 00000070
+[761] bo_new sz/phys/vmoff 00010000 02e70000 42e70000
+[762] bo_new sz/phys/vmoff 00004000 024d9400 424d9400
+[762] bo_new sz/phys/vmoff 00001000 024dd400 424dd400
+[762] bo_new sz/phys/vmoff 00000400 024de400 424de400
+[762] bo_new sz/phys/vmoff 00000100 024de800 424de800
+[762] bo_new sz/phys/vmoff 00000040 024de900 424de900
+[762] bo_new sz/phys/vmoff 00000010 024dea00 424dea00
+[762] bo_new sz/phys/vmoff 00000004 024deb00 424deb00
+[763] bo_new sz/phys/vmoff 00010000 02e80000 42e80000
+[763] bo_kind phys/size/kind 02e80000 00010000 00000070
+[763] bo_new sz/phys/vmoff 00010000 02f50000 42f50000
+[763] bo_new sz/phys/vmoff 00020000 02fd0000 42fd0000
+[763] bo_kind phys/size/kind 02fd0000 00020000 00000070
+[763] bo_new sz/phys/vmoff 00004000 025a1000 425a1000
+[763] bo_new sz/phys/vmoff 00001000 024dec00 424dec00
+[763] bo_new sz/phys/vmoff 00000400 024dfc00 424dfc00
+[763] bo_new sz/phys/vmoff 00000100 025a5000 425a5000
+[763] bo_new sz/phys/vmoff 00000040 025a5100 425a5100
+[763] bo_new sz/phys/vmoff 00000010 025a5200 425a5200
+[763] bo_new sz/phys/vmoff 00000004 025a5300 425a5300
+[764] bo_new sz/phys/vmoff 00040000 04780000 44780000
+[764] bo_kind phys/size/kind 04780000 00040000 00000070
+[764] bo_new sz/phys/vmoff 00040000 047c0000 447c0000
+[764] bo_new sz/phys/vmoff 00060000 04800000 44800000
+[764] bo_kind phys/size/kind 04800000 00060000 00000070
+[764] bo_new sz/phys/vmoff 00010000 02f60000 42f60000
+[764] bo_new sz/phys/vmoff 00004000 025a5400 425a5400
+[764] bo_new sz/phys/vmoff 00001000 025a9400 425a9400
+[765] bo_new sz/phys/vmoff 00000400 025aa400 425aa400
+[765] bo_new sz/phys/vmoff 00000100 025aa800 425aa800
+[765] bo_new sz/phys/vmoff 00000040 025aa900 425aa900
+[765] bo_new sz/phys/vmoff 00000010 025aaa00 425aaa00
+[765] bo_new sz/phys/vmoff 00000004 025aab00 425aab00
+[765] bo_new sz/phys/vmoff 00040000 04860000 44860000
+[765] bo_kind phys/size/kind 04860000 00040000 00000070
+[765] bo_new sz/phys/vmoff 00040000 048a0000 448a0000
+[766] bo_new sz/phys/vmoff 00060000 048e0000 448e0000
+[766] bo_kind phys/size/kind 048e0000 00060000 00000070
+[766] bo_new sz/phys/vmoff 00010000 02ff0000 42ff0000
+[766] bo_new sz/phys/vmoff 00004000 025ac000 425ac000
+[766] bo_new sz/phys/vmoff 00001000 04060000 44060000
+[767] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[767] kick ok cnt/put/pgi 00000a27 0320d3f8 00000000
+[767] fence refresh phys/seq 02010000 00000007
+[767] fence refresh phys/seq 02010000 00000007
+[767] bo_kind phys/size/kind 044a0000 00040000 00000000
+[767] bo_kind phys/size/kind 02910000 00010000 00000000
+[767] bo_kind phys/size/kind 02be0000 00040000 00000000
+[767] bo_kind phys/size/kind 04460000 00040000 00000000
+[767] bo_kind phys/size/kind 046a0000 00040000 00000000
+[767] bo_kind phys/size/kind 02e80000 00010000 00000000
+[767] bo_kind phys/size/kind 04780000 00040000 00000000
+[767] bo_new sz/phys/vmoff 00001000 02910000 42910000
+[771] bo_new sz/phys/vmoff 00000400 02012000 42012000
+[771] bo_new sz/phys/vmoff 00000100 02012400 42012400
+[771] bo_new sz/phys/vmoff 00000040 02012500 42012500
+[771] bo_new sz/phys/vmoff 00000010 02012600 42012600
+[771] bo_new sz/phys/vmoff 00000004 02012700 42012700
+[772] bo_new sz/phys/vmoff 00040000 027f0000 427f0000
+[772] bo_kind phys/size/kind 027f0000 00040000 00000070
+[772] bo_new sz/phys/vmoff 00040000 02ba0000 42ba0000
+[772] bo_new sz/phys/vmoff 00060000 042a0000 442a0000
+[772] bo_kind phys/size/kind 042a0000 00060000 00000070
+[772] bo_new sz/phys/vmoff 00010000 024c1000 424c1000
+[772] bo_new sz/phys/vmoff 00004000 02012800 42012800
+[772] bo_new sz/phys/vmoff 00001000 02016800 42016800
+[773] bo_new sz/phys/vmoff 00000400 02017800 42017800
+[773] bo_new sz/phys/vmoff 00000100 02017c00 42017c00
+[773] bo_new sz/phys/vmoff 00000040 02017d00 42017d00
+[773] bo_new sz/phys/vmoff 00000010 02017e00 42017e00
+[773] bo_new sz/phys/vmoff 00000004 02017f00 42017f00
+[773] bo_new sz/phys/vmoff 00010000 02500000 42500000
+[773] bo_kind phys/size/kind 02500000 00010000 00000070
+[773] bo_new sz/phys/vmoff 00010000 02530000 42530000
+[773] bo_new sz/phys/vmoff 00020000 028f0000 428f0000
+[773] bo_kind phys/size/kind 028f0000 00020000 00000070
+[773] bo_new sz/phys/vmoff 00004000 02018000 42018000
+[773] bo_new sz/phys/vmoff 00001000 0201c000 4201c000
+[774] bo_new sz/phys/vmoff 00000400 0201d000 4201d000
+[774] bo_new sz/phys/vmoff 00000100 0201d400 4201d400
+[774] bo_new sz/phys/vmoff 00000040 0201d500 4201d500
+[774] bo_new sz/phys/vmoff 00000010 0201d600 4201d600
+[774] bo_new sz/phys/vmoff 00000004 0201d700 4201d700
+[774] bo_new sz/phys/vmoff 00040000 02be0000 42be0000
+[774] bo_kind phys/size/kind 02be0000 00040000 00000070
+[774] bo_new sz/phys/vmoff 00040000 02c90000 42c90000
+[775] bo_new sz/phys/vmoff 00060000 04460000 44460000
+[775] bo_kind phys/size/kind 04460000 00060000 00000070
+[775] bo_new sz/phys/vmoff 00010000 02980000 42980000
+[775] bo_new sz/phys/vmoff 00004000 021a1000 421a1000
+[775] bo_new sz/phys/vmoff 00001000 0201d800 4201d800
+[775] bo_new sz/phys/vmoff 00000400 0201e800 4201e800
+[775] bo_new sz/phys/vmoff 00000100 0201ec00 4201ec00
+[775] bo_new sz/phys/vmoff 00000040 0201ed00 4201ed00
+[776] bo_new sz/phys/vmoff 00000010 0201ee00 4201ee00
+[776] bo_new sz/phys/vmoff 00000004 0201ef00 4201ef00
+[776] bo_new sz/phys/vmoff 00040000 04600000 44600000
+[776] bo_kind phys/size/kind 04600000 00040000 00000070
+[776] bo_new sz/phys/vmoff 00040000 046a0000 446a0000
+[776] bo_new sz/phys/vmoff 00060000 04780000 44780000
+[776] bo_kind phys/size/kind 04780000 00060000 00000070
+[776] kick > cnt/m0/m1 0000054c 0004a200 00000001
+[776] kick ok cnt/put/pgi 0000054c 0320fc94 00000000
+[776] bo_kind phys/size/kind 04860000 00040000 00000000
+[776] bo_kind phys/size/kind 027f0000 00040000 00000000
+[776] bo_kind phys/size/kind 02500000 00010000 00000000
+[776] bo_kind phys/size/kind 02be0000 00040000 00000000
+[776] bo_new sz/phys/vmoff 00001000 0201f000 4201f000
+[779] bo_new sz/phys/vmoff 00010000 02500000 42500000
+[780] bo_new sz/phys/vmoff 00004000 021a5000 421a5000
+[780] bo_new sz/phys/vmoff 00001000 021a9000 421a9000
+[780] heap allocs/used/largest 00000200 01666400 036c0000
+[780] heap frees/kicks 0000019c 0000000a
+[780] bo_new sz/phys/vmoff 00000400 021aa000 421aa000
+[781] bo_new sz/phys/vmoff 00000100 021aa400 421aa400
+[781] bo_kind phys/size/kind 027f0000 00040000 00000070
+[782] bo_kind phys/size/kind 04860000 00060000 00000070
+[783] bo_kind phys/size/kind 02c20000 00010000 00000070
+[783] bo_kind phys/size/kind 02f50000 00020000 00000070
+[784] bo_kind phys/size/kind 046e0000 00040000 00000070
+[784] bo_kind phys/size/kind 04980000 00060000 00000070
+[785] bo_kind phys/size/kind 049e0000 00040000 00000070
+[786] bo_kind phys/size/kind 04a60000 00060000 00000070
+[787] bo_kind phys/size/kind 04ac0000 00040000 00000070
+[787] bo_kind phys/size/kind 04b40000 00060000 00000070
+[788] bo_kind phys/size/kind 04070000 00010000 00000070
+[788] bo_kind phys/size/kind 04220000 00020000 00000070
+[789] bo_kind phys/size/kind 04ba0000 00040000 00000070
+[790] bo_kind phys/size/kind 04c20000 00060000 00000070
+[790] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[790] kick ok cnt/put/pgi 00000a27 032111c4 00000000
+[790] fence refresh phys/seq 02010000 00000009
+[790] fence refresh phys/seq 02010000 00000009
+[790] bo_kind phys/size/kind 04600000 00040000 00000000
+[790] bo_kind phys/size/kind 027f0000 00040000 00000000
+[790] bo_kind phys/size/kind 02c20000 00010000 00000000
+[790] bo_kind phys/size/kind 046e0000 00040000 00000000
+[790] bo_kind phys/size/kind 049e0000 00040000 00000000
+[790] bo_kind phys/size/kind 04ac0000 00040000 00000000
+[790] bo_kind phys/size/kind 04070000 00010000 00000000
+[796] bo_kind phys/size/kind 027f0000 00040000 00000070
+[796] bo_kind phys/size/kind 046a0000 00060000 00000070
+[797] bo_kind phys/size/kind 02be0000 00040000 00000070
+[798] bo_kind phys/size/kind 049e0000 00060000 00000070
+[799] bo_kind phys/size/kind 02530000 00010000 00000070
+[799] bo_kind phys/size/kind 02e70000 00020000 00000070
+[800] bo_kind phys/size/kind 04600000 00040000 00000070
+[800] bo_kind phys/size/kind 04ac0000 00060000 00000070
+[802] bo_kind phys/size/kind 04be0000 00040000 00000070
+[802] kick > cnt/m0/m1 00000687 0004a200 00000001
+[802] kick ok cnt/put/pgi 00000687 03213a60 00000000
+[802] bo_kind phys/size/kind 04ba0000 00040000 00000000
+[802] bo_kind phys/size/kind 027f0000 00040000 00000000
+[802] bo_kind phys/size/kind 02be0000 00040000 00000000
+[802] bo_kind phys/size/kind 02530000 00010000 00000000
+[802] bo_kind phys/size/kind 04600000 00040000 00000000
+[804] bo_kind phys/size/kind 04c80000 00060000 00000070
+[806] bo_kind phys/size/kind 02be0000 00040000 00000070
+[806] bo_kind phys/size/kind 04ce0000 00060000 00000070
+[807] bo_kind phys/size/kind 02ff0000 00010000 00000070
+[807] bo_kind phys/size/kind 04140000 00020000 00000070
+[808] bo_kind phys/size/kind 04ba0000 00040000 00000070
+[809] bo_kind phys/size/kind 04d80000 00060000 00000070
+[810] bo_kind phys/size/kind 04de0000 00040000 00000070
+[810] bo_kind phys/size/kind 04e60000 00060000 00000070
+[811] bo_kind phys/size/kind 04ec0000 00040000 00000070
+[812] bo_kind phys/size/kind 04f40000 00060000 00000070
+[813] bo_kind phys/size/kind 043e0000 00010000 00000070
+[813] bo_kind phys/size/kind 044c0000 00020000 00000070
+[814] bo_kind phys/size/kind 04fa0000 00040000 00000070
+[815] bo_kind phys/size/kind 05020000 00060000 00000070
+[818] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[818] kick ok cnt/put/pgi 00000a27 0321547c 00000000
+[818] fence refresh phys/seq 02010000 0000000b
+[818] fence refresh phys/seq 02010000 0000000b
+[818] bo_kind phys/size/kind 04be0000 00040000 00000000
+[818] bo_kind phys/size/kind 02be0000 00040000 00000000
+[818] bo_kind phys/size/kind 02ff0000 00010000 00000000
+[818] bo_kind phys/size/kind 04ba0000 00040000 00000000
+[818] bo_kind phys/size/kind 04de0000 00040000 00000000
+[818] bo_kind phys/size/kind 04ec0000 00040000 00000000
+[818] bo_kind phys/size/kind 043e0000 00010000 00000000
+[821] bo_kind phys/size/kind 027f0000 00040000 00000070
+[822] bo_kind phys/size/kind 04ba0000 00060000 00000070
+[823] bo_kind phys/size/kind 02be0000 00040000 00000070
+[823] bo_kind phys/size/kind 04de0000 00060000 00000070
+[824] bo_kind phys/size/kind 02500000 00010000 00000070
+[825] bo_kind phys/size/kind 04060000 00020000 00000070
+[826] bo_kind phys/size/kind 04600000 00040000 00000070
+[826] bo_kind phys/size/kind 04ec0000 00060000 00000070
+[826] kick > cnt/m0/m1 0000054c 0004a200 00000001
+[826] kick ok cnt/put/pgi 0000054c 03217d18 00000000
+[826] bo_kind phys/size/kind 04fa0000 00040000 00000000
+[826] bo_kind phys/size/kind 027f0000 00040000 00000000
+[826] bo_kind phys/size/kind 02be0000 00040000 00000000
+[826] bo_kind phys/size/kind 02500000 00010000 00000000
+[830] heap allocs/used/largest 00000300 01dc7800 02f80000
+[830] heap frees/kicks 0000027f 0000000e
+[830] bo_kind phys/size/kind 027f0000 00040000 00000070
+[830] bo_new sz/phys/vmoff 00040000 02be0000 42be0000
+[831] bo_kind phys/size/kind 04fa0000 00060000 00000070
+[832] bo_kind phys/size/kind 04d40000 00040000 00000070
+[832] bo_kind phys/size/kind 050c0000 00060000 00000070
+[833] bo_kind phys/size/kind 02c20000 00010000 00000070
+[834] bo_kind phys/size/kind 04300000 00020000 00000070
+[835] bo_kind phys/size/kind 05120000 00040000 00000070
+[835] bo_kind phys/size/kind 051a0000 00060000 00000070
+[836] bo_kind phys/size/kind 05200000 00040000 00000070
+[837] bo_kind phys/size/kind 05280000 00060000 00000070
+[838] bo_kind phys/size/kind 052e0000 00040000 00000070
+[838] bo_kind phys/size/kind 05360000 00060000 00000070
+[839] bo_kind phys/size/kind 04710000 00010000 00000070
+[839] bo_kind phys/size/kind 048c0000 00020000 00000070
+[840] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[840] kick ok cnt/put/pgi 00000a27 03219248 00000000
+[840] fence refresh phys/seq 02010000 0000000d
+[840] fence refresh phys/seq 02010000 0000000d
+[840] bo_kind phys/size/kind 04600000 00040000 00000000
+[840] bo_kind phys/size/kind 027f0000 00040000 00000000
+[840] bo_kind phys/size/kind 04d40000 00040000 00000000
+[840] bo_kind phys/size/kind 02c20000 00010000 00000000
+[840] bo_kind phys/size/kind 05120000 00040000 00000000
+[840] bo_kind phys/size/kind 05200000 00040000 00000000
+[840] bo_kind phys/size/kind 052e0000 00040000 00000000
+[845] bo_kind phys/size/kind 02ba0000 00040000 00000070
+[845] bo_kind phys/size/kind 05120000 00060000 00000070
+[846] bo_kind phys/size/kind 02c90000 00040000 00000070
+[847] bo_kind phys/size/kind 05200000 00060000 00000070
+[848] bo_kind phys/size/kind 04940000 00040000 00000070
+[848] bo_kind phys/size/kind 052e0000 00060000 00000070
+[849] bo_kind phys/size/kind 02530000 00010000 00000070
+[850] bo_kind phys/size/kind 02810000 00020000 00000070
+[851] bo_kind phys/size/kind 05080000 00040000 00000070
+[851] kick > cnt/m0/m1 00000687 0004a200 00000001
+[852] kick ok cnt/put/pgi 00000687 0321bae4 00000000
+[852] bo_kind phys/size/kind 04710000 00010000 00000000
+[852] bo_kind phys/size/kind 02ba0000 00040000 00000000
+[852] bo_kind phys/size/kind 02c90000 00040000 00000000
+[852] bo_kind phys/size/kind 04940000 00040000 00000000
+[852] bo_kind phys/size/kind 02530000 00010000 00000000
+[853] bo_kind phys/size/kind 053c0000 00060000 00000070
+[855] bo_kind phys/size/kind 02c90000 00040000 00000070
+[855] bo_kind phys/size/kind 05420000 00060000 00000070
+[856] bo_kind phys/size/kind 05480000 00040000 00000070
+[857] bo_kind phys/size/kind 05500000 00060000 00000070
+[858] bo_kind phys/size/kind 02c20000 00010000 00000070
+[858] bo_kind phys/size/kind 043e0000 00020000 00000070
+[859] bo_kind phys/size/kind 05560000 00040000 00000070
+[859] bo_kind phys/size/kind 055e0000 00060000 00000070
+[861] bo_kind phys/size/kind 05640000 00040000 00000070
+[861] bo_kind phys/size/kind 056c0000 00060000 00000070
+[862] bo_kind phys/size/kind 05720000 00040000 00000070
+[863] bo_kind phys/size/kind 057a0000 00060000 00000070
+[864] bo_kind phys/size/kind 047f0000 00010000 00000070
+[864] bo_kind phys/size/kind 04b20000 00020000 00000070
+[864] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[867] kick ok cnt/put/pgi 00000a27 0321d500 00000000
+[867] fence refresh phys/seq 02010000 0000000f
+[867] fence refresh phys/seq 02010000 0000000f
+[867] bo_kind phys/size/kind 05080000 00040000 00000000
+[867] bo_kind phys/size/kind 02c90000 00040000 00000000
+[867] bo_kind phys/size/kind 05480000 00040000 00000000
+[867] bo_kind phys/size/kind 02c20000 00010000 00000000
+[867] bo_kind phys/size/kind 05560000 00040000 00000000
+[867] bo_kind phys/size/kind 05640000 00040000 00000000
+[867] bo_kind phys/size/kind 05720000 00040000 00000000
+[870] bo_kind phys/size/kind 02ba0000 00040000 00000070
+[870] bo_kind phys/size/kind 05480000 00060000 00000070
+[871] bo_kind phys/size/kind 02c90000 00040000 00000070
+[872] bo_kind phys/size/kind 05560000 00060000 00000070
+[873] bo_kind phys/size/kind 04940000 00040000 00000070
+[873] bo_kind phys/size/kind 05640000 00060000 00000070
+[874] bo_kind phys/size/kind 02530000 00010000 00000070
+[874] kick > cnt/m0/m1 0000054c 0004a200 00000001
+[874] kick ok cnt/put/pgi 0000054c 0321fd9c 00000000
+[874] bo_kind phys/size/kind 047f0000 00010000 00000000
+[874] bo_kind phys/size/kind 02ba0000 00040000 00000000
+[874] bo_kind phys/size/kind 02c90000 00040000 00000000
+[874] bo_kind phys/size/kind 04940000 00040000 00000000
+[877] bo_kind phys/size/kind 02ba0000 00020000 00000070
+[878] bo_kind phys/size/kind 02c90000 00040000 00000070
+[878] bo_kind phys/size/kind 05720000 00060000 00000070
+[879] heap allocs/used/largest 00000400 0256c800 02800000
+[879] heap frees/kicks 00000363 00000012
+[879] bo_new sz/phys/vmoff 00000400 021af800 421af800
+[880] bo_kind phys/size/kind 05080000 00040000 00000070
+[881] bo_kind phys/size/kind 05840000 00060000 00000070
+[882] bo_kind phys/size/kind 058a0000 00040000 00000070
+[882] bo_kind phys/size/kind 05920000 00060000 00000070
+[883] bo_kind phys/size/kind 02bc0000 00010000 00000070
+[883] bo_kind phys/size/kind 04700000 00020000 00000070
+[884] bo_kind phys/size/kind 05980000 00040000 00000070
+[885] bo_kind phys/size/kind 05a00000 00060000 00000070
+[886] bo_kind phys/size/kind 05a60000 00040000 00000070
+[886] bo_kind phys/size/kind 05ae0000 00060000 00000070
+[888] bo_kind phys/size/kind 05b40000 00040000 00000070
+[888] bo_kind phys/size/kind 05bc0000 00060000 00000070
+[889] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[889] kick ok cnt/put/pgi 00000a27 032212cc 00000000
+[889] fence refresh phys/seq 02010000 00000011
+[889] fence refresh phys/seq 02010000 00000011
+[889] bo_kind phys/size/kind 02530000 00010000 00000000
+[889] bo_kind phys/size/kind 02c90000 00040000 00000000
+[889] bo_kind phys/size/kind 05080000 00040000 00000000
+[889] bo_kind phys/size/kind 058a0000 00040000 00000000
+[889] bo_kind phys/size/kind 02bc0000 00010000 00000000
+[889] bo_kind phys/size/kind 05980000 00040000 00000000
+[889] bo_kind phys/size/kind 05a60000 00040000 00000000
+[894] bo_kind phys/size/kind 024c0000 00010000 00000070
+[894] bo_kind phys/size/kind 02bc0000 00020000 00000070
+[895] bo_kind phys/size/kind 02be0000 00040000 00000070
+[896] bo_kind phys/size/kind 058a0000 00060000 00000070
+[897] bo_kind phys/size/kind 04600000 00040000 00000070
+[897] bo_kind phys/size/kind 05980000 00060000 00000070
+[898] bo_kind phys/size/kind 04d40000 00040000 00000070
+[899] bo_kind phys/size/kind 05a60000 00060000 00000070
+[899] kick > cnt/m0/m1 0000054c 0004a200 00000001
+[899] kick ok cnt/put/pgi 0000054c 03223b68 00000000
+[899] bo_kind phys/size/kind 05b40000 00040000 00000000
+[899] bo_kind phys/size/kind 024c0000 00010000 00000000
+[899] bo_kind phys/size/kind 02be0000 00040000 00000000
+[899] bo_kind phys/size/kind 04600000 00040000 00000000
+[902] bo_kind phys/size/kind 02910000 00010000 00000070
+[902] bo_kind phys/size/kind 02be0000 00020000 00000070
+[903] bo_kind phys/size/kind 04600000 00040000 00000070
+[904] bo_kind phys/size/kind 05b40000 00060000 00000070
+[905] bo_kind phys/size/kind 05c20000 00040000 00000070
+[905] bo_kind phys/size/kind 05ca0000 00060000 00000070
+[907] bo_kind phys/size/kind 05d00000 00040000 00000070
+[907] bo_kind phys/size/kind 05d80000 00060000 00000070
+[908] bo_kind phys/size/kind 02c20000 00010000 00000070
+[908] bo_kind phys/size/kind 047e0000 00020000 00000070
+[909] bo_kind phys/size/kind 05de0000 00040000 00000070
+[910] bo_kind phys/size/kind 05e60000 00060000 00000070
+[911] bo_kind phys/size/kind 05ec0000 00040000 00000070
+[911] bo_kind phys/size/kind 05f40000 00060000 00000070
+[912] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[912] kick ok cnt/put/pgi 00000a27 03225098 00000000
+[912] fence refresh phys/seq 02010000 00000013
+[912] fence refresh phys/seq 02010000 00000013
+[912] bo_kind phys/size/kind 04d40000 00040000 00000000
+[912] bo_kind phys/size/kind 02910000 00010000 00000000
+[912] bo_kind phys/size/kind 04600000 00040000 00000000
+[912] bo_kind phys/size/kind 05c20000 00040000 00000000
+[912] bo_kind phys/size/kind 05d00000 00040000 00000000
+[912] bo_kind phys/size/kind 02c20000 00010000 00000000
+[912] bo_kind phys/size/kind 05de0000 00040000 00000000
+[917] bo_kind phys/size/kind 02c90000 00040000 00000070
+[918] bo_kind phys/size/kind 05c20000 00060000 00000070
+[919] bo_kind phys/size/kind 024d0000 00010000 00000070
+[919] bo_kind phys/size/kind 02c00000 00020000 00000070
+[920] bo_kind phys/size/kind 04940000 00040000 00000070
+[920] bo_kind phys/size/kind 05d00000 00060000 00000070
+[922] bo_kind phys/size/kind 05080000 00040000 00000070
+[922] bo_kind phys/size/kind 05de0000 00060000 00000070
+[923] bo_kind phys/size/kind 05f00000 00040000 00000070
+[923] kick > cnt/m0/m1 00000687 0004a200 00000001
+[923] kick ok cnt/put/pgi 00000687 03227934 00000000
+[923] bo_kind phys/size/kind 05ec0000 00040000 00000000
+[923] bo_kind phys/size/kind 02c90000 00040000 00000000
+[923] bo_kind phys/size/kind 024d0000 00010000 00000000
+[923] bo_kind phys/size/kind 04940000 00040000 00000000
+[923] bo_kind phys/size/kind 05080000 00040000 00000000
+[926] bo_kind phys/size/kind 05fa0000 00060000 00000070
+[928] bo_kind phys/size/kind 02980000 00010000 00000070
+[928] bo_kind phys/size/kind 04940000 00020000 00000070
+[928] heap allocs/used/largest 00000500 02ca2400 02000000
+[928] heap frees/kicks 00000440 00000016
+[929] bo_new sz/phys/vmoff 00040000 05080000 45080000
+[929] bo_kind phys/size/kind 05080000 00040000 00000070
+[930] bo_kind phys/size/kind 06000000 00060000 00000070
+[931] bo_kind phys/size/kind 06060000 00040000 00000070
+[931] bo_kind phys/size/kind 060e0000 00060000 00000070
+[933] bo_kind phys/size/kind 06140000 00040000 00000070
+[933] bo_kind phys/size/kind 061c0000 00060000 00000070
+[934] bo_kind phys/size/kind 04970000 00010000 00000070
+[934] bo_kind phys/size/kind 04c00000 00020000 00000070
+[935] bo_kind phys/size/kind 06220000 00040000 00000070
+[936] bo_kind phys/size/kind 062a0000 00060000 00000070
+[937] bo_kind phys/size/kind 06300000 00040000 00000070
+[937] bo_kind phys/size/kind 06380000 00060000 00000070
+[940] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[940] kick ok cnt/put/pgi 00000a27 03229350 00000000
+[940] fence refresh phys/seq 02010000 00000015
+[940] fence refresh phys/seq 02010000 00000015
+[940] bo_kind phys/size/kind 05f00000 00040000 00000000
+[940] bo_kind phys/size/kind 02980000 00010000 00000000
+[940] bo_kind phys/size/kind 05080000 00040000 00000000
+[940] bo_kind phys/size/kind 06060000 00040000 00000000
+[940] bo_kind phys/size/kind 06140000 00040000 00000000
+[940] bo_kind phys/size/kind 04970000 00010000 00000000
+[940] bo_kind phys/size/kind 06220000 00040000 00000000
+[943] bo_kind phys/size/kind 02c90000 00040000 00000070
+[944] bo_kind phys/size/kind 05ec0000 00060000 00000070
+[945] bo_kind phys/size/kind 024d0000 00010000 00000070
+[945] bo_kind phys/size/kind 04960000 00020000 00000070
+[946] bo_kind phys/size/kind 04d40000 00040000 00000070
+[946] bo_kind phys/size/kind 06060000 00060000 00000070
+[947] bo_kind phys/size/kind 05800000 00040000 00000070
+[948] bo_kind phys/size/kind 06220000 00060000 00000070
+[948] kick > cnt/m0/m1 0000054c 0004a200 00000001
+[948] kick ok cnt/put/pgi 0000054c 0322bbec 00000000
+[948] bo_kind phys/size/kind 06300000 00040000 00000000
+[948] bo_kind phys/size/kind 02c90000 00040000 00000000
+[948] bo_kind phys/size/kind 024d0000 00010000 00000000
+[948] bo_kind phys/size/kind 04d40000 00040000 00000000
+[951] bo_kind phys/size/kind 02c90000 00040000 00000070
+[952] bo_kind phys/size/kind 06300000 00060000 00000070
+[953] bo_kind phys/size/kind 02980000 00010000 00000070
+[953] bo_kind phys/size/kind 04a40000 00020000 00000070
+[954] bo_kind phys/size/kind 06180000 00040000 00000070
+[955] bo_kind phys/size/kind 06420000 00060000 00000070
+[956] bo_kind phys/size/kind 06480000 00040000 00000070
+[956] bo_kind phys/size/kind 06500000 00060000 00000070
+[957] bo_kind phys/size/kind 06560000 00040000 00000070
+[958] bo_kind phys/size/kind 065e0000 00060000 00000070
+[959] bo_kind phys/size/kind 04e50000 00010000 00000070
+[959] bo_kind phys/size/kind 05000000 00020000 00000070
+[960] bo_kind phys/size/kind 06640000 00040000 00000070
+[961] bo_kind phys/size/kind 066c0000 00060000 00000070
+[961] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[961] kick ok cnt/put/pgi 00000a27 0322d11c 00000000
+[961] fence refresh phys/seq 02010000 00000017
+[961] fence refresh phys/seq 02010000 00000017
+[961] bo_kind phys/size/kind 05800000 00040000 00000000
+[961] bo_kind phys/size/kind 02c90000 00040000 00000000
+[961] bo_kind phys/size/kind 02980000 00010000 00000000
+[961] bo_kind phys/size/kind 06180000 00040000 00000000
+[961] bo_kind phys/size/kind 06480000 00040000 00000000
+[961] bo_kind phys/size/kind 06560000 00040000 00000000
+[961] bo_kind phys/size/kind 04e50000 00010000 00000000
+[967] bo_kind phys/size/kind 02c90000 00040000 00000070
+[967] bo_kind phys/size/kind 06140000 00060000 00000070
+[969] bo_kind phys/size/kind 04d40000 00040000 00000070
+[969] bo_kind phys/size/kind 06480000 00060000 00000070
+[970] bo_kind phys/size/kind 02500000 00010000 00000070
+[970] bo_kind phys/size/kind 04e40000 00020000 00000070
+[971] bo_kind phys/size/kind 05800000 00040000 00000070
+[972] bo_kind phys/size/kind 06560000 00060000 00000070
+[973] bo_kind phys/size/kind 06680000 00040000 00000070
+[973] kick > cnt/m0/m1 00000687 0004a200 00000001
+[973] kick ok cnt/put/pgi 00000687 0322f9b8 00000000
+[973] bo_kind phys/size/kind 06640000 00040000 00000000
+[973] bo_kind phys/size/kind 02c90000 00040000 00000000
+[973] bo_kind phys/size/kind 04d40000 00040000 00000000
+[973] bo_kind phys/size/kind 02500000 00010000 00000000
+[973] bo_kind phys/size/kind 05800000 00040000 00000000
+[976] bo_kind phys/size/kind 06720000 00060000 00000070
+[977] bo_kind phys/size/kind 04d40000 00040000 00000070
+[977] bo_kind phys/size/kind 06780000 00060000 00000070
+[978] bo_kind phys/size/kind 02b30000 00010000 00000070
+[978] bo_kind phys/size/kind 04f20000 00020000 00000070
+[978] heap allocs/used/largest 00000600 034b5400 01820000
+[978] heap frees/kicks 00000525 0000001a
+[979] bo_new sz/phys/vmoff 00001000 021bd400 421bd400
+[980] bo_kind phys/size/kind 06640000 00040000 00000070
+[980] bo_kind phys/size/kind 06820000 00060000 00000070
+[981] bo_kind phys/size/kind 06880000 00040000 00000070
+[982] bo_kind phys/size/kind 06900000 00060000 00000070
+[983] bo_kind phys/size/kind 06960000 00040000 00000070
+[983] bo_kind phys/size/kind 069e0000 00060000 00000070
+[985] bo_kind phys/size/kind 05260000 00010000 00000070
+[985] bo_kind phys/size/kind 05340000 00020000 00000070
+[986] bo_kind phys/size/kind 06a40000 00040000 00000070
+[986] bo_kind phys/size/kind 06ac0000 00060000 00000070
+[987] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[990] kick ok cnt/put/pgi 00000a27 032313d4 00000000
+[990] fence refresh phys/seq 02010000 00000019
+[990] bo_kind phys/size/kind 06680000 00040000 00000000
+[990] bo_kind phys/size/kind 04d40000 00040000 00000000
+[990] bo_kind phys/size/kind 02b30000 00010000 00000000
+[990] bo_kind phys/size/kind 06640000 00040000 00000000
+[990] bo_kind phys/size/kind 06880000 00040000 00000000
+[990] bo_kind phys/size/kind 06960000 00040000 00000000
+[990] bo_kind phys/size/kind 05260000 00010000 00000000
+[992] bo_kind phys/size/kind 02c90000 00040000 00000070
+[993] bo_kind phys/size/kind 06640000 00060000 00000070
+[994] bo_kind phys/size/kind 04d40000 00040000 00000070
+[994] bo_kind phys/size/kind 06880000 00060000 00000070
+[995] bo_kind phys/size/kind 02500000 00010000 00000070
+[996] bo_kind phys/size/kind 05180000 00020000 00000070
+[997] bo_kind phys/size/kind 05800000 00040000 00000070
+[997] bo_kind phys/size/kind 06960000 00060000 00000070
+[997] kick > cnt/m0/m1 0000054c 0004a200 00000001
+[997] kick ok cnt/put/pgi 0000054c 03233c70 00000000
+[997] bo_kind phys/size/kind 06a40000 00040000 00000000
+[997] bo_kind phys/size/kind 02c90000 00040000 00000000
+[997] bo_kind phys/size/kind 04d40000 00040000 00000000
+[997] bo_kind phys/size/kind 02500000 00010000 00000000
+[1001] bo_kind phys/size/kind 02c90000 00040000 00000070
+[1001] bo_kind phys/size/kind 06a40000 00060000 00000070
+[1003] bo_kind phys/size/kind 067e0000 00040000 00000070
+[1003] bo_kind phys/size/kind 06b60000 00060000 00000070
+[1004] bo_kind phys/size/kind 02980000 00010000 00000070
+[1004] bo_kind phys/size/kind 05260000 00020000 00000070
+[1005] bo_kind phys/size/kind 06bc0000 00040000 00000070
+[1006] bo_kind phys/size/kind 06c40000 00060000 00000070
+[1007] bo_kind phys/size/kind 06ca0000 00040000 00000070
+[1007] bo_kind phys/size/kind 06d20000 00060000 00000070
+[1009] bo_kind phys/size/kind 06d80000 00040000 00000070
+[1009] bo_kind phys/size/kind 06e00000 00060000 00000070
+[1010] bo_kind phys/size/kind 054f0000 00010000 00000070
+[1010] bo_kind phys/size/kind 056a0000 00020000 00000070
+[1012] kick > cnt/m0/m1 00000a27 00107b00 00000000
+[1012] kick ok cnt/put/pgi 00000a27 032351a0 00000000
+[1012] bo_kind phys/size/kind 05800000 00040000 00000000
+[1012] bo_kind phys/size/kind 02c90000 00040000 00000000
+[1012] bo_kind phys/size/kind 067e0000 00040000 00000000
+[1012] bo_kind phys/size/kind 02980000 00010000 00000000
+[1012] bo_kind phys/size/kind 06bc0000 00040000 00000000
+[1012] bo_kind phys/size/kind 06ca0000 00040000 00000000
+[1012] bo_kind phys/size/kind 06d80000 00040000 00000000
+[1016] bo_kind phys/size/kind 02c90000 00040000 00000070
+[1016] bo_kind phys/size/kind 06bc0000 00060000 00000070
+[1017] bo_kind phys/size/kind 04d40000 00040000 00000070
+[1018] bo_kind phys/size/kind 06ca0000 00060000 00000070
+[1019] bo_kind phys/size/kind 05800000 00040000 00000070
+[1019] bo_kind phys/size/kind 06d80000 00060000 00000070
+[1020] bo_kind phys/size/kind 02530000 00010000 00000070
+[1020] bo_kind phys/size/kind 055c0000 00020000 00000070
+[1021] kick > cnt/m0/m1 00000687 0004a200 00000001
+[1021] kick ok cnt/put/pgi 00000687 03237a3c 00000000
+[1023] bo_kind phys/size/kind 054f0000 00010000 00000000
+[1023] bo_kind phys/size/kind 02c90000 00040000 00000000
+[1023] bo_kind phys/size/kind 04d40000 00040000 00000000
+[1023] bo_kind phys/size/kind 05800000 00040000 00000000
+[1023] bo_kind phys/size/kind 02530000 00010000 00000000
+[1024] kick > cnt/m0/m1 00000005 00107b00 00000000
+[1024] kick ok cnt/put/pgi 00000005 03239458 00000000
+[1026] front phys/size 00100000 00096000
+[1026] bo_front phys/vmoff 00100000 40100000
+[1026] wgl: front resource/bpp 04e7ca20 00000010
+[1026] wgl: front surface/pitch 00100000 00000500
+[1027] kick > cnt/m0/m1 00000025 00088200 000000e8
+[1027] kick ok cnt/put/pgi 00000025 0323946c 00000000
+[1029] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1030] kick ok cnt/put/pgi 00000018 03239500 00000000
+[1030] vram_read > off/dwords 02c90000 00010000
+[1030] vram_read < dwords 00010000
+[1031] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1031] kick ok cnt/put/pgi 00000018 03239560 00000000
+[1031] vram_read > off/dwords 024c0000 00004000
+[1031] vram_read < dwords 00004000
+[1033] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1033] kick ok cnt/put/pgi 00000018 032395c0 00000000
+[1035] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1035] kick ok cnt/put/pgi 00000018 03239620 00000000
+[1037] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1037] kick ok cnt/put/pgi 00000018 03239680 00000000
+[1038] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1040] kick ok cnt/put/pgi 00000018 032396e0 00000000
+[1040] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1040] kick ok cnt/put/pgi 00000018 03239740 00000000
+[1042] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1042] kick ok cnt/put/pgi 00000018 032397a0 00000000
+[1044] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1044] kick ok cnt/put/pgi 00000018 03239800 00000000
+[1046] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1046] kick ok cnt/put/pgi 00000018 03239860 00000000
+[1046] vram_read > off/dwords 02c90000 00010000
+[1046] vram_read < dwords 00010000
+[1048] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1048] kick ok cnt/put/pgi 00000018 032398c0 00000000
+[1048] vram_read > off/dwords 024c0000 00004000
+[1048] vram_read < dwords 00004000
+[1050] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1050] kick ok cnt/put/pgi 00000018 03239920 00000000
+[1052] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1052] kick ok cnt/put/pgi 00000018 03239980 00000000
+[1054] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1054] kick ok cnt/put/pgi 00000018 032399e0 00000000
+[1055] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1055] kick ok cnt/put/pgi 00000018 03239a40 00000000
+[1057] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1057] kick ok cnt/put/pgi 00000018 03239aa0 00000000
+[1059] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1059] kick ok cnt/put/pgi 00000018 03239b00 00000000
+[1061] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1062] kick ok cnt/put/pgi 00000018 03239b60 00000000
+[1062] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1062] kick ok cnt/put/pgi 00000018 03239bc0 00000000
+[1062] vram_read > off/dwords 02c90000 00010000
+[1062] vram_read < dwords 00010000
+[1065] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1065] kick ok cnt/put/pgi 00000018 03239c20 00000000
+[1065] vram_read > off/dwords 024c0000 00004000
+[1065] vram_read < dwords 00004000
+[1067] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1067] kick ok cnt/put/pgi 00000018 03239c80 00000000
+[1069] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1069] kick ok cnt/put/pgi 00000018 03239ce0 00000000
+[1070] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1070] kick ok cnt/put/pgi 00000018 03239d40 00000000
+[1072] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1073] kick ok cnt/put/pgi 00000018 03239da0 00000000
+[1074] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1074] kick ok cnt/put/pgi 00000018 03239e00 00000000
+[1076] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1076] kick ok cnt/put/pgi 00000018 03239e60 00000000
+[1077] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1077] kick ok cnt/put/pgi 00000018 03239ec0 00000000
+[1079] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1079] kick ok cnt/put/pgi 00000018 03239f20 00000000
+[1079] vram_read > off/dwords 024c0000 00004000
+[1079] vram_read < dwords 00004000
+[1081] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1081] kick ok cnt/put/pgi 00000018 03239f80 00000000
+[1083] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1083] kick ok cnt/put/pgi 00000018 03239fe0 00000000
+[1084] heap allocs/used/largest 00000700 03890400 011a0000
+[1084] heap frees/kicks 0000064e 0000003e
+[1085] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1085] kick ok cnt/put/pgi 00000018 0323a040 00000000
+[1087] bo_new sz/phys/vmoff 00000100 02012000 42012000
+[1087] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1087] kick ok cnt/put/pgi 00000018 0323a0a0 00000000
+[1089] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1089] kick ok cnt/put/pgi 00000018 0323a100 00000000
+[1090] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1090] kick ok cnt/put/pgi 00000018 0323a160 00000000
+[1091] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1091] kick ok cnt/put/pgi 00000018 0323a1c0 00000000
+[1092] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1092] kick ok cnt/put/pgi 00000018 0323a220 00000000
+[1092] vram_read > off/dwords 02c90000 00010000
+[1092] vram_read < dwords 00010000
+[1094] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1094] kick ok cnt/put/pgi 00000018 0323a280 00000000
+[1094] vram_read > off/dwords 024c0000 00004000
+[1094] vram_read < dwords 00004000
+[1095] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1095] kick ok cnt/put/pgi 00000018 0323a2e0 00000000
+[1096] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1096] kick ok cnt/put/pgi 00000018 0323a340 00000000
+[1098] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1098] kick ok cnt/put/pgi 00000018 0323a3a0 00000000
+[1099] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1099] kick ok cnt/put/pgi 00000018 0323a400 00000000
+[1100] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1100] kick ok cnt/put/pgi 00000018 0323a460 00000000
+[1101] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1101] kick ok cnt/put/pgi 00000018 0323a4c0 00000000
+[1102] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1102] kick ok cnt/put/pgi 00000018 0323a520 00000000
+[1104] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1104] kick ok cnt/put/pgi 00000018 0323a580 00000000
+[1104] vram_read > off/dwords 02c90000 00010000
+[1104] vram_read < dwords 00010000
+[1105] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1105] kick ok cnt/put/pgi 00000018 0323a5e0 00000000
+[1105] vram_read > off/dwords 024c0000 00004000
+[1105] vram_read < dwords 00004000
+[1107] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1107] kick ok cnt/put/pgi 00000018 0323a640 00000000
+[1108] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1108] kick ok cnt/put/pgi 00000018 0323a6a0 00000000
+[1109] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1109] kick ok cnt/put/pgi 00000018 0323a700 00000000
+[1110] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1110] kick ok cnt/put/pgi 00000018 0323a760 00000000
+[1111] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1111] kick ok cnt/put/pgi 00000018 0323a7c0 00000000
+[1112] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1112] kick ok cnt/put/pgi 00000018 0323a820 00000000
+[1114] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1114] kick ok cnt/put/pgi 00000018 0323a880 00000000
+[1115] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1115] kick ok cnt/put/pgi 00000018 0323a8e0 00000000
+[1115] vram_read > off/dwords 02c90000 00010000
+[1115] vram_read < dwords 00010000
+[1117] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1117] kick ok cnt/put/pgi 00000018 0323a940 00000000
+[1117] vram_read > off/dwords 024c0000 00004000
+[1117] vram_read < dwords 00004000
+[1118] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1118] kick ok cnt/put/pgi 00000018 0323a9a0 00000000
+[1119] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1119] kick ok cnt/put/pgi 00000018 0323aa00 00000000
+[1121] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1121] kick ok cnt/put/pgi 00000018 0323aa60 00000000
+[1122] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1122] kick ok cnt/put/pgi 00000018 0323aac0 00000000
+[1123] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1123] kick ok cnt/put/pgi 00000018 0323ab20 00000000
+[1124] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1124] kick ok cnt/put/pgi 00000018 0323ab80 00000000
+[1125] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1125] kick ok cnt/put/pgi 00000018 0323abe0 00000000
+[1126] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1126] kick ok cnt/put/pgi 00000018 0323ac40 00000000
+[1126] vram_read > off/dwords 024c0000 00004000
+[1126] vram_read < dwords 00004000
+[1128] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1128] kick ok cnt/put/pgi 00000018 0323aca0 00000000
+[1129] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1129] kick ok cnt/put/pgi 00000018 0323ad00 00000000
+[1130] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1130] kick ok cnt/put/pgi 00000018 0323ad60 00000000
+[1131] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1131] kick ok cnt/put/pgi 00000018 0323adc0 00000000
+[1132] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1132] kick ok cnt/put/pgi 00000018 0323ae20 00000000
+[1134] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1134] kick ok cnt/put/pgi 00000018 0323ae80 00000000
+[1135] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1135] kick ok cnt/put/pgi 00000018 0323aee0 00000000
+[1136] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1136] kick ok cnt/put/pgi 00000018 0323af40 00000000
+[1136] vram_read > off/dwords 02c90000 00010000
+[1136] vram_read < dwords 00010000
+[1138] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1138] kick ok cnt/put/pgi 00000018 0323afa0 00000000
+[1138] vram_read > off/dwords 024c0000 00004000
+[1138] vram_read < dwords 00004000
+[1139] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1139] kick ok cnt/put/pgi 00000018 0323b000 00000000
+[1140] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1140] kick ok cnt/put/pgi 00000018 0323b060 00000000
+[1142] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1142] kick ok cnt/put/pgi 00000018 0323b0c0 00000000
+[1143] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1143] kick ok cnt/put/pgi 00000018 0323b120 00000000
+[1144] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1144] kick ok cnt/put/pgi 00000018 0323b180 00000000
+[1145] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1145] kick ok cnt/put/pgi 00000018 0323b1e0 00000000
+[1146] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1146] kick ok cnt/put/pgi 00000018 0323b240 00000000
+[1147] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1147] kick ok cnt/put/pgi 00000018 0323b2a0 00000000
+[1147] vram_read > off/dwords 02c90000 00010000
+[1147] vram_read < dwords 00010000
+[1149] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1149] kick ok cnt/put/pgi 00000018 0323b300 00000000
+[1149] vram_read > off/dwords 024c0000 00004000
+[1149] vram_read < dwords 00004000
+[1150] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1150] kick ok cnt/put/pgi 00000018 0323b360 00000000
+[1152] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1152] kick ok cnt/put/pgi 00000018 0323b3c0 00000000
+[1153] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1153] kick ok cnt/put/pgi 00000018 0323b420 00000000
+[1154] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1154] kick ok cnt/put/pgi 00000018 0323b480 00000000
+[1155] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1155] kick ok cnt/put/pgi 00000018 0323b4e0 00000000
+[1156] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1156] kick ok cnt/put/pgi 00000018 0323b540 00000000
+[1158] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1158] kick ok cnt/put/pgi 00000018 0323b5a0 00000000
+[1159] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1159] kick ok cnt/put/pgi 00000018 0323b600 00000000
+[1159] vram_read > off/dwords 02c90000 00010000
+[1159] vram_read < dwords 00010000
+[1161] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1161] kick ok cnt/put/pgi 00000018 0323b660 00000000
+[1162] vram_read > off/dwords 024c0000 00004000
+[1162] vram_read < dwords 00004000
+[1162] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1162] kick ok cnt/put/pgi 00000018 0323b6c0 00000000
+[1163] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1163] kick ok cnt/put/pgi 00000018 0323b720 00000000
+[1164] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1164] kick ok cnt/put/pgi 00000018 0323b780 00000000
+[1166] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1166] kick ok cnt/put/pgi 00000018 0323b7e0 00000000
+[1167] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1167] kick ok cnt/put/pgi 00000018 0323b840 00000000
+[1168] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1168] kick ok cnt/put/pgi 00000018 0323b8a0 00000000
+[1169] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1169] kick ok cnt/put/pgi 00000018 0323b900 00000000
+[1170] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1170] kick ok cnt/put/pgi 00000018 0323b960 00000000
+[1170] vram_read > off/dwords 024c0000 00004000
+[1170] vram_read < dwords 00004000
+[1172] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1172] kick ok cnt/put/pgi 00000018 0323b9c0 00000000
+[1173] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1173] kick ok cnt/put/pgi 00000018 0323ba20 00000000
+[1174] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1174] kick ok cnt/put/pgi 00000018 0323ba80 00000000
+[1175] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1175] kick ok cnt/put/pgi 00000018 0323bae0 00000000
+[1176] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1176] kick ok cnt/put/pgi 00000018 0323bb40 00000000
+[1178] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1178] kick ok cnt/put/pgi 00000018 0323bba0 00000000
+[1179] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1179] kick ok cnt/put/pgi 00000018 0323bc00 00000000
+[1180] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1180] kick ok cnt/put/pgi 00000018 0323bc60 00000000
+[1180] vram_read > off/dwords 02c90000 00010000
+[1180] vram_read < dwords 00010000
+[1182] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1182] kick ok cnt/put/pgi 00000018 0323bcc0 00000000
+[1182] vram_read > off/dwords 024c0000 00004000
+[1182] vram_read < dwords 00004000
+[1183] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1183] kick ok cnt/put/pgi 00000018 0323bd20 00000000
+[1184] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1184] kick ok cnt/put/pgi 00000018 0323bd80 00000000
+[1186] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1186] kick ok cnt/put/pgi 00000018 0323bde0 00000000
+[1187] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1187] kick ok cnt/put/pgi 00000018 0323be40 00000000
+[1188] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1188] kick ok cnt/put/pgi 00000018 0323bea0 00000000
+[1189] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1189] kick ok cnt/put/pgi 00000018 0323bf00 00000000
+[1190] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1190] kick ok cnt/put/pgi 00000018 0323bf60 00000000
+[1191] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1191] kick ok cnt/put/pgi 00000018 0323bfc0 00000000
+[1191] vram_read > off/dwords 02c90000 00010000
+[1191] vram_read < dwords 00010000
+[1193] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1193] kick ok cnt/put/pgi 00000018 0323c020 00000000
+[1193] vram_read > off/dwords 024c0000 00004000
+[1193] vram_read < dwords 00004000
+[1195] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1195] kick ok cnt/put/pgi 00000018 0323c080 00000000
+[1196] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1196] kick ok cnt/put/pgi 00000018 0323c0e0 00000000
+[1197] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1197] kick ok cnt/put/pgi 00000018 0323c140 00000000
+[1198] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1198] kick ok cnt/put/pgi 00000018 0323c1a0 00000000
+[1199] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1199] kick ok cnt/put/pgi 00000018 0323c200 00000000
+[1200] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1200] kick ok cnt/put/pgi 00000018 0323c260 00000000
+[1202] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1202] kick ok cnt/put/pgi 00000018 0323c2c0 00000000
+[1203] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1203] kick ok cnt/put/pgi 00000018 0323c320 00000000
+[1203] vram_read > off/dwords 02c90000 00010000
+[1203] vram_read < dwords 00010000
+[1205] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1205] kick ok cnt/put/pgi 00000018 0323c380 00000000
+[1205] vram_read > off/dwords 024c0000 00004000
+[1205] vram_read < dwords 00004000
+[1206] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1206] kick ok cnt/put/pgi 00000018 0323c3e0 00000000
+[1207] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1207] kick ok cnt/put/pgi 00000018 0323c440 00000000
+[1208] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1208] kick ok cnt/put/pgi 00000018 0323c4a0 00000000
+[1210] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1210] kick ok cnt/put/pgi 00000018 0323c500 00000000
+[1211] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1211] kick ok cnt/put/pgi 00000018 0323c560 00000000
+[1212] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1212] kick ok cnt/put/pgi 00000018 0323c5c0 00000000
+[1213] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1213] kick ok cnt/put/pgi 00000018 0323c620 00000000
+[1214] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1214] kick ok cnt/put/pgi 00000018 0323c680 00000000
+[1214] vram_read > off/dwords 024c0000 00004000
+[1214] vram_read < dwords 00004000
+[1216] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1216] kick ok cnt/put/pgi 00000018 0323c6e0 00000000
+[1217] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1217] kick ok cnt/put/pgi 00000018 0323c740 00000000
+[1218] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1218] kick ok cnt/put/pgi 00000018 0323c7a0 00000000
+[1219] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1219] kick ok cnt/put/pgi 00000018 0323c800 00000000
+[1220] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1220] kick ok cnt/put/pgi 00000018 0323c860 00000000
+[1222] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1222] kick ok cnt/put/pgi 00000018 0323c8c0 00000000
+[1223] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1223] kick ok cnt/put/pgi 00000018 0323c920 00000000
+[1224] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1224] kick ok cnt/put/pgi 00000018 0323c980 00000000
+[1224] vram_read > off/dwords 02c90000 00010000
+[1224] vram_read < dwords 00010000
+[1226] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1226] kick ok cnt/put/pgi 00000018 0323c9e0 00000000
+[1226] vram_read > off/dwords 024c0000 00004000
+[1226] vram_read < dwords 00004000
+[1227] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1227] kick ok cnt/put/pgi 00000018 0323ca40 00000000
+[1228] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1228] kick ok cnt/put/pgi 00000018 0323caa0 00000000
+[1229] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1229] kick ok cnt/put/pgi 00000018 0323cb00 00000000
+[1231] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1231] kick ok cnt/put/pgi 00000018 0323cb60 00000000
+[1232] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1232] kick ok cnt/put/pgi 00000018 0323cbc0 00000000
+[1233] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1233] kick ok cnt/put/pgi 00000018 0323cc20 00000000
+[1234] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1234] kick ok cnt/put/pgi 00000018 0323cc80 00000000
+[1235] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1235] kick ok cnt/put/pgi 00000018 0323cce0 00000000
+[1235] vram_read > off/dwords 02c90000 00010000
+[1235] vram_read < dwords 00010000
+[1237] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1237] kick ok cnt/put/pgi 00000018 0323cd40 00000000
+[1237] vram_read > off/dwords 024c0000 00004000
+[1237] vram_read < dwords 00004000
+[1238] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1238] kick ok cnt/put/pgi 00000018 0323cda0 00000000
+[1240] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1240] kick ok cnt/put/pgi 00000018 0323ce00 00000000
+[1241] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1241] kick ok cnt/put/pgi 00000018 0323ce60 00000000
+[1242] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1242] kick ok cnt/put/pgi 00000018 0323cec0 00000000
+[1243] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1243] kick ok cnt/put/pgi 00000018 0323cf20 00000000
+[1244] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1244] kick ok cnt/put/pgi 00000018 0323cf80 00000000
+[1246] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1246] kick ok cnt/put/pgi 00000018 0323cfe0 00000000
+[1247] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1247] kick ok cnt/put/pgi 00000018 0323d040 00000000
+[1247] vram_read > off/dwords 02c90000 00010000
+[1247] vram_read < dwords 00010000
+[1249] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1249] kick ok cnt/put/pgi 00000018 0323d0a0 00000000
+[1249] vram_read > off/dwords 024c0000 00004000
+[1249] vram_read < dwords 00004000
+[1250] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1250] kick ok cnt/put/pgi 00000018 0323d100 00000000
+[1251] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1251] kick ok cnt/put/pgi 00000018 0323d160 00000000
+[1252] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1252] kick ok cnt/put/pgi 00000018 0323d1c0 00000000
+[1253] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1253] kick ok cnt/put/pgi 00000018 0323d220 00000000
+[1255] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1255] kick ok cnt/put/pgi 00000018 0323d280 00000000
+[1256] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1256] kick ok cnt/put/pgi 00000018 0323d2e0 00000000
+[1257] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1257] kick ok cnt/put/pgi 00000018 0323d340 00000000
+[1258] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1258] kick ok cnt/put/pgi 00000018 0323d3a0 00000000
+[1258] vram_read > off/dwords 024c0000 00004000
+[1258] vram_read < dwords 00004000
+[1259] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1259] kick ok cnt/put/pgi 00000018 0323d400 00000000
+[1261] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1261] kick ok cnt/put/pgi 00000018 0323d460 00000000
+[1262] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1262] kick ok cnt/put/pgi 00000018 0323d4c0 00000000
+[1263] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1263] kick ok cnt/put/pgi 00000018 0323d520 00000000
+[1264] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1264] kick ok cnt/put/pgi 00000018 0323d580 00000000
+[1265] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1265] kick ok cnt/put/pgi 00000018 0323d5e0 00000000
+[1267] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1267] kick ok cnt/put/pgi 00000018 0323d640 00000000
+[1268] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1268] kick ok cnt/put/pgi 00000018 0323d6a0 00000000
+[1268] vram_read > off/dwords 02c90000 00010000
+[1268] vram_read < dwords 00010000
+[1270] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1270] kick ok cnt/put/pgi 00000018 0323d700 00000000
+[1270] vram_read > off/dwords 024c0000 00004000
+[1270] vram_read < dwords 00004000
+[1271] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1271] kick ok cnt/put/pgi 00000018 0323d760 00000000
+[1272] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1272] kick ok cnt/put/pgi 00000018 0323d7c0 00000000
+[1273] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1273] kick ok cnt/put/pgi 00000018 0323d820 00000000
+[1274] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1274] kick ok cnt/put/pgi 00000018 0323d880 00000000
+[1276] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1276] kick ok cnt/put/pgi 00000018 0323d8e0 00000000
+[1277] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1277] kick ok cnt/put/pgi 00000018 0323d940 00000000
+[1278] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1278] kick ok cnt/put/pgi 00000018 0323d9a0 00000000
+[1279] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1279] kick ok cnt/put/pgi 00000018 0323da00 00000000
+[1279] vram_read > off/dwords 02c90000 00010000
+[1279] vram_read < dwords 00010000
+[1281] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1281] kick ok cnt/put/pgi 00000018 0323da60 00000000
+[1281] vram_read > off/dwords 024c0000 00004000
+[1281] vram_read < dwords 00004000
+[1282] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1282] kick ok cnt/put/pgi 00000018 0323dac0 00000000
+[1284] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1284] kick ok cnt/put/pgi 00000018 0323db20 00000000
+[1285] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1285] kick ok cnt/put/pgi 00000018 0323db80 00000000
+[1286] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1286] kick ok cnt/put/pgi 00000018 0323dbe0 00000000
+[1287] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1287] kick ok cnt/put/pgi 00000018 0323dc40 00000000
+[1288] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1288] kick ok cnt/put/pgi 00000018 0323dca0 00000000
+[1289] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1289] kick ok cnt/put/pgi 00000018 0323dd00 00000000
+[1291] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1291] kick ok cnt/put/pgi 00000018 0323dd60 00000000
+[1291] vram_read > off/dwords 02c90000 00010000
+[1291] vram_read < dwords 00010000
+[1292] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1292] kick ok cnt/put/pgi 00000018 0323ddc0 00000000
+[1292] vram_read > off/dwords 024c0000 00004000
+[1292] vram_read < dwords 00004000
+[1294] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1294] kick ok cnt/put/pgi 00000018 0323de20 00000000
+[1295] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1295] kick ok cnt/put/pgi 00000018 0323de80 00000000
+[1296] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1296] kick ok cnt/put/pgi 00000018 0323dee0 00000000
+[1297] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1297] kick ok cnt/put/pgi 00000018 0323df40 00000000
+[1298] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1298] kick ok cnt/put/pgi 00000018 0323dfa0 00000000
+[1300] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1300] kick ok cnt/put/pgi 00000018 0323e000 00000000
+[1301] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1301] kick ok cnt/put/pgi 00000018 0323e060 00000000
+[1302] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1302] kick ok cnt/put/pgi 00000018 0323e0c0 00000000
+[1302] vram_read > off/dwords 024c0000 00004000
+[1302] vram_read < dwords 00004000
+[1303] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1303] kick ok cnt/put/pgi 00000018 0323e120 00000000
+[1304] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1304] kick ok cnt/put/pgi 00000018 0323e180 00000000
+[1306] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1306] kick ok cnt/put/pgi 00000018 0323e1e0 00000000
+[1307] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1307] kick ok cnt/put/pgi 00000018 0323e240 00000000
+[1308] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1308] kick ok cnt/put/pgi 00000018 0323e2a0 00000000
+[1309] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1309] kick ok cnt/put/pgi 00000018 0323e300 00000000
+[1310] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1310] kick ok cnt/put/pgi 00000018 0323e360 00000000
+[1312] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1312] kick ok cnt/put/pgi 00000018 0323e3c0 00000000
+[1312] vram_read > off/dwords 02c90000 00010000
+[1312] vram_read < dwords 00010000
+[1313] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1313] kick ok cnt/put/pgi 00000018 0323e420 00000000
+[1313] vram_read > off/dwords 024c0000 00004000
+[1313] vram_read < dwords 00004000
+[1315] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1315] kick ok cnt/put/pgi 00000018 0323e480 00000000
+[1316] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1316] kick ok cnt/put/pgi 00000018 0323e4e0 00000000
+[1317] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1317] kick ok cnt/put/pgi 00000018 0323e540 00000000
+[1318] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1318] kick ok cnt/put/pgi 00000018 0323e5a0 00000000
+[1319] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1319] kick ok cnt/put/pgi 00000018 0323e600 00000000
+[1320] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1320] kick ok cnt/put/pgi 00000018 0323e660 00000000
+[1322] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1322] kick ok cnt/put/pgi 00000018 0323e6c0 00000000
+[1323] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1323] kick ok cnt/put/pgi 00000018 0323e720 00000000
+[1323] vram_read > off/dwords 02c90000 00010000
+[1323] vram_read < dwords 00010000
+[1325] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1325] kick ok cnt/put/pgi 00000018 0323e780 00000000
+[1325] vram_read > off/dwords 024c0000 00004000
+[1325] vram_read < dwords 00004000
+[1326] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1326] kick ok cnt/put/pgi 00000018 0323e7e0 00000000
+[1328] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1328] kick ok cnt/put/pgi 00000018 0323e840 00000000
+[1329] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1329] kick ok cnt/put/pgi 00000018 0323e8a0 00000000
+[1330] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1330] kick ok cnt/put/pgi 00000018 0323e900 00000000
+[1331] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1331] kick ok cnt/put/pgi 00000018 0323e960 00000000
+[1332] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1332] kick ok cnt/put/pgi 00000018 0323e9c0 00000000
+[1333] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1333] kick ok cnt/put/pgi 00000018 0323ea20 00000000
+[1335] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1335] kick ok cnt/put/pgi 00000018 0323ea80 00000000
+[1335] vram_read > off/dwords 02c90000 00010000
+[1335] vram_read < dwords 00010000
+[1337] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1337] kick ok cnt/put/pgi 00000018 0323eae0 00000000
+[1337] vram_read > off/dwords 024c0000 00004000
+[1337] vram_read < dwords 00004000
+[1338] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1338] kick ok cnt/put/pgi 00000018 0323eb40 00000000
+[1339] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1339] kick ok cnt/put/pgi 00000018 0323eba0 00000000
+[1340] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1340] kick ok cnt/put/pgi 00000018 0323ec00 00000000
+[1341] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1341] kick ok cnt/put/pgi 00000018 0323ec60 00000000
+[1343] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1343] kick ok cnt/put/pgi 00000018 0323ecc0 00000000
+[1344] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1344] kick ok cnt/put/pgi 00000018 0323ed20 00000000
+[1345] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1345] kick ok cnt/put/pgi 00000018 0323ed80 00000000
+[1346] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1346] kick ok cnt/put/pgi 00000018 0323ede0 00000000
+[1346] vram_read > off/dwords 024c0000 00004000
+[1346] vram_read < dwords 00004000
+[1347] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1347] kick ok cnt/put/pgi 00000018 0323ee40 00000000
+[1349] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1349] kick ok cnt/put/pgi 00000018 0323eea0 00000000
+[1350] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1350] kick ok cnt/put/pgi 00000018 0323ef00 00000000
+[1351] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1351] kick ok cnt/put/pgi 00000018 0323ef60 00000000
+[1352] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1352] kick ok cnt/put/pgi 00000018 0323efc0 00000000
+[1353] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1353] kick ok cnt/put/pgi 00000018 0323f020 00000000
+[1354] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1354] kick ok cnt/put/pgi 00000018 0323f080 00000000
+[1356] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1356] kick ok cnt/put/pgi 00000018 0323f0e0 00000000
+[1356] vram_read > off/dwords 02c90000 00010000
+[1356] vram_read < dwords 00010000
+[1357] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1357] kick ok cnt/put/pgi 00000018 0323f140 00000000
+[1357] vram_read > off/dwords 024c0000 00004000
+[1357] vram_read < dwords 00004000
+[1359] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1359] kick ok cnt/put/pgi 00000018 0323f1a0 00000000
+[1360] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1360] kick ok cnt/put/pgi 00000018 0323f200 00000000
+[1361] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1361] kick ok cnt/put/pgi 00000018 0323f260 00000000
+[1362] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1362] kick ok cnt/put/pgi 00000018 0323f2c0 00000000
+[1363] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1363] kick ok cnt/put/pgi 00000018 0323f320 00000000
+[1364] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1364] kick ok cnt/put/pgi 00000018 0323f380 00000000
+[1366] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1366] kick ok cnt/put/pgi 00000018 0323f3e0 00000000
+[1367] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1367] kick ok cnt/put/pgi 00000018 0323f440 00000000
+[1367] vram_read > off/dwords 02c90000 00010000
+[1367] vram_read < dwords 00010000
+[1369] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1369] kick ok cnt/put/pgi 00000018 0323f4a0 00000000
+[1369] vram_read > off/dwords 024c0000 00004000
+[1369] vram_read < dwords 00004000
+[1370] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1370] kick ok cnt/put/pgi 00000018 0323f500 00000000
+[1371] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1371] kick ok cnt/put/pgi 00000018 0323f560 00000000
+[1372] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1372] kick ok cnt/put/pgi 00000018 0323f5c0 00000000
+[1373] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1373] kick ok cnt/put/pgi 00000018 0323f620 00000000
+[1375] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1375] kick ok cnt/put/pgi 00000018 0323f680 00000000
+[1376] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1376] kick ok cnt/put/pgi 00000018 0323f6e0 00000000
+[1377] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1377] kick ok cnt/put/pgi 00000018 0323f740 00000000
+[1378] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1378] kick ok cnt/put/pgi 00000018 0323f7a0 00000000
+[1379] vram_read > off/dwords 02c90000 00010000
+[1379] vram_read < dwords 00010000
+[1380] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1380] kick ok cnt/put/pgi 00000018 0323f800 00000000
+[1380] vram_read > off/dwords 024c0000 00004000
+[1380] vram_read < dwords 00004000
+[1381] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1381] kick ok cnt/put/pgi 00000018 0323f860 00000000
+[1382] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1382] kick ok cnt/put/pgi 00000018 0323f8c0 00000000
+[1384] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1384] kick ok cnt/put/pgi 00000018 0323f920 00000000
+[1385] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1385] kick ok cnt/put/pgi 00000018 0323f980 00000000
+[1386] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1386] kick ok cnt/put/pgi 00000018 0323f9e0 00000000
+[1387] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1387] kick ok cnt/put/pgi 00000018 0323fa40 00000000
+[1388] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1388] kick ok cnt/put/pgi 00000018 0323faa0 00000000
+[1389] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1389] kick ok cnt/put/pgi 00000018 0323fb00 00000000
+[1389] vram_read > off/dwords 024c0000 00004000
+[1389] vram_read < dwords 00004000
+[1391] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1391] kick ok cnt/put/pgi 00000018 0323fb60 00000000
+[1393] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1393] kick ok cnt/put/pgi 00000018 0323fbc0 00000000
+[1394] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1394] kick ok cnt/put/pgi 00000018 0323fc20 00000000
+[1395] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1395] kick ok cnt/put/pgi 00000018 0323fc80 00000000
+[1396] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1396] kick ok cnt/put/pgi 00000018 0323fce0 00000000
+[1397] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1397] kick ok cnt/put/pgi 00000018 0323fd40 00000000
+[1398] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1398] kick ok cnt/put/pgi 00000018 0323fda0 00000000
+[1400] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1400] kick ok cnt/put/pgi 00000018 0323fe00 00000000
+[1400] vram_read > off/dwords 02c90000 00010000
+[1400] vram_read < dwords 00010000
+[1401] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1401] kick ok cnt/put/pgi 00000018 0323fe60 00000000
+[1401] vram_read > off/dwords 024c0000 00004000
+[1401] vram_read < dwords 00004000
+[1403] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1403] kick ok cnt/put/pgi 00000018 0323fec0 00000000
+[1404] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1404] kick ok cnt/put/pgi 00000018 0323ff20 00000000
+[1405] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1405] kick ok cnt/put/pgi 00000018 0323ff80 00000000
+[1406] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1406] kick ok cnt/put/pgi 00000018 0323ffe0 00000000
+[1407] heap allocs/used/largest 00000800 03890100 011a0000
+[1407] heap frees/kicks 0000074e 0000013e
+[1408] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1408] kick ok cnt/put/pgi 00000018 03240040 00000000
+[1409] bo_new sz/phys/vmoff 00000010 02012000 42012000
+[1409] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1409] kick ok cnt/put/pgi 00000018 032400a0 00000000
+[1410] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1410] kick ok cnt/put/pgi 00000018 03240100 00000000
+[1412] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1412] kick ok cnt/put/pgi 00000018 03240160 00000000
+[1412] vram_read > off/dwords 02c90000 00010000
+[1412] vram_read < dwords 00010000
+[1413] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1413] kick ok cnt/put/pgi 00000018 032401c0 00000000
+[1413] vram_read > off/dwords 024c0000 00004000
+[1413] vram_read < dwords 00004000
+[1415] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1415] kick ok cnt/put/pgi 00000018 03240220 00000000
+[1416] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1416] kick ok cnt/put/pgi 00000018 03240280 00000000
+[1417] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1417] kick ok cnt/put/pgi 00000018 032402e0 00000000
+[1418] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1418] kick ok cnt/put/pgi 00000018 03240340 00000000
+[1419] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1419] kick ok cnt/put/pgi 00000018 032403a0 00000000
+[1420] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1420] kick ok cnt/put/pgi 00000018 03240400 00000000
+[1422] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1422] kick ok cnt/put/pgi 00000018 03240460 00000000
+[1423] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1423] kick ok cnt/put/pgi 00000018 032404c0 00000000
+[1423] vram_read > off/dwords 02c90000 00010000
+[1423] vram_read < dwords 00010000
+[1425] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1425] kick ok cnt/put/pgi 00000018 03240520 00000000
+[1425] vram_read > off/dwords 024c0000 00004000
+[1425] vram_read < dwords 00004000
+[1426] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1426] kick ok cnt/put/pgi 00000018 03240580 00000000
+[1427] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1427] kick ok cnt/put/pgi 00000018 032405e0 00000000
+[1428] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1428] kick ok cnt/put/pgi 00000018 03240640 00000000
+[1429] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1429] kick ok cnt/put/pgi 00000018 032406a0 00000000
+[1431] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1431] kick ok cnt/put/pgi 00000018 03240700 00000000
+[1432] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1432] kick ok cnt/put/pgi 00000018 03240760 00000000
+[1433] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1433] kick ok cnt/put/pgi 00000018 032407c0 00000000
+[1434] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1434] kick ok cnt/put/pgi 00000018 03240820 00000000
+[1434] vram_read > off/dwords 024c0000 00004000
+[1434] vram_read < dwords 00004000
+[1436] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1436] kick ok cnt/put/pgi 00000018 03240880 00000000
+[1437] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1437] kick ok cnt/put/pgi 00000018 032408e0 00000000
+[1438] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1438] kick ok cnt/put/pgi 00000018 03240940 00000000
+[1439] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1439] kick ok cnt/put/pgi 00000018 032409a0 00000000
+[1440] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1440] kick ok cnt/put/pgi 00000018 03240a00 00000000
+[1441] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1441] kick ok cnt/put/pgi 00000018 03240a60 00000000
+[1443] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1443] kick ok cnt/put/pgi 00000018 03240ac0 00000000
+[1444] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1444] kick ok cnt/put/pgi 00000018 03240b20 00000000
+[1444] vram_read > off/dwords 02c90000 00010000
+[1444] vram_read < dwords 00010000
+[1446] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1446] kick ok cnt/put/pgi 00000018 03240b80 00000000
+[1446] vram_read > off/dwords 024c0000 00004000
+[1446] vram_read < dwords 00004000
+[1447] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1447] kick ok cnt/put/pgi 00000018 03240be0 00000000
+[1448] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1448] kick ok cnt/put/pgi 00000018 03240c40 00000000
+[1449] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1449] kick ok cnt/put/pgi 00000018 03240ca0 00000000
+[1450] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1450] kick ok cnt/put/pgi 00000018 03240d00 00000000
+[1452] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1452] kick ok cnt/put/pgi 00000018 03240d60 00000000
+[1453] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1453] kick ok cnt/put/pgi 00000018 03240dc0 00000000
+[1454] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1454] kick ok cnt/put/pgi 00000018 03240e20 00000000
+[1455] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1455] kick ok cnt/put/pgi 00000018 03240e80 00000000
+[1455] vram_read > off/dwords 02c90000 00010000
+[1455] vram_read < dwords 00010000
+[1457] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1457] kick ok cnt/put/pgi 00000018 03240ee0 00000000
+[1457] vram_read > off/dwords 024c0000 00004000
+[1457] vram_read < dwords 00004000
+[1459] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1459] kick ok cnt/put/pgi 00000018 03240f40 00000000
+[1460] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1460] kick ok cnt/put/pgi 00000018 03240fa0 00000000
+[1461] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1461] kick ok cnt/put/pgi 00000018 03241000 00000000
+[1462] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1462] kick ok cnt/put/pgi 00000018 03241060 00000000
+[1463] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1463] kick ok cnt/put/pgi 00000018 032410c0 00000000
+[1465] kick > cnt/m0/m1 00000018 0018a200 00000000
+[1465] kick ok cnt/put/pgi 00000018 03241120 00000000
