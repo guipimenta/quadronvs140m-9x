@@ -720,6 +720,52 @@ C:\nvkick.txt, C:\nvclk.txt.
   `nvhl -width 800 -height 600`; texcheck with GALLIUM_DRIVER=nouveau set; `nvhl heaphi` is
   not useful any more.
 
+### 3099 on the T61 (2026-10-28 night; analysis/t61-logs/3099-*): the artifacts are CORNER HOLES
+- The 3099 VxD ran ('vxd build / shim build 00000c1b 00000c1b'); the 3098 submit drain ran
+  ('S> drain loops 16' once, then 0) and changed nothing. 800x600 fixed. texcheck PASSED on the
+  hardware (160 textures, 1400 levels read back, 13 draws, 0 bad) - texture data is fine.
+  One Half-Life process: 1024x768 for 80 s (artifacts), then the in-game switch to 800x600
+  (clean; textures re-uploaded by vid_restart). Heap never full, VxD blitter idle in-game,
+  validator clean on the 64 dumped kicks, no traps.
+- What the artifacts ARE (user's crops): small rectangular blocks of garbage at the screen
+  corners (bottom-left/upper-right, also upper-left/bottom-right), on the world, not the HUD.
+  Reading: Half-Life never clears the colour buffer (gl_clear 0), so a block = pixels that
+  no triangle covered this frame, showing stale VRAM. Opposite corners = the tips of the two
+  triangles of a screen-filling quad (sky faces, near walls, floors - vertices far off screen
+  or behind the eye), and only at the largest viewport = the rasterizer's coordinate range,
+  i.e. clipping/guard band, not textures. Mesa builds nv50 with NV50_SCISSORS_CLIPPING
+  (VIEW_VOLUME_CLIP_CTRL=0: x/y clipping left to the hardware guard band).
+- Where we differ from Linux there: the PGRAPH context the VxD loads (nv50_grctx_g86.h) came
+  from nouveau v2.6.36 (2010). Ran that generator and the CURRENT ctxnv50.c on the host with
+  a register-mapping hook (analysis/grctx_host): same 502 MMIO registers and 94528-dword
+  layout, but for the G86: 0x40821c/0x40829c = 0x018c0000 now (was 0x008c0000, chip-specific),
+  the clipping strand's FP_CTRL_UNK196C/UNK1968 defaults (the 3 sat one slot late: Mesa
+  rewrites 0x196c, never 0x1968), the 2D IFC_CLIP_W/H defaults, and a reordered 114-dword
+  ctxprog. Current nv50_gr_init also zeroes the 8 zcull region descriptors and the ctxctl
+  scratch after the microcode upload; the VxD did neither.
+- Checks that would decide it without a build: in Half-Life 'gl_clear 1' (blocks become the
+  clear colour if they are uncovered pixels); wgltest 'sky' (below) fullscreen 1024x768x16
+  vs 800x600x16.
+
+### M5.5 step 9 (build 3100): current-nouveau PGRAPH context, zcull init, wgltest 'sky'
+- nv50_grctx_g86.h regenerated from current nouveau (analysis/grctx_host/fetch_build_run.sh;
+  the harness reproduces the old header from the old source bit for bit, so the diff above
+  is the whole difference). gpu_pgraph_init: after the microcode upload clear 0x400828/
+  0x40082c/0x400830/0x40032c/0x400330 and zero 0x402c20..0x402c9c (zcull regions); 0x400824
+  keeps 0x4000 (our manual context load was proven with it).
+- wgltest 'sky' scene (wgltest.c, 'bpp <n>' option for fullscreen): GoldSrc-style skybox (6
+  huge quads around the eye, depth off, UL-BR split), floor, near wall, yaw + pitch, cleared
+  to MAGENTA every frame: magenta blocks = uncovered pixels, non-checker = wrong sampling.
+  llvmpipe under Wine renders it clean (scratchpad screenshots); fake-GPU validator clean.
+  dist/driver/nvsky.bat: `nvsky [w h [bpp]]` = fullscreen 1024x768x16 by default.
+- T61 order: copy nvmini.vxd to C:\WINDOWS\SYSTEM + reboot (the VxD build shows in
+  nvshim.log as 00000c1c); `nvsky` (corner blocks? magenta?), `nvsky 800 600`; `nvhl` at
+  1024x768 (holes gone?); if not, in the HL console `gl_clear 1`. Logs as usual + photos.
+- If 3100 does not fix it: the next candidates are the PGRAPH init registers nouveau writes
+  that we never touch (compare nv50_gr_init / nv50_gr_init_tpc once more), then an A/B of
+  VIEW_VOLUME_CLIP_CTRL=0x1080 (geometric x/y clipping, Mesa's non-scissor mode) through a
+  shim-side method override.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

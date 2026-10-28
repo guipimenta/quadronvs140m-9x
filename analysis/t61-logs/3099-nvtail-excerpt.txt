@@ -1,0 +1,2370 @@
+8x32 flags=00000081
+V> DESTROY_PROCESS: FFF373A9
+V> INT 10h ignored for EAX=00000003
+V> SAVE_REGISTERS
+V> RESTORE_REGISTERS
+V> INT 10h ignored for EAX=00000003
+V> RESTORE_REGISTERS
+V> DIOC_OPEN
+V> IOCTL 00005001 #1 in=8 [00004000 00000010 00000000 00000000] out=64
+V> DESTROY_PROCESS: FFF3739D
+V> DIOC_OPEN
+V> IOCTL 00005001 #2 in=8 [0000C040 00000001 00000000 00000000] out=4
+V> DESTROY_PROCESS: FFF3739D
+V> DIOC_OPEN
+V> IOCTL 00005001 #3 in=8 [00022000 00000001 00000000 00000000] out=4
+V> DESTROY_PROCESS: FFF3739D
+V> DIOC_OPEN
+V> IOCTL 00005001 #4 in=8 [0000E81C 00000001 00000000 00000000] out=4
+V> DESTROY_PROCESS: FFF3739D
+V> DIOC_OPEN
+V> IOCTL 00005001 #5 in=8 [00101000 00000001 00000000 00000000] out=4
+V> DESTROY_PROCESS: FFF38F59
+V> DIOC_OPEN
+V> IOCTL 00005000 #1 in=0 [00000000 00000000 00000000 00000000] out=116
+V> NV_probe: 000010DE:00000429 subsys=20D817AA at 1:0.0
+V> NV_probe: BAR0=DE000000 (01000000) BAR1=E0000000 (10000000)
+V> NV_probe: BOOT_0=086900A2 chipset=00000086 family=00000008 rev=000000A2
+V> DESTROY_PROCESS: FFF3739D
+V> INT 10h ignored for EAX=00000003
+V> SAVE_REGISTERS
+V> RESTORE_REGISTERS
+V> RESTORE_REGISTERS
+V> DIOC_OPEN
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C9080800
+V> DIOC_OPEN
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> success
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C9080800
+V> DIOC_OPEN
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> get the ramp
+V> DIOC_OPEN
+V> IOCTL 10000002 #1 in=4 [BFF88DC4 00000000 00000000 00000000] out=64
+V> DeviceIOControl: Unknown: 2
+V> DIOC_OPEN
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGetVersion
+D> struct size: 19222 (28 60 616 712)
+D> Control (16bit): 3075 (0x0c03)
+D> DDGET32BITDRIVERNAME: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDNEWCALLBACKFNS: success
+D> Control (16bit): 3075 (0x0c03)
+D> DDCREATEDRIVEROBJECT: Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> success
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> get the ramp
+V> DIOC_OPEN
+V> IOCTL 10000002 #2 in=4 [BFF88DC4 00000000 00000000 00000000] out=64
+V> DeviceIOControl: Unknown: 2
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4363 (0x110b)
+D> FBHDA request: C9080800
+V> DIOC_OPEN
+V> IOCTL 0000110C #1 in=4 [00000008 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #1 in=4 [00000000 00000000 00000000 00000000] out=0
+V> IOCTL 0000110C #2 in=4 [00000010 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #2 in=4 [00000000 00000000 00000000 00000000] out=0
+V> IOCTL 0000110C #3 in=4 [00000010 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #3 in=4 [00000000 00000000 00000000 00000000] out=0
+V> IOCTL 0000110C #4 in=4 [00000008 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #4 in=4 [00000000 00000000 00000000 00000000] out=0
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 640x480 16bpp 96dpi
+D> Entry: 640x480
+D> After fix: 640x480 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 640x480
+D> SetDisplayMode: wXRes=640 wYRes=480
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_evo_takeover: append path, ring_pos=336 ch0 stat=2D0B001B get=00000540 put=00000540
+V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=1C590001 get=0000060C put=0000060C
+V> NV_native_modeset 640x480x16 OK
+V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+V> Clear success
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+V> trace reset: mode 640x480x16
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_evo_takeover: append path, ring_pos=387 ch0 stat=2D0B001B get=0000060C put=0000060C
+V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=1D5E0001 get=000006D8 put=000006D8
+V> NV_native_modeset 640x480x16 OK
+V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+V> Clear success
+V> SAVE_REGISTERS
+V> FBHDA_clean
+V> FBHDA_clean done
+D> Enable: wBpp=16 wDpi=96 wScreenX=640 wScreenY=480 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=640 wScrY=480 wBpp=16 wDpi=96 wScreenX=640 wScreenY=480
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> get the ramp
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> Control (16bit): 3073 (0x0c01)
+D> QUERYDIBSUPPORT -> DIB
+D> Control (16bit): 8 (0x0008)
+D> Control: function check for unknown: 5250
+D> Control: unknown code: 8
+D> Control (16bit): 8 (0x0008)
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 32bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 32 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=32
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_evo_takeover: append path, ring_pos=746 ch0 stat=2D0B001B get=00000BA8 put=00000BA8
+V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=18120001 get=00000C74 put=00000C74
+V> NV_native_modeset 1024x768x32 OK
+V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+V> Clear success
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+V> trace reset: mode 1024x768x32
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_evo_takeover: append path, ring_pos=797 ch0 stat=2D0B001B get=00000C74 put=00000C74
+V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=19420001 get=00000D40 put=00000D40
+V> NV_native_modeset 1024x768x32 OK
+V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+V> Clear success
+V> SAVE_REGISTERS
+V> FBHDA_clean
+V> FBHDA_clean done
+D> Enable: wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> Dump DD32 calls
+D>   CanCreateSurface = B00B4F50
+D>   CreateSurface = B00B4FA0
+D>   Blt = B00B7690
+D>   Flip = B00B7310
+D>   Lock = B00B55D0
+D>   Unlock = B00B5670
+D>   GetBltStatus = B00B7CA0
+D>   GetFlipStatus = B00B7550
+D>   DestroySurface = B00B53C0
+D>   GetDriverInfo = B00DBAE0
+D>   WaitForVerticalBlank = B00B54B0
+D>   DestroyDriver = 033F17DC
+
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=32 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> get the ramp
+V> IOCTL 0000110C #1 in=4 [00000010 00000000 00000000 00000000] out=0
+V> IOCTL 0000110D #1 in=4 [00000000 00000000 00000000 00000000] out=0
+V> DIOC_OPEN
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=1024 wScreenY=768
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 1024x768 16bpp 96dpi
+D> Entry: 1024x768
+D> After fix: 1024x768 16 bpp
+D> ReEnable: wScreenX=1024 wScreenY=768 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 1024x768
+D> SetDisplayMode: wXRes=1024 wYRes=768
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_evo_takeover: append path, ring_pos=876 ch0 stat=2D0B001B get=00000DB0 put=00000DB0
+V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=1F200001 get=00000E7C put=00000E7C
+V> NV_native_modeset 1024x768x16 OK
+V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+V> Clear success
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+V> trace reset: mode 1024x768x16
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_evo_takeover: append path, ring_pos=927 ch0 stat=2D0B001B get=00000E7C put=00000E7C
+V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=20980001 get=000000CC put=000000CC
+V> NV_native_modeset 1024x768x16 OK
+V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+V> Clear success
+V> SAVE_REGISTERS
+V> FBHDA_clean
+V> FBHDA_clean done
+D> Enable: wBpp=16 wDpi=96 wScreenX=1024 wScreenY=768 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=1024 wScrY=768 wBpp=16 wDpi=96 wScreenX=1024 wScreenY=768
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 3075 (0x0c03)
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+V> DIOC_OPEN
+S> [5] ==== shim log open, instance 6cb1b38c
+S> [0] wgl: DllMain ATTACH hinst 69500000
+S> [16] wgl: screen_create ENTER lasterr/sw_only 00000002 00000000
+S> [18] wgl: try driver 'nouveau' 00000000
+S> [19] wgl: nouveau_drm_screen_create enter lasterr 00000002
+S> [21] winsys: nouveau_screen_create enter fd 00000000 00000000
+S> [22] drm_new fd 00000000
+S> [22] winsys: drm_new ret/drm 00000000 009cbd50
+S> [27] device_new
+V> IOCTL 00005000 #1 in=0 [00000000 00000000 00000000 00000000] out=256
+V> NV_probe: 000010DE:00000429 subsys=20D817AA at 1:0.0
+V> NV_probe: BAR0=DE000000 (01000000) BAR1=E0000000 (10000000)
+V> NV_probe: BOOT_0=086900A2 chipset=00000086 family=00000008 rev=000000A2
+S> [39] vxd build / shim build 00000c1b 00000c1b
+S> [39] winsys: device_new ret/dev 00000000 0099f1b0
+S> [40] winsys: chipset 00000086 00000000
+S> [76] object_new handle/oclass 00000000 80000001
+V> IOCTL 00005016 #1 in=8 [BEEF0201 0000003D 00000000 00000000] out=28
+V> NV_gpu_bind: handle=BEEF0201 class=0000003D -> inst=03008000 engine=0
+S> [84] bind handle/class/engine beef0201 0000003d 00000000
+V> IOCTL 00005016 #2 in=8 [BEEF0202 0000003D 00000000 00000000] out=28
+V> NV_gpu_bind: handle=BEEF0202 class=0000003D -> inst=03008100 engine=0
+S> [85] bind handle/class/engine beef0202 0000003d 00000000
+S> [86] client_new ok
+S> [89] pushbuf_new cap 0003c000
+S> [107] bo_new sz/phys/vmoff 00001000 02010000 42010000
+S> [109] object_new handle/oclass beef0301 80000002
+V> IOCTL 00005016 #3 in=8 [BEEF0301 80000002 00000000 00000000] out=28
+V> NV_gpu_bind: handle=BEEF0301 class=80000002 -> inst=03008200 engine=0
+S> [110] bind handle/class/engine beef0301 80000002 00000000
+S> [111] object_new handle/oclass beef5039 00005039
+V> IOCTL 00005016 #4 in=8 [BEEF5039 00005039 00000000 00000000] out=28
+V> NV_gpu_bind: handle=BEEF5039 class=00005039 -> inst=03008300 engine=1
+S> [112] bind handle/class/engine beef5039 00005039 00000001
+S> [112] object_new handle/oclass beef502d 0000502d
+V> IOCTL 00005016 #5 in=8 [BEEF502D 0000502D 00000000 00000000] out=28
+V> NV_gpu_bind: handle=BEEF502D class=0000502D -> inst=03008400 engine=1
+S> [113] bind handle/class/engine beef502d 0000502d 00000001
+S> [114] object_new handle/oclass beef5097 00008297
+V> IOCTL 00005016 #6 in=8 [BEEF5097 00008297 00000000 00000000] out=28
+V> NV_gpu_bind: handle=BEEF5097 class=00008297 -> inst=03008500 engine=1
+S> [115] bind handle/class/engine beef5097 00008297 00000001
+S> [116] bo_new sz/phys/vmoff 00181000 02020000 42020000
+V> IOCTL 00005001 #1 in=8 [00001540 00000001 00000000 00000000] out=16
+S> [116] graph_units reg/used f3010001 f3010001
+S> [117] bo_new sz/phys/vmoff 00008000 021b0000 421b0000
+S> [118] bo_new sz/phys/vmoff 00020000 021c0000 421c0000
+S> [119] bo_new sz/phys/vmoff 00050000 021e0000 421e0000
+S> [119] bo_new sz/phys/vmoff 00030000 02230000 42230000
+S> [138] object_new handle/oclass beef50c0 000050c0
+V> NV_gpu_bind: handle=BEEF50C0 class=000050C0 -> inst=03008600 engine=1
+S> [138] bind handle/class/engine beef50c0 000050c0 00000001
+S> [141] kick > cnt/m0/m1 0000025c 0004a000 beef5039
+V> IOCTL 00005013 #1 in=2416 [0004A000 BEEF5039 000CA180 BEEF0301] out=92
+V> S> submit begin cnt=604 m0=0004A000 m1=BEEF5039 ibput=0
+V> S> drain loops 16 (ib loops 2)
+V> S> submit end get=1 pfi=00000000 loops=18 gridle=0 dmaget=03200970 c1put=00000674 c1get=00000674 pull0=70000001
+S> [145] kick ok cnt/put/pgi 0000025c 03200000 00000000
+S> [161] winsys: init(dev) screen 009ed010 00000000
+S> [162] winsys: context_create fn 6957c280 00000000
+S> [163] wgl: nouveau_drm_screen_create exit screen/lasterr 009ed010 000000cb
+S> [164] wgl: result screen/lasterr 009ed010 000000cb
+S> [212] stw: pixelformat_init count 000001e0 00000000
+S> [213] stw: init_screen done screen/max2d 009ed010 00002000
+S> [214] stw: DescribePF count-query hdc/count 000014ce 000001e0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+S> [219] stw: DescribePF i/cjpfd 00000001 00000028
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+S> [222] stw: DescribePF count-query hdc/count 000014ce 000001e0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+S> [223] stw: DescribePF i/cjpfd 00000002 00000028
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+S> [224] stw: DescribePF count-query hdc/count 000014ce 000001e0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+S> [225] stw: DescribePF count-query hdc/count 000014ce 000001e0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> C
+[nvprobe tail: 11287 bytes lost]
+101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+S> [314] stw: DescribePF i/cjpfd 000000c8 00000028
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (1
+[nvprobe tail: 16758 bytes lost]
+it): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+S> [399] stw: DescribePF i/cjpfd 00000190 00000028
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+S> [449] stw: SetPF enter ipf/count 00000003 000001e0
+S> [449] stw: fb_create hwnd/pfi 00000488 0550a098
+S> [450] stw: SetPF fb_create ret/pfi 009ae280 0550a098
+S> [451] stw: SetPF GDI GetPixelFormat ret/lasterr 00000003 00000485
+S> [451] stw: SetPF OK hwnd 00000488 00000000
+S> [556] stw: CreateLayerContext hdc/lasterr 000014ce 00000485
+S> [557] stw: get_info_from_hdc hdc/fb 000014ce 009ae280
+S> [558] stw: CreateLayerContext pfi 0550a098 00000000
+S> [558] stw: create_context_attribs enter hdc/pfi 000014ce 0550a098
+S> [559] stw: attribs profile/major 00000000 00000001
+S> [580] nv50: create enter 05501010 00000000
+S> [581] client_new ok
+S> [581] nouveau: context_init client_new ret 00000000 00000000
+S> [582] pushbuf_new cap 0003c000
+S> [583] nouveau: context_init pushbuf ret 00000000 00000000
+S> [583] nv50: nouveau_context_init ret 00000000 00000000
+S> [584] bufctx_new ok bins 00000002
+S> [585] bufctx_new ok bins 00000038
+S> [586] bufctx_new ok bins 00000016
+S> [588] nv50: bufctx_new x3 ret 00000000 00000000
+S> [595] nv50: stream_uploader 009ccb90 00000000
+S> [607] bo_new sz/phys/vmoff 00001000 02011000 42011000
+S> [607] nv50: create OK pipe 05501010 00000000
+S> [609] st: screen->context_create pipe 05501010 00000000
+S> [952] st: st_create_context st 057e3010 00000000
+S> [953] stw: st_api_create_context st/err 057e3010 00000000
+S> [963] stw: CreateLayerContext ctx/dhglrc 015f23e0 00000001
+S> [1064] stw: SetContext hdc/dhglrc 000014ce 00000001
+S> [1085] bo_new sz/phys/vmoff 00300000 02260000 42260000
+V> IOCTL 00005019 #1 in=12 [02260000 00300000 00000070 00000000] out=4
+V> S> vmkind phys=02260000 size=00300000 kind=70 pages=48 flushloops=2
+S> [1085] bo_kind phys/size/kind 02260000 00300000 00000070
+S> [1120] bo_new sz/phys/vmoff 00300000 02560000 42560000
+V> IOCTL 00005019 #2 in=12 [02560000 00300000 00000028 00000000] out=4
+V> S> vmkind phys=02560000 size=00300000 kind=28 pages=48 flushloops=2
+S> [1124] bo_kind phys/size/kind 02560000 00300000 00000028
+S> [1274] kick > cnt/m0/m1 00000022 00088200 000000f3
+V> IOCTL 00005013 #2 in=136 [00088200 000000F3 00000001 00148214] out=92
+V> S> submit begin cnt=34 m0=00088200 m1=000000F3 ibput=1
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=2 pfi=00000000 loops=1 gridle=0 dmaget=032009F8 c1put=000006E4 c1get=000006E4 pull0=70000001
+S> [1275] kick ok cnt/put/pgi 00000022 03200970 00000000
+S> [1503] bo_new sz/phys/vmoff 00010000 02860000 42860000
+V> IOCTL 00005019 #3 in=12 [02860000 00010000 00000070 00000000] out=4
+V> S> vmkind phys=02860000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1504] bo_kind phys/size/kind 02860000 00010000 00000070
+S> [1526] bo_new sz/phys/vmoff 00010000 02870000 42870000
+S> [1564] bo_new sz/phys/vmoff 00020000 02880000 42880000
+V> IOCTL 00005019 #4 in=12 [02880000 00020000 00000070 00000000] out=4
+V> S> vmkind phys=02880000 size=00020000 kind=70 pages=2 flushloops=2
+S> [1567] bo_kind phys/size/kind 02880000 00020000 00000070
+S> [1571] bo_new sz/phys/vmoff 00020000 028a0000 428a0000
+V> IOCTL 00005019 #5 in=12 [028A0000 00020000 00000070 00000000] out=4
+V> S> vmkind phys=028A0000 size=00020000 kind=70 pages=2 flushloops=2
+S> [1572] bo_kind phys/size/kind 028a0000 00020000 00000070
+S> [1573] bo_new sz/phys/vmoff 00020000 028c0000 428c0000
+V> IOCTL 00005015 #1 in=4104 [02870000 00000400 005A5A5A 005A5A5A] out=4
+V> IOCTL 00005015 #2 in=4104 [02871000 00000400 005A5A5A 005A5A5A] out=4
+V> IOCTL 00005015 #3 in=4104 [02872000 00000400 005A5A5A 005A5A5A] out=4
+V> IOCTL 00005015 #4 in=4104 [02873000 00000400 005A5A5A 005A5A5A] out=4
+V> IOCTL 00005015 #5 in=4104 [02874000 00000400 005A5A5A 005A5A5A] out=4
+V> IOCTL 00005015 #6 in=4104 [02875000 00000400 005A5A5A 005A5A5A] out=4
+S> [1579] kick > cnt/m0/m1 00000057 0004a200 00000001
+V> IOCTL 00005013 #3 in=348 [0004A200 00000001 0004A314 00000200] out=92
+V> S> submit begin cnt=87 m0=0004A200 m1=00000001 ibput=2
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=3 pfi=00000000 loops=1 gridle=451 dmaget=03200B54 c1put=000007E8 c1get=000007E8 pull0=70000001
+S> [1585] kick ok cnt/put/pgi 00000057 032009f8 00000000
+S> [1586] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> IOCTL 00005019 #6 in=12 [028A0000 00020000 00000000 00000000] out=4
+V> S> vmkind phys=028A0000 size=00020000 kind=00 pages=2 flushloops=2
+S> [1587] bo_kind phys/size/kind 028a0000 00020000 00000000
+S> [1588] bo_new sz/phys/vmoff 00020000 028a0000 428a0000
+V> S> vmkind phys=028A0000 size=00020000 kind=70 pages=2 flushloops=2
+S> [1590] bo_kind phys/size/kind 028a0000 00020000 00000070
+S> [1591] bo_new sz/phys/vmoff 00020000 028e0000 428e0000
+S> [1592] bo_new sz/phys/vmoff 00010000 02900000 42900000
+V> S> vmkind phys=02900000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1593] bo_kind phys/size/kind 02900000 00010000 00000070
+S> [1594] bo_new sz/phys/vmoff 00010000 02910000 42910000
+V> S> vmkind phys=02910000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1594] bo_kind phys/size/kind 02910000 00010000 00000070
+S> [1595] bo_new sz/phys/vmoff 00010000 02920000 42920000
+S> [1596] kick > cnt/m0/m1 0000005c 00107b00 00000000
+V> IOCTL 00005013 #4 in=368 [00107B00 00000000 42010000 00000001] out=92
+V> S> submit begin cnt=92 m0=00107B00 m1=00000000 ibput=3
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=4 pfi=00000000 loops=1 gridle=406 dmaget=03200CC4 c1put=000008FC c1get=000008FC pull0=70000001
+S> [1600] kick ok cnt/put/pgi 0000005c 03200b54 00000000
+V> IOCTL 0000501A #1 in=8 [02010000 00000004 00000000 00000000] out=16
+S> [1601] fence refresh phys/seq 02010000 00000001
+S> [1602] bo_new sz/phys/vmoff 00001000 02013000 42013000
+V> S> vmkind phys=02910000 size=00010000 kind=00 pages=1 flushloops=2
+S> [1603] bo_kind phys/size/kind 02910000 00010000 00000000
+S> [1604] bo_new sz/phys/vmoff 00010000 02870000 42870000
+V> S> vmkind phys=02870000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1605] bo_kind phys/size/kind 02870000 00010000 00000070
+S> [1605] bo_new sz/phys/vmoff 00004000 02014000 42014000
+S> [1606] bo_new sz/phys/vmoff 00010000 028c0000 428c0000
+V> S> vmkind phys=028C0000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1607] bo_kind phys/size/kind 028c0000 00010000 00000070
+S> [1608] bo_new sz/phys/vmoff 00000100 02011000 42011000
+S> [1609] bo_new sz/phys/vmoff 00010000 028d0000 428d0000
+V> S> vmkind phys=028D0000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1609] bo_kind phys/size/kind 028d0000 00010000 00000070
+S> [1610] bo_new sz/phys/vmoff 00010000 02910000 42910000
+V> S> vmkind phys=02910000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1611] bo_kind phys/size/kind 02910000 00010000 00000070
+S> [1612] bo_new sz/phys/vmoff 00000400 02011100 42011100
+S> [1614] kick > cnt/m0/m1 00000074 00107b00 00000000
+V> IOCTL 00005013 #5 in=464 [00107B00 00000000 42010000 00000002] out=92
+V> S> submit begin cnt=116 m0=00107B00 m1=00000000 ibput=4
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=5 pfi=00000000 loops=1 gridle=0 dmaget=03200E94 c1put=00000A54 c1get=00000A54 pull0=70000001
+S> [1617] kick ok cnt/put/pgi 00000074 03200cc4 00000000
+V> IOCTL 0000501A #2 in=8 [02010000 00000004 00000000 00000000] out=16
+S> [1618] fence refresh phys/seq 02010000 00000002
+S> [1618] bo_new sz/phys/vmoff 00001000 02018000 42018000
+V> S> vmkind phys=02910000 size=00010000 kind=00 pages=1 flushloops=2
+S> [1619] bo_kind phys/size/kind 02910000 00010000 00000000
+S> [1620] bo_new sz/phys/vmoff 00010000 028e0000 428e0000
+V> S> vmkind phys=028E0000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1621] bo_kind phys/size/kind 028e0000 00010000 00000070
+S> [1622] bo_new sz/phys/vmoff 00010000 028f0000 428f0000
+V> S> vmkind phys=028F0000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1622] bo_kind phys/size/kind 028f0000 00010000 00000070
+S> [1623] bo_new sz/phys/vmoff 00000100 02011500 42011500
+S> [1624] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> IOCTL 00005013 #6 in=272 [00107B00 00000000 42010000 00000003] out=92
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=5
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=6 pfi=00000000 loops=1 gridle=0 dmaget=03200FA4 c1put=00000B24 c1get=00000B24 pull0=70000001
+S> [1626] kick ok cnt/put/pgi 00000044 03200e94 00000000
+V> IOCTL 0000501A #3 in=8 [02010000 00000004 00000000 00000000] out=16
+S> [1627] fence refresh phys/seq 02010000 00000003
+S> [1628] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> S> vmkind phys=028F0000 size=00010000 kind=00 pages=1 flushloops=2
+S> [1628] bo_kind phys/size/kind 028f0000 00010000 00000000
+S> [1629] bo_new sz/phys/vmoff 00010000 028f0000 428f0000
+V> S> vmkind phys=028F0000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1630] bo_kind phys/size/kind 028f0000 00010000 00000070
+S> [1631] bo_new sz/phys/vmoff 00000040 02011000 42011000
+S> [1631] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=6
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=7 pfi=00000000 loops=1 gridle=0 dmaget=032010B4 c1put=00000BF4 c1get=00000BF4 pull0=70000001
+S> [1633] kick ok cnt/put/pgi 00000044 03200fa4 00000000
+V> IOCTL 0000501A #4 in=8 [02010000 00000004 00000000 00000000] out=16
+S> [1634] fence refresh phys/seq 02010000 00000004
+S> [1635] bo_new sz/phys/vmoff 00001000 02013000 42013000
+V> S> vmkind phys=028F0000 size=00010000 kind=00 pages=1 flushloops=2
+S> [1635] bo_kind phys/size/kind 028f0000 00010000 00000000
+S> [1636] bo_new sz/phys/vmoff 00010000 028f0000 428f0000
+V> S> vmkind phys=028F0000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1637] bo_kind phys/size/kind 028f0000 00010000 00000070
+S> [1639] bo_new sz/phys/vmoff 00000010 02011100 42011100
+S> [1640] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=7
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=8 pfi=00000000 loops=1 gridle=0 dmaget=032011C4 c1put=00000CC4 c1get=00000CC4 pull0=70000001
+S> [1643] kick ok cnt/put/pgi 00000044 032010b4 00000000
+V> IOCTL 0000501A #5 in=8 [02010000 00000004 00000000 00000000] out=16
+S> [1644] fence refresh phys/seq 02010000 00000005
+S> [1644] bo_new sz/phys/vmoff 00001000 02014000 42014000
+V> S> vmkind phys=028F0000 size=00010000 kind=00 pages=1 flushloops=2
+S> [1645] bo_kind phys/size/kind 028f0000 00010000 00000000
+S> [1646] bo_new sz/phys/vmoff 00010000 028f0000 428f0000
+V> S> vmkind phys=028F0000 size=00010000 kind=70 pages=1 flushloops=2
+S> [1647] bo_kind phys/size/kind 028f0000 00010000 00000070
+S> [1647] bo_new sz/phys/vmoff 00000004 02011000 42011000
+S> [1648] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=8
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=9 pfi=00000000 loops=1 gridle=0 dmaget=032012D4 c1put=00000D94 c1get=00000D94 pull0=70000001
+S> [1650] kick ok cnt/put/pgi 00000044 032011c4 00000000
+V> IOCTL 0000501A #6 in=8 [02010000 00000004 00000000 00000000] out=16
+S> [1651] fence refresh phys/seq 02010000 00000006
+S> [1652] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> S> vmkind phys=028F0000 size=00010000 kind=00 pages=1 flushloops=2
+S> [1652] bo_kind phys/size/kind 028f0000 00010000 00000000
+S> [2282] bo_new sz/phys/vmoff 00010000 028f0000 428f0000
+V> S> vmkind phys=028F0000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2282] bo_kind phys/size/kind 028f0000 00010000 00000070
+S> [2283] bo_new sz/phys/vmoff 00010000 02910000 42910000
+V> S> vmkind phys=02910000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2284] bo_kind phys/size/kind 02910000 00010000 00000070
+S> [2285] bo_new sz/phys/vmoff 00000400 02011100 42011100
+S> [2285] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=9
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=10 pfi=00000000 loops=1 gridle=0 dmaget=032013E4 c1put=00000E64 c1get=00000E64 pull0=70000001
+S> [2289] kick ok cnt/put/pgi 00000044 032012d4 00000000
+S> [2289] fence refresh phys/seq 02010000 00000007
+S> [2290] bo_new sz/phys/vmoff 00001000 02013000 42013000
+V> S> vmkind phys=02910000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2291] bo_kind phys/size/kind 02910000 00010000 00000000
+S> [2292] bo_new sz/phys/vmoff 00010000 02910000 42910000
+V> S> vmkind phys=02910000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2293] bo_kind phys/size/kind 02910000 00010000 00000070
+S> [2293] bo_new sz/phys/vmoff 00010000 02920000 42920000
+V> S> vmkind phys=02920000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2294] bo_kind phys/size/kind 02920000 00010000 00000070
+S> [2295] bo_new sz/phys/vmoff 00000100 02011000 42011000
+S> [2296] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=10
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=11 pfi=00000000 loops=1 gridle=0 dmaget=032014F4 c1put=00000F34 c1get=00000F34 pull0=70000001
+S> [2298] kick ok cnt/put/pgi 00000044 032013e4 00000000
+S> [2298] fence refresh phys/seq 02010000 00000008
+S> [2299] bo_new sz/phys/vmoff 00001000 02014000 42014000
+V> S> vmkind phys=02920000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2300] bo_kind phys/size/kind 02920000 00010000 00000000
+S> [2301] bo_new sz/phys/vmoff 00010000 02920000 42920000
+V> S> vmkind phys=02920000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2301] bo_kind phys/size/kind 02920000 00010000 00000070
+S> [2302] bo_new sz/phys/vmoff 00000040 02011100 42011100
+S> [2303] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=11
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=12 pfi=00000000 loops=1 gridle=0 dmaget=03201604 c1put=00000004 c1get=00000004 pull0=70000001
+S> [2305] kick ok cnt/put/pgi 00000044 032014f4 00000000
+S> [2306] fence refresh phys/seq 02010000 00000009
+S> [2306] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> S> vmkind phys=02920000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2307] bo_kind phys/size/kind 02920000 00010000 00000000
+S> [2308] bo_new sz/phys/vmoff 00010000 02920000 42920000
+V> S> vmkind phys=02920000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2309] bo_kind phys/size/kind 02920000 00010000 00000070
+S> [2309] bo_new sz/phys/vmoff 00000010 02011000 42011000
+S> [2310] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=12
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=13 pfi=00000000 loops=1 gridle=0 dmaget=03201714 c1put=000000D4 c1get=000000D4 pull0=70000001
+S> [2313] kick ok cnt/put/pgi 00000044 03201604 00000000
+S> [2315] fence refresh phys/seq 02010000 0000000a
+S> [2316] bo_new sz/phys/vmoff 00001000 02013000 42013000
+V> S> vmkind phys=02920000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2317] bo_kind phys/size/kind 02920000 00010000 00000000
+S> [2317] bo_new sz/phys/vmoff 00010000 02920000 42920000
+V> S> vmkind phys=02920000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2318] bo_kind phys/size/kind 02920000 00010000 00000070
+S> [2319] bo_new sz/phys/vmoff 00000004 02011100 42011100
+S> [2320] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=13
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=14 pfi=00000000 loops=1 gridle=0 dmaget=03201824 c1put=000001A4 c1get=000001A4 pull0=70000001
+S> [2321] kick ok cnt/put/pgi 00000044 03201714 00000000
+S> [2323] fence refresh phys/seq 02010000 0000000b
+S> [2323] bo_new sz/phys/vmoff 00001000 02014000 42014000
+V> S> vmkind phys=02920000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2324] bo_kind phys/size/kind 02920000 00010000 00000000
+S> [2330] bo_new sz/phys/vmoff 00010000 02920000 42920000
+V> S> vmkind phys=02920000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2331] bo_kind phys/size/kind 02920000 00010000 00000070
+S> [2332] bo_new sz/phys/vmoff 00010000 02930000 42930000
+V> S> vmkind phys=02930000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2333] bo_kind phys/size/kind 02930000 00010000 00000070
+S> [2334] bo_new sz/phys/vmoff 00002000 02015000 42015000
+S> [2334] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=14
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=15 pfi=00000000 loops=1 gridle=0 dmaget=03201934 c1put=00000274 c1get=00000274 pull0=70000001
+S> [2336] kick ok cnt/put/pgi 00000044 03201824 00000000
+S> [2338] fence refresh phys/seq 02010000 0000000c
+S> [2339] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> S> vmkind phys=02930000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2340] bo_kind phys/size/kind 02930000 00010000 00000000
+S> [2341] bo_new sz/phys/vmoff 00010000 02930000 42930000
+V> S> vmkind phys=02930000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2342] bo_kind phys/size/kind 02930000 00010000 00000070
+S> [2343] bo_new sz/phys/vmoff 00010000 02940000 42940000
+V> S> vmkind phys=02940000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2344] bo_kind phys/size/kind 02940000 00010000 00000070
+S> [2344] bo_new sz/phys/vmoff 00000800 02011000 42011000
+S> [2345] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=15
+V> S> drain loops 0 (ib loops 1)
+V> S> submit end get=16 pfi=00000000 loops=1 gridle=0 dmaget=03201A44 c1put=00000344 c1get=00000344 pull0=70000001
+S> [2347] kick ok cnt/put/pgi 00000044 03201934 00000000
+S> [2348] fence refresh phys/seq 02010000 0000000d
+S> [2348] bo_new sz/phys/vmoff 00001000 02013000 42013000
+V> S> vmkind phys=02940000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2349] bo_kind phys/size/kind 02940000 00010000 00000000
+S> [2350] bo_new sz/phys/vmoff 00010000 02940000 42940000
+V> S> vmkind phys=02940000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2351] bo_kind phys/size/kind 02940000 00010000 00000070
+S> [2352] bo_new sz/phys/vmoff 00000200 02011800 42011800
+S> [2352] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=16
+V> S> submit end get=17 pfi=00000000 loops=1 gridle=11 dmaget=03201B54 c1put=00000414 c1get=00000414 pull0=70000001
+S> [2354] kick ok cnt/put/pgi 00000044 03201a44 00000000
+S> [2355] fence refresh phys/seq 02010000 0000000e
+S> [2356] bo_new sz/phys/vmoff 00001000 02014000 42014000
+V> S> vmkind phys=02940000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2356] bo_kind phys/size/kind 02940000 00010000 00000000
+S> [2357] bo_new sz/phys/vmoff 00010000 02940000 42940000
+V> S> vmkind phys=02940000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2358] bo_kind phys/size/kind 02940000 00010000 00000070
+S> [2359] bo_new sz/phys/vmoff 00000080 02011000 42011000
+S> [2360] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=17
+V> S> submit end get=18 pfi=00000000 loops=1 gridle=10 dmaget=03201C64 c1put=000004E4 c1get=000004E4 pull0=70000001
+S> [2363] kick ok cnt/put/pgi 00000044 03201b54 00000000
+S> [2364] fence refresh phys/seq 02010000 0000000f
+S> [2365] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> S> vmkind phys=02940000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2366] bo_kind phys/size/kind 02940000 00010000 00000000
+S> [2367] bo_new sz/phys/vmoff 00010000 02940000 42940000
+V> S> vmkind phys=02940000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2368] bo_kind phys/size/kind 02940000 00010000 00000070
+S> [2368] bo_new sz/phys/vmoff 00000020 02011100 42011100
+S> [2369] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=18
+V> S> submit end get=19 pfi=00000000 loops=1 gridle=10 dmaget=03201D74 c1put=000005B4 c1get=000005B4 pull0=70000001
+S> [2371] kick ok cnt/put/pgi 00000044 03201c64 00000000
+S> [2372] fence refresh phys/seq 02010000 00000010
+S> [2372] bo_new sz/phys/vmoff 00001000 02013000 42013000
+V> S> vmkind phys=02940000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2373] bo_kind phys/size/kind 02940000 00010000 00000000
+S> [2374] bo_new sz/phys/vmoff 00010000 02940000 42940000
+V> S> vmkind phys=02940000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2374] bo_kind phys/size/kind 02940000 00010000 00000070
+S> [2375] bo_new sz/phys/vmoff 00000008 02011000 42011000
+S> [2376] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=19
+V> S> submit end get=20 pfi=00000000 loops=1 gridle=10 dmaget=03201E84 c1put=00000684 c1get=00000684 pull0=70000001
+S> [2378] kick ok cnt/put/pgi 00000044 03201d74 00000000
+S> [2379] fence refresh phys/seq 02010000 00000011
+S> [2379] bo_new sz/phys/vmoff 00001000 02014000 42014000
+V> S> vmkind phys=02940000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2380] bo_kind phys/size/kind 02940000 00010000 00000000
+S> [2381] bo_new sz/phys/vmoff 00010000 02940000 42940000
+V> S> vmkind phys=02940000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2382] bo_kind phys/size/kind 02940000 00010000 00000070
+S> [2382] bo_new sz/phys/vmoff 00000004 02011100 42011100
+S> [2383] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=20
+V> S> submit end get=21 pfi=00000000 loops=1 gridle=10 dmaget=03201F94 c1put=00000754 c1get=00000754 pull0=70000001
+S> [2385] kick ok cnt/put/pgi 00000044 03201e84 00000000
+S> [2386] fence refresh phys/seq 02010000 00000012
+S> [2388] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> S> vmkind phys=02940000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2389] bo_kind phys/size/kind 02940000 00010000 00000000
+S> [2391] bo_new sz/phys/vmoff 00010000 02940000 42940000
+V> S> vmkind phys=02940000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2392] bo_kind phys/size/kind 02940000 00010000 00000070
+S> [2392] bo_new sz/phys/vmoff 00010000 02950000 42950000
+V> S> vmkind phys=02950000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2393] bo_kind phys/size/kind 02950000 00010000 00000070
+S> [2394] bo_new sz/phys/vmoff 00002000 02015000 42015000
+S> [2395] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=21
+V> S> submit end get=22 pfi=00000000 loops=1 gridle=28 dmaget=032020A4 c1put=00000824 c1get=00000824 pull0=70000001
+S> [2397] kick ok cnt/put/pgi 00000044 03201f94 00000000
+S> [2398] fence refresh phys/seq 02010000 00000013
+S> [2398] bo_new sz/phys/vmoff 00001000 02013000 42013000
+V> S> vmkind phys=02950000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2399] bo_kind phys/size/kind 02950000 00010000 00000000
+S> [2400] bo_new sz/phys/vmoff 00010000 02950000 42950000
+V> S> vmkind phys=02950000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2401] bo_kind phys/size/kind 02950000 00010000 00000070
+S> [2401] bo_new sz/phys/vmoff 00010000 02960000 42960000
+V> S> vmkind phys=02960000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2402] bo_kind phys/size/kind 02960000 00010000 00000070
+S> [2403] bo_new sz/phys/vmoff 00000800 02011000 42011000
+S> [2404] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=22
+V> S> submit end get=23 pfi=00000000 loops=1 gridle=13 dmaget=032021B4 c1put=000008F4 c1get=000008F4 pull0=70000001
+S> [2405] kick ok cnt/put/pgi 00000044 032020a4 00000000
+S> [2406] fence refresh phys/seq 02010000 00000014
+S> [2407] bo_new sz/phys/vmoff 00001000 02014000 42014000
+V> S> vmkind phys=02960000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2408] bo_kind phys/size/kind 02960000 00010000 00000000
+S> [2409] bo_new sz/phys/vmoff 00010000 02960000 42960000
+V> S> vmkind phys=02960000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2409] bo_kind phys/size/kind 02960000 00010000 00000070
+S> [2410] bo_new sz/phys/vmoff 00000200 02011800 42011800
+S> [2411] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=23
+V> S> submit end get=24 pfi=00000000 loops=1 gridle=11 dmaget=032022C4 c1put=000009C4 c1get=000009C4 pull0=70000001
+S> [2414] kick ok cnt/put/pgi 00000044 032021b4 00000000
+S> [2415] fence refresh phys/seq 02010000 00000015
+S> [2416] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> S> vmkind phys=02960000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2417] bo_kind phys/size/kind 02960000 00010000 00000000
+S> [2418] bo_new sz/phys/vmoff 00010000 02960000 42960000
+V> S> vmkind phys=02960000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2418] bo_kind phys/size/kind 02960000 00010000 00000070
+S> [2419] bo_new sz/phys/vmoff 00000080 02011000 42011000
+S> [2420] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=24
+V> S> submit end get=25 pfi=00000000 loops=1 gridle=10 dmaget=032023D4 c1put=00000A94 c1get=00000A94 pull0=70000001
+S> [2422] kick ok cnt/put/pgi 00000044 032022c4 00000000
+S> [2422] fence refresh phys/seq 02010000 00000016
+S> [2423] bo_new sz/phys/vmoff 00001000 02013000 42013000
+V> S> vmkind phys=02960000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2424] bo_kind phys/size/kind 02960000 00010000 00000000
+S> [2425] bo_new sz/phys/vmoff 00010000 02960000 42960000
+V> S> vmkind phys=02960000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2426] bo_kind phys/size/kind 02960000 00010000 00000070
+S> [2426] bo_new sz/phys/vmoff 00000020 02011100 42011100
+S> [2427] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=25
+V> S> submit end get=26 pfi=00000000 loops=1 gridle=9 dmaget=032024E4 c1put=00000B64 c1get=00000B64 pull0=70000001
+S> [2429] kick ok cnt/put/pgi 00000044 032023d4 00000000
+S> [2430] fence refresh phys/seq 02010000 00000017
+S> [2430] bo_new sz/phys/vmoff 00001000 02014000 42014000
+V> S> vmkind phys=02960000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2431] bo_kind phys/size/kind 02960000 00010000 00000000
+S> [2432] bo_new sz/phys/vmoff 00010000 02960000 42960000
+V> S> vmkind phys=02960000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2433] bo_kind phys/size/kind 02960000 00010000 00000070
+S> [2434] bo_new sz/phys/vmoff 00000008 02011000 42011000
+S> [2435] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=26
+V> S> submit end get=27 pfi=00000000 loops=1 gridle=9 dmaget=032025F4 c1put=00000C34 c1get=00000C34 pull0=70000001
+S> [2438] kick ok cnt/put/pgi 00000044 032024e4 00000000
+S> [2439] fence refresh phys/seq 02010000 00000018
+S> [2440] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> S> vmkind phys=02960000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2441] bo_kind phys/size/kind 02960000 00010000 00000000
+S> [2441] bo_new sz/phys/vmoff 00010000 02960000 42960000
+V> S> vmkind phys=02960000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2442] bo_kind phys/size/kind 02960000 00010000 00000070
+S> [2443] bo_new sz/phys/vmoff 00000004 02011100 42011100
+S> [2444] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=27
+V> S> submit end get=28 pfi=00000000 loops=1 gridle=10 dmaget=03202704 c1put=00000D04 c1get=00000D04 pull0=70000001
+S> [2446] kick ok cnt/put/pgi 00000044 032025f4 00000000
+S> [2447] bo_new sz/phys/vmoff 00001000 02013000 42013000
+V> S> vmkind phys=02960000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2447] bo_kind phys/size/kind 02960000 00010000 00000000
+S> [2448] bo_new sz/phys/vmoff 00010000 02960000 42960000
+V> S> vmkind phys=02960000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2449] bo_kind phys/size/kind 02960000 00010000 00000070
+S> [2450] bo_new sz/phys/vmoff 00010000 02970000 42970000
+V> S> vmkind phys=02970000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2451] bo_kind phys/size/kind 02970000 00010000 00000070
+S> [2452] bo_new sz/phys/vmoff 00002000 02014000 42014000
+S> [2452] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=28
+V> S> submit end get=29 pfi=00000000 loops=1 gridle=28 dmaget=03202814 c1put=00000DD4 c1get=00000DD4 pull0=70000001
+S> [2454] kick ok cnt/put/pgi 00000044 03202704 00000000
+S> [2455] bo_new sz/phys/vmoff 00001000 02016000 42016000
+V> S> vmkind phys=02970000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2456] bo_kind phys/size/kind 02970000 00010000 00000000
+S> [2456] bo_new sz/phys/vmoff 00010000 02970000 42970000
+V> S> vmkind phys=02970000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2457] bo_kind phys/size/kind 02970000 00010000 00000070
+S> [2458] bo_new sz/phys/vmoff 00010000 02980000 42980000
+V> S> vmkind phys=02980000 size=00010000 kind=70 pages=1 flushloops=2
+S> [2459] bo_kind phys/size/kind 02980000 00010000 00000070
+S> [2460] bo_new sz/phys/vmoff 00000800 02011000 42011000
+S> [2461] kick > cnt/m0/m1 00000044 00107b00 00000000
+V> S> submit begin cnt=68 m0=00107B00 m1=00000000 ibput=29
+V> S> submit end get=30 pfi=00000000 loops=1 gridle=14 dmaget=03202924 c1put=00000EA4 c1get=00000EA4 pull0=70000001
+S> [2464] kick ok cnt/put/pgi 00000044 03202814 00000000
+S> [2465] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> S> vmkind phys=02980000 size=00010000 kind=00 pages=1 flushloops=2
+S> [2466] bo_kind phys/size/kind 02980000 00010000 00000000
+V> HB 56 t=66224 blits=138 px=20822488 lock=0 mode=1024x768x32 flags=00000081
+V> HB 57 t=67249 blits=141 px=21695654 lock=0 mode=1024x768x32 flags=00000081
+V> HB 58 t=68274 blits=141 px=21695654 lock=0 mode=1024x768x32 flags=00000081
+V> HB 59 t=69299 blits=144 px=22344599 lock=0 mode=1024x768x32 flags=00000081
+V> HB 60 t=70324 blits=154 px=23827454 lock=0 mode=1024x768x32 flags=00000081
+V> HB 61 t=71344 blits=154 px=23827454 lock=0 mode=1024x768x32 flags=00000081
+V> HB 62 t=72368 blits=154 px=23827454 lock=0 mode=1024x768x32 flags=00000081
+V> HB 63 t=73394 blits=194 px=29064665 lock=0 mode=1024x768x32 flags=00000081
+V> HB 64 t=74419 blits=196 px=29075851 lock=0 mode=1024x768x32 flags=00000081
+V> HB 65 t=75444 blits=196 px=29075851 lock=0 mode=1024x768x32 flags=00000081
+V> HB 66 t=76464 blits=197 px=29145448 lock=0 mode=1024x768x32 flags=00000081
+V> HB 67 t=77489 blits=201 px=29971457 lock=0 mode=1024x768x32 flags=00000081
+V> HB 68 t=78512 blits=203 px=30620836 lock=0 mode=1024x768x32 flags=00000081
+V> HB 69 t=79539 blits=204 px=31057748 lock=0 mode=1024x768x32 flags=00000081
+V> HB 70 t=80564 blits=204 px=31057748 lock=0 mode=1024x768x32 flags=00000081
+V> HB 71 t=81584 blits=204 px=31057748 lock=0 mode=1024x768x32 flags=00000081
+V> HB 72 t=82609 blits=205 px=31324880 lock=0 mode=1024x768x32 flags=00000081
+V> HB 73 t=83634 blits=205 px=31324880 lock=0 mode=1024x768x32 flags=00000081
+V> HB 74 t=84659 blits=205 px=31324880 lock=0 mode=1024x768x32 flags=00000081
+V> HB 75 t=85684 blits=206 px=31328912 lock=0 mode=1024x768x32 flags=00000081
+V> HB 76 t=86705 blits=220 px=31971423 lock=0 mode=1024x768x32 flags=00000081
+V> HB 77 t=87730 blits=233 px=32100771 lock=0 mode=1024x768x32 flags=00000081
+V> HB 78 t=88754 blits=243 px=32599410 lock=0 mode=1024x768x32 flags=00000081
+V> HB 79 t=89779 blits=253 px=32741674 lock=0 mode=1024x768x32 flags=00000081
+V> HB 80 t=90800 blits=261 px=32887159 lock=0 mode=1024x768x32 flags=00000081
+V> HB 81 t=91824 blits=273 px=33122617 lock=0 mode=1024x768x32 flags=00000081
+V> HB 82 t=92884 blits=283 px=33239106 lock=0 mode=1024x768x32 flags=00000081
+V> HB 83 t=93909 blits=291 px=33365220 lock=0 mode=1024x768x32 flags=00000081
+V> HB 84 t=94929 blits=302 px=33562967 lock=0 mode=1024x768x32 flags=00000081
+V> HB 85 t=95954 blits=314 px=33662267 lock=0 mode=1024x768x32 flags=00000081
+V> HB 86 t=96979 blits=326 px=33861084 lock=0 mode=1024x768x32 flags=00000081
+V> HB 87 t=98005 blits=336 px=33996243 lock=0 mode=1024x768x32 flags=00000081
+V> HB 88 t=99024 blits=348 px=34141009 lock=0 mode=1024x768x32 flags=00000081
+V> HB 89 t=100055 blits=361 px=34795851 lock=0 mode=1024x768x32 flags=00000081
+V> HB 90 t=101074 blits=364 px=35717599 lock=0 mode=1024x768x32 flags=00000081
+V> HB 91 t=102099 blits=365 px=35717701 lock=0 mode=1024x768x32 flags=00000081
+V> HB 92 t=103124 blits=365 px=35717701 lock=0 mode=1024x768x32 flags=00000081
+V> HB 93 t=104145 blits=366 px=35717803 lock=0 mode=1024x768x32 flags=00000081
+V> HB 94 t=105169 blits=372 px=35749615 lock=0 mode=1024x768x32 flags=00000081
+V> HB 95 t=106193 blits=376 px=35765623 lock=0 mode=1024x768x32 flags=00000081
+V> HB 96 t=107220 blits=378 px=35776227 lock=0 mode=1024x768x32 flags=00000081
+V> HB 97 t=108244 blits=387 px=36554737 lock=0 mode=1024x768x32 flags=00000081
+V> HB 98 t=109284 blits=405 px=38448945 lock=0 mode=1024x768x32 flags=00000081
+V> HB 99 t=110309 blits=420 px=39106740 lock=0 mode=1024x768x32 flags=00000081
+V> HB 100 t=111347 blits=435 px=39255278 lock=0 mode=1024x768x32 flags=00000081
+V> HB 101 t=112369 blits=446 px=39408197 lock=0 mode=1024x768x32 flags=00000081
+V> HB 102 t=113394 blits=457 px=39552931 lock=0 mode=1024x768x32 flags=00000081
+V> HB 103 t=114419 blits=466 px=39750296 lock=0 mode=1024x768x32 flags=00000081
+V> HB 104 t=115442 blits=479 px=39911500 lock=0 mode=1024x768x32 flags=00000081
+V> HB 105 t=116464 blits=488 px=40062637 lock=0 mode=1024x768x32 flags=00000081
+V> HB 106 t=117489 blits=498 px=40237359 lock=0 mode=1024x768x32 flags=00000081
+V> HB 107 t=118515 blits=513 px=40375610 lock=0 mode=1024x768x32 flags=00000081
+V> HB 108 t=119568 blits=527 px=40478570 lock=0 mode=1024x768x32 flags=00000081
+V> HB 109 t=120594 blits=540 px=40634873 lock=0 mode=1024x768x32 flags=00000081
+V> HB 110 t=121619 blits=551 px=40808103 lock=0 mode=1024x768x32 flags=00000081
+V> HB 111 t=122659 blits=563 px=40993230 lock=0 mode=1024x768x32 flags=00000081
+V> HB 112 t=123714 blits=575 px=41124786 lock=0 mode=1024x768x32 flags=00000081
+V> HB 113 t=124739 blits=588 px=41281247 lock=0 mode=1024x768x32 flags=00000081
+V> HB 114 t=125829 blits=603 px=41447075 lock=0 mode=1024x768x32 flags=00000081
+V> HB 115 t=126964 blits=617 px=41618214 lock=0 mode=1024x768x32 flags=00000081
+V> HB 116 t=128005 blits=631 px=41764960 lock=0 mode=1024x768x32 flags=00000081
+V> HB 117 t=129025 blits=645 px=41968439 lock=0 mode=1024x768x32 flags=00000081
+V> HB 118 t=130049 blits=660 px=42102407 lock=0 mode=1024x768x32 flags=00000081
+V> HB 119 t=131184 blits=673 px=42304334 lock=0 mode=1024x768x32 flags=00000081
+V> HB 120 t=132209 blits=684 px=42863206 lock=0 mode=1024x768x32 flags=00000081
+V> HB 121 t=133234 blits=695 px=43077761 lock=0 mode=1024x768x32 flags=00000081
+V> HB 122 t=134259 blits=706 px=43222815 lock=0 mode=1024x768x32 flags=00000081
+V> HB 123 t=135284 blits=720 px=43411244 lock=0 mode=1024x768x32 flags=00000081
+V> HB 124 t=136324 blits=732 px=43604276 lock=0 mode=1024x768x32 flags=00000081
+V> HB 125 t=137379 blits=746 px=43788563 lock=0 mode=1024x768x32 flags=00000081
+V> HB 126 t=138419 blits=759 px=43980145 lock=0 mode=1024x768x32 flags=00000081
+V> HB 127 t=139524 blits=771 px=44166472 lock=0 mode=1024x768x32 flags=00000081
+V> HB 128 t=140544 blits=790 px=44323332 lock=0 mode=1024x768x32 flags=00000081
+V> HB 129 t=141569 blits=800 px=44537977 lock=0 mode=1024x768x32 flags=00000081
+V> HB 130 t=142594 blits=812 px=44701431 lock=0 mode=1024x768x32 flags=00000081
+V> HB 131 t=143635 blits=829 px=44923888 lock=0 mode=1024x768x32 flags=00000081
+V> HB 132 t=144689 blits=840 px=45101762 lock=0 mode=1024x768x32 flags=00000081
+V> HB 133 t=145745 blits=853 px=45272431 lock=0 mode=1024x768x32 flags=00000081
+V> HB 134 t=146784 blits=867 px=45407209 lock=0 mode=1024x768x32 flags=00000081
+V> HB 135 t=147860 blits=882 px=45593106 lock=0 mode=1024x768x32 flags=00000081
+V> HB 136 t=148884 blits=898 px=45770587 lock=0 mode=1024x768x32 flags=00000081
+V> HB 137 t=149909 blits=913 px=45924165 lock=0 mode=1024x768x32 flags=00000081
+V> HB 138 t=150949 blits=924 px=46184826 lock=0 mode=1024x768x32 flags=00000081
+V> HB 139 t=152034 blits=938 px=46352344 lock=0 mode=1024x768x32 flags=00000081
+V> HB 140 t=153109 blits=952 px=46505651 lock=0 mode=1024x768x32 flags=00000081
+V> HB 141 t=154145 blits=967 px=46659629 lock=0 mode=1024x768x32 flags=00000081
+V> HB 142 t=155169 blits=979 px=46841734 lock=0 mode=1024x768x32 flags=00000081
+V> HB 143 t=156244 blits=992 px=47022708 lock=0 mode=1024x768x32 flags=00000081
+V> HB 144 t=157269 blits=1005 px=47226955 lock=0 mode=1024x768x32 flags=00000081
+V> HB 145 t=158400 blits=1018 px=47452595 lock=0 mode=1024x768x32 flags=00000081
+V> HB 146 t=159444 blits=1032 px=47626454 lock=0 mode=1024x768x32 flags=00000081
+V> HB 147 t=160465 blits=1045 px=47758720 lock=0 mode=1024x768x32 flags=00000081
+V> HB 148 t=161489 blits=1056 px=47975355 lock=0 mode=1024x768x32 flags=00000081
+V> HB 149 t=162577 blits=1070 px=48143391 lock=0 mode=1024x768x32 flags=00000081
+V> HB 150 t=163619 blits=1083 px=48392704 lock=0 mode=1024x768x32 flags=00000081
+V> HB 151 t=164659 blits=1095 px=48526260 lock=0 mode=1024x768x32 flags=00000081
+V> HB 152 t=165684 blits=1108 px=48744555 lock=0 mode=1024x768x32 flags=00000081
+V> HB 153 t=166739 blits=1123 px=48940037 lock=0 mode=1024x768x32 flags=00000081
+V> HB 154 t=167762 blits=1135 px=49084818 lock=0 mode=1024x768x32 flags=00000081
+V> HB 155 t=168784 blits=1149 px=49268502 lock=0 mode=1024x768x32 flags=00000081
+V> HB 156 t=169829 blits=1163 px=49443443 lock=0 mode=1024x768x32 flags=00000081
+V> HB 157 t=170849 blits=1176 px=49620375 lock=0 mode=1024x768x32 flags=00000081
+V> HB 158 t=171874 blits=1188 px=49765396 lock=0 mode=1024x768x32 flags=00000081
+V> HB 159 t=172915 blits=1201 px=49962700 lock=0 mode=1024x768x32 flags=00000081
+V> HB 160 t=174005 blits=1215 px=50164875 lock=0 mode=1024x768x32 flags=00000081
+V> HB 161 t=175026 blits=1227 px=50345859 lock=0 mode=1024x768x32 flags=00000081
+V> HB 162 t=176129 blits=1242 px=50507422 lock=0 mode=1024x768x32 flags=00000081
+V> HB 163 t=177154 blits=1254 px=50700614 lock=0 mode=1024x768x32 flags=00000081
+V> HB 164 t=178209 blits=1269 px=50854951 lock=0 mode=1024x768x32 flags=00000081
+V> HB 165 t=179234 blits=1280 px=51049273 lock=0 mode=1024x768x32 flags=00000081
+V> HB 166 t=180274 blits=1293 px=51239632 lock=0 mode=1024x768x32 flags=00000081
+V> HB 167 t=181300 blits=1307 px=51405466 lock=0 mode=1024x768x32 flags=00000081
+V> HB 168 t=182340 blits=1322 px=51580275 lock=0 mode=1024x768x32 flags=00000081
+V> HB 169 t=183444 blits=1337 px=51781719 lock=0 mode=1024x768x32 flags=00000081
+V> HB 170 t=184465 blits=1350 px=51973678 lock=0 mode=1024x768x32 flags=00000081
+V> HB 171 t=185524 blits=1367 px=52134901 lock=0 mode=1024x768x32 flags=00000081
+V> HB 172 t=186642 blits=1379 px=52331533 lock=0 mode=1024x768x32 flags=00000081
+V> HB 173 t=187764 blits=1397 px=52521800 lock=0 mode=1024x768x32 flags=00000081
+V> HB 174 t=188785 blits=1409 px=52732922 lock=0 mode=1024x768x32 flags=00000081
+V> HB 175 t=189859 blits=1423 px=52911545 lock=0 mode=1024x768x32 flags=00000081
+V> HB 176 t=190880 blits=1438 px=53077129 lock=0 mode=1024x768x32 flags=00000081
+V> HB 177 t=191939 blits=1450 px=53335558 lock=0 mode=1024x768x32 flags=00000081
+V> HB 178 t=192979 blits=1466 px=53524990 lock=0 mode=1024x768x32 flags=00000081
+V> HB 179 t=194035 blits=1477 px=53714207 lock=0 mode=1024x768x32 flags=00000081
+V> HB 180 t=195089 blits=1493 px=53900793 lock=0 mode=1024x768x32 flags=00000081
+V> HB 181 t=196114 blits=1505 px=54106650 lock=0 mode=1024x768x32 flags=00000081
+V> HB 182 t=197139 blits=1516 px=54283922 lock=0 mode=1024x768x32 flags=00000081
+V> HB 183 t=198163 blits=1527 px=54502477 lock=0 mode=1024x768x32 flags=00000081
+V> HB 184 t=199269 blits=1544 px=54678685 lock=0 mode=1024x768x32 flags=00000081
+V> HB 185 t=200339 blits=1557 px=54880010 lock=0 mode=1024x768x32 flags=00000081
+V> HB 186 t=201379 blits=1572 px=55018058 lock=0 mode=1024x768x32 flags=00000081
+V> HB 187 t=202434 blits=1589 px=55213717 lock=0 mode=1024x768x32 flags=00000081
+V> HB 188 t=203490 blits=1602 px=55398691 lock=0 mode=1024x768x32 flags=00000081
+V> HB 189 t=204529 blits=1614 px=55616116 lock=0 mode=1024x768x32 flags=00000081
+V> HB 190 t=205554 blits=1626 px=55796018 lock=0 mode=1024x768x32 flags=00000081
+V> HB 191 t=206609 blits=1637 px=55977051 lock=0 mode=1024x768x32 flags=00000081
+V> HB 192 t=207665 blits=1651 px=56115189 lock=0 mode=1024x768x32 flags=00000081
+V> HB 193 t=208689 blits=1666 px=56278112 lock=0 mode=1024x768x32 flags=00000081
+V> HB 194 t=209714 blits=1676 px=56455954 lock=0 mode=1024x768x32 flags=00000081
+V> HB 195 t=210789 blits=1690 px=56690107 lock=0 mode=1024x768x32 flags=00000081
+V> HB 196 t=211809 blits=1701 px=56900797 lock=0 mode=1024x768x32 flags=00000081
+V> HB 197 t=212869 blits=1713 px=57089684 lock=0 mode=1024x768x32 flags=00000081
+V> HB 198 t=213924 blits=1727 px=57261480 lock=0 mode=1024x768x32 flags=00000081
+V> HB 199 t=214945 blits=1739 px=57433937 lock=0 mode=1024x768x32 flags=00000081
+V> HB 200 t=215969 blits=1752 px=57620111 lock=0 mode=1024x768x32 flags=00000081
+V> HB 201 t=217059 blits=1768 px=57813720 lock=0 mode=1024x768x32 flags=00000081
+V> HB 202 t=218080 blits=1779 px=57991952 lock=0 mode=1024x768x32 flags=00000081
+V> HB 203 t=219204 blits=1792 px=58199799 lock=0 mode=1024x768x32 flags=00000081
+V> HB 204 t=220244 blits=1806 px=58405796 lock=0 mode=1024x768x32 flags=00000081
+V> HB 205 t=221334 blits=1817 px=58616966 lock=0 mode=1024x768x32 flags=00000081
+V> HB 206 t=222369 blits=1831 px=58780075 lock=0 mode=1024x768x32 flags=00000081
+V> HB 207 t=223474 blits=1845 px=58967279 lock=0 mode=1024x768x32 flags=00000081
+V> HB 208 t=224530 blits=1858 px=59152974 lock=0 mode=1024x768x32 flags=00000081
+V> HB 209 t=225605 blits=1872 px=59356268 lock=0 mode=1024x768x32 flags=00000081
+V> HB 210 t=226644 blits=1885 px=59537219 lock=0 mode=1024x768x32 flags=00000081
+V> HB 211 t=227734 blits=1899 px=59718701 lock=0 mode=1024x768x32 flags=00000081
+V> HB 212 t=228786 blits=1912 px=59923126 lock=0 mode=1024x768x32 flags=00000081
+V> HB 213 t=229844 blits=1928 px=60108710 lock=0 mode=1024x768x32 flags=00000081
+V> HB 214 t=230869 blits=1942 px=60272041 lock=0 mode=1024x768x32 flags=00000081
+V> HB 215 t=231889 blits=1954 px=60453383 lock=0 mode=1024x768x32 flags=00000081
+V> HB 216 t=232914 blits=1970 px=60603464 lock=0 mode=1024x768x32 flags=00000081
+V> HB 217 t=233989 blits=1984 px=60770498 lock=0 mode=1024x768x32 flags=00000081
+V> HB 218 t=235059 blits=1999 px=60941063 lock=0 mode=1024x768x32 flags=00000081
+V> HB 219 t=236084 blits=2013 px=61114653 lock=0 mode=1024x768x32 flags=00000081
+V> HB 220 t=237170 blits=2022 px=61280054 lock=0 mode=1024x768x32 flags=00000081
+V> HB 221 t=238194 blits=2033 px=61492754 lock=0 mode=1024x768x32 flags=00000081
+V> HB 222 t=239224 blits=2045 px=61683343 lock=0 mode=1024x768x32 flags=00000081
+V> HB 223 t=240304 blits=2059 px=61870841 lock=0 mode=1024x768x32 flags=00000081
+V> HB 224 t=241393 blits=2075 px=62038938 lock=0 mode=1024x768x32 flags=00000081
+V> HB 225 t=242419 blits=2091 px=62196676 lock=0 mode=1024x768x32 flags=00000081
+V> HB 226 t=243444 blits=2105 px=62388934 lock=0 mode=1024x768x32 flags=00000081
+V> HB 227 t=244464 blits=2118 px=62572450 lock=0 mode=1024x768x32 flags=00000081
+V> HB 228 t=245504 blits=2121 px=63169976 lock=0 mode=1024x768x32 flags=00000081
+V> HB 229 t=246529 blits=2121 px=63169976 lock=0 mode=1024x768x32 flags=00000081
+V> HB 230 t=247554 blits=2121 px=63169976 lock=0 mode=1024x768x32 flags=00000081
+V> HB 231 t=248579 blits=2129 px=63993522 lock=0 mode=1024x768x32 flags=00000081
+V> HB 232 t=249600 blits=2131 px=64238720 lock=0 mode=1024x768x32 flags=00000081
+V> HB 233 t=250624 blits=2148 px=65199786 lock=0 mode=1024x768x32 flags=00000081
+V> HB 234 t=251649 blits=2153 px=66004606 lock=0 mode=1024x768x32 flags=00000081
+V> HB 235 t=252674 blits=2156 px=66006418 lock=0 mode=1024x768x32 flags=00000081
+V> HB 236 t=253699 blits=2159 px=66793221 lock=0 mode=1024x768x32 flags=00000081
+V> HB 237 t=254724 blits=2163 px=66814429 lock=0 mode=1024x768x32 flags=00000081
+V> HB 238 t=255749 blits=2185 px=68534158 lock=0 mode=1024x768x32 flags=00000081
+V> HB 239 t=256769 blits=2192 px=69015436 lock=0 mode=1024x768x32 flags=00000081
+V> HB 240 t=257794 blits=2195 px=69031342 lock=0 mode=1024x768x32 flags=00000081
+V> HB 241 t=258819 blits=2213 px=71020791 lock=0 mode=1024x768x32 flags=00000081
+V> HB 242 t=259842 blits=2220 px=71685669 lock=0 mode=1024x768x32 flags=00000081
+V> HB 243 t=260864 blits=2220 px=71685669 lock=0 mode=1024x768x32 flags=00000081
+V> HB 244 t=261889 blits=2224 px=72663989 lock=0 mode=1024x768x32 flags=00000081
+V> HB 245 t=262916 blits=2224 px=72663989 lock=0 mode=1024x768x32 flags=00000081
+V> HB 246 t=263954 blits=2239 px=78532337 lock=0 mode=1024x768x32 flags=00000081
+V> HB 247 t=264980 blits=2242 px=78945818 lock=0 mode=1024x768x32 flags=00000081
+V> HB 248 t=266019 blits=2244 px=78945854 lock=0 mode=1024x768x32 flags=00000081
+V> HB 249 t=267040 blits=2245 px=78945872 lock=0 mode=1024x768x32 flags=00000081
+V> HB 250 t=268064 blits=2247 px=78945908 lock=0 mode=1024x768x32 flags=00000081
+V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+V> HB 251 t=269184 blits=2254 px=80961360 lock=0 mode=640x480x16 flags=00000081
+V> HB 252 t=270208 blits=2268 px=85262160 lock=0 mode=640x480x16 flags=00000081
+V> HB 253 t=271232 blits=2280 px=88948560 lock=0 mode=640x480x16 flags=00000081
+V> HB 254 t=272259 blits=2304 px=91498794 lock=0 mode=640x480x16 flags=00000081
+V> HB 255 t=273284 blits=2331 px=92793248 lock=0 mode=640x480x16 flags=00000081
+V> HB 256 t=274304 blits=2362 px=94307634 lock=0 mode=640x480x16 flags=00000081
+V> HB 257 t=275329 blits=2390 px=96413960 lock=0 mode=640x480x16 flags=00000081
+V> HB 258 t=276354 blits=2416 px=99085327 lock=0 mode=640x480x16 flags=00000081
+V> HB 259 t=277379 blits=2441 px=101471529 lock=0 mode=640x480x16 flags=00000081
+V> HB 260 t=278402 blits=2471 px=103264206 lock=0 mode=640x480x16 flags=00000081
+V> HB 261 t=279489 blits=2499 px=104447150 lock=0 mode=640x480x16 flags=00000081
+V> HB 262 t=280514 blits=2522 px=104764479 lock=0 mode=640x480x16 flags=00000081
+V> HB 263 t=281537 blits=2556 px=105958868 lock=0 mode=640x480x16 flags=00000081
+V> HB 264 t=282564 blits=2573 px=106556769 lock=0 mode=640x480x16 flags=00000081
+V> HB 265 t=283584 blits=2603 px=107379930 lock=0 mode=640x480x16 flags=00000081
+V> HB 266 t=284609 blits=2618 px=107488731 lock=0 mode=640x480x16 flags=00000081
+V> HB 267 t=285634 blits=2648 px=108462005 lock=0 mode=640x480x16 flags=00000081
+V> HB 268 t=286659 blits=2684 px=110482190 lock=0 mode=640x480x16 flags=00000081
+V> HB 269 t=287684 blits=2718 px=112348307 lock=0 mode=640x480x16 flags=00000081
+V> HB 270 t=288704 blits=2719 px=112456467 lock=0 mode=640x480x16 flags=00000081
+V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+V> HB 271 t=289744 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> S> drain loops 16 (ib loops 2)
+V> HB 272 t=290769 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> S> drain loops 0 (ib loops 1)
+V> HB 273 t=291792 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> S> drain loops 0 (ib loops 1)
+V> HB 274 t=292816 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 275 t=293841 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+S> [3952] wgl: front surface/pitch 00000000 00000800
+V> HB 276 t=294866 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 277 t=295921 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 278 t=296946 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 279 t=297968 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 280 t=298993 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 281 t=300018 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 282 t=301044 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 283 t=302066 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 284 t=303088 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 285 t=304114 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 286 t=305152 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 287 t=306179 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 288 t=307205 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 289 t=308224 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 290 t=309249 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 291 t=310279 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 292 t=311314 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 293 t=312339 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 294 t=313364 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 295 t=314384 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 296 t=315409 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 297 t=316432 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 298 t=317459 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 299 t=318481 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 300 t=319511 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 301 t=320534 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 302 t=321558 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 303 t=322577 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 304 t=323619 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 305 t=324640 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 306 t=325664 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 307 t=326688 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 308 t=327712 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 309 t=328739 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 310 t=329760 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 311 t=330784 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 312 t=331814 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 313 t=332839 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 314 t=333874 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 315 t=334896 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 316 t=335924 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 317 t=336944 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 318 t=337974 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 319 t=338993 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 320 t=340019 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 321 t=341042 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 322 t=342064 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 323 t=343088 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 324 t=344114 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 325 t=345138 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 326 t=346167 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 327 t=347184 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 328 t=348209 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 329 t=349234 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 330 t=350259 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 331 t=351282 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 332 t=352304 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 333 t=353331 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 334 t=354354 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 335 t=355378 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> HB 336 t=356403 blits=2727 px=117962949 lock=0 mode=1024x768x16 flags=00000081
+V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+V> HB 337 t=357444 blits=2762 px=121267417 lock=0 mode=640x480x16 flags=00000081
+V> HB 338 t=358464 blits=2795 px=124119710 lock=0 mode=640x480x16 flags=00000081
+V> HB 339 t=359489 blits=2834 px=126724302 lock=0 mode=640x480x16 flags=00000081
+V> HB 340 t=360514 blits=2870 px=128962012 lock=0 mode=640x480x16 flags=00000081
+V> HB 341 t=361539 blits=2901 px=129982545 lock=0 mode=640x480x16 flags=00000081
+V> HB 342 t=362564 blits=2918 px=130185232 lock=0 mode=640x480x16 flags=00000081
+V> HB 343 t=363584 blits=2948 px=131399754 lock=0 mode=640x480x16 flags=00000081
+V> HB 344 t=364609 blits=2958 px=131462240 lock=0 mode=640x480x16 flags=00000081
+V> HB 345 t=365634 blits=2965 px=131651444 lock=0 mode=640x480x16 flags=00000081
+V> HB 346 t=366659 blits=2981 px=131794628 lock=0 mode=640x480x16 flags=00000081
+V> HB 347 t=367684 blits=3011 px=132808228 lock=0 mode=640x480x16 flags=00000081
+V> HB 348 t=368704 blits=3039 px=133764713 lock=0 mode=640x480x16 flags=00000081
+V> HB 349 t=369729 blits=3069 px=135046822 lock=0 mode=640x480x16 flags=00000081
+V> HB 350 t=370754 blits=3095 px=136797805 lock=0 mode=640x480x16 flags=00000081
+V> native mode set: 800x600x16 shadow pitch=1792, scanout 16 bpp pitch=1792 (scaled to 1024x768)
+V> native mode set: 800x600x16 shadow pitch=1792, scanout 16 bpp pitch=1792 (scaled to 1024x768)
+V> HB 352 t=372816 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+S> [82533] wgl: front surface/pitch 00000000 00000700
+V> HB 353 t=373840 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 354 t=374869 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 355 t=375888 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 356 t=376914 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 357 t=377936 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 358 t=378964 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 359 t=379984 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 360 t=381009 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 361 t=382033 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 362 t=383057 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 363 t=384082 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 364 t=385104 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 365 t=386129 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 366 t=387156 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 367 t=388178 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 368 t=389203 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 369 t=390229 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 370 t=391249 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 371 t=392274 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 372 t=393299 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 373 t=394321 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 374 t=395353 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 375 t=396374 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 376 t=397394 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 377 t=398419 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 378 t=399444 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 379 t=400464 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 380 t=401489 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 381 t=402514 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 382 t=403539 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 383 t=404564 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 384 t=405584 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> HB 385 t=406609 blits=3098 px=138237805 lock=0 mode=800x600x16 flags=00000081
+V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+V> HB 386 t=407649 blits=3113 px=140376843 lock=0 mode=640x480x16 flags=00000081
+V> HB 387 t=408674 blits=3145 px=143082593 lock=0 mode=640x480x16 flags=00000081
+V> HB 388 t=409699 blits=3179 px=145899317 lock=0 mode=640x480x16 flags=00000081
+V> HB 389 t=410724 blits=3216 px=149453894 lock=0 mode=640x480x16 flags=00000081
+V> HB 390 t=411745 blits=3247 px=152480862 lock=0 mode=640x480x16 flags=00000081
+V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+V> HB 391 t=412784 blits=3254 px=155887483 lock=0 mode=1024x768x32 flags=00000081
+V> HB 392 t=413809 blits=3254 px=155887483 lock=0 mode=1024x768x32 flags=00000081
+V> HB 393 t=414834 blits=3254 px=155887483 lock=0 mode=1024x768x32 flags=00000081
+V> HB 394 t=415859 blits=3257 px=156612639 lock=0 mode=1024x768x32 flags=00000081

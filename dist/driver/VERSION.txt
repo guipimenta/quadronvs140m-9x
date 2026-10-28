@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3099  (M5.5 step 8: 800x600 fix - the GDI/GL pitch now equals the hardware scanout pitch at 16/32 bpp (800x600: 1792, not 1600), so GL presents correctly in that mode. Also carries 3098's complete submit drain (nvmini.vxd changed: copy to C:\WINDOWS\SYSTEM and reboot). 'nvhl heaphi' is a 64 MiB-heap diagnostic only: Half-Life needs ~65 MiB of textures, so sprites loaded last (HUD) fail there.)
+Build: 3100  (M5.5 step 9: the PGRAPH context template is regenerated from current nouveau (was the 2010 v2.6.36 generation): the G86-specific per-TP value 0x40821c/0x40829c=0x018c0000, the clipping-strand defaults (FP_CTRL_UNK196C/UNK1968), the 2D IFC clip defaults, and a reordered ctxprog; the VxD init also zeroes the zcull regions. Candidate fix for the 1024x768-only corner blocks (pixels huge triangles leave uncovered). nvmini.vxd changed: copy to C:\WINDOWS\SYSTEM and reboot. wgltest: 'sky' scene (skybox + floor + near wall, magenta clear) and 'bpp <n>' for fullscreen; nvsky.bat runs it at 1024x768x16. Carries 3099 (800x600 pitch) and 3098 (submit drain).)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

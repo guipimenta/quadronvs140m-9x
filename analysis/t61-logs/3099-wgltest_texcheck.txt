@@ -1,0 +1,5 @@
+texcheck: 160 textures, 3/4 at 256x256 and 1/4 at 128x128, mipmapped, odd ones GL_RGB (2D conversion upload), even GL_RGBA (M2MF upload)
+texcheck: uploaded, glGetError 0000
+texcheck: readback done - 1400 levels, 0 bad, glGetError 0000
+texcheck: drawn 13, 0 bad, glGetError 0000
+texcheck: PASSED

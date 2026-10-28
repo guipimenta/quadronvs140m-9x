@@ -104,6 +104,19 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3100 - the 1024x768-only artifacts are small rectangular blocks of stale VRAM in
+the screen corners: pixels that the huge, mostly off-screen triangles (sky faces, near
+walls, floors) leave uncovered at the native viewport; Half-Life never clears its colour
+buffer, so whatever was there shows through. The PGRAPH context the VxD loads at channel
+start was generated from a 2010 nouveau; the current nouveau generator differs for the
+G86 in a per-TP configuration value, the clipping-strand defaults and the 2D clip
+defaults. This build loads the current context and also zeroes the zcull region
+registers at init. nvmini.vxd changed: copy it to C:\WINDOWS\SYSTEM and reboot. Tests,
+from C:\NVMINI in a DOS box: 'nvsky' (wgltest 'sky' scene fullscreen 1024x768x16, cleared
+to magenta every frame - any magenta block = uncovered pixels; then 'nvsky 800 600' to
+compare), then Half-Life with plain 'nvhl' at 1024x768. In Half-Life, 'gl_clear 1' in the
+console turns such blocks into the clear colour if they are uncovered pixels.
+
 Build 3099 - 800x600 works now: the GDI pitch equals the hardware scanout pitch at
 16/32 bpp (800x600: 1792 bytes, not 1600), which is what the GL present and DirectDraw
 use for the screen surface - GL at 800x600 was a sheared, garbage picture before

@@ -283,6 +283,18 @@ static int gpu_pgraph_init(void)
 	NV_wr32(PGRAPH_CTXCTL_UCODE_IDX, 0);
 	for(i = 0; i < NV50_CTXPROG_LEN; i++)
 		NV_wr32(PGRAPH_CTXCTL_UCODE_DAT, nv50_ctxprog[i]);
+	/* 3100: what current nouveau's nv50_gr_init does after the microcode upload
+	 * and v2.6.36 did not: clear the ctxctl scratch registers (0x400824 keeps the
+	 * 0x4000 our manual context load was proven with) and zero the eight zcull
+	 * region descriptors, which nothing else ever writes - stale ones could
+	 * cull fragments in screen-space tiles. */
+	NV_wr32(0x400828, 0); NV_wr32(0x40082c, 0); NV_wr32(0x400830, 0);
+	NV_wr32(0x40032c, 0); NV_wr32(0x400330, 0);
+	for(i = 0; i < 8; i++)
+	{
+		NV_wr32(0x402c20 + i * 0x10, 0); NV_wr32(0x402c24 + i * 0x10, 0);
+		NV_wr32(0x402c28 + i * 0x10, 0); NV_wr32(0x402c2c + i * 0x10, 0);
+	}
 	NV_wr32(0x400320, 4);
 	NV_wr32(PGRAPH_CTXCTL_CUR, 0);
 	NV_wr32(PGRAPH_CHANNEL_CTX_PTR, 0);

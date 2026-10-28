@@ -2811,10 +2811,10 @@ index 96f7ccaa..8efc4c31 100644
  _debug_vprintf(const char *format, va_list ap)
  {
 diff --git a/wgltest.c b/wgltest.c
-index 6c6d2fc1..c175544b 100644
+index 6c6d2fc1..8365cf46 100644
 --- a/wgltest.c
 +++ b/wgltest.c
-@@ -1,979 +1,1456 @@
+@@ -1,979 +1,1533 @@
 -/******************************************************************************
 - * Copyright (c) 2023-2024 Jaroslav Hensl                                     *
 - *                                                                            *
@@ -3840,6 +3840,8 @@ index 6c6d2fc1..c175544b 100644
 +  "texture: textured scene (mipmaps, TexSubImage, depth, fog, blend)\n"
 +  "texcheck: texture DATA integrity on the GPU - 160 mipmapped textures (RGB + RGBA) uploaded, every level read back and compared, then drawn 1:1 and read back; results in wgltest_texcheck.txt\n"
 +  "stress: GoldSrc-like draw-call load (600 glBegin/glEnd quads, 72 textures, 32 lightmap patches of 64x16, 50 indexed draws per frame)\n"
++  "sky: GoldSrc-like skybox (6 huge quads around the eye, depth off) + floor + near wall, camera yaws and pitches; every frame cleared to MAGENTA first, so magenta = pixels the GPU did not cover. Watch the screen corners\n"
++  "bpp <bits>: colour depth of the fullscreen mode (16 = the mode Half-Life uses); default keeps the desktop depth\n"
 +  "help: show this message";
 +
 +static void GUIError(const char *fmt, ...)
@@ -3892,6 +3894,7 @@ index 6c6d2fc1..c175544b 100644
 +typedef void (APIENTRY *glTexCoord2f_f)(GLfloat s, GLfloat t);
 +typedef void (APIENTRY *glBlendFunc_f)(GLenum sfactor, GLenum dfactor);
 +typedef void (APIENTRY *glDepthFunc_f)(GLenum func);
++typedef void (APIENTRY *glDepthMask_f)(GLboolean flag);
 +typedef void (APIENTRY *glAlphaFunc_f)(GLenum func, GLclampf ref);
 +typedef void (APIENTRY *glColor4f_f)(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
 +typedef void (APIENTRY *glMatrixMode_f)(GLenum mode);
@@ -4852,6 +4855,58 @@ index 6c6d2fc1..c175544b 100644
 +	GL32.glEnd();
 +}
 +
++/* ---- "sky" scene (3099b): the geometry Half-Life draws where its 1024x768-only
++ * corner artifacts appear. A GoldSrc-style skybox: six huge quads around the eye
++ * (half-size 64, depth test off; each quad is two triangles split along its
++ * UL-BR diagonal, so the tips of the two triangles are the upper-right and the
++ * lower-left corner of the face), then a floor and a near wall with the depth
++ * test on (their vertices project far outside the screen or behind the eye).
++ * The camera yaws continuously and pitches +-20 degrees. Every frame is cleared
++ * to MAGENTA first: any magenta on screen = pixels the GPU did not cover; any
++ * non-checker content = sampled from the wrong place. Run it at the game's mode:
++ *   wgltest driver mesa3d.dll fullscreen width 1024 height 768 bpp 16 sky
++ * and compare with width 800 height 600. */
++static void draw_sky(float rot, unsigned frame)
++{
++	static int inited = 0;
++	const float S = 64.0f;
++	float yaw = rot * 0.6f, pitch = 20.0f * (float)sin(rot * 0.013);
++	if(!inited) { if(!tex_checker) scene_init(); inited = 1; }
++	GL32.glMatrixMode(GL_PROJECTION);
++	GL32.glLoadIdentity();
++	GL32.glFrustum(-1.0, 1.0, -0.75, 0.75, 1.0, 400.0);
++	GL32.glMatrixMode(GL_MODELVIEW);
++	GL32.glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
++	GL32.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
++	GL32.glDisable(GL_FOG);
++	GL32.glDisable(GL_BLEND);
++	GL32.glDisable(GL_ALPHA_TEST);
++	GL32.glEnable(GL_TEXTURE_2D);
++	GL32.glBindTexture(GL_TEXTURE_2D, tex_checker);
++	GL32.glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
++	GL32.glLoadIdentity();
++	GL32.glRotatef(pitch, 1.0f, 0.0f, 0.0f);
++	GL32.glRotatef(yaw, 0.0f, 1.0f, 0.0f);
++	/* skybox: depth test and depth writes off (R_DrawSkyBox); vertex order UL, UR, LR, LL as seen from inside */
++	GL32.glDisable(GL_DEPTH_TEST);
++	GL32.glDepthMask(GL_FALSE);
++	GL32.glColor4f(1, 1, 1, 1);           tex_quad(-S, S,-S,  S, S,-S,  S,-S,-S, -S,-S,-S, 2.0f);  /* front */
++	GL32.glColor4f(0.7f, 0.7f, 0.7f, 1);  tex_quad( S, S, S, -S, S, S, -S,-S, S,  S,-S, S, 2.0f);  /* back  */
++	GL32.glColor4f(1, 0.6f, 0.6f, 1);     tex_quad(-S, S, S, -S, S,-S, -S,-S,-S, -S,-S, S, 2.0f);  /* left  */
++	GL32.glColor4f(0.6f, 1, 0.6f, 1);     tex_quad( S, S,-S,  S, S, S,  S,-S, S,  S,-S,-S, 2.0f);  /* right */
++	GL32.glColor4f(0.6f, 0.7f, 1, 1);     tex_quad(-S, S, S,  S, S, S,  S, S,-S, -S, S,-S, 2.0f);  /* up    */
++	GL32.glColor4f(1, 1, 0.5f, 1);        tex_quad(-S,-S,-S,  S,-S,-S,  S,-S, S, -S,-S, S, 2.0f);  /* down  */
++	/* world: a floor and a near wall, depth test on */
++	GL32.glDepthMask(GL_TRUE);
++	GL32.glEnable(GL_DEPTH_TEST);
++	GL32.glColor4f(0.9f, 0.9f, 0.9f, 1);  tex_quad(-S,-2, S,  S,-2, S,  S,-2,-S, -S,-2,-S, 32.0f);   /* floor */
++	GL32.glColor4f(0.8f, 0.8f, 1, 1);     tex_quad(-40, 8,-4,  40, 8,-4,  40,-2,-4, -40,-2,-4, 8.0f);  /* wall  */
++	GL32.glDisable(GL_TEXTURE_2D);
++	GL32.glDisable(GL_DEPTH_TEST);
++	GL32.glFlush();
++	(void)frame;
++}
++
 +void gui_report()
 +{
 +	MSG msg          = {0};
@@ -4908,6 +4963,7 @@ index 6c6d2fc1..c175544b 100644
 +static BOOL  setup_fullscreen = FALSE;
 +static int   setup_width  = 640;
 +static int   setup_height = 480;
++static int   setup_bpp    = 0;      /* 3099b: fullscreen colour depth, 0 = keep the desktop's */
 +static BOOL  setup_show_help = FALSE;
 +
 +BOOL parse_cmd(int argc, char **argv)
@@ -4996,6 +5052,20 @@ index 6c6d2fc1..c175544b 100644
 +		{
 +			setup_scene = 3;
 +		}
++		else if(strcmp(argv[i], "sky") == 0)
++		{
++			setup_scene = 4;
++		}
++		else if(strcmp(argv[i], "bpp") == 0)
++		{
++			if(i+1 == argc)
++			{
++				GUIError("Command line: bpp command require number");
++				return FALSE;
++			}
++			setup_bpp = atoi(argv[i+1]);
++			i++;
++		}
 +		else
 +		{
 +			GUIError("Command line: unknown argument '%s'\n\nrun '%s help' to list supported command line arguments", argv[i], argv[0]);
@@ -5015,6 +5085,11 @@ index 6c6d2fc1..c175544b 100644
 +	fullscreenSettings.dmPelsWidth        = width;
 +	fullscreenSettings.dmPelsHeight       = height;
 +	fullscreenSettings.dmFields           = DM_PELSWIDTH | DM_PELSHEIGHT;
++	if(setup_bpp)
++	{
++		fullscreenSettings.dmBitsPerPel = setup_bpp;       /* 3099b: 'bpp 16' = Half-Life's mode */
++		fullscreenSettings.dmFields    |= DM_BITSPERPEL;
++	}
 +	
 +	LONG_PTR old_style = GetWindowLongPtr(hwnd, GWL_STYLE); 
 +	LONG_PTR old_exstyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE); 
@@ -5222,7 +5297,9 @@ index 6c6d2fc1..c175544b 100644
 +			TranslateMessage(&msg);
 +			DispatchMessage(&msg);
 +		}
-+		if(setup_scene == 3)
++		if(setup_scene == 4)
++			draw_sky(0.5f * timer, (unsigned)timer);
++		else if(setup_scene == 3)
 +			draw_texcheck((unsigned)timer, setup_width, setup_height);
 +		else if(setup_scene == 2)
 +			draw_stress(0.5f * timer, (unsigned)timer);
@@ -5251,10 +5328,10 @@ index 6c6d2fc1..c175544b 100644
 +	return 0;
 +}
 diff --git a/wgltest_api.h b/wgltest_api.h
-index 52b80742..cc514149 100644
+index 52b80742..7ab48ce5 100644
 --- a/wgltest_api.h
 +++ b/wgltest_api.h
-@@ -1,41 +1,75 @@
+@@ -1,41 +1,76 @@
 -/*
 - - name
 - - GetProcAddress/wglGetProcAddress
@@ -5327,6 +5404,7 @@ index 52b80742..cc514149 100644
 +GL_API_LOAD(glTexCoord2f,      FUNC_GL, LIB_GL32)
 +GL_API_LOAD(glBlendFunc,       FUNC_GL, LIB_GL32)
 +GL_API_LOAD(glDepthFunc,       FUNC_GL, LIB_GL32)
++GL_API_LOAD(glDepthMask,       FUNC_GL, LIB_GL32)
 +GL_API_LOAD(glAlphaFunc,       FUNC_GL, LIB_GL32)
 +GL_API_LOAD(glColor4f,         FUNC_GL, LIB_GL32)
 +GL_API_LOAD(glMatrixMode,      FUNC_GL, LIB_GL32)
