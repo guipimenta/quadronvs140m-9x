@@ -46,6 +46,13 @@
 #endif
 #define NVSHIM_G86_UNITS  0xF3010001UL   /* 3094: PMC 0x1540 on the T61's G86 (1 TP x 2 MPs); the fake GPU's answer */
 #define NVSHIM_G86_DEVID  0x0429UL       /* 10DE:0429 Quadro NVS 140M */
+/* 3096: NV50 PDISPLAY raster state for head 0 (the LVDS panel; nouveau nv50_disp
+ * scanoutpos): current raster line, and the mode's vblank end/start + total lines
+ * (EVO shadow regs, vertical in bits 16-31) */
+#define NV50_PDISPLAY_VLINE0    0x616340UL
+#define NV50_PDISPLAY_VBLANKE0  0x610aecUL
+#define NV50_PDISPLAY_VBLANKS0  0x610af4UL
+#define NV50_PDISPLAY_VTOTAL0   0x610afcUL
 /* 3095: a second heap region below the GPU channel's structures. VRAM is 128 MiB
  * and the channel VM maps all of it 1:1; the display driver's window ends at
  * 24 MiB, the EVO reservation (pushbuffer, notifier, LUT, cursor, display
@@ -202,6 +209,45 @@ static int shim_kickdump_limit(void)
 		if(lim < 0) lim = 0;
 	}
 	return lim;
+}
+/* 3096: NVSHIM_PUSHCAP=<dwords> caps the pushbuffer (simulation knob: forces
+ * frequent pushbuf-full kicks so packet sequences get cut across kicks the way
+ * a long game session cuts them now and then; floor 0x800) */
+static uint32_t shim_pushcap(void)
+{
+	static int32_t cap = -1;
+	if(cap < 0)
+	{
+		char b[16]; DWORD n = GetEnvironmentVariableA("NVSHIM_PUSHCAP", b, sizeof(b));
+		cap = (n > 0 && n < sizeof(b)) ? (int32_t)strtoul(b, NULL, 0) : 0;
+		if(cap && cap < 0x800) cap = 0x800;
+	}
+	return (uint32_t)cap;
+}
+/* 3096: NVSHIM_FULLFLUSH=1 ('nvhl fullflush') - whole-BO dirty-diff at every
+ * kick instead of the range-directed one, an A/B switch for the T61: artifacts
+ * that stay with it are not the flush ranges' doing */
+static int shim_fullflush(void)
+{
+	static int v = -1;
+	if(v < 0)
+	{
+		char b[8]; DWORD n = GetEnvironmentVariableA("NVSHIM_FULLFLUSH", b, sizeof(b));
+		v = (n > 0 && n < sizeof(b) && b[0] != '0') ? 1 : 0;
+	}
+	return v;
+}
+/* 3096: NVSHIM_SCANRESET=1 restores the 3095 kick walk (M2MF state forgotten at
+ * every kick) in the MARK pass only, so the verify pass shows what it missed */
+static int shim_scanreset(void)
+{
+	static int v = -1;
+	if(v < 0)
+	{
+		char b[8]; DWORD n = GetEnvironmentVariableA("NVSHIM_SCANRESET", b, sizeof(b));
+		v = (n > 0 && n < sizeof(b) && b[0] != '0') ? 1 : 0;
+	}
+	return v;
 }
 
 #define FAKE_PAGE_SHIFT 20                         /* 1 MiB pages, allocated on first touch */
@@ -363,7 +409,16 @@ static BOOL fake_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, D
 		uint32_t *o = (uint32_t *)out, i, n;
 		if(insz < 8 || !o) return FALSE;
 		n = w[1] ? w[1] : 1; if(outsz < n * 4) n = outsz / 4;
-		for(i = 0; i < n; i++) o[i] = (w[0] + i * 4 == 0x1540UL) ? NVSHIM_G86_UNITS : 0;
+		for(i = 0; i < n; i++)
+		{
+			uint32_t a = w[0] + i * 4;
+			if(a == 0x1540UL)                    o[i] = NVSHIM_G86_UNITS;
+			else if(a == NV50_PDISPLAY_VLINE0)   { static uint32_t raster = 0; o[i] = (raster += 7) % 525; }   /* 3096: a raster that advances 7 lines per poll (640x480 timing; the tick counter is too coarse under Wine) */
+			else if(a == NV50_PDISPLAY_VBLANKE0) o[i] = 3 << 16;
+			else if(a == NV50_PDISPLAY_VBLANKS0) o[i] = 484 << 16;
+			else if(a == NV50_PDISPLAY_VTOTAL0)  o[i] = (525 << 16) | 800;
+			else                                 o[i] = 0;
+		}
 		if(ret) *ret = n * 4;
 		return TRUE;
 	}
@@ -428,6 +483,8 @@ static void nvshim_dump_kick(int idx, const uint32_t *m, uint32_t count)
 /* 3092: per-run counters, read by wgl.c's present stats line (nvshim_stats) */
 static uint32_t g_st_kicks = 0, g_st_flush_dw = 0, g_st_read_dw = 0, g_st_traps = 0, g_st_kick_dw = 0;
 static uint32_t g_st_warn = 0;   /* 3094: KICK WARN count (dead or unflushed DMA sources) */
+static uint32_t g_st_m2mf_split = 0;                    /* 3096: M2MF copies whose PITCH_IN came from an earlier kick */
+static uint32_t g_st_vsync_n = 0, g_st_vsync_ms = 0;    /* 3096: NVSHIM_VSYNC waits before the present blit, total ms */
 /* 3095: where the shim's own CPU time goes, in TSC cycles (reported /1000):
  * 0 validate (kref), 1 bufctx add/reset, 2 kick (whole), 3 of which flush,
  * 4 bo_new + bo_map. rdtsc: ~20 cycles, unlike Win9x's port-I/O QPC. */
@@ -449,6 +506,8 @@ void nvshim_stats(uint32_t *v)
 	v[10] = (uint32_t)(g_st_kc[2] / 1000);                  /* kick kcycles (incl. flush + submit) */
 	v[11] = (uint32_t)(g_st_kc[3] / 1000);                  /* flush kcycles */
 	v[12] = (uint32_t)(g_st_kc[4] / 1000);                  /* bo_new + bo_map kcycles */
+	v[13] = g_st_vsync_n; v[14] = g_st_vsync_ms;            /* 3096 */
+	v[15] = g_st_m2mf_split;
 }
 static void shim_refresh_queries(const uint32_t *m, uint32_t count);
 static void shim_kick_scan(const uint32_t *m, uint32_t count, int verify);
@@ -795,9 +854,23 @@ static void shim_bo_unregister(struct shim_bo *b)
  * source must be a live BO with no unflushed CPU writes in the noted range
  * -> 'KICK WARN' (first 32), stats[5]; the validator fails on it. */
 static uint32_t g_kgen = 0;
-static struct { uint32_t fetch, start, limit; } g_va[16];   /* 3D vertex-array state, persists across kicks */
-static int      g_va_indexed = 0;
-static uint32_t g_cb_lo = 0;
+/* 3096: everything the walk tracks is ENGINE STATE that persists across kicks
+ * (the hardware's does - a kick boundary is only where the shim cut the
+ * stream), and the verify pass replays a kick from the state the mark pass
+ * started in. 3095 kept the M2MF part in locals reset per kick: when the
+ * pushbuffer filled between a transfer's PITCH_IN and its LINE_COUNT/NOTIFY
+ * (nv50's BEGIN_NV04 may kick between any two packets), the next kick's walk
+ * saw pitch 0 and bounded the source to ONE ROW; the rest of the lightmap /
+ * texture patch stayed in the shadow and the engine copied stale VRAM - the
+ * occasional artifacts of 3095's Half-Life run on the T61. */
+static struct shim_scan {
+	struct { uint32_t fetch, start, limit; } va[16];   /* 3D vertex arrays */
+	int      va_indexed;                               /* VB_ELEMENT seen since the last VERTEX_END_GL */
+	uint32_t cb_lo;                                    /* CB_DEF_ADDRESS_LOW */
+	uint32_t first;                                    /* VERTEX_BUFFER_FIRST */
+	uint32_t m_linear, m_off, m_pitch, m_len, m_lines; /* M2MF LINEAR_IN, OFFSET_IN, PITCH_IN, LINE_LENGTH_IN, LINE_COUNT */
+	int      m_pitch_set;                              /* PITCH_IN seen in the kick being walked */
+} g_scan = { {{0, 0, 0}}, 0, 0, 0, 1, 0, 0, 0, 0, 0 }, g_scan0;
 
 static void range_mark(struct shim_bo *b, uint32_t off, uint32_t len, int whole)
 {
@@ -853,18 +926,26 @@ static void shim_va_draw(uint32_t first, uint32_t count, int whole, int verify)
 	int i;
 	for(i = 0; i < 16; i++)
 	{
-		uint32_t stride = g_va[i].fetch & 0xfff, lo, len;
-		if(!(g_va[i].fetch & 0x20000000UL) || !g_va[i].start) continue;
-		if(whole || stride == 0) { range_add(g_va[i].start, 64, whole, 1, verify); continue; }
-		lo = g_va[i].start + first * stride; len = count * stride;
-		if(g_va[i].limit >= lo && lo + len > g_va[i].limit + 1) len = g_va[i].limit + 1 - lo;
+		uint32_t stride = g_scan.va[i].fetch & 0xfff, lo, len;
+		if(!(g_scan.va[i].fetch & 0x20000000UL) || !g_scan.va[i].start) continue;
+		if(whole || stride == 0) { range_add(g_scan.va[i].start, 64, whole, 1, verify); continue; }
+		lo = g_scan.va[i].start + first * stride; len = count * stride;
+		if(g_scan.va[i].limit >= lo && lo + len > g_scan.va[i].limit + 1) len = g_scan.va[i].limit + 1 - lo;
 		range_add(lo, len, 0, 1, verify);
 	}
 }
 static void shim_kick_scan(const uint32_t *m, uint32_t count, int verify)
 {
-	uint32_t i = 0, in_linear = 1, in_off = 0, in_pitch = 0, in_len = 0, in_lines = 0, first = 0;
-	if(!verify) g_kgen++;
+	struct shim_scan *s = &g_scan;
+	uint32_t i = 0;
+	if(!verify)
+	{
+		g_kgen++;
+		g_scan0 = g_scan;                              /* the verify pass replays from here */
+		if(shim_scanreset()) { s->m_linear = 1; s->m_off = s->m_pitch = s->m_len = s->m_lines = 0; }   /* the 3095 walk */
+	}
+	else g_scan = g_scan0;
+	s->m_pitch_set = 0;
 	while(i < count)
 	{
 		uint32_t h = m[i], typ = h >> 29, subc = (h >> 13) & 7, mthd = h & 0x1ffc, n = (h >> 18) & 0x7ff, k;
@@ -874,30 +955,35 @@ static void shim_kick_scan(const uint32_t *m, uint32_t count, int verify)
 			uint32_t mm = typ == 0 ? mthd + 4 * k : mthd, v = m[i + 1 + k];
 			if(subc == 5)                                   /* M2MF (nv50_winsys.h SUBC_M2MF) */
 			{
-				if(mm == 0x200)      in_linear = v;         /* LINEAR_IN */
-				else if(mm == 0x30c) in_off = v;            /* OFFSET_IN */
-				else if(mm == 0x314) in_pitch = v;          /* PITCH_IN */
-				else if(mm == 0x31c) in_len = v;            /* LINE_LENGTH_IN */
-				else if(mm == 0x320) in_lines = v;          /* LINE_COUNT */
-				else if(mm == 0x328 && in_linear && in_lines && in_len)   /* BUFFER_NOTIFY = go */
-					range_add(in_off, (in_lines - 1) * in_pitch + in_len, 0, 0, verify);
+				if(mm == 0x200)      s->m_linear = v;        /* LINEAR_IN */
+				else if(mm == 0x30c) s->m_off = v;           /* OFFSET_IN */
+				else if(mm == 0x314) { s->m_pitch = v; s->m_pitch_set = 1; }   /* PITCH_IN */
+				else if(mm == 0x31c) s->m_len = v;           /* LINE_LENGTH_IN */
+				else if(mm == 0x320) s->m_lines = v;         /* LINE_COUNT */
+				else if(mm == 0x328 && s->m_linear && s->m_lines && s->m_len)   /* BUFFER_NOTIFY = go */
+				{
+					int whole = (s->m_lines > 1 && s->m_pitch == 0);     /* pitch unknown: cannot bound it */
+					if(!verify && s->m_lines > 1 && !s->m_pitch_set) g_st_m2mf_split++;
+					if(!verify && shim_scanreset()) whole = 0;           /* 3095: one row */
+					range_add(s->m_off, (s->m_lines - 1) * s->m_pitch + s->m_len, whole, 0, verify);
+				}
 			}
 			else if(subc == 3)                              /* 3D */
 			{
 				if(mm >= 0x900 && mm < 0xa00)
 				{
 					uint32_t a = (mm - 0x900) >> 4, r = (mm - 0x900) & 0xf;
-					if(r == 0)      g_va[a].fetch = v;        /* VERTEX_ARRAY_FETCH(i): ENABLE | stride */
-					else if(r == 8) g_va[a].start = v;        /* VERTEX_ARRAY_START_LOW(i) */
+					if(r == 0)      s->va[a].fetch = v;       /* VERTEX_ARRAY_FETCH(i): ENABLE | stride */
+					else if(r == 8) s->va[a].start = v;       /* VERTEX_ARRAY_START_LOW(i) */
 				}
 				else if(mm >= 0x1084 && mm < 0x1104 && ((mm - 0x1084) & 7) == 0)
-					g_va[(mm - 0x1084) >> 3].limit = v;       /* VERTEX_ARRAY_LIMIT_LOW(i) */
-				else if(mm == 0xd74) first = v;              /* VERTEX_BUFFER_FIRST */
-				else if(mm == 0xd78) shim_va_draw(first, v, 0, verify);   /* VERTEX_BUFFER_COUNT: a non-indexed draw */
-				else if(mm == 0x15e8 || mm == 0x15f0 || mm == 0x1304) g_va_indexed = 1;   /* VB_ELEMENT_U32/U16/U8 */
-				else if(mm == 0x15e0) { if(g_va_indexed) shim_va_draw(0, 0, 1, verify); g_va_indexed = 0; }   /* VERTEX_END_GL */
-				else if(mm == 0x1284) g_cb_lo = v;            /* CB_DEF_ADDRESS_LOW */
-				else if(mm == 0x1288 && g_cb_lo) range_add(g_cb_lo, (v & 0xffff) ? (v & 0xffff) : 0x10000, 0, 2, verify);   /* CB_DEF_SET: size */
+					s->va[(mm - 0x1084) >> 3].limit = v;      /* VERTEX_ARRAY_LIMIT_LOW(i) */
+				else if(mm == 0xd74) s->first = v;            /* VERTEX_BUFFER_FIRST */
+				else if(mm == 0xd78) shim_va_draw(s->first, v, 0, verify);   /* VERTEX_BUFFER_COUNT: a non-indexed draw */
+				else if(mm == 0x15e8 || mm == 0x15f0 || mm == 0x1304) s->va_indexed = 1;   /* VB_ELEMENT_U32/U16/U8 */
+				else if(mm == 0x15e0) { if(s->va_indexed) shim_va_draw(0, 0, 1, verify); s->va_indexed = 0; }   /* VERTEX_END_GL */
+				else if(mm == 0x1284) s->cb_lo = v;           /* CB_DEF_ADDRESS_LOW */
+				else if(mm == 0x1288 && s->cb_lo) range_add(s->cb_lo, (v & 0xffff) ? (v & 0xffff) : 0x10000, 0, 2, verify);   /* CB_DEF_SET: size */
 			}
 			else if(subc == 4 && mm == 0x254)              /* 2D SRC_ADDRESS_LOW: extent unknown */
 				range_add(v, 0, 1, 3, verify);
@@ -1057,6 +1143,54 @@ static uint32_t shim_graph_units(void)
 		NVLOG2("graph_units reg/used", out[0], units);
 	}
 	return units;
+}
+
+/* 3096: NVSHIM_VSYNC=1 - tear-free present. wgl.c drains the frame's draws,
+ * calls this, then kicks the blit into the scanout surface: we wait until head
+ * 0's raster is in vertical blank (nouveau nv50_disp scanoutpos: blank when
+ * vline >= vblanks or vline <= vblanke), so the 2D engine's top-down copy
+ * (~1 ms for 1440x900x32) stays ahead of the beam (16 ms). Polls through
+ * OP_NV_RD32; gives up after 40 ms (a wrong register must not freeze every
+ * frame) and uses vline >= active lines when the raster regs look implausible. */
+static uint32_t shim_rd32(uint32_t off)
+{
+	uint32_t in[2], out[1]; DWORD ret = 0;
+	in[0] = off; in[1] = 1; out[0] = 0xffffffffUL;
+	if(!shim_ioctl(OP_NV_RD32, in, sizeof(in), out, sizeof(out), &ret)) return 0xffffffffUL;
+	return out[0];
+}
+void nvshim_vsync_wait(uint32_t active_lines)
+{
+	static int on = -1;
+	static uint32_t blanks = 0, blanke = 0, nlate = 0;
+	uint32_t t0, t1, vline, polls = 0;
+	if(on < 0)
+	{
+		char b[8]; DWORD n = GetEnvironmentVariableA("NVSHIM_VSYNC", b, sizeof(b));
+		on = (n > 0 && n < sizeof(b) && b[0] != '0') ? 1 : 0;
+		if(on && nvshim_open())
+		{
+			uint32_t e = shim_rd32(NV50_PDISPLAY_VBLANKE0), st = shim_rd32(NV50_PDISPLAY_VBLANKS0), t = shim_rd32(NV50_PDISPLAY_VTOTAL0);
+			blanke = e >> 16; blanks = st >> 16;
+			NVLOG3("vsync head0 vblanke/vblanks/vtotal", e, st, t);
+			if(blanks == 0 || blanks > 4096 || blanke >= blanks || (t >> 16) < blanks) { blanks = 0; blanke = 0; }
+			NVLOG2("vsync on - blank from line (0 = use active lines) / active", blanks, active_lines);
+		}
+	}
+	if(!on) return;
+	t0 = GetTickCount();
+	for(;;)
+	{
+		vline = shim_rd32(NV50_PDISPLAY_VLINE0);
+		if(vline == 0xffffffffUL) { on = 0; NVLOG0("vsync OFF - raster read failed"); return; }
+		vline &= 0xffff;
+		if(blanks ? (vline >= blanks || vline <= blanke) : (vline >= active_lines)) break;
+		polls++;
+		t1 = GetTickCount();
+		if(t1 - t0 > 40) { if(nlate++ < 8) NVLOG2("vsync wait timed out vline/polls", vline, polls); break; }
+	}
+	t1 = GetTickCount();
+	g_st_vsync_n++; g_st_vsync_ms += t1 - t0;
 }
 
 int nouveau_getparam(struct nouveau_device *dev, uint64_t param, uint64_t *value)
@@ -1454,6 +1588,7 @@ int nouveau_pushbuf_new(struct nouveau_client *client, struct nouveau_object *ch
 	/* 3095: one submit must fit the VxD's 1 MiB command region (NVGPU_PUSHBUF_SIZE);
 	 * Mesa asks for 512 KiB which the shim had read as dwords (2 MiB) */
 	if(p->cap > 0x3C000) p->cap = 0x3C000;
+	if(shim_pushcap() && p->cap > shim_pushcap()) p->cap = shim_pushcap();   /* 3096: simulation knob */
 	p->buf = malloc(p->cap * 4);
 	if(!p->buf) { free(p); return -1; }
 	p->base.client  = client;
@@ -1509,7 +1644,7 @@ static void shim_bo_flush(struct shim_bo *b)
 	/* 3095: when this kick's stream walk bounded what the engines read from
 	 * this BO, diff only that (chunk-aligned) window; otherwise the whole BO */
 	lo = 0; hi = b->shadow_sz;
-	if(b->kgen == g_kgen && !b->kwhole && b->klo < b->khi && b->klo < b->shadow_sz)
+	if(!shim_fullflush() && b->kgen == g_kgen && !b->kwhole && b->klo < b->khi && b->klo < b->shadow_sz)
 	{
 		lo = b->klo & ~(uint32_t)(SHIM_FLUSH_CHUNK - 1);
 		hi = (b->khi + SHIM_FLUSH_CHUNK - 1) & ~(uint32_t)(SHIM_FLUSH_CHUNK - 1);
@@ -1601,6 +1736,14 @@ int nouveau_pushbuf_kick(struct nouveau_pushbuf *push)
 
 	/* reset the command buffer for the next batch */
 	push->cur = p->buf;
+	if(shim_pushcap())
+	{
+		/* 3096: jitter the capped size per kick so the cut points drift through
+		 * the stream (a fixed-length test frame cuts at the same packets forever) */
+		static uint32_t x = 12345;
+		x = x * 1103515245u + 12345u;
+		p->cap = shim_pushcap() - ((x >> 16) & 0xff);
+	}
 	push->end = p->buf + p->cap;
 	push_unref_all(p);                               /* submits are synchronous: the GPU is done with them */
 

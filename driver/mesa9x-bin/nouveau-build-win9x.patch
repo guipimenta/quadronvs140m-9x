@@ -2368,7 +2368,7 @@ index d7db69a2..97b7426c 100644
     return bestindex;
  }
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..246a8c26 100644
+index 8017cd00..c6d6ca36 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,12 @@
@@ -2397,7 +2397,7 @@ index 8017cd00..246a8c26 100644
  
  #ifdef WIN9X
  #include "3d_accel.h"
-@@ -92,6 +104,26 @@ void crt_locks_destroy();
+@@ -92,6 +104,27 @@ void crt_locks_destroy();
  
  static const char *created_driver_name = NULL;
  
@@ -2408,6 +2408,7 @@ index 8017cd00..246a8c26 100644
 +extern void nvshim_trace(const char *label, unsigned n, const uint32_t *v);
 +extern void nvshim_set_front(uint32_t phys, uint32_t size);
 +extern void nvshim_stats(uint32_t *v);
++extern void nvshim_vsync_wait(uint32_t active_lines);   /* 3096: NVSHIM_VSYNC=1 */
 +extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
 +static void nvt(const char *pre, const char *str, unsigned n, uint32_t a0, uint32_t a1)
 +{
@@ -2424,7 +2425,7 @@ index 8017cd00..246a8c26 100644
  static struct pipe_screen *
  wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  {
-@@ -99,6 +131,16 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
+@@ -99,6 +132,16 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  
     debug_printf("tried driver: %s\n", driver);
  
@@ -2441,7 +2442,7 @@ index 8017cd00..246a8c26 100644
  #ifdef GALLIUM_LLVMPIPE
     if (strcmp(driver, "llvmpipe") == 0) {
  # ifdef HAVE_CRTEX
-@@ -138,6 +180,13 @@ wgl_screen_create(HDC hDC)
+@@ -138,6 +181,13 @@ wgl_screen_create(HDC hDC)
     struct sw_winsys *winsys;
     UNUSED bool sw_only = debug_get_bool_option("LIBGL_ALWAYS_SOFTWARE", false);
  
@@ -2455,7 +2456,7 @@ index 8017cd00..246a8c26 100644
     winsys = gdi_create_sw_winsys(gdi_sw_acquire_hdc_by_value, gdi_sw_release_hdc_by_value);
     if (!winsys)
        return NULL;
-@@ -175,7 +224,9 @@ wgl_screen_create(HDC hDC)
+@@ -175,7 +225,9 @@ wgl_screen_create(HDC hDC)
     	  }
  #endif
     	
@@ -2465,7 +2466,7 @@ index 8017cd00..246a8c26 100644
        if (screen) {
           created_driver_name = drivers[i];
           return screen;
-@@ -184,6 +235,7 @@ wgl_screen_create(HDC hDC)
+@@ -184,6 +236,7 @@ wgl_screen_create(HDC hDC)
           break;
     }
  
@@ -2473,7 +2474,7 @@ index 8017cd00..246a8c26 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +289,169 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +290,176 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2586,6 +2587,11 @@ index 8017cd00..246a8c26 100644
 +                     blit.src.box.width = view_w; blit.src.box.height = view_h; blit.src.box.depth = 1;
 +                     blit.mask = PIPE_MASK_RGBA;
 +                     blit.filter = PIPE_TEX_FILTER_NEAREST;
++                     /* 3096: with NVSHIM_VSYNC=1 drain the frame's draws first (submits are
++                      * synchronous), wait for head 0's vertical blank, then kick the blit
++                      * alone so the copy into the scanout surface runs ahead of the beam */
++                     ctx->flush(ctx, NULL, 0);
++                     nvshim_vsync_wait(hda->height);
 +                     ctx->blit(ctx, &blit);
 +                     ctx->flush(ctx, NULL, 0);
 +                  }
@@ -2606,6 +2612,8 @@ index 8017cd00..246a8c26 100644
 +                     nvt("wgl: stats submit ms", NULL, 1, st[8], 0);                      /* 3095: time inside OP_NV_SUBMIT */
 +                     nvt("wgl: stats kcyc validate/kick", NULL, 2, st[9], st[10]);         /* 3095: shim CPU time, TSC kcycles */
 +                     nvt("wgl: stats kcyc flush/bo", NULL, 2, st[11], st[12]);
++                     nvt("wgl: stats vsync waits/ms", NULL, 2, st[13], st[14]);          /* 3096: NVSHIM_VSYNC */
++                     nvt("wgl: stats m2mf splits", NULL, 1, st[15], 0);                  /* 3096: copies cut across kicks (now handled) */
 +                     nframes = 0; t_last = now;
 +                  }
 +               }
@@ -2643,7 +2651,7 @@ index 8017cd00..246a8c26 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
-@@ -326,6 +541,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -326,6 +549,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  
        stw_init(&stw_winsys, hinstDLL);
        stw_init_thread();
@@ -2657,7 +2665,7 @@ index 8017cd00..246a8c26 100644
        break;
  
     case DLL_THREAD_ATTACH:
-@@ -337,6 +559,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -337,6 +567,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
        break;
  
     case DLL_PROCESS_DETACH:
@@ -2780,10 +2788,10 @@ index 96f7ccaa..8efc4c31 100644
  _debug_vprintf(const char *format, va_list ap)
  {
 diff --git a/wgltest.c b/wgltest.c
-index 6c6d2fc1..132376e2 100644
+index 6c6d2fc1..c71a66e7 100644
 --- a/wgltest.c
 +++ b/wgltest.c
-@@ -1,979 +1,1280 @@
+@@ -1,979 +1,1281 @@
 -/******************************************************************************
 - * Copyright (c) 2023-2024 Jaroslav Hensl                                     *
 - *                                                                            *
@@ -3807,7 +3815,7 @@ index 6c6d2fc1..132376e2 100644
 +  "window: run test in window\n"
 +  "fullscreen: run test on fullscreen\n"
 +  "texture: textured scene (mipmaps, TexSubImage, depth, fog, blend)\n"
-+  "stress: GoldSrc-like draw-call load (600 glBegin/glEnd quads, 72 textures, 32 lightmap patches, 50 indexed draws per frame)\n"
++  "stress: GoldSrc-like draw-call load (600 glBegin/glEnd quads, 72 textures, 32 lightmap patches of 64x16, 50 indexed draws per frame)\n"
 +  "help: show this message";
 +
 +static void GUIError(const char *fmt, ...)
@@ -4392,15 +4400,16 @@ index 6c6d2fc1..132376e2 100644
 +		GL32.glBindTexture(GL_TEXTURE_2D, (i & 1) ? tex_lm[(i >> 1) & 63] : tex_world[(i >> 1) & 7]);
 +		tex_quad(x, y, z, x + 0.48f, y, z, x + 0.48f, y + 0.48f, z, x, y + 0.48f, z, 1.0f);
 +	}
-+	/* 32 lightmap patches (16x16) per frame */
++	/* 32 lightmap patches (64x16: a GoldSrc dirty-rect, 4 KB of staging each; 3096 - was 16x16, which
++	 * fit one flush chunk and could not show a copy cut across kicks) per frame */
 +	if(tex_buf)
 +	{
 +		unsigned char v = (unsigned char)(frame * 8);
-+		for(i = 0; i < 16 * 16; i++) { tex_buf[i * 4] = v; tex_buf[i * 4 + 1] = (unsigned char)(255 - v); tex_buf[i * 4 + 2] = (unsigned char)(i & 255); tex_buf[i * 4 + 3] = 255; }
++		for(i = 0; i < 64 * 16; i++) { tex_buf[i * 4] = v; tex_buf[i * 4 + 1] = (unsigned char)(255 - v); tex_buf[i * 4 + 2] = (unsigned char)(i & 255); tex_buf[i * 4 + 3] = 255; }
 +		for(i = 0; i < 32; i++)
 +		{
 +			GL32.glBindTexture(GL_TEXTURE_2D, tex_lm[(frame * 32 + i) & 63]);
-+			GL32.glTexSubImage2D(GL_TEXTURE_2D, 0, (int)(stress_rnd() % 7) * 16, (int)(stress_rnd() % 7) * 16, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
++			GL32.glTexSubImage2D(GL_TEXTURE_2D, 0, (int)(stress_rnd() % 2) * 64, (int)(stress_rnd() % 7) * 16, 64, 16, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
 +		}
 +	}
 +	/* 50 indexed draws from client arrays (sprites/models): vertex + texcoord pointers, glDrawElements */

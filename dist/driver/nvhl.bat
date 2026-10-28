@@ -8,11 +8,32 @@ rem      (mesa3d.dll) from the game folder first.
 rem   2. set NVDRV below to the driver package folder (for nvprobe.exe).
 rem Run from the Half-Life folder:  nvhl [hl.exe options]
 rem   e.g.  nvhl -width 640 -height 480
+rem 3096 A/B switches (before the hl.exe options):
+rem   nvhl vsync      present waits for the panel's vertical blank: no tearing, at most 60 fps
+rem   nvhl fullflush  whole-buffer flushes instead of range-directed ones (slower)
+rem   nvhl vsync fullflush [options]   both
 rem Afterwards send C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt.
 set NVDRV=C:\NVMINI
 set GALLIUM_DRIVER=nouveau
 set MESA_EXTENSION_MAX_YEAR=2000
 set NVSHIM_KICKDUMP=64
+set NVSHIM_VSYNC=
+set NVSHIM_FULLFLUSH=
+:flags
+if "%1"=="vsync" goto f_vsync
+if "%1"=="fullflush" goto f_full
+goto run
+:f_vsync
+set NVSHIM_VSYNC=1
+echo nvhl: vsync on
+shift
+goto flags
+:f_full
+set NVSHIM_FULLFLUSH=1
+echo nvhl: fullflush on
+shift
+goto flags
+:run
 if exist C:\nvshim.log del C:\nvshim.log
 if exist C:\nvkick.txt del C:\nvkick.txt
 if exist C:\nvtail.txt del C:\nvtail.txt

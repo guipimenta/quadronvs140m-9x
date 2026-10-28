@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3095  (M5.5 step 4: game speed. 3094 on the T61 = Half-Life renders on the GPU (milestone) but ~1 frame per 13 s from ~1,160 synchronous kicks per frame: the shim kicked on every buffer map. Now libdrm map/wait semantics, inline index payloads, range-directed flushes, 88 MiB heap, kick-source stats. VxD: per-kick ring lines gated. Test: Half-Life via nvhl.bat; wgltest driver mesa3d.dll window stress)
+Build: 3096  (M5.5 step 5: 3095 on the T61 = Half-Life playable, 30-68 fps at native resolution, occasional on-screen artifacts. A/B switches for the T61: 'nvhl vsync' (NVSHIM_VSYNC=1, present waits for the panel's vertical blank - no tearing, capped at 60 Hz) and 'nvhl fullflush' (NVSHIM_FULLFLUSH=1, whole-buffer flush). Shim kick-walk state persists across kicks, verify pass replays from the kick's start state; 'wgl: stats vsync waits/ms' and 'stats m2mf splits' log lines. wgltest stress patches 64x16. VxD/DRV byte-identical to 3095 bar the stamp.)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

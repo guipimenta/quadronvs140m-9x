@@ -104,6 +104,18 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3096 - the occasional on-screen artifacts of 3095's Half-Life run: the driver's
+self-checks saw nothing, so two switches let the T61 decide (both off by default):
+  nvhl vsync      NVSHIM_VSYNC=1: the present waits for the panel's vertical blank before
+                  the blit - no tearing, frame rate capped at the panel's 60 Hz. 3095 has
+                  no vertical-blank sync at all, so fast turns tear.
+  nvhl fullflush  NVSHIM_FULLFLUSH=1: whole-buffer flushes instead of 3095's range-directed
+                  ones (slower). Artifacts that stay with it are not the flush ranges.
+  nvhl vsync fullflush   both.
+Please describe or photograph the artifacts: a horizontal seam during fast turns (tearing;
+vsync removes it), a patch of wrong texture or lighting, or stray triangles.
+New log lines: 'wgl: stats vsync waits/ms' and 'wgl: stats m2mf splits'.
+
 Reading C:\nvshim.log (build 3094+): 'graph_units reg/used f3010001 f3010001'
 = the GPU's unit mask was read (1 TP x 2 MPs); 'wgl: stats traps/warns' every
 2 s must stay 0 0 - a 'KICK WARN' line means the engine was handed a buffer

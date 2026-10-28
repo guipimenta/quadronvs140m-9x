@@ -580,6 +580,43 @@ Known: Mesa's per-draw CPU cost (~100 us per textured glBegin/glEnd under Wine) 
 likely ceiling; options later: the VxD writing methods with rep movsd / WC, ring-3 direct
 BAR1 access for fences and flushes (Win9x shares the system arena), fewer state atoms.
 
+### 3095 on the T61 (2026-10-28): Half-Life PLAYABLE - 30-68 fps at native resolution
+Logs in analysis/t61-logs/3095-*: 4 minutes of play, 0 traps, 0 KICK WARN, validator clean,
+~4 kicks/frame, GPU wait ('submit ms') 5-12 ms/frame, shim CPU 2-6 ms/frame, the rest Mesa +
+game. Flushed 30-190 KB/frame. Heap: 0x1300 BOs, 64 MB used, largest free 13 MB. Released as
+v3095 (policy: T61-confirmed). Remaining: occasional on-screen artifacts during play.
+
+### M5.5 step 5 (build 3096): the artifacts - an oracle fix and two A/B switches
+- Suspect 1, read from the walk: shim_kick_scan kept the M2MF state (PITCH_IN etc.) in locals
+  reset per kick while the engine's persists; nv50's BEGIN_NV04 kicks between ANY two packets
+  when the pushbuffer fills, so a transfer cut between PITCH_IN and LINE_COUNT/NOTIFY was
+  bounded to one row by the next kick's walk. Simulated under Wine with NVSHIM_PUSHCAP=0x800
+  (capped + jittered pushbuffer: ~16 cuts/frame; the jitter is needed because a fixed-length
+  test frame cuts at the same packets forever) and NVSHIM_SCANRESET=1 (the 3095 walk in the
+  mark pass only): the cut copies happen ('wgl: stats m2mf splits') but the verify pass finds
+  NOTHING unflushed - the staging BO is kref'd (PUSH_VAL) before its packets, so the kick at
+  the cut flushed it whole (no range marked = whole-BO diff) and the one-row range later was
+  moot. So: not the cause. The walk state (vertex arrays, constbuf, M2MF, VERTEX_BUFFER_FIRST)
+  now persists across kicks and the verify pass replays each kick from the state the mark pass
+  started in (3095's verify pass started from the END state - a weaker oracle than it looked).
+- Suspect 2, which no validator can see: TEARING. The present blit has no vertical-blank sync
+  at all; at 30-68 fps on the 60 Hz panel every fast turn tears. NVSHIM_VSYNC=1 ('nvhl vsync'):
+  wgl.c drains the draws (synchronous submit), nvshim_vsync_wait polls head 0's raster line
+  (0x616340) through OP_NV_RD32 until it is in the blank window read from the EVO shadow regs
+  (0x610aec vblanke / 0x610af4 vblanks / 0x610afc vtotal, nouveau nv50_disp scanoutpos; fallback
+  vline >= active lines when they look implausible), then kicks the blit alone: a 1440x900x32
+  copy (~1 ms) stays ahead of the beam (16 ms). 40 ms timeout, 'vsync wait timed out' log line,
+  'wgl: stats vsync waits/ms'. The fake GPU answers the raster regs (a raster that advances 7
+  lines per poll - Wine's tick counter is too coarse to drive it).
+- Suspect 3, exonerate or convict the flush ranges on hardware: NVSHIM_FULLFLUSH=1 ('nvhl
+  fullflush') = whole-BO dirty-diff at every kick (slower, 3094-style).
+- wgltest stress: lightmap patches 64x16 (were 16x16, which fit one flush chunk).
+- Fake GPU (analysis/fake-runs/3096-*): texture + stress + fullflush + vsync + the PUSHCAP/
+  SCANRESET pair all clean; stress still ~3 kicks/frame.
+T61: `nvhl` (artifacts as before?), `nvhl vsync` (gone = tearing), `nvhl fullflush` (still there
+= not the flush ranges). Please describe/photograph them: horizontal seam in fast turns vs a
+patch of wrong texture/lighting vs stray triangles. Logs as usual.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into
