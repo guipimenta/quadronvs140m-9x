@@ -104,6 +104,18 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3101 - 3100's context made the screen garbage on the T61 (nvsky 800x600 and
+Half-Life; the first nvsky at 1024x768 after the reboot was clean). This build carries all
+three PGRAPH context generations and picks one from the registry at every GL start, so
+switching needs no reboot: HKLM\Software\vmdisp9x\vesa\GrCtx = 0 (nouveau 2.6.36, exactly
+build 3099 - the DEFAULT, so installing 3101 restores the working driver), 1 (3099's
+layout with only the three values current nouveau sets differently for the G86), 2 (the
+current nouveau generation + zcull init = build 3100). Double-click grctx0.reg, grctx1.reg
+or grctx2.reg, then run nvsky / nvhl; C:\nvtail.txt shows 'grctx variant N'. Install:
+copy nvmini.vxd to C:\WINDOWS\SYSTEM and reboot once. Please test in this order and say
+what each looks like (a photo of garbage helps): grctx1 nvsky, grctx1 nvsky 800 600,
+grctx1 nvhl; then the same with grctx2; grctx0 is the known 3099 behaviour.
+
 Build 3100 - the 1024x768-only artifacts are small rectangular blocks of stale VRAM in
 the screen corners: pixels that the huge, mostly off-screen triangles (sky faces, near
 walls, floors) leave uncovered at the native viewport; Half-Life never clears its colour

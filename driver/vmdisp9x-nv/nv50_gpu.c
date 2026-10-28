@@ -22,6 +22,7 @@
 #include "nv50_evo.h"
 #include "nv50_gpu.h"
 #include "nv50_grctx_g86.h"
+#include "nv50_grctx_g86_2636.h"
 #include "code32.h"
 
 extern nv_hwinfo_t nv_hwinfo;
@@ -247,6 +248,44 @@ int NV_gpu_grinit(nv_gpu_grinit_t *out)
 	return 1;
 }
 
+/* 3101: which PGRAPH context generation to load, HKLM\Software\vmdisp9x\vesa\GrCtx,
+ * read at every PGRAPH init = every channel creation, so a GL program started after
+ * editing the registry gets the new one without a reboot:
+ *   0 = nouveau v2.6.36 generation (builds 3091-3099, the proven one) - DEFAULT
+ *   1 = the same layout/ctxprog with current nouveau's three differing G86 values
+ *   2 = current nouveau generation + the zcull/ctxctl zeroing (build 3100) */
+static unsigned long g_grctx_variant = 0;
+static const char GRCTX_conf_path[] = "Software\\vmdisp9x\\vesa";
+
+static void grctx_read_variant(void)
+{
+	DWORD v = 0;
+	g_grctx_variant = (RegReadConf(HKEY_LOCAL_MACHINE, (const char*)GRCTX_conf_path, "GrCtx", &v) && v <= 2) ? v : 0;
+	dbg_printf("grctx variant %lu (%s)\n", g_grctx_variant,
+		g_grctx_variant == 0 ? "nouveau 2.6.36 = 3099" :
+		g_grctx_variant == 1 ? "2.6.36 layout + current nouveau values" : "current nouveau + zcull init = 3100");
+}
+
+/* zero a channel's grctx and write the selected generation's initial values */
+static void grctx_fill(unsigned long grctx)
+{
+	unsigned long i;
+	NV_vram_fill(grctx, NV50_GRCTX_DWORDS, 0);
+	if(g_grctx_variant == 2)
+	{
+		for(i = 0; i < NV50_CTXVALS_CNT; i++)
+			NV_vram_wr32(grctx + nv50_ctxvals[i][0] * 4, nv50_ctxvals[i][1]);
+	}
+	else
+	{
+		for(i = 0; i < NV50_CTXVALS_2636_CNT; i++)
+			NV_vram_wr32(grctx + nv50_ctxvals_2636[i][0] * 4, nv50_ctxvals_2636[i][1]);
+		if(g_grctx_variant == 1)
+			for(i = 0; i < NV50_CTXVALS_2636_FIX_CNT; i++)
+				NV_vram_wr32(grctx + nv50_ctxvals_2636_fix[i][0] * 4, nv50_ctxvals_2636_fix[i][1]);
+	}
+}
+
 /* Shared: PGRAPH reset + register init + context-microcode upload.
  * Returns 1 on success. Leaves PGRAPH powered and idle. */
 static int gpu_pgraph_init(void)
@@ -254,6 +293,7 @@ static int gpu_pgraph_init(void)
 	unsigned long units, i, pmc;
 	if(!nv_hwinfo.found || !nv_hwinfo.mmio_ok)
 		return 0;
+	grctx_read_variant();
 	if((NV_rd32(0) & 0xFFFF0000UL) == 0xDEAD0000UL)
 		return 0;
 	pmc = NV_rd32(PMC_ENABLE);
@@ -281,19 +321,26 @@ static int gpu_pgraph_init(void)
 	NV_wr32(PGRAPH_INTR_138, 0xffffffffUL);
 	NV_wr32(PGRAPH_INTR_EN,  0xffffffffUL);
 	NV_wr32(PGRAPH_CTXCTL_UCODE_IDX, 0);
-	for(i = 0; i < NV50_CTXPROG_LEN; i++)
-		NV_wr32(PGRAPH_CTXCTL_UCODE_DAT, nv50_ctxprog[i]);
-	/* 3100: what current nouveau's nv50_gr_init does after the microcode upload
-	 * and v2.6.36 did not: clear the ctxctl scratch registers (0x400824 keeps the
-	 * 0x4000 our manual context load was proven with) and zero the eight zcull
-	 * region descriptors, which nothing else ever writes - stale ones could
-	 * cull fragments in screen-space tiles. */
-	NV_wr32(0x400828, 0); NV_wr32(0x40082c, 0); NV_wr32(0x400830, 0);
-	NV_wr32(0x40032c, 0); NV_wr32(0x400330, 0);
-	for(i = 0; i < 8; i++)
+	if(g_grctx_variant == 2)
 	{
-		NV_wr32(0x402c20 + i * 0x10, 0); NV_wr32(0x402c24 + i * 0x10, 0);
-		NV_wr32(0x402c28 + i * 0x10, 0); NV_wr32(0x402c2c + i * 0x10, 0);
+		for(i = 0; i < NV50_CTXPROG_LEN; i++)
+			NV_wr32(PGRAPH_CTXCTL_UCODE_DAT, nv50_ctxprog[i]);
+		/* 3100: what current nouveau's nv50_gr_init does after the microcode upload
+		 * and v2.6.36 did not: clear the ctxctl scratch registers (0x400824 keeps the
+		 * 0x4000 our manual context load was proven with) and zero the eight zcull
+		 * region descriptors. 3101: variant 2 only. */
+		NV_wr32(0x400828, 0); NV_wr32(0x40082c, 0); NV_wr32(0x400830, 0);
+		NV_wr32(0x40032c, 0); NV_wr32(0x400330, 0);
+		for(i = 0; i < 8; i++)
+		{
+			NV_wr32(0x402c20 + i * 0x10, 0); NV_wr32(0x402c24 + i * 0x10, 0);
+			NV_wr32(0x402c28 + i * 0x10, 0); NV_wr32(0x402c2c + i * 0x10, 0);
+		}
+	}
+	else
+	{
+		for(i = 0; i < NV50_CTXPROG_2636_LEN; i++)
+			NV_wr32(PGRAPH_CTXCTL_UCODE_DAT, nv50_ctxprog_2636[i]);
 	}
 	NV_wr32(0x400320, 4);
 	NV_wr32(PGRAPH_CTXCTL_CUR, 0);
@@ -334,9 +381,7 @@ int NV_gpu_ctxtest(nv_gpu_ctxtest_t *out)
 
 	/* 2. per-channel grctx: zero the whole thing, apply the baked values,
 	 *    then the channel back-pointer at grctx[0]. */
-	NV_vram_fill(grctx, NV50_GRCTX_DWORDS, 0);
-	for(i = 0; i < NV50_CTXVALS_CNT; i++)
-		NV_vram_wr32(grctx + nv50_ctxvals[i][0] * 4, nv50_ctxvals[i][1]);
+	grctx_fill(grctx);                               /* 3101: the selected generation */
 	inst12 = ramin >> 12;
 	NV_vram_wr32(grctx + 0, inst12);
 	out->inst12 = inst12;
@@ -415,9 +460,7 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 	NV_vram_wr32(ramin + 0x20 + 0x14, 0x00010000UL);
 
 	/* per-channel grctx */
-	NV_vram_fill(grctx, NV50_GRCTX_DWORDS, 0);
-	for(i = 0; i < NV50_CTXVALS_CNT; i++)
-		NV_vram_wr32(grctx + nv50_ctxvals[i][0] * 4, nv50_ctxvals[i][1]);
+	grctx_fill(grctx);                               /* 3101: the selected generation */
 	inst12 = ramin >> 12;
 	NV_vram_wr32(grctx + 0, inst12);
 	out->stage = 2;
@@ -733,9 +776,7 @@ static unsigned long nv_chan_init(void)
 	NV_vram_wr32(ramin + 0x20 + 0x14, 0x00010000UL);
 
 	/* per-channel grctx */
-	NV_vram_fill(grctx, NV50_GRCTX_DWORDS, 0);
-	for(i = 0; i < NV50_CTXVALS_CNT; i++)
-		NV_vram_wr32(grctx + nv50_ctxvals[i][0] * 4, nv50_ctxvals[i][1]);
+	grctx_fill(grctx);                               /* 3101: the selected generation */
 	inst12 = ramin >> 12;
 	NV_vram_wr32(grctx + 0, inst12);
 

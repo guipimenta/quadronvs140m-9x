@@ -1,0 +1,7 @@
+REGEDIT4
+
+; grctx0.reg - PGRAPH context generation 0: nouveau v2.6.36 generation = build 3099 (default)
+; read by nvmini.vxd at every GL start (no reboot)
+
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\vesa]
+"GrCtx"="0"

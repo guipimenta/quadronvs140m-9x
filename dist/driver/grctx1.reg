@@ -1,0 +1,7 @@
+REGEDIT4
+
+; grctx1.reg - PGRAPH context generation 1: 3099 layout + current nouveau's three G86 values
+; read by nvmini.vxd at every GL start (no reboot)
+
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\vesa]
+"GrCtx"="1"

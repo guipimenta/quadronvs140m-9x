@@ -1,0 +1,7 @@
+REGEDIT4
+
+; grctx2.reg - PGRAPH context generation 2: current nouveau generation + zcull init = build 3100
+; read by nvmini.vxd at every GL start (no reboot)
+
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\vesa]
+"GrCtx"="2"

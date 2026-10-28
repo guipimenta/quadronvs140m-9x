@@ -766,6 +766,30 @@ C:\nvkick.txt, C:\nvclk.txt.
   VIEW_VOLUME_CLIP_CTRL=0x1080 (geometric x/y clipping, Mesa's non-scissor mode) through a
   shim-side method override.
 
+### 3100 on the T61 (2026-10-28 late): MUCH WORSE - garbage screen; 3101 = three contexts, registry-selected
+- User: after the reboot `nvsky` (1024x768x16) was clean, `nvsky 800 600` garbage, Half-Life
+  garbage. Logs (nvshim.log = the HL session): VxD 3100 confirmed (shim still 3099 = old DLL
+  next to hl.exe, harmless); no traps, no failed kicks; session 2 (nvsky 800x600) ran at the
+  same 57 fps as the clean session 1, so its garbage is not a slow/wedged GPU; Half-Life ran
+  at 4-6 fps at 1024x768 and ~38 fps at 640x480 (3099: 55 fps), submit 3.3 ms/kick (was 1.5).
+  No photo yet. Not decidable from the logs whether the current ctxprog/flow (our 2.6.36-style
+  manual USER_LOAD against the current ctxprog) or one of the three changed values is at fault.
+- User's direction: stop hand-rolling - make the GPU bring-up work "the same way" as the
+  reference (nouveau), using everything available, instead of reinventing it.
+- 3101: all three generations in one VxD (nv50_grctx_g86.h = current, nv50_grctx_g86_2636.h =
+  2.6.36 + the 6-slot fix list), chosen by HKLM\Software\vmdisp9x\vesa\GrCtx read in
+  gpu_pgraph_init (= every channel creation, no reboot): 0 = 2.6.36 = 3099 (DEFAULT), 1 =
+  2.6.36 layout/ctxprog + current nouveau's three G86 values, 2 = current + zcull init = 3100.
+  dist/driver/grctx0/1/2.reg set it; the VxD log says 'grctx variant N'. One reboot to
+  install, then A/B without reboots: grctx1 nvsky / nvsky 800 600 / nvhl, then grctx2.
+  Outcome table to fill: variant 1 clean + holes gone => the values were the fix; variant 1
+  garbage => one of the three values is wrong for this board (split them next); variant 1
+  clean but holes remain => the context is not the hole cause.
+- The faithful route after that (the user's point): port current nvkm nv50 gr/fifo channel
+  bring-up as a unit - nv50_gr_init register sequence, ctxprog + ctxvals, PFIFO-driven
+  context switch (engine-context slot at inst+0x20, no manual USER_LOAD poke), nv50_fifo
+  RAMFC/playlist - rather than the 2.6.36 manual load with a current ctxprog.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into
