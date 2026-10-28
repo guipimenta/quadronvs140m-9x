@@ -1,0 +1,219 @@
+61:D> DriverInit: ENTER (nvmini.drv build 3096)
+78:V> NV_vram_check: VRAM 128 MB (PFB 08000000, cfg0 01001800 cfg1 01449000), BAR1 256 MB, window 24 MB
+79:V> NV_vram_check: layout OK (window 0-01800000, EVO 01800000-02008000)
+90:D> SetDisplayMode: wXRes=1024 wYRes=768
+92:V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=21640001 get=0000014C put=0000014C
+97:V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+108:V> NV_evo_takeover: append path, ring_pos=83 ch0 stat=2D0B001B get=0000014C put=0000014C
+109:V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=22940001 get=00000218 put=00000218
+111:V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+173:V> HB 10 t=19104 blits=19 px=5757723 lock=0 mode=1024x768x32 flags=00000081
+443:D> SetDisplayMode: wXRes=640 wYRes=480
+447:V> NV_evo_takeover: append path, ring_pos=189 ch0 stat=2D0B001B get=000002F4 put=000002F4
+448:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=007F0001 get=000003C0 put=000003C0
+450:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+457:V> NV_evo_takeover: append path, ring_pos=240 ch0 stat=2D0B001B get=000003C0 put=000003C0
+458:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=01840001 get=0000048C put=0000048C
+460:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+564:D> SetDisplayMode: wXRes=1024 wYRes=768
+568:V> NV_evo_takeover: append path, ring_pos=501 ch0 stat=2D0B001B get=000007D4 put=000007D4
+569:V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=35300001 get=000008A0 put=000008A0
+571:V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+578:V> NV_evo_takeover: append path, ring_pos=552 ch0 stat=2D0B001B get=000008A0 put=000008A0
+579:V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=36600001 get=0000096C put=0000096C
+581:V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+649:D> SetDisplayMode: wXRes=1024 wYRes=768
+653:V> NV_evo_takeover: append path, ring_pos=631 ch0 stat=2D0B001B get=000009DC put=000009DC
+654:V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=3C3D0001 get=00000AA8 put=00000AA8
+656:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+663:V> NV_evo_takeover: append path, ring_pos=682 ch0 stat=2D0B001B get=00000AA8 put=00000AA8
+664:V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=3DB50001 get=00000B74 put=00000B74
+666:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+3631:V> HB 110 t=121783 blits=553 px=67907817 lock=0 mode=1024x768x16 flags=00000081
+10115:D> SetDisplayMode: wXRes=640 wYRes=480
+10119:V> NV_evo_takeover: append path, ring_pos=782 ch0 stat=2D0B001B get=00000C38 put=00000C38
+10120:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=18FA0001 get=00000D04 put=00000D04
+10122:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+10129:V> NV_evo_takeover: append path, ring_pos=833 ch0 stat=2D0B001B get=00000D04 put=00000D04
+10130:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=19FF0001 get=00000DD0 put=00000DD0
+10132:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+10579:D> SetDisplayMode: wXRes=1024 wYRes=768
+10583:V> NV_evo_takeover: append path, ring_pos=968 ch0 stat=2D0B001B get=00000F20 put=00000F20
+10584:V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=2E400001 get=000000CC put=000000CC
+10586:V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+10593:V> NV_evo_takeover: append path, ring_pos=51 ch0 stat=2D0B001B get=000000CC put=000000CC
+10594:V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=2F700001 get=00000198 put=00000198
+10596:V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+10811:D> SetDisplayMode: wXRes=640 wYRes=480
+10815:V> NV_evo_takeover: append path, ring_pos=214 ch0 stat=2D0B001B get=00000358 put=00000358
+10816:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=3A010001 get=00000424 put=00000424
+10818:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+10825:V> NV_evo_takeover: append path, ring_pos=265 ch0 stat=2D0B001B get=00000424 put=00000424
+10826:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=3B060001 get=000004F0 put=000004F0
+10828:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+10928:D> SetDisplayMode: wXRes=1024 wYRes=768
+10932:V> NV_evo_takeover: append path, ring_pos=379 ch0 stat=2D0B001B get=000005EC put=000005EC
+10933:V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=2F8B0001 get=000006B8 put=000006B8
+10935:V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+10942:V> NV_evo_takeover: append path, ring_pos=430 ch0 stat=2D0B001B get=000006B8 put=000006B8
+10943:V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=30BB0001 get=00000784 put=00000784
+10945:V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+11013:D> SetDisplayMode: wXRes=1024 wYRes=768
+11017:V> NV_evo_takeover: append path, ring_pos=509 ch0 stat=2D0B001B get=000007F4 put=000007F4
+11018:V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=36990001 get=000008C0 put=000008C0
+11020:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+11027:V> NV_evo_takeover: append path, ring_pos=560 ch0 stat=2D0B001B get=000008C0 put=000008C0
+11028:V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=38100001 get=0000098C put=0000098C
+11030:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+18621:V> HB 210 t=224420 blits=842 px=110271874 lock=0 mode=1024x768x16 flags=00000081
+18649:D> SetDisplayMode: wXRes=640 wYRes=480
+18653:V> NV_evo_takeover: append path, ring_pos=660 ch0 stat=2D0B001B get=00000A50 put=00000A50
+18654:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=00E20001 get=00000B1C put=00000B1C
+18656:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+18663:V> NV_evo_takeover: append path, ring_pos=711 ch0 stat=2D0B001B get=00000B1C put=00000B1C
+18664:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=01E70001 get=00000BE8 put=00000BE8
+18666:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+19138:D> SetDisplayMode: wXRes=1024 wYRes=768
+19142:V> NV_evo_takeover: append path, ring_pos=902 ch0 stat=2D0B001B get=00000E18 put=00000E18
+19143:V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=0D0E0001 get=00000EE4 put=00000EE4
+19145:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+19152:V> NV_evo_takeover: append path, ring_pos=953 ch0 stat=2D0B001B get=00000EE4 put=00000EE4
+19153:V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=0E3E0001 get=000000CC put=000000CC
+19155:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+28272:D> SetDisplayMode: wXRes=640 wYRes=480
+28276:V> NV_evo_takeover: append path, ring_pos=100 ch0 stat=2D0B001B get=00000190 put=00000190
+28277:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=1A4F0001 get=0000025C put=0000025C
+28279:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+28286:V> NV_evo_takeover: append path, ring_pos=151 ch0 stat=2D0B001B get=0000025C put=0000025C
+28287:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=1B540001 get=00000328 put=00000328
+28289:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+28346:D> SetDisplayMode: wXRes=1024 wYRes=768
+28350:V> NV_evo_takeover: append path, ring_pos=314 ch0 stat=2D0B001B get=000004E8 put=000004E8
+28351:V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=08EF0001 get=000005B4 put=000005B4
+28353:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+28360:V> NV_evo_takeover: append path, ring_pos=365 ch0 stat=2D0B001B get=000005B4 put=000005B4
+28361:V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=0A1F0001 get=00000680 put=00000680
+28363:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+35100:D> SetDisplayMode: wXRes=640 wYRes=480
+35104:V> NV_evo_takeover: append path, ring_pos=430 ch0 stat=2D0B001B get=000006B8 put=000006B8
+35105:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=3CCF0001 get=00000784 put=00000784
+35107:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+35114:V> NV_evo_takeover: append path, ring_pos=481 ch0 stat=2D0B001B get=00000784 put=00000784
+35115:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=3DD40001 get=00000850 put=00000850
+35117:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+49139:V> HB 310 t=326995 blits=1622 px=160683983 lock=0 mode=640x480x16 flags=00000081
+49866:D> SetDisplayMode: wXRes=800 wYRes=600
+49870:V> NV_evo_takeover: append path, ring_pos=889 ch0 stat=2D0B001B get=00000DE4 put=00000DE4
+49871:V> NV_evo_takeover: 800x600x16 fb=00000000 ntfy=001F0001 get=00000EB0 put=00000EB0
+49873:V> native mode set: 800x600x16 shadow pitch=1600, scanout 16 bpp pitch=1792 (scaled to 1024x768)
+49880:V> NV_evo_takeover: append path, ring_pos=940 ch0 stat=2D0B001B get=00000EB0 put=00000EB0
+49881:V> NV_evo_takeover: 800x600x16 fb=00000000 ntfy=01240001 get=000000CC put=000000CC
+49883:V> native mode set: 800x600x16 shadow pitch=1600, scanout 16 bpp pitch=1792 (scaled to 1024x768)
+56136:D> SetDisplayMode: wXRes=640 wYRes=480
+56140:V> NV_evo_takeover: append path, ring_pos=100 ch0 stat=2D0B001B get=00000190 put=00000190
+56141:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=3DF10001 get=0000025C put=0000025C
+56143:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+56150:V> NV_evo_takeover: append path, ring_pos=151 ch0 stat=2D0B001B get=0000025C put=0000025C
+56151:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=3EF60001 get=00000328 put=00000328
+56153:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+56785:D> SetDisplayMode: wXRes=1024 wYRes=768
+56789:V> NV_evo_takeover: append path, ring_pos=496 ch0 stat=2D0B001B get=000007C0 put=000007C0
+56790:V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=0C590001 get=0000088C put=0000088C
+56792:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+56799:V> NV_evo_takeover: append path, ring_pos=547 ch0 stat=2D0B001B get=0000088C put=0000088C
+56800:V> NV_evo_takeover: 1024x768x16 fb=00000000 ntfy=0D890001 get=00000958 put=00000958
+56802:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+69853:D> SetDisplayMode: wXRes=640 wYRes=480
+69857:V> NV_evo_takeover: append path, ring_pos=647 ch0 stat=2D0B001B get=00000A1C put=00000A1C
+69858:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=2E2B0001 get=00000AE8 put=00000AE8
+69860:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+69867:V> NV_evo_takeover: append path, ring_pos=698 ch0 stat=2D0B001B get=00000AE8 put=00000AE8
+69868:V> NV_evo_takeover: 640x480x16 fb=00000000 ntfy=2F300001 get=00000BB4 put=00000BB4
+69870:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+70274:D> SetDisplayMode: wXRes=1024 wYRes=768
+70278:V> NV_evo_takeover: append path, ring_pos=819 ch0 stat=2D0B001B get=00000CCC put=00000CCC
+70279:V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=14F00001 get=00000D98 put=00000D98
+70281:V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+70288:V> NV_evo_takeover: append path, ring_pos=870 ch0 stat=2D0B001B get=00000D98 put=00000D98
+70289:V> NV_evo_takeover: 1024x768x32 fb=00000000 ntfy=16200001 get=00000E64 put=00000E64
+70291:V> native mode set: 1024x768x32 shadow pitch=4096, scanout 32 bpp pitch=4096
+70375:V> HB 410 t=429475 blits=2520 px=211512147 lock=0 mode=1024x768x32 flags=00000081
+----- 800x600 window -----
+V> PM16 00004002 #3 ecx=00000010 ebx=00000258 esi=00000320 edi=00000258
+V> PM16 00001F04 #3 ecx=00000000 ebx=172F0000 esi=00000000 edi=0000018F
+D> ReEnable: lpDevice=2056:0000 lpInfo=05CF:FB46 wScreenX=640 wScreenY=480
+D> SYSTEM.INI: 0x0 0bpp 96dpi
+D> Registry: 800x600 16bpp 96dpi
+D> Entry: 800x600
+D> After fix: 800x600 16 bpp
+D> ReEnable: wScreenX=640 wScreenY=480 wBpp=16
+D> Enable: lpDevice=2056:0000 style=0000 bReEnabling=1 wPalettized=0
+D> PhysicalEnable: continue with 800x600
+V> PM16 00004002 #4 ecx=00000010 ebx=00000258 esi=00000320 edi=00000258
+D> SetDisplayMode: wXRes=800 wYRes=600
+V> PM16 00004001 #2 ecx=00000010 ebx=00000258 esi=03200258 edi=00000000
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_evo_takeover: append path, ring_pos=889 ch0 stat=2D0B001B get=00000DE4 put=00000DE4
+V> NV_evo_takeover: 800x600x16 fb=00000000 ntfy=001F0001 get=00000EB0 put=00000EB0
+V> NV_native_modeset 800x600x16 OK
+V> native mode set: 800x600x16 shadow pitch=1600, scanout 16 bpp pitch=1792 (scaled to 1024x768)
+V> Clear success
+D> PhysicalEnable: RestoreDesktopMode is at 033F:0488
+V> trace reset: mode 800x600x16
+V> PM16 00004001 #1 ecx=00000010 ebx=00000258 esi=03200258 edi=00000000
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_hw_lost? objects 00020009 (ours 00020009) ch0 stat 2D0B001B
+V> NV_evo_takeover: append path, ring_pos=940 ch0 stat=2D0B001B get=00000EB0 put=00000EB0
+V> NV_evo_takeover: 800x600x16 fb=00000000 ntfy=01240001 get=000000CC put=000000CC
+V> NV_native_modeset 800x600x16 OK
+V> native mode set: 800x600x16 shadow pitch=1600, scanout 16 bpp pitch=1792 (scaled to 1024x768)
+V> Clear success
+V> SAVE_REGISTERS
+V> PM16 0000110F #1 ecx=000E0000 ebx=00000258 esi=00000000 edi=00000488
+V> FBHDA_clean
+V> FBHDA_clean done
+D> Enable: wBpp=16 wDpi=96 wScreenX=800 wScreenY=600 wDIBPdevSize=0030
+D> DDCreateDriverObject: lpDDHAL_SetInfo = NULL
+D> Enable: lpDevice=05CF:FB46 style=0001 bReEnabling=1 wPalettized=0
+D> Enable: wDIBPdevSize=0030 wScrX=800 wScrY=600 wBpp=16 wDpi=96 wScreenX=800 wScreenY=600
+D> sizeof(GDIINFO)=110 (006E), dpDEVICEsize=0058
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 8 (0x0008)
+V> PM16 00001F04 #1 ecx=00210000 ebx=00020000 esi=00000000 edi=00000001
+D> Control (16bit): 39 (0x0027)
+D> MOUSETRAILS: 0
+V> PM16 00001F01 #1 ecx=00210000 ebx=00020054 esi=165E0054 edi=00000000
+V> PM16 00001F02 #1 ecx=0002012C ebx=0001012C esi=00000190 edi=0000012C
+----- shim S> stats in the 800x600 session -----
+V> S> vmkind phys=079A0000 size=00010000 kind=00 pages=1 flushloops=2
+V> S> vmkind phys=079A0000 size=00010000 kind=70 pages=1 flushloops=2
+V> S> vmkind phys=079A0000 size=00010000 kind=00 pages=1 flushloops=2
+V> S> vmkind phys=079A0000 size=00010000 kind=70 pages=1 flushloops=2
+V> S> vmkind phys=079A0000 size=00010000 kind=00 pages=1 flushloops=2
+V> S> vmkind phys=079A0000 size=00010000 kind=70 pages=1 flushloops=2
+V> S> vmkind phys=079A0000 size=00010000 kind=00 pages=1 flushloops=2
+V> PM16 00001F04 #2 ecx=00000000 ebx=007E0000 esi=00000000 edi=00001A56
+S> [145430] stw: SwapBuffers hdc 00001db6 00000000
+S> [145430] heap allocs/used/largest 0000da00 03adf000 00500000
+S> [145430] heap frees/kicks 0000d703 00007809
+S> [145435] wgl: front mode changed w/h 00000320 00000258
+S> [145435] front phys/size 00000000 000ea600
+S> [145435] bo_front phys/vmoff 00000000 40000000
+S> [145435] wgl: front resource/bpp 052d5fd0 00000010
+S> [145435] wgl: front surface/pitch 00000000 00000640
+S> [145437] wgl: present frames/ms 0000002c 00005002
+S> [145437] wgl: stats kicks/kickdw 0000780b 06000a75
+S> [145438] wgl: stats flushdw/readdw 06b24c41 0001628c
+S> [145441] wgl: stats traps/warns 00000000 00000000
+S> [145442] wgl: stats kicks mapwait/internal 000001cc 0000000a
+S> [145443] wgl: stats submit ms 00008244
+S> [145449] wgl: stats kcyc validate/kick 001dea1c 04cbca67
+S> [145449] wgl: stats kcyc flush/bo 00daacf3 004e5421
+S> [145450] wgl: stats vsync waits/ms 00000000 00000000
+S> [145451] wgl: stats m2mf splits 00000000
+S> [145451] wgl: stats vram checks/mismatches 00000000 00000000
+S> [145452] bo_new sz/phys/vmoff 00200000 079a0000 479a0000
+V> S> vmkind phys=079A0000 size=00200000 kind=70 pages=32 flushloops=2
+S> [145455] stw: SwapBuffers hdc 00001db6 00000000
+S> [145465] stw: SwapBuffers hdc 00001db6 00000000

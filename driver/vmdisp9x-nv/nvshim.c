@@ -29,6 +29,8 @@
 #include "nvshim.h"
 #include "vxd_nv.h"      /* OP_NV_SUBMIT / OP_NV_VRAM_READ / OP_NV_VRAM_WRITE */
 #include "nv50_gpu.h"    /* nv_gpu_submit_t / nv_gpu_vread_t result structs    */
+#define NVSHIM_HWINFO_BUILD 22   /* nv_hwinfo_t.build as a dword index (3099)        */
+#define NVSHIM_BUILD        NV_BUILD
 #else
 #include "nouveau.h"       /* Mesa's own copy - ABI identical to nvshim.h */
 #include "nvif/cl0080.h"   /* struct nv_device_info_v0 (device_info fields) */
@@ -1094,6 +1096,16 @@ int nouveau_device_new(struct nouveau_object *parent, struct nouveau_device **pd
 	struct nouveau_device *dev = calloc(1, sizeof(*dev));
 	NVLOG0("device_new");
 	if(!dev) return -1;
+	{
+		/* 3099: name the VxD this log came from. The 3097 T61 round was read as a
+		 * 3098 run until nvtail/nvclk showed the 3096 VxD and nvprobe 3097. */
+		DWORD hw[64]; DWORD ret = 0;             /* nv_hwinfo_t is 29 dwords; room to grow */
+		memset(hw, 0, sizeof(hw));
+		if(!shim_fake() && shim_ioctl(OP_NV_PROBE, NULL, 0, hw, sizeof(hw), &ret))
+			NVLOG2("vxd build / shim build", hw[NVSHIM_HWINFO_BUILD], (uint32_t)NVSHIM_BUILD);
+		else
+			NVLOG2("vxd build UNKNOWN (fake backend or probe failed; ret) / shim build", ret, (uint32_t)NVSHIM_BUILD);
+	}
 	dev->object.parent = parent;
 	dev->object.oclass = 0x80000000;   /* NV_DEVICE */
 	dev->chipset  = 0x86;              /* G86 (Quadro NVS 140M) */

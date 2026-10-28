@@ -1,5 +1,5 @@
 NVIDIA Quadro NVS 140M (G86) - Win98SE native display driver
-Build: 3098  (M5.5 step 7: nvhl.bat usable again (CRLF restored - 3096/3097's launcher failed in COMMAND.COM, so the 3097 'good textures, low frame rate' run was the software renderer); VxD submit now drains the pusher and the method cache (CACHE1 DMA_GET/PUT, GET/PUT) before the PGRAPH idle wait - a submit could return before the engines had read everything, letting ring 3 overwrite reused staging VRAM under them: the likely 1024x768 texture-patch cause. 3097's texcheck / nvhl verify / heaphi / nvclk.txt still apply.)
+Build: 3099  (M5.5 step 8: 800x600 fix - the GDI/GL pitch now equals the hardware scanout pitch at 16/32 bpp (800x600: 1792, not 1600), so GL presents correctly in that mode. Also carries 3098's complete submit drain (nvmini.vxd changed: copy to C:\WINDOWS\SYSTEM and reboot). 'nvhl heaphi' is a 64 MiB-heap diagnostic only: Half-Life needs ~65 MiB of textures, so sprites loaded last (HUD) fail there.)
 
 Files:
   nvmini.vxd   - display VxD (minivdd) + native G86 backend + 16 KB debug ring

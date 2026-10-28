@@ -983,9 +983,15 @@ BOOL VESA_setmode_phy(DWORD w, DWORD h, DWORD bpp, DWORD rr_min, DWORD rr_max)
 			/* M4.1: the shadow (what GDI draws into) is at the desktop depth,
 			 * the scanout surface in VRAM is at the hardware depth (8 bpp
 			 * desktops are expanded to 32 bpp by the blitter via the palette). */
-			DWORD pitch    = w * ((bpp + 7) / 8);
 			DWORD hwbpp    = NV_hw_bpp(bpp);
 			DWORD hw_pitch = NV_hw_pitch(w, bpp);   /* 256-byte aligned, matches the EVO surface */
+			/* 3099: at 16/32 bpp the shadow pitch IS the scanout pitch. The GL
+			 * front import (wgl.c) and DirectDraw take hda->pitch as the pitch of
+			 * VRAM surface 0 - the scanout - so the two must agree; 800x600 was
+			 * the one mode where they did not (1600 vs 1792 bytes: GL presented
+			 * a sheared, garbage picture there, 640x480/1024x768 were fine). 8 bpp
+			 * keeps a packed shadow (the blitter expands it to 32 bpp). */
+			DWORD pitch    = (bpp >= 16) ? hw_pitch : w;
 			NV_blog(0x212);
 
 			hda->width  = w;

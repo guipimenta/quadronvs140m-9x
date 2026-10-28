@@ -685,6 +685,41 @@ it), and the 1024x768 fullscreen variant; send wgltest_texcheck.txt. (3) if patc
 `nvhl verify`, `nvhl heaphi`. Always: C:\nvshim.log, C:\nvtail.txt (the drain lines),
 C:\nvkick.txt, C:\nvclk.txt.
 
+### 3097 package on the T61 with `nvhl heaphi` (2026-10-28; analysis/t61-logs/3097-heaphi-*)
+- The 3098 VxD was NOT installed: nvtail says "nvmini.drv build 3096", has no 'S> drain' lines,
+  nvclk.txt says nvprobe 3097. The run = 3097 shim + Mesa on the 3096 VxD; the drain fix is
+  still untested. (Lesson: logs must name the VxD build - done in 3099.)
+- Textures fine at 1024x768 for 3 minutes; HUD (health, flashlight) wrong. Cause: the 64 MiB
+  heaphi heap is exhausted 3.3 s in (620 bo_new FAILs of 0x10000/0x40000, largest free
+  0x30000); Half-Life holds ~65 MiB of RGBA8 textures (3095 run: 65 MiB used of 88), so the
+  sprites loaded last get no VRAM. heaphi is a diagnostic only. Its clean-texture result is
+  an A/B hint that the low region [0x02010000,0x03000000) matters, not a conclusion: the VxD
+  touches nothing there (VRAM rd/wr go through the 256 MiB BAR1 map, the VxD heap is at
+  0x03500000, the 1:1 VM covers all 128 MiB), and one 3-minute run of an occasional artifact
+  proves little.
+- 800x600 "does not work": nvtail shows the mode set OK (shadow pitch 1600, scanout pitch 1792,
+  scaled to the panel) and a GL session with 'front surface/pitch 0 0x640': wgl.c imports the
+  scanout with hda->pitch = the GDI shadow pitch, but the scanout is 256-byte aligned
+  (NV_hw_pitch). 640x480 (1280) and 1024x768 (2048) are multiples of 256, 800x600 is not, so
+  GL presented a sheared picture. The VxD's HB blit counter stays flat during every GL
+  session (GL writes the scanout directly), so that was not it.
+- Clock registers (nvclk.txt): 0x4008/0x400c 80016400/00001c05, 0x4020/0x4024
+  80010000/00000b01, 0x4028/0x402c a0020000/00001602, 0x4030/0x4034 80010000/00001202,
+  0xc040 2ee01b33. Decode pending (nouveau nvkm/subdev/clk/nv50.c); the small N/M values look
+  like VBIOS boot clocks, which would explain a lot of the frame-rate ceiling.
+
+### M5.5 step 8 (build 3099): 800x600 pitch, self-identifying logs
+- vxd_vesa.c native mode set: at 16/32 bpp hda->pitch = NV_hw_pitch(w, bpp), the scanout
+  pitch. GDI's shadow (wram, 64 MiB) takes the same pitch, the blitter copies row by row,
+  DirectDraw and the GL front import read hda->pitch - one pitch everywhere. 8 bpp keeps the
+  packed shadow (the blitter expands it to 32 bpp).
+- nvshim.c: 'vxd build / shim build' logged at device_new (OP_NV_PROBE .build); nvhl.bat
+  appends the full nvprobe output (VxD build) to C:\nvclk.txt.
+- T61 order: copy nvmini.vxd to C:\WINDOWS\SYSTEM + reboot, check 'vxd build 3099' in
+  nvshim.log; plain `nvhl` at 1024x768 (patches gone? 'S> drain loops' in nvtail);
+  `nvhl -width 800 -height 600`; texcheck with GALLIUM_DRIVER=nouveau set; `nvhl heaphi` is
+  not useful any more.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

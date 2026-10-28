@@ -104,6 +104,17 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3099 - 800x600 works now: the GDI pitch equals the hardware scanout pitch at
+16/32 bpp (800x600: 1792 bytes, not 1600), which is what the GL present and DirectDraw
+use for the screen surface - GL at 800x600 was a sheared, garbage picture before
+(640x480 and 1024x768 have 256-byte-multiple pitches and were never affected).
+nvmini.vxd changed (3098's complete submit drain + this): copy it to C:\WINDOWS\SYSTEM
+and reboot. The shim log now starts with 'vxd build / shim build', and nvhl appends
+the VxD probe to C:\nvclk.txt, so a log says which VxD ran. About 'nvhl heaphi': it
+is a 64 MB-heap diagnostic; Half-Life needs about 65 MB of textures, so with it the
+sprites loaded last (HUD: health, flashlight) get no VRAM and draw wrong - that is
+the heap, not a GPU bug. Use plain 'nvhl'; 800x600: nvhl -width 800 -height 600.
+
 Build 3097 - the artifacts are WRONG TEXTURE PATCHES at 1024x768, absent at 640x480
 (where the sampler rarely touches the big mip levels), unchanged by vsync/fullflush.
 Two tests decide where the texture data goes wrong:

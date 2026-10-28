@@ -15,6 +15,8 @@ rem   nvhl vsync fullflush [options]   both
 rem 3097: nvhl verify   read every flushed range back from VRAM after each submit (VRAM WARN lines; slower)
 rem       nvhl heaphi   use only the 64 MB heap region above the GPU channel (the 3094 layout)
 rem       the launcher also dumps the clock registers to C:\nvclk.txt
+rem 3099: nvclk.txt also gets the full nvprobe output (the VxD build), nvshim.log starts
+rem       with "vxd build / shim build"; 800x600 works: nvhl -width 800 -height 600
 rem Afterwards send C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt, C:\nvclk.txt.
 set NVDRV=C:\NVMINI
 set GALLIUM_DRIVER=nouveau
@@ -60,6 +62,7 @@ if not exist mesa3d.dll echo nvhl: WARNING mesa3d.dll is not in this folder - th
 if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe rd 4000 16 > C:\nvclk.txt
 if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe rd c040 1 >> C:\nvclk.txt
 if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe rd 22000 1 >> C:\nvclk.txt
+if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe >> C:\nvclk.txt
 if exist %NVDRV%\nvprobe.exe start /min %NVDRV%\nvprobe tail C:\nvtail.txt
 start /w hl.exe %1 %2 %3 %4 %5 %6
 echo nvhl: Half-Life exited. Logs: C:\nvshim.log C:\nvtail.txt C:\nvkick.txt C:\nvclk.txt
