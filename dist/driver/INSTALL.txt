@@ -1,4 +1,4 @@
-M2 package — NVIDIA G86 hardware detection (scans out via VESA, adds native probe)
+M2 package - NVIDIA G86 hardware detection (scans out via VESA, adds native probe)
 
 What this is: the same working VESA framebuffer desktop as M1, PLUS our own
 code that finds the G86 on the PCI bus, maps its MMIO, and reads the chip ID

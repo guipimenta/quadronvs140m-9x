@@ -692,6 +692,8 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 static int           g_chan_ready = 0;
 static unsigned long g_chan_put   = 0;    /* next free byte offset in the command region */
 static unsigned long g_ib_put     = 0;    /* next free IB ring entry index */
+static unsigned long g_drain_off    = 0;  /* 3098: pusher/cache drain latched off after a timeout */
+static unsigned long g_drain_logged = 0;
 static unsigned long g_nsub       = 0;    /* 3095: submits so far (log gating) */
 static int           nsub_verbose = 0;
 #define NVGPU_PUSHBUF_SIZE 0x00100000UL   /* 1 MiB command data region            */
@@ -1044,6 +1046,38 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 		}
 	}
 	out->idle_loops = i;
+	/* 3098: IBGET==put only says the pusher TOOK this kick's IB entries; it may
+	 * still be fetching their pushbuffer data (CACHE1 DMA_GET 0x3244 behind
+	 * DMA_PUT 0x3240) and the puller may still hold methods in the cache (CACHE1
+	 * GET 0x3270 behind PUT 0x3210) while PGRAPH reads idle between two methods,
+	 * so a "synchronous" submit could return before the engines had read all of
+	 * it - and ring 3 then overwrites staging VRAM (reused for the next texture
+	 * patch) under them. Drain the pusher and the method cache before the PGRAPH
+	 * idle wait. Latched off after one timeout, so a misread register costs one
+	 * slow kick, not every kick; the first kicks report their drain loops. */
+	if(!g_drain_off)
+	{
+		unsigned long j;
+		for(j = 0; j < 400000UL; j++)
+		{
+			if(NV_rd32(0x3244) == NV_rd32(0x3240) && NV_rd32(0x3270) == NV_rd32(0x3210))
+				break;
+			if(NV_rd32(PFIFO_INTR_0) || NV_rd32(PGRAPH_INTR))
+				break;
+		}
+		if(j >= 400000UL)
+		{
+			g_drain_off = 1;
+			dbg_printf("S> drain TIMEOUT - disabled: dmaget/put %08lx/%08lx c1get/put %08lx/%08lx\n",
+			           NV_rd32(0x3244), NV_rd32(0x3240), NV_rd32(0x3270), NV_rd32(0x3210));
+		}
+		else if(g_drain_logged < 16UL)
+		{
+			g_drain_logged++;
+			dbg_printf("S> drain loops %lu (ib loops %lu)\n", j, i);
+		}
+		out->idle_loops += j;
+	}
 	out->gr_idle = gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 4000000UL);
 	for(i = 0; i < 4; i++)
 	{

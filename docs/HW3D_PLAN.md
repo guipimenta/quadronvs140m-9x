@@ -662,6 +662,29 @@ T61: (1) wgltest driver mesa3d.dll window texcheck and the same with fullscreen 
 height 768; send wgltest_texcheck.txt. (2) nvhl verify (play until artifacts show, quit;
 send the logs + C:\nvclk.txt). (3) nvhl heaphi. (4) nvhl vsync once more for the samples.
 
+### 3097 on the T61 (2026-10-28): the launcher was broken, the "good" run was software
+nvhl.bat reported an invalid command (it had since 3096: the Python edits wrote LF line
+endings, COMMAND.COM needs CRLF), so the user started hl.exe directly - without
+GALLIUM_DRIVER=nouveau that is the software renderer: textures correct, frame rate low even
+at 640x480. So: the 3096 switches never ran, and the 3097 result says nothing about the GPU.
+
+### M5.5 step 7 (build 3098): CRLF, and a complete submit drain
+- nvhl.bat and INSTALL.txt rewritten with CRLF (make_dist does not touch them; the masters are
+  edited on Linux - keep them CRLF).
+- VxD NV_gpu_submit: after IBGET==put it now also waits for the pusher's data fetch
+  (CACHE1 DMA_GET 0x3244 == DMA_PUT 0x3240) and the method cache (CACHE1 GET 0x3270 == PUT
+  0x3210) before the PGRAPH idle wait. IBGET==put only means the IB entries were taken;
+  PGRAPH_STATUS can read idle between two methods while the puller still holds this kick's
+  methods, so the "synchronous" submit could return early and ring 3 then overwrote reused
+  staging VRAM (the next lightmap/texture patch) under the engines: timing-bound and worse
+  with bigger frames, which fits the 1024x768-only wrong texture patches. Bounded (400k
+  polls), latched off after one timeout, 'S> drain loops' for the first 16 kicks in nvtail.
+T61 order: (1) plain `nvhl` from a DOS box - are the patches gone? (2) `wgltest driver
+mesa3d.dll window texcheck` with GALLIUM_DRIVER=nouveau set in that DOS box (nvgl.bat sets
+it), and the 1024x768 fullscreen variant; send wgltest_texcheck.txt. (3) if patches remain:
+`nvhl verify`, `nvhl heaphi`. Always: C:\nvshim.log, C:\nvtail.txt (the drain lines),
+C:\nvkick.txt, C:\nvclk.txt.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into
