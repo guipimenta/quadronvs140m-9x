@@ -62,6 +62,8 @@ if not exist mesa3d.dll echo nvhl: WARNING mesa3d.dll is not in this folder - th
 if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe rd 4000 16 > C:\nvclk.txt
 if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe rd c040 1 >> C:\nvclk.txt
 if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe rd 22000 1 >> C:\nvclk.txt
+if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe rd e81c 1 >> C:\nvclk.txt
+if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe rd 101000 1 >> C:\nvclk.txt
 if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe >> C:\nvclk.txt
 if exist %NVDRV%\nvprobe.exe start /min %NVDRV%\nvprobe tail C:\nvtail.txt
 start /w hl.exe %1 %2 %3 %4 %5 %6
