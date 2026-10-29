@@ -1073,8 +1073,9 @@ C:\nvkick.txt, C:\nvclk.txt.
   garbage was the shared channel (3104), and on 3108 grctx 2 rendered like grctx 0 (holes
   from the row-block bug). 3111: g_grctx_variant defaults to 2 when the GrCtx key is
   absent; grctx0.reg selects the old one without a reboot. VxD changed (reboot).
-- Untested on the T61. Test: Half-Life as usual ('grctx variant 2' in nvtail.txt); A/B
-  against grctx0.reg if anything regressed.
+- Released as v3111 on 2026-10-30 at the user's request ("should be fine"), T61 result still
+  pending. Test: Half-Life as usual ('grctx variant 2' in nvtail.txt); A/B against grctx0.reg
+  if anything regressed.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
