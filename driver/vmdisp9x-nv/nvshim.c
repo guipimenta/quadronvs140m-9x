@@ -743,16 +743,45 @@ static void heap_stats(uint32_t *free_total, uint32_t *largest)
 	for(i = 0; i < g_nfree; i++) { t += g_free[i].size; if(g_free[i].size > l) l = g_free[i].size; }
 	*free_total = t; *largest = l;
 }
-static uint32_t heap_alloc(uint32_t size, uint32_t align)
+/* 3108: NVSHIM_HIKIND=depth|color|tiled ('nvhl hidepth' / 'hicolor' / 'hitiled'):
+ * BOs of that storage class are placed in the 64 MiB+ heap region first (the
+ * low 32-48 MiB region only when the high one is full). The T61 showed the
+ * 1024x768 holes only with the default layout, where the window buffer and
+ * its depth buffer are the first allocations and land in the low region, and
+ * not with NVSHIM_HEAPHI (everything high): this switch says WHICH of the two
+ * buffers it is without starving the textures the way heaphi does. */
+static int shim_hikind(void)
+{
+	static int v = -1;
+	if(v < 0)
+	{
+		char b[16]; DWORD n = GetEnvironmentVariableA("NVSHIM_HIKIND", b, sizeof(b));
+		v = 0;
+		if(n > 0 && n < sizeof(b))
+		{
+			if(!strcmp(b, "depth")) v = 1;
+			else if(!strcmp(b, "color")) v = 2;
+			else if(!strcmp(b, "tiled")) v = 3;
+		}
+	}
+	return v;
+}
+static int shim_kind_wants_hi(uint32_t kind)
+{
+	int hk = shim_hikind();
+	if(!kind || !hk) return 0;
+	/* nv50 storage kinds: 0x18-0x2f and 0x40-0x6f depth/stencil (Z24S8 0x28,
+	 * X8Z24 0x18, Z32F 0x40, Z16 0x6c), 0x70+ colour */
+	return hk == 3 || (hk == 1 && kind < 0x70) || (hk == 2 && kind >= 0x70);
+}
+static uint32_t heap_alloc_in(uint32_t size, uint32_t align, uint32_t lowest)
 {
 	int i;
-	if(g_nfree < 0) heap_init();
-	if(align < 0x100) align = 0x100;
-	size = (size + 0xff) & ~0xffUL;
 	for(i = 0; i < g_nfree; i++)
 	{
 		uint32_t bs = g_free[i].start, be = g_free[i].start + g_free[i].size;
 		uint32_t a = (bs + (align - 1)) & ~(align - 1);
+		if(a < lowest) a = (lowest + (align - 1)) & ~(align - 1);
 		if(a < bs || a + size > be || a + size < a)
 			continue;
 		/* carve [a, a+size) out of block i: head [bs,a) stays as block i (or
@@ -777,6 +806,15 @@ static uint32_t heap_alloc(uint32_t size, uint32_t align)
 		return a;
 	}
 	return 0;                                   /* out of VRAM */
+}
+static uint32_t heap_alloc(uint32_t size, uint32_t align, int hi)
+{
+	uint32_t a;
+	if(g_nfree < 0) heap_init();
+	if(align < 0x100) align = 0x100;
+	size = (size + 0xff) & ~0xffUL;
+	if(hi && (a = heap_alloc_in(size, align, NVSHIM_HEAP_BASE)) != 0) return a;
+	return heap_alloc_in(size, align, 0);
 }
 static uint32_t g_heap_frees = 0;
 static void heap_free(uint32_t start, uint32_t size)
@@ -1387,7 +1425,7 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 		if(align < 0x10000) align = 0x10000;
 		size = ((uint32_t)size + 0xffffUL) & ~0xffffUL;
 	}
-	phys = heap_alloc((uint32_t)size, align);
+	phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f));
 	if(!phys)
 	{
 		/* 3097: nothing is evicted here, but pending work holds the staging BOs
@@ -1405,7 +1443,7 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 			if(!g_cur_push || g_cur_push->cur == (uint32_t*)((struct shim_push_hdr*)g_cur_push)->buf) break;
 			g_kick_src = 6; nouveau_pushbuf_kick(g_cur_push); g_kick_src = 0;
 			push_kref_bufctx((struct shim_push *)g_cur_push);
-			phys = heap_alloc((uint32_t)size, align);
+			phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f));
 		}
 		if(n++ < 16) NVLOG3("bo_new: heap full - kicked pending work; size/free before/phys after", (uint32_t)size, ft0, phys);
 	}

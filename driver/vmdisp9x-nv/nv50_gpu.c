@@ -573,8 +573,14 @@ static int gpu_2dfill_core(nv_gpu_2dfill_t *out, int flags)
 		}
 		/* channel page directory at RAMIN+0x200. Only PDE 2 (byte 0x10,
 		 * VM 1 GiB) is needed; it maps to our VRAM page table. The rest of
-		 * the PD lives in the already-zeroed first 4 KiB (invalid PDEs). */
-		NV_vram_wr32(NVGPU_VMPD + 0x10, NVGPU_VRAMPT | 0x61UL);
+		 * the PD lives in the already-zeroed first 4 KiB (invalid PDEs).
+		 * 3108: PDE bits 5-6 tell the MMU how big the page table is (nouveau
+		 * nv50_vm_map_pgt: 0x60 = up to 32 MiB of 64 KiB pages, 0x40 = 64 MiB,
+		 * 0x20 = 128 MiB, 0 = the full 512 MiB of the PDE). Ours is the full
+		 * 64 KiB table (8192 entries), so the flag is 0 - 0x60 (used since
+		 * M5.2, when only 4 pages were mapped) told the MMU the table ends at
+		 * 32 MiB, exactly where the shim's low heap region begins. */
+		NV_vram_wr32(NVGPU_VMPD + 0x10, NVGPU_VRAMPT | 0x01UL);
 		NV_vram_wr32(NVGPU_VMPD + 0x14, 0);
 	}
 	if(want_fence_bo)
@@ -880,7 +886,9 @@ static unsigned long nv_chan_init(void)
 		NV_vram_wr32(NVGPU_VRAMPT + i * 8 + 0, (i * 0x10000UL) | 1UL);
 		NV_vram_wr32(NVGPU_VRAMPT + i * 8 + 4, 0);
 	}
-	NV_vram_wr32(NVGPU_VMPD + 0x10, NVGPU_VRAMPT | 0x61UL);   /* PDE 2 -> the PT */
+	/* 3108: PDE size flag 0 = full 512 MiB table (see the M5.2 path above);
+	 * 0x60 declared a 32 MiB table while the 1:1 window maps 128 MiB. */
+	NV_vram_wr32(NVGPU_VMPD + 0x10, NVGPU_VRAMPT | 0x01UL);   /* PDE 2 -> the PT */
 	NV_vram_wr32(NVGPU_VMPD + 0x14, 0);
 
 	NV_vram_fill(NVGPU_CACHE, 0x1000 / 4, 0);

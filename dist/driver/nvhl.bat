@@ -21,7 +21,10 @@ rem   vsync       the present waits for the panel's vertical blank (no tearing, 
 rem   fullflush   whole-buffer dirty diffs instead of range-directed ones (slower)
 rem   verify      read every flushed range back from VRAM after each submit ('VRAM WARN'; slow)
 rem   kickdump N  dump the first N submits to C:\nvkick.txt (default 64)
-rem (3097's 'heaphi' is gone: it starved the HUD sprites of VRAM and proved nothing.)
+rem   hidepth     put depth buffers in the 64 MB+ VRAM region (3108: the 1024x768 holes
+rem   hicolor     ...or the colour buffers; heaphi showed the holes depend on where in VRAM
+rem   hitiled     ...or every tiled surface  (the buffers sit; these say which one)
+rem   heaphi      everything in the 64 MB+ region (starves the HUD sprites; diagnostic only)
 rem Logs: C:\nvshim.log (Mesa/shim), C:\nvtail.txt (VxD ring, written through while the
 rem game runs, survives a crash), C:\nvkick.txt (submit dump), C:\nvclk.txt (clocks +
 rem VxD probe). Send all four.
@@ -36,6 +39,7 @@ set NVSHIM_HEAPHI=
 set NVSHIM_PRESENT_BARRIER=
 set NVSHIM_PRESENT_3D=
 set NVSHIM_CPU_PRESENT=
+set NVSHIM_HIKIND=
 set NVHL_GRCTX=
 :flags
 if "%1"=="grctx" goto f_grctx
@@ -47,6 +51,9 @@ if "%1"=="fullflush" goto f_full
 if "%1"=="verify" goto f_verify
 if "%1"=="kickdump" goto f_kickdump
 if "%1"=="heaphi" goto f_heaphi
+if "%1"=="hidepth" goto f_hidepth
+if "%1"=="hicolor" goto f_hicolor
+if "%1"=="hitiled" goto f_hitiled
 goto run
 :f_grctx
 set NVHL_GRCTX=%2
@@ -91,7 +98,23 @@ shift
 shift
 goto flags
 :f_heaphi
-echo nvhl: 'heaphi' is no longer a switch (it starved the HUD sprites) - ignored
+set NVSHIM_HEAPHI=1
+echo nvhl: heaphi on (everything in the 64 MB+ region; HUD sprites may starve)
+shift
+goto flags
+:f_hidepth
+set NVSHIM_HIKIND=depth
+echo nvhl: depth buffers in the 64 MB+ region
+shift
+goto flags
+:f_hicolor
+set NVSHIM_HIKIND=color
+echo nvhl: colour buffers in the 64 MB+ region
+shift
+goto flags
+:f_hitiled
+set NVSHIM_HIKIND=tiled
+echo nvhl: tiled surfaces in the 64 MB+ region
 shift
 goto flags
 :run

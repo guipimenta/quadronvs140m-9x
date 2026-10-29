@@ -104,6 +104,19 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3108 - the VM page directory fix (nvmini.vxd changed: copy it to C:\WINDOWS\SYSTEM,
+copy mesa3d.dll + nvhl.bat + nvprobe.exe too, reboot once). Your 3105 findings: with
+gl_clear 1 the blocks turn red = the clear colour = pixels nothing drew, so it is a
+rendering hole after all, and "nvhl heaphi" (all buffers in the 64 MB+ VRAM region)
+removes them, so the hole depends on where the window/depth buffers sit in VRAM. The
+VxD told the GPU its page table covers 32 MB while the buffers are mapped at 32-128 MB
+(the table really covers all of it); 3108 declares the full table, as nouveau does.
+Tests at 1024x768, grctx0, same spot:
+  nvhl                 holes gone? (the PDE fix alone)
+  if not:  nvhl hidepth    then  nvhl hicolor   - only that buffer goes to 64 MB+;
+           the one that cures it names the buffer. (nvhl heaphi is back as a switch.)
+The 3106 present switches (barrier/present3d) are no longer the first thing to try.
+
 Build 3107 - nvhl.bat reviewed (copy it over the one in the Half-Life folder; the
 driver itself is unchanged since 3104). "nvhl grctx N" applies grctxN.reg before the
 launch (no reboot since 3104), "nvhl kickdump N" sets the submit dump size, "heaphi" is

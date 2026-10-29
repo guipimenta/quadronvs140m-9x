@@ -957,6 +957,35 @@ C:\nvkick.txt, C:\nvclk.txt.
   GALLIUM_DRIVER does not expand (DOS box out of environment space = the switches
   silently did not apply); a warning when nvprobe.exe is missing at NVDRV.
 
+### 3105 revisited by the user -> build 3108: the holes depend on WHERE the buffers sit in VRAM
+- User corrections (still 3105): `gl_clear 1` DOES paint the blocks red (GoldSrc's clear
+  colour) - so they ARE pixels no fragment reached (a rendering hole; the "present blit"
+  reading of the CPU-present run was wrong - that run most likely just changed the heap
+  layout). The blocks are also on the console/main menu. Two blocks, one in the upper
+  half and one in the lower half, mutually exclusive, around the screen's half height.
+  And: `nvhl heaphi` (every BO in the 64 MiB+ region) REMOVES them. (The user mentions
+  green-highlighted photos; none received yet.)
+- Default layout: the window buffer (3 MiB, 0x02260000) and its depth buffer (3 MiB,
+  0x02560000) are the first allocations and land in the LOW heap region 32-48 MiB
+  (NVSHIM_HEAP_LO 0x02010000 .. 0x03000000); textures spill to 64 MiB+. heaphi moves
+  the two buffers to 64 MiB+ -> clean. So: an address-dependent fault in the 32-48 MiB
+  range for RT/depth traffic (textures are fine there: texcheck).
+- Found in the VxD: the channel's PDE 2 was written as VRAMPT | 0x61 in both init paths.
+  nouveau nv50_vm_map_pgt: bits 5-6 = page-table size, 0x60 = "up to 32 MiB of 64 KiB
+  pages", 0x40 = 64 MiB, 0x20 = 128 MiB, 0 = the full 512 MiB table. Our table is the
+  full 64 KiB (8192 entries; the 1:1 window fills 2048 = 128 MiB), so the flag must be 0.
+  0x60 dates from M5.2 (4 scratch pages). With it the MMU was told the table ends at
+  32 MiB - exactly where the low heap region starts. Why most traffic still worked and
+  only RT/depth in 32-48 MiB broke is not known (TLB/prefetch behaviour of the size
+  field); the fix is nouveau's value either way.
+- 3108: PDE 2 = VRAMPT | 0x01 (both paths). Shim: NVSHIM_HIKIND=depth|color|tiled
+  (nvhl hidepth / hicolor / hitiled) prefers the 64 MiB+ region for that storage class
+  only (kinds < 0x70 = depth/stencil, >= 0x70 = colour), falling back to any region -
+  the probe that names the buffer if the PDE fix alone is not it. heaphi is back as a
+  documented diagnostic switch.
+- T61: nvmini.vxd + reboot; plain `nvhl` at 1024x768 (holes gone?); if not, `nvhl hidepth`,
+  `nvhl hicolor`. Photos of the blocks (before/after gl_clear 1) still wanted.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into
