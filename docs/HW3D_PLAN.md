@@ -879,6 +879,38 @@ C:\nvkick.txt, C:\nvclk.txt.
   Expected log: 'bound again' only right after a program's first bind (BEEF0201), never
   mid-process. Same T61 order as 3103.
 
+### 3104 on the T61 + independent review -> build 3105: write-only maps assumed zeroed VRAM
+- User: with 3104 and grctx0, nvsky 800x600 is FIXED (the per-process channel works), but
+  Half-Life still shows the corner squares. So: 3103's finding (channel reuse) explained the
+  "garbage" runs, NOT the 1024x768 squares; the 3099 in-process observation (squares at
+  1024x768, clean after switching to 800x600 in the same process) stands, and "800x600 is a
+  red herring" in the step-12 notes was too strong.
+- Independent review (analysis/OPENGL_ARTIFACT_REVIEW_2026-10-29.md, reproducer
+  tools/repro_nvshim_zero_upload.py, which compiles the tree's own nouveau_bo_map +
+  shim_bo_flush against a byte-array VRAM): a write-only nouveau_bo_map callocs both the
+  shadow and `clean`, i.e. it tells the dirty-diff flush that VRAM already holds zeros - but
+  heap_free never clears VRAM, so a fresh BO inherits the previous BO's bytes, and a 1 KiB
+  chunk the CPU fills entirely with zeros compares equal to `clean` and is never uploaded.
+  FULLFLUSH widens the window but keeps the comparison, so it never caught this either.
+  Repro before the fix: 2048/3072 stale bytes; after: 0.
+- 3105 (shim only; nvmini.vxd = 3104 code restamped): `clean` of a write-only first map is
+  a sentinel pattern (0xA5C3F00F ^ golden-ratio*i) = "VRAM unknown", so the first flush of
+  each chunk in a kick's window is unconditional and later flushes diff as before. Read
+  maps and refreshes still seed `clean` from VRAM. Cost: nothing for staging uploads (the
+  CPU writes all of them anyway); untouched chunks inside a first window get zeros once.
+  Chosen over "zero VRAM at first map" (would double the traffic of every lightmap staging
+  upload) and over per-chunk write tracking (more state). mesa3d.dll relinked
+  (impcheck: missing on Win98 none), nvprobe rebuilt.
+- Relevance to the squares: UNPROVEN. Candidates where a fully-zero 1 KiB chunk occurs in
+  HL: black texture rows / lightmap patches (staging BOs are fresh per transfer = exactly
+  the reuse pattern), unused constant-buffer slots. That would give garbage blocks on
+  textured surfaces, not obviously screen corners.
+- T61 next, grctx0, one Half-Life run at 1024x768: (1) 3105 still shows the squares?
+  (2) `gl_clear 1`: squares turn into the clear colour (uncovered pixels -> clipping /
+  guard band / zcull) or stay garbage (texture or present path); (3) `set
+  NVSHIM_CPU_PRESENT=1` + nvhl: squares gone -> the 2D present blit; still there ->
+  rendering. Photos. Only then touch VIEW_VOLUME_CLIP_CTRL / zcull / context values.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

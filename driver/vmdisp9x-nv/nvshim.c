@@ -1520,6 +1520,24 @@ int nouveau_bo_map(struct nouveau_bo *bo, uint32_t access, struct nouveau_client
 			vxd_vram_read(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
 			memcpy(b->clean, b->base.map, b->shadow_sz);
 		}
+		else
+		{
+			/* 3105: a write-only map starts from a shadow of zeros, but VRAM is
+			 * NOT zero - heap_free never clears, so a new BO inherits the bytes
+			 * of whatever lived in that range before. 3092-3104 also set `clean`
+			 * to zeros, which told the dirty-diff flush "VRAM already holds
+			 * zeros": a 1 KiB chunk the CPU filled entirely with zeros (black
+			 * texture rows, lightmap patches, unused constant slots) compared
+			 * equal and was never uploaded, and the engines read the previous
+			 * BO's data there (tools/repro_nvshim_zero_upload.py; FULLFLUSH did
+			 * not catch it either, same comparison). `clean` now starts as a
+			 * sentinel pattern no CPU write produces, i.e. "VRAM contents
+			 * unknown": the first flush of every chunk in a kick's window is
+			 * unconditional (zeros included), later flushes diff as before. A
+			 * read map or a refresh still seeds `clean` from real VRAM. */
+			uint32_t *c = (uint32_t*)b->clean, n = (b->shadow_sz + 3) / 4, i;
+			for(i = 0; i < n; i++) c[i] = 0xA5C3F00Fu ^ (0x9E3779B9u * (i + 1));
+		}
 	}
 	else if(access & NOUVEAU_BO_RD)
 	{
