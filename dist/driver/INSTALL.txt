@@ -104,6 +104,15 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3107 - nvhl.bat reviewed (copy it over the one in the Half-Life folder; the
+driver itself is unchanged since 3104). "nvhl grctx N" applies grctxN.reg before the
+launch (no reboot since 3104), "nvhl kickdump N" sets the submit dump size, "heaphi" is
+gone, the batch warns when the DOS box has run out of environment space (then the
+switches silently did not apply - give the DOS box a larger initial environment in its
+properties), and the VxD log tail now stops when Half-Life exits: every earlier run left
+an nvprobe window polling for ever, and the next run had two of them writing nvtail.txt.
+Switches combine, e.g.  nvhl grctx 0 barrier -width 1024 -height 768
+
 Build 3106 - present A/B switches (mesa3d.dll only; copy it next to hl.exe too - the
 3105 log showed Half-Life still loading the 3099 mesa3d.dll: nvshim.log must start with
 "vxd build / shim build 00000c22 00000c22"). On the T61, 3105's corner blocks stayed with
@@ -124,7 +133,7 @@ independent review; reproducer tools/repro_nvshim_zero_upload.py. Not yet proven
 the corner squares. Tests for the squares, all grctx0 and all in ONE Half-Life run at
 1024x768: (1) does 3105 still show them; (2) console "gl_clear 1" - do the squares
 become the clear colour (= uncovered pixels) or stay garbage; (3) from a DOS box
-"set NVSHIM_CPU_PRESENT=1" then nvhl (slow; CPU copies the frame instead of the GPU
+"nvhl cpupresent" (slow; CPU copies the frame instead of the GPU
 blit) - squares gone = the present path, still there = rendering. A photo of the
 squares helps more than any log.
 

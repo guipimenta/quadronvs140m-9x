@@ -943,6 +943,20 @@ C:\nvkick.txt, C:\nvclk.txt.
   buffer against what the 3D engine was given. Neither -> the scanout side (front BO
   'external', pitch, the VxD's own blitter/cursor) and the vsync timing.
 
+### Build 3107: nvhl.bat reviewed (user request)
+- nvprobe tail never exited: every `nvhl` run started one with `start /min` and the next
+  run deleted/re-created nvtail.txt under it, so two tails appended to the same file.
+  `nvprobe tail <file> <runfile>` now exits once the run file is gone (checked every
+  0.5 s); nvhl.bat creates C:\nvtail.run before the tail and deletes it after hl.exe.
+- The 3105 INSTALL text said `set NVSHIM_CPU_PRESENT=1` then `nvhl`, but the 3106 batch
+  clears every NVSHIM_* at the top (so a flag from one run never leaks into the next, since
+  command.com keeps a batch's SETs): the instruction became `nvhl cpupresent`.
+- `heaphi` removed (3099: starves the HUD sprites, proves nothing); `grctx N` added
+  (regedit /s %NVDRV%\grctxN.reg before the launch - valid since 3104 reads the value per
+  GL start); `kickdump N`; hl.exe gets %1..%9 instead of %1..%6; a warning when
+  GALLIUM_DRIVER does not expand (DOS box out of environment space = the switches
+  silently did not apply); a warning when nvprobe.exe is missing at NVDRV.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

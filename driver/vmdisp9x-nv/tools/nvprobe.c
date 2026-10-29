@@ -344,12 +344,18 @@ int main(int argc, char **argv)
 	 * prefixes the ring with the running byte total, so the new bytes are
 	 * known exactly and an overflow between two polls is reported instead
 	 * of silently dropped. Leave it running in a DOS box while starting the
-	 * program under test; Ctrl+C stops it. */
+	 * program under test; Ctrl+C stops it. 3107: an optional 3rd argument names
+	 * a "run" file - the tail exits by itself once that file is gone, so a
+	 * launcher can create it, start the tail minimized, run the program and
+	 * delete the file afterwards (nvhl.bat). Until now every nvhl run left a
+	 * tail polling forever, and the next run deleted/re-created nvtail.txt
+	 * under it: two tails writing the same file. */
 	if(argc >= 3 && strcmp(argv[1], "tail") == 0)
 	{
 		static char cur[DBG_RING_SIZE + 16];
 		DWORD prev_total = 0;
-		int first = 1;
+		int first = 1, polls = 0;
+		const char *runfile = (argc >= 4) ? argv[3] : NULL;
 		DWORD wr;
 		HANDLE f = CreateFileA(argv[2], GENERIC_WRITE, FILE_SHARE_READ, NULL,
 			OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
@@ -395,6 +401,12 @@ int main(int argc, char **argv)
 			}
 			prev_total = total;
 			Sleep(20);
+			if(runfile && (++polls % 25) == 0 && GetFileAttributesA(runfile) == 0xFFFFFFFFUL)
+			{
+				const char msg[] = "\r\n[nvprobe tail: run file gone, stopping]\r\n";
+				WriteFile(f, msg, sizeof(msg) - 1, &wr, NULL);
+				break;
+			}
 		}
 		CloseHandle(f);
 		CloseHandle(vxd);
