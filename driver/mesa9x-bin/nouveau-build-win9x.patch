@@ -2390,7 +2390,7 @@ index d7db69a2..97b7426c 100644
     return bestindex;
  }
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..0fc1772c 100644
+index 8017cd00..e3f22935 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,12 @@
@@ -2496,7 +2496,7 @@ index 8017cd00..0fc1772c 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +290,177 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +290,199 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2609,6 +2609,28 @@ index 8017cd00..0fc1772c 100644
 +                     blit.src.box.width = view_w; blit.src.box.height = view_h; blit.src.box.depth = 1;
 +                     blit.mask = PIPE_MASK_RGBA;
 +                     blit.filter = PIPE_TEX_FILTER_NEAREST;
++                     /* 3106: the T61 showed the 1024x768 corner blocks vanish with
++                      * NVSHIM_CPU_PRESENT=1 (M2MF readback + CPU copy), so the frame is
++                      * right and this 2D-engine blit of it is not. Two A/B switches:
++                      *  NVSHIM_PRESENT_BARRIER=1  emit the nv50 texture barrier (GRAPH
++                      *     SERIALIZE + TEX_CACHE_CTL) between the frame's draws and the
++                      *     blit - the 3D engine's writes vs the 2D engine's reads;
++                      *  NVSHIM_PRESENT_3D=1       present with the 3D engine instead (a
++                      *     textured quad into the scanout surface; mask RGB makes
++                      *     nv50_blit take its eng3d path) - a different read path. */
++                     {
++                        static int present_barrier = -1, present_3d = -1;
++                        if (present_barrier < 0) {
++                           char b[8];
++                           present_barrier = (GetEnvironmentVariableA("NVSHIM_PRESENT_BARRIER", b, sizeof(b)) > 0 && b[0] != '0') ? 1 : 0;
++                           present_3d = (GetEnvironmentVariableA("NVSHIM_PRESENT_3D", b, sizeof(b)) > 0 && b[0] != '0') ? 1 : 0;
++                           nvt("wgl: present barrier/3d", NULL, 2, present_barrier, present_3d);
++                        }
++                        if (present_3d)
++                           blit.mask = PIPE_MASK_R | PIPE_MASK_G | PIPE_MASK_B;
++                        if (present_barrier && ctx->texture_barrier)
++                           ctx->texture_barrier(ctx, PIPE_TEXTURE_BARRIER_FRAMEBUFFER);
++                     }
 +                     /* 3096: with NVSHIM_VSYNC=1 drain the frame's draws first (submits are
 +                      * synchronous), wait for head 0's vertical blank, then kick the blit
 +                      * alone so the copy into the scanout surface runs ahead of the beam */
@@ -2674,7 +2696,7 @@ index 8017cd00..0fc1772c 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
-@@ -326,6 +550,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -326,6 +572,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  
        stw_init(&stw_winsys, hinstDLL);
        stw_init_thread();
@@ -2688,7 +2710,7 @@ index 8017cd00..0fc1772c 100644
        break;
  
     case DLL_THREAD_ATTACH:
-@@ -337,6 +568,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -337,6 +590,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
        break;
  
     case DLL_PROCESS_DETACH:

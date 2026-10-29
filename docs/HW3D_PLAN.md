@@ -911,6 +911,38 @@ C:\nvkick.txt, C:\nvclk.txt.
   NVSHIM_CPU_PRESENT=1` + nvhl: squares gone -> the 2D present blit; still there ->
   rendering. Photos. Only then touch VIEW_VOLUME_CLIP_CTRL / zcull / context values.
 
+### 3105 on the T61 -> THE BLOCKS ARE THE GPU PRESENT BLIT -> build 3106: present A/B switches
+- User: `gl_clear 1` changed nothing; `set NVSHIM_CPU_PRESENT=1` + nvhl = slow but the
+  corner blocks are GONE. So the rendered frame (tiled nv50 window buffer) is correct -
+  the M2MF de-tile readback + CPU copy shows it clean - and the blocks come from the GPU
+  present: nv50_blit -> nv50_blit_eng2d, the 2D engine (0x502d BLIT, point sample,
+  ORIGIN_CENTER, 1:1) copying the tiled B8G8R8A8 window buffer into the linear scanout
+  surface (16 bpp -> R5G6B5 conversion on the way; 3099 log: front 1024x768x16 pitch 2048).
+  Clipping / guard band / zcull / the PGRAPH context are OFF the table for this one; so is
+  the 3105 upload fix (not even loaded: the 3105 nvshim.log still says shim build 0c1b =
+  the 3099 mesa3d.dll next to hl.exe; the CPU-present result stands regardless).
+- The 3099 note "on the world, not the HUD" fits a STALE READ in the 2D path: previous-
+  frame data is invisible where the picture does not change (HUD) and garbage where it
+  does (world). Candidates: (a) the 3D engine's render-target writes (ROP) not visible to
+  the 2D engine's reads within the same channel without a GRAPH SERIALIZE / cache flush
+  (Mesa's eng2d path emits none; under X the DDX blit lives in another channel, which
+  forces a full PGRAPH context switch); (b) a 2D-side read cache/TLB holding the previous
+  frame's first/last tiles (corners = extreme addresses of the 3 MiB tiled surface, 768 =
+  exactly 12 tile rows). Resolution dependence unexplained either way.
+- 3106 (mesa3d.dll only, VxD = 3104 code restamped): wgl.c present gets
+  NVSHIM_PRESENT_BARRIER=1 (ctx->texture_barrier = SUBC_3D GRAPH_SERIALIZE + TEX_CACHE_CTL
+  0x20 right before the blit) and NVSHIM_PRESENT_3D=1 (blit.mask = RGB -> nv50_blit takes
+  nv50_blit_3d: the frame is drawn into the scanout surface as a textured quad, a
+  different read path: TEX units instead of the 2D engine). nvhl.bat flags `barrier`,
+  `present3d`, `cpupresent` (+ the existing `vsync`). Log line 'wgl: present barrier/3d'.
+- T61 next (grctx0, 1024x768, same spot): nvhl barrier / nvhl present3d / nvhl vsync ->
+  blocks yes/no + fps each. barrier fixes it -> add the barrier to the present for good
+  (nouveau does the equivalent through the channel switch). present3d fixes it but barrier
+  does not -> the 2D engine's read path (tiled source) is the problem: compare the 2D
+  SRC setup (BLOCK_DIMENSIONS/tile mode, width/height) and the PTE kind of the window
+  buffer against what the 3D engine was given. Neither -> the scanout side (front BO
+  'external', pitch, the VxD's own blitter/cursor) and the vsync timing.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

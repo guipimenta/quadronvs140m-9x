@@ -17,6 +17,10 @@ rem       nvhl heaphi   use only the 64 MB heap region above the GPU channel (th
 rem       the launcher also dumps the clock registers to C:\nvclk.txt
 rem 3099: nvclk.txt also gets the full nvprobe output (the VxD build), nvshim.log starts
 rem       with "vxd build / shim build"; 800x600 works: nvhl -width 800 -height 600
+rem 3106: the corner blocks are made by the GPU present blit (CPU present is clean):
+rem       nvhl barrier    cache barrier (SERIALIZE + TEX_CACHE_CTL) before the present blit
+rem       nvhl present3d  present with the 3D engine (textured quad) instead of the 2D blit
+rem       nvhl cpupresent CPU readback + copy (slow; the reference picture)
 rem Afterwards send C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt, C:\nvclk.txt.
 set NVDRV=C:\NVMINI
 set GALLIUM_DRIVER=nouveau
@@ -26,11 +30,17 @@ set NVSHIM_VSYNC=
 set NVSHIM_FULLFLUSH=
 set NVSHIM_VERIFYVRAM=
 set NVSHIM_HEAPHI=
+set NVSHIM_PRESENT_BARRIER=
+set NVSHIM_PRESENT_3D=
+set NVSHIM_CPU_PRESENT=
 :flags
 if "%1"=="vsync" goto f_vsync
 if "%1"=="fullflush" goto f_full
 if "%1"=="verify" goto f_verify
 if "%1"=="heaphi" goto f_heaphi
+if "%1"=="barrier" goto f_barrier
+if "%1"=="present3d" goto f_present3d
+if "%1"=="cpupresent" goto f_cpupresent
 goto run
 :f_vsync
 set NVSHIM_VSYNC=1
@@ -50,6 +60,21 @@ goto flags
 :f_heaphi
 set NVSHIM_HEAPHI=1
 echo nvhl: heaphi on
+shift
+goto flags
+:f_barrier
+set NVSHIM_PRESENT_BARRIER=1
+echo nvhl: present barrier on
+shift
+goto flags
+:f_present3d
+set NVSHIM_PRESENT_3D=1
+echo nvhl: 3D-engine present on
+shift
+goto flags
+:f_cpupresent
+set NVSHIM_CPU_PRESENT=1
+echo nvhl: CPU present on
 shift
 goto flags
 :run
