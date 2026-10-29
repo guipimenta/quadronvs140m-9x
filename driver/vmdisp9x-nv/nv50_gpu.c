@@ -1295,6 +1295,28 @@ int NV_gpu_3dtest(nv_gpu_2dfill_t *out) { return gpu_2dfill_core(out, NVF_3D); }
  * bindings (used by nvprobe gpu2d/submit) are untouched. */
 static unsigned long g_obj_next = 0;
 
+/* 3104: the handles the GL processes bound through NV_gpu_bind since the channel
+ * was (re)built. 3103 asked the RAMHT whether a handle was "bound again", but
+ * nv_chan_init pre-seeds the RAMHT with the VxD's OWN 0xbeef502d (the blitter's
+ * 2D object), so Mesa's first 0xbeef502d of the very first process already
+ * looked like a second process: the channel was rebuilt in the middle of the
+ * screen setup, the object area restarted and the new 2D/3D/compute instances
+ * overwrote the vram/gart/notifier ctxdmas bound just before -> the first 3D
+ * submit hung PGRAPH (T61: gray nvsky window, Half-Life died in Mesa once the
+ * shim heap filled with buffers no fence could ever retire). Only handles that
+ * went through THIS function count now. */
+#define NV_GL_HANDLES 32
+static unsigned long g_gl_handles[NV_GL_HANDLES];
+static int           g_gl_nh = 0;
+
+static int gl_handle_seen(unsigned long handle)
+{
+	int i;
+	for(i = 0; i < g_gl_nh; i++)
+		if(g_gl_handles[i] == handle) return 1;
+	return 0;
+}
+
 static int nv_class_is_gfx(unsigned long oclass)
 {
 	switch(oclass)
@@ -1326,10 +1348,12 @@ int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out)
 	 * whatever the context variant, which the registry could not even switch
 	 * (read at channel creation = once per boot). Mesa binds the same handles in
 	 * the same order in every process (0xbeef0201 first), so a handle that is
-	 * already in the RAMHT means a new process: rebuild the channel from cold -
-	 * PGRAPH reset + context (the variant is re-read), RAMIN/RAMHT/RAMFC, PFIFO,
-	 * pushbuffer and IB indices, object area, wedge and drain latches. */
-	if(g_chan_ready && NV_vram_rd32(gpu_ramht_slot(handle)) == handle)
+	 * already bound by a GL process (3104: tracked in g_gl_handles, NOT the RAMHT,
+	 * which nv_chan_init pre-seeds with the VxD's own 0xbeef502d) means a new
+	 * process: rebuild the channel from cold - PGRAPH reset + context (the variant
+	 * is re-read), RAMIN/RAMHT/RAMFC, PFIFO, pushbuffer and IB indices, object
+	 * area, wedge and drain latches. */
+	if(g_chan_ready && gl_handle_seen(handle))
 	{
 		dbg_printf("NV_gpu_bind: handle %lX bound again -> new GL process, rebuilding the channel\n", handle);
 		(void)gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 2000000UL);
@@ -1348,7 +1372,9 @@ int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out)
 		g_chan_ready = 1;
 		g_chan_put   = 0;
 		g_ib_put     = 0;
+		g_gl_nh      = 0;
 	}
+	if(g_gl_nh < NV_GL_HANDLES) g_gl_handles[g_gl_nh++] = handle;
 	if(g_obj_next < NVGPU_OBJAREA) g_obj_next = NVGPU_OBJAREA;
 
 	inst = (g_obj_next + 0xffUL) & ~0xffUL;        /* 256-byte aligned instance */

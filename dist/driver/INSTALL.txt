@@ -104,6 +104,17 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3104 - 3103 fixed. Its "handle bound again" test looked in the channel's hash table,
+which the channel init pre-seeds with the VxD's own 2D handle 0xbeef502d, so the very first
+GL program's own 0xbeef502d bind already counted as a "second process": the channel was
+rebuilt in the middle of the screen setup and the new 2D/3D objects overwrote the memory
+objects bound just before - the first 3D submit hung the GPU (gray nvsky window; Half-Life
+crashed inside mesa3d.dll once the shim heap filled with buffers that never retired).
+3104 only counts the handles the GL programs bound themselves. Same retest as 3103:
+several programs per boot, grctx0 (nvsky, nvsky 800 600, nvhl), then grctx4, then grctx3.
+C:\nvtail.txt must show "bound again -> new GL process" only at the START of the 2nd, 3rd...
+program (right after its first bind, BEEF0201), never in the middle of one.
+
 Build 3103 - one GPU channel per GL program. The 3102 logs explained "nvsky 1024x768 fine,
 nvsky 800x600 garbage, Half-Life garbage": the GPU channel is built by the FIRST GL program
 after a boot and, until now, every later program reused it (same objects bound twice, the

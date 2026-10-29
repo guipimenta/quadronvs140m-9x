@@ -861,6 +861,24 @@ C:\nvkick.txt, C:\nvclk.txt.
   except the holes = the per-process channel is the fix for the "garbage" runs); then
   grctx4 (holes?); then grctx3 (XP microcode; 'grctx xp: 0x400800=' line).
 
+### 3103 on the T61 -> build 3104: the "bound again" test must not read the RAMHT
+- User: "much worse": nvsky = gray window, Half-Life = invalid page fault in MESA3D.DLL
+  (cmp byte [ebx+0x6ec] with ebx = 0). Logs (analysis/t61-logs/3103-*): the FIRST GL
+  process of the boot binds 0201, 0202, 0301, 5039 and then, at its own first 0xbeef502d,
+  the VxD prints 'handle BEEF502D bound again -> new GL process, rebuilding the channel':
+  nv_chan_init pre-seeds the RAMHT with the VxD's own 0xbeef502d (the blitter's 2D object
+  for nvprobe gpu2d / the DRV), so the RAMHT lookup matched a handle no GL process had
+  bound. The rebuild restarted the object area: 502D landed at 0x03008000 (over the vram
+  ctxdma 0201), 5097 over the gart ctxdma 0202, 50C0 over the notifier 0301. Kick 0 (M2MF
+  init) still passed, kick 1 (the first NV84_3D stream) hung: 'kick FAIL pfi/pgi/wedged
+  0 0 1', 400001 drain loops. Everything after follows from the wedge: nothing drawn (gray
+  window), no fence ever retired, 'bo_new FAIL heap full' x30 in Half-Life, then Mesa
+  dereferenced the NULL bo.
+- 3104: g_gl_handles[32] records the handles bound through NV_gpu_bind since the channel
+  was (re)built; a handle in that table = new process. The RAMHT is no longer consulted.
+  Expected log: 'bound again' only right after a program's first bind (BEEF0201), never
+  mid-process. Same T61 order as 3103.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

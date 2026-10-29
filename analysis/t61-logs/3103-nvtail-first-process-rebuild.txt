@@ -1,0 +1,142 @@
+D> DCI(1) refused
+D> Control: unknown code: 3075
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+V> HB 37 t=47266 blits=239 px=58248861 lock=0 mode=1024x768x16 flags=00000081
+V> HB 38 t=48288 blits=239 px=58248861 lock=0 mode=1024x768x16 flags=00000081
+V> DIOC_OPEN
+S> [5] ==== shim log open, instance 6cb1b38c
+S> [0] wgl: DllMain ATTACH hinst 69500000
+S> [15] wgl: screen_create ENTER lasterr/sw_only 00000002 00000000
+S> [18] wgl: try driver 'nouveau' 00000000
+S> [19] wgl: nouveau_drm_screen_create enter lasterr 00000002
+S> [21] winsys: nouveau_screen_create enter fd 00000000 00000000
+S> [22] drm_new fd 00000000
+S> [23] winsys: drm_new ret/drm 00000000 009a9d50
+S> [27] device_new
+V> IOCTL 00005000 #1 in=0 [00000000 00000000 00000000 00000000] out=256
+V> NV_probe: 000010DE:00000429 subsys=20D817AA at 1:0.0
+V> NV_probe: BAR0=DE000000 (01000000) BAR1=E0000000 (10000000)
+V> NV_probe: BOOT_0=086900A2 chipset=00000086 family=00000008 rev=000000A2
+S> [35] vxd build / shim build 00000c1f 00000c1b
+S> [40] winsys: device_new ret/dev 00000000 0097d1b0
+S> [41] winsys: chipset 00000086 00000000
+S> [77] object_new handle/oclass 00000000 80000001
+V> IOCTL 00005016 #1 in=8 [BEEF0201 0000003D 00000000 00000000] out=28
+V> grctx variant 4 (2.6.36 + XP's TRAST/CCACHE/0x400844 values)
+V> NV_gpu_bind: handle=BEEF0201 class=0000003D -> inst=03008000 engine=0
+S> [80] bind handle/class/engine beef0201 0000003d 00000000
+V> IOCTL 00005016 #2 in=8 [BEEF0202 0000003D 00000000 00000000] out=28
+V> NV_gpu_bind: handle=BEEF0202 class=0000003D -> inst=03008100 engine=0
+S> [86] bind handle/class/engine beef0202 0000003d 00000000
+S> [87] client_new ok
+S> [89] pushbuf_new cap 0003c000
+S> [107] bo_new sz/phys/vmoff 00001000 02010000 42010000
+S> [110] object_new handle/oclass beef0301 80000002
+V> IOCTL 00005016 #3 in=8 [BEEF0301 80000002 00000000 00000000] out=28
+V> NV_gpu_bind: handle=BEEF0301 class=80000002 -> inst=03008200 engine=0
+S> [111] bind handle/class/engine beef0301 80000002 00000000
+S> [112] object_new handle/oclass beef5039 00005039
+V> IOCTL 00005016 #4 in=8 [BEEF5039 00005039 00000000 00000000] out=28
+V> NV_gpu_bind: handle=BEEF5039 class=00005039 -> inst=03008300 engine=1
+S> [113] bind handle/class/engine beef5039 00005039 00000001
+S> [113] object_new handle/oclass beef502d 0000502d
+V> IOCTL 00005016 #5 in=8 [BEEF502D 0000502D 00000000 00000000] out=28
+V> NV_gpu_bind: handle BEEF502D bound again -> new GL process, rebuilding the channel
+V> grctx variant 4 (2.6.36 + XP's TRAST/CCACHE/0x400844 values)
+V> NV_gpu_bind: handle=BEEF502D class=0000502D -> inst=03008000 engine=1
+S> [122] bind handle/class/engine beef502d 0000502d 00000001
+S> [123] object_new handle/oclass beef5097 00008297
+V> IOCTL 00005016 #6 in=8 [BEEF5097 00008297 00000000 00000000] out=28
+V> NV_gpu_bind: handle=BEEF5097 class=00008297 -> inst=03008100 engine=1
+S> [124] bind handle/class/engine beef5097 00008297 00000001
+S> [125] bo_new sz/phys/vmoff 00181000 02020000 42020000
+V> IOCTL 00005001 #1 in=8 [00001540 00000001 00000000 00000000] out=16
+S> [125] graph_units reg/used f3010001 f3010001
+S> [126] bo_new sz/phys/vmoff 00008000 021b0000 421b0000
+S> [127] bo_new sz/phys/vmoff 00020000 021c0000 421c0000
+S> [127] bo_new sz/phys/vmoff 00050000 021e0000 421e0000
+S> [128] bo_new sz/phys/vmoff 00030000 02230000 42230000
+S> [147] object_new handle/oclass beef50c0 000050c0
+V> NV_gpu_bind: handle=BEEF50C0 class=000050C0 -> inst=03008200 engine=1
+S> [148] bind handle/class/engine beef50c0 000050c0 00000001
+S> [150] kick > cnt/m0/m1 0000025c 0004a000 beef5039
+V> IOCTL 00005013 #1 in=2416 [0004A000 BEEF5039 000CA180 BEEF0301] out=92
+V> S> submit begin cnt=604 m0=0004A000 m1=BEEF5039 ibput=0
+V> S> drain loops 58 (ib loops 2)
+V> S> submit end get=1 pfi=00000001 loops=60 gridle=0 dmaget=03200970 c1put=00000674 c1get=00000000 pull0=00000010
+S> [154] kick ok cnt/put/pgi 0000025c 03200000 00000000
+S> [172] winsys: init(dev) screen 009cb010 00000000
+S> [173] winsys: context_create fn 6957c280 00000000
+S> [174] wgl: nouveau_drm_screen_create exit screen/lasterr 009cb010 000000cb
+S> [174] wgl: result screen/lasterr 009cb010 000000cb
+S> [224] stw: pixelformat_init count 000001e0 00000000
+S> [224] stw: init_screen done screen/max2d 009cb010 00002000
+S> [225] stw: DescribePF count-query hdc/count 0000178e 000001e0
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+S> [231] stw: DescribePF i/cjpfd 00000001 00000028
+D> Control (16bit): 8 (0x0008)
+D> Control (16bit): 4353 (0x1101)
+S> [233] stw: DescribePF count-query hdc/count 0000178e 000001e0
+S> [1101] bo_kind phys/size/kind 02260000 00300000 00000070
+S> [1131] bo_new sz/phys/vmoff 00300000 02560000 42560000
+V> IOCTL 00005019 #2 in=12 [02560000 00300000 00000028 00000000] out=4
+V> S> vmkind phys=02560000 size=00300000 kind=28 pages=48 flushloops=2
+S> [1132] bo_kind phys/size/kind 02560000 00300000 00000028
+S> [1280] kick > cnt/m0/m1 00000022 00088200 000000f3
+V> IOCTL 00005013 #2 in=136 [00088200 000000F3 00000001 00148214] out=92
+V> S> submit begin cnt=34 m0=00088200 m1=000000F3 ibput=1
+V> S> drain TIMEOUT - disabled: dmaget/put 032009f8/032009f8 c1get/put 00000000/000006e4
+V> S> submit end get=2 pfi=00000000 loops=400001 gridle=0 dmaget=032009F8 c1put=000006E4 c1get=00000000 pull0=00000010
+S> [2874] kick ok cnt/put/pgi 00000022 03200970 00000000
+S> [3115] bo_new sz/phys/vmoff 00010000 02860000 42860000
+V> IOCTL 00005019 #3 in=12 [02860000 00010000 00000070 00000000] out=4
+V> S> vmkind phys=02860000 size=00010000 kind=70 pages=1 flushloops=1
+S> [3116] bo_kind phys/size/kind 02860000 00010000 00000070
+S> [3137] bo_new sz/phys/vmoff 00010000 02870000 42870000
+S> [3176] bo_new sz/phys/vmoff 00020000 02880000 42880000
+V> IOCTL 00005019 #4 in=12 [02880000 00020000 00000070 00000000] out=4
+V> S> vmkind phys=02880000 size=00020000 kind=70 pages=2 flushloops=2
+S> [3179] bo_kind phys/size/kind 02880000 00020000 00000070
+S> [3183] bo_new sz/phys/vmoff 00020000 028a0000 428a0000
+V> IOCTL 00005019 #5 in=12 [028A0000 00020000 00000070 00000000] out=4
+V> S> vmkind phys=028A0000 size=00020000 kind=70 pages=2 flushloops=2
+S> [3184] bo_kind phys/size/kind 028a0000 00020000 00000070
+S> [3185] bo_new sz/phys/vmoff 00020000 028c0000 428c0000
+V> IOCTL 00005015 #1 in=4104 [02870000 00000400 005A5A5A 005A5A5A] out=4
+V> IOCTL 00005015 #2 in=4104 [02871000 00000400 005A5A5A 005A5A5A] out=4
+V> IOCTL 00005015 #3 in=4104 [02872000 00000400 005A5A5A 005A5A5A] out=4
+V> IOCTL 00005015 #4 in=4104 [02873000 00000400 005A5A5A 005A5A5A] out=4
+V> IOCTL 00005015 #5 in=4104 [02874000 00000400 005A5A5A 005A5A5A] out=4
+V> IOCTL 00005015 #6 in=4104 [02875000 00000400 005A5A5A 005A5A5A] out=4
+S> [3191] kick > cnt/m0/m1 00000057 0004a200 00000001
+V> IOCTL 00005013 #3 in=348 [0004A200 00000001 0004A314 00000200] out=92
+V> S> submit begin cnt=87 m0=0004A200 m1=00000001 ibput=2
+V> S> submit end get=3 pfi=00000000 loops=1 gridle=0 dmaget=03200B54 c1put=000007E8 c1get=00000000 pull0=00000010
+S> [3198] kick ok cnt/put/pgi 00000057 032009f8 00000000
+S> [3199] bo_new sz/phys/vmoff 00001000 02012000 42012000
+V> IOCTL 00005019 #6 in=12 [028A0000 00020000 00000000 00000000] out=4
+V> S> vmkind phys=028A0000 size=00020000 kind=00 pages=2 flushloops=2
+S> [3200] bo_kind phys/size/kind 028a0000 00020000 00000000
+S> [3201] bo_new sz/phys/vmoff 00020000 028a0000 428a0000
+V> S> vmkind phys=028A0000 size=00020000 kind=70 pages=2 flushloops=2
+S> [3202] bo_kind phys/size/kind 028a0000 00020000 00000070
+S> [3203] bo_new sz/phys/vmoff 00020000 028e0000 428e0000
+S> [3204] bo_new sz/phys/vmoff 00010000 02900000 42900000
+V> S> vmkind phys=02900000 size=00010000 kind=70 pages=1 flushloops=2
+S> [3205] bo_kind phys/size/kind 02900000 00010000 00000070
+S> [3206] bo_new sz/phys/vmoff 00010000 02910000 42910000
+V> S> vmkind phys=02910000 size=00010000 kind=70 pages=1 flushloops=2
+S> [3206] bo_kind phys/size/kind 02910000 00010000 00000070
+S> [3207] bo_new sz/phys/vmoff 00010000 02920000 42920000
+S> [3208] kick > cnt/m0/m1 0000005c 00107b00 00000000
+V> IOCTL 00005013 #4 in=368 [00107B00 00000000 42010000 00000001] out=92
+V> S> submit begin cnt=92 m0=00107B00 m1=00000000 ibput=3
+V> S> submit end get=4 pfi=00000000 loops=1 gridle=0 dmaget=03200B78 c1put=00000800 c1get=00000000 pull0=00000010
+S> [3212] kick ok cnt/put/pgi 0000005c 03200b54 00000000
+V> IOCTL 0000501A #1 in=8 [02010000 00000004 00000000 00000000] out=16
+S> [3213] fence refresh phys/seq 02010000 efffffff
+S> [3214] bo_new sz/phys/vmoff 00001000 02013000 42013000
+V> S> vmkind phys=02910000 size=00010000 kind=00 pages=1 flushloops=2
+S> [3215] bo_kind phys/size/kind 02910000 00010000 00000000
