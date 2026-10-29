@@ -104,6 +104,19 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3103 - one GPU channel per GL program. The 3102 logs explained "nvsky 1024x768 fine,
+nvsky 800x600 garbage, Half-Life garbage": the GPU channel is built by the FIRST GL program
+after a boot and, until now, every later program reused it (same objects bound twice, the
+dead program's engine state inherited) - only the first GL program after a boot ever drew
+correctly (3099's Half-Life, 3100's and 3102's first nvsky), every later one was garbage at
+9 fps, whatever the context variant. The GrCtx value was also only read at that first
+creation, so the grctx1..4 switches never took effect. Now the second GL program rebuilds
+the channel from cold (C:\nvtail.txt: 'bound again -> new GL process, rebuilding the
+channel' followed by 'grctx variant N'), so the registry switch really works per GL start.
+Please retest in this order, several programs per boot: grctx0 (the 3099 context): nvsky,
+nvsky 800 600, nvhl at 1024x768 (expected: all clean except the corner holes); then grctx4
+(holes gone?); then grctx3.
+
 Build 3102 - the 1024x768-only corner holes checked against NVIDIA's own Windows XP driver
 for this chip. nv4_mini.sys carries the G86's complete PGRAPH context setup (context
 microcode, golden context values, the register init list); its golden 3D state is the same

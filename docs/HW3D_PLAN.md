@@ -840,6 +840,27 @@ C:\nvkick.txt, C:\nvclk.txt.
   (Mesa's NV50_SCISSORS_CLIPPING = 0 vs 0x1080, a shim-side method override), and the
   XP ICMD defaults for methods Mesa never writes (list in g86_xp_context.txt).
 
+### 3102 on the T61 -> M5.5 step 12 (build 3103): one channel per GL process
+- User: grctx3 and grctx4 "none worked" - nvsky 1024x768 fine, nvsky 800 600 garbage,
+  Half-Life garbage. Logs (nvtail.txt 643 KB, nvshim.log = the HL session, VxD 3102):
+  no 'grctx variant' line at all, object instances at 0x0300A300 and 0x0300AF00 (the
+  OBJAREA bump had already served 5 processes), Half-Life at 9 fps, no traps. The channel
+  is created ONCE per boot (g_chan_ready) and every later GL process reuses it, so (1) the
+  GrCtx value was read only at that first creation - no variant of 3101/3102 was ever
+  switched without a reboot, contrary to the 3101 notes - and (2) every log we have fits
+  "only the first GL process after a boot renders correctly": 3099's Half-Life was the
+  first process (texcheck separate), 3100's "first nvsky clean, then garbage" and today's
+  runs are the same pattern. 3100 was probably never "much worse" either; the resolution
+  was a red herring (800x600 in-game in 3099's single process was clean).
+- 3103: NV_gpu_bind sees a handle already in the RAMHT (Mesa binds 0xbeef0201 first in
+  every process) -> waits for PGRAPH idle, PFIFO caches off, rebuilds the channel from cold
+  (nv_chan_init: PGRAPH reset + ctxprog + grctx with the variant re-read, RAMIN/RAMHT/
+  RAMFC, PFIFO, playlist), resets the pushbuffer/IB indices, object area, wedge/drain/log
+  latches. Log line 'bound again -> new GL process, rebuilding the channel'.
+- T61 order: several programs per boot - grctx0: nvsky, nvsky 800 600, nvhl (all clean
+  except the holes = the per-process channel is the fix for the "garbage" runs); then
+  grctx4 (holes?); then grctx3 (XP microcode; 'grctx xp: 0x400800=' line).
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

@@ -1,0 +1,42 @@
+232:S> [3076] bo_kind phys/size/kind 02280000 00300000 00000000
+250:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+259:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+302:S> [0] ==== shim log open, instance 6cb1b38c
+311:S> [16] wgl: screen_create ENTER lasterr/sw_only 00000000 00000000
+326:V> NV_gpu_bind: handle=BEEF0201 class=0000003D -> inst=0300A300 engine=0
+328:V> NV_gpu_bind: handle=BEEF0202 class=0000003D -> inst=0300A400 engine=0
+334:V> NV_gpu_bind: handle=BEEF0301 class=80000002 -> inst=0300A500 engine=0
+337:V> NV_gpu_bind: handle=BEEF5039 class=00005039 -> inst=0300A600 engine=1
+340:V> NV_gpu_bind: handle=BEEF502D class=0000502D -> inst=0300A700 engine=1
+343:V> NV_gpu_bind: handle=BEEF5097 class=00008297 -> inst=0300A800 engine=1
+353:V> NV_gpu_bind: handle=BEEF50C0 class=000050C0 -> inst=0300A900 engine=1
+1459:V> native mode set: 800x600x16 shadow pitch=1792, scanout 16 bpp pitch=1792 (scaled to 1024x768)
+1469:V> native mode set: 800x600x16 shadow pitch=1792, scanout 16 bpp pitch=1792 (scaled to 1024x768)
+2785:S> [971] wgl: front surface/pitch 00000000 00000700
+3826:S> [2996] wgl: present frames/ms 0000006c 000007e5
+4073:S> [5006] wgl: present frames/ms 00000072 000007da
+4128:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+4138:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+4388:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+4398:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+4511:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+4521:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+4596:S> [1] ==== shim log open, instance 6cb1b38c
+4598:S> [3] wgl: screen_create ENTER lasterr/sw_only 00000002 00000000
+4614:V> NV_gpu_bind: handle=BEEF0201 class=0000003D -> inst=0300AA00 engine=0
+4617:V> NV_gpu_bind: handle=BEEF0202 class=0000003D -> inst=0300AB00 engine=0
+4624:V> NV_gpu_bind: handle=BEEF0301 class=80000002 -> inst=0300AC00 engine=0
+4628:V> NV_gpu_bind: handle=BEEF5039 class=00005039 -> inst=0300AD00 engine=1
+4632:V> NV_gpu_bind: handle=BEEF502D class=0000502D -> inst=0300AE00 engine=1
+4636:V> NV_gpu_bind: handle=BEEF5097 class=00008297 -> inst=0300AF00 engine=1
+4646:V> NV_gpu_bind: handle=BEEF50C0 class=000050C0 -> inst=0300B000 engine=1
+5817:S> [512] bo_kind phys/size/kind 02260000 00300000 00000070
+5821:S> [513] bo_kind phys/size/kind 02560000 00300000 00000028
+7244:S> [1360] wgl: front surface/pitch 00000000 00000800
+7250:S> [1370] bo_kind phys/size/kind 04000000 00300000 00000070
+11089:S> [3425] wgl: present frames/ms 00000012 0000080d
+11417:S> [5491] wgl: present frames/ms 00000010 00000812
+11456:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+11466:V> native mode set: 640x480x16 shadow pitch=1280, scanout 16 bpp pitch=1280 (scaled to 1024x768)
+11882:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048
+11892:V> native mode set: 1024x768x16 shadow pitch=2048, scanout 16 bpp pitch=2048

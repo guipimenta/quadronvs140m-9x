@@ -137,14 +137,19 @@ static void gpu_ctxdma(unsigned long inst, unsigned long base, unsigned long siz
 }
 
 /* add a RAMHT entry: handle -> object at inst, with engine code (GR=1, SW=0). */
-static void gpu_ramht(unsigned long handle, unsigned long inst, unsigned long engine)
+static unsigned long gpu_ramht_slot(unsigned long handle)
 {
 	unsigned long h = handle, hash = 0, mask = (1UL << 9) - 1UL;  /* 4KiB RAMHT */
 	int b;
 	for(b = 32; b > 0; b -= 9) { hash ^= (h & mask); h >>= 9; }
-	hash <<= 3;
-	NV_vram_wr32(NVGPU_RAMHT + hash + 0, handle);
-	NV_vram_wr32(NVGPU_RAMHT + hash + 4, (inst >> 4) | (engine << 20));
+	return NVGPU_RAMHT + (hash << 3);
+}
+
+static void gpu_ramht(unsigned long handle, unsigned long inst, unsigned long engine)
+{
+	unsigned long slot = gpu_ramht_slot(handle);
+	NV_vram_wr32(slot + 0, handle);
+	NV_vram_wr32(slot + 4, (inst >> 4) | (engine << 20));
 }
 
 
@@ -1311,6 +1316,31 @@ int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out)
 	out->handle = handle;
 	out->oclass = oclass;
 
+	/* 3103: one channel per GL process, the way nouveau gives every process its own.
+	 * Until now the channel built by the first GL program after boot lived on and
+	 * every later program reused it (instances kept bumping, RAMHT got the same
+	 * handles twice, the context, pusher and caches carried the dead process's
+	 * state): on the T61 only the FIRST GL process after a boot ever rendered
+	 * correctly - 3099's Half-Life, the first nvsky of 3100 and 3102 - and every
+	 * second one (nvsky 800x600, Half-Life after nvsky) was garbage at 9 fps,
+	 * whatever the context variant, which the registry could not even switch
+	 * (read at channel creation = once per boot). Mesa binds the same handles in
+	 * the same order in every process (0xbeef0201 first), so a handle that is
+	 * already in the RAMHT means a new process: rebuild the channel from cold -
+	 * PGRAPH reset + context (the variant is re-read), RAMIN/RAMHT/RAMFC, PFIFO,
+	 * pushbuffer and IB indices, object area, wedge and drain latches. */
+	if(g_chan_ready && NV_vram_rd32(gpu_ramht_slot(handle)) == handle)
+	{
+		dbg_printf("NV_gpu_bind: handle %lX bound again -> new GL process, rebuilding the channel\n", handle);
+		(void)gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 2000000UL);
+		NV_wr32(PFIFO_CACHES, 0);
+		g_chan_ready   = 0;
+		g_gpu_wedged   = 0;
+		g_drain_off    = 0;
+		g_drain_logged = 0;
+		g_nsub         = 0;
+		g_obj_next     = NVGPU_OBJAREA;
+	}
 	if(!g_chan_ready)
 	{
 		out->ctxctl = nv_chan_init();
