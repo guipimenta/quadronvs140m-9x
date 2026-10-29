@@ -2847,10 +2847,10 @@ index 96f7ccaa..8efc4c31 100644
  _debug_vprintf(const char *format, va_list ap)
  {
 diff --git a/wgltest.c b/wgltest.c
-index 6c6d2fc1..8365cf46 100644
+index 6c6d2fc1..efaa5fcd 100644
 --- a/wgltest.c
 +++ b/wgltest.c
-@@ -1,979 +1,1533 @@
+@@ -1,979 +1,1726 @@
 -/******************************************************************************
 - * Copyright (c) 2023-2024 Jaroslav Hensl                                     *
 - *                                                                            *
@@ -3877,6 +3877,7 @@ index 6c6d2fc1..8365cf46 100644
 +  "texcheck: texture DATA integrity on the GPU - 160 mipmapped textures (RGB + RGBA) uploaded, every level read back and compared, then drawn 1:1 and read back; results in wgltest_texcheck.txt\n"
 +  "stress: GoldSrc-like draw-call load (600 glBegin/glEnd quads, 72 textures, 32 lightmap patches of 64x16, 50 indexed draws per frame)\n"
 +  "sky: GoldSrc-like skybox (6 huge quads around the eye, depth off) + floor + near wall, camera yaws and pitches; every frame cleared to MAGENTA first, so magenta = pixels the GPU did not cover. Watch the screen corners\n"
++  "load [N]: Quake 2 engine level load - N (default 900) mipmapped 256x256 RGBA textures (~300 MB, more than the GPU heap) uploaded behind a loading screen, 150 frames drawing all of them, delete + reload twice; wgltest_load.txt records GL errors (0x505 = out of memory) and frame times\n"
 +  "bpp <bits>: colour depth of the fullscreen mode (16 = the mode Half-Life uses); default keeps the desktop depth\n"
 +  "help: show this message";
 +
@@ -4891,6 +4892,187 @@ index 6c6d2fc1..8365cf46 100644
 +	GL32.glEnd();
 +}
 +
++/* ---- "load" scene (3112): a Quake 2 engine level load, as Soldier of Fortune
++ * does it, against the shim's fixed VRAM heap. Phase 0 (loading screen): 16
++ * mipmapped 256x256 RGBA textures uploaded per frame, a tiny draw each (the
++ * state tracker's level-0 copy), a loading quad drawn with the latest one,
++ * SwapBuffers in between - until N textures (default 900 = ~300 MB, far more
++ * than the 88 MiB heap) are resident. Phase 1 (play): 150 frames of 400
++ * textured quads cycling through ALL textures, 32 lightmap patches
++ * (glTexSubImage2D) and 50 client-array glDrawElements. Phase 2 (level
++ * change): every texture deleted, then phase 0 again; twice. glGetError is
++ * polled after every texture and every frame; wgltest_load.txt in the current
++ * folder records when GL_OUT_OF_MEMORY (0x505) first appears, the error counts
++ * per phase and the frame times, so a hang or a crash is placed exactly.
++ *   wgltest driver mesa3d.dll window load [N]       (N = textures per level) */
++#define LD_MAXTEX 4096
++#define LD_NLM    64
++static GLuint ld_tex[LD_MAXTEX], ld_lm[LD_NLM];
++static int    ld_ntex = 900, ld_loaded = 0, ld_phase = -1, ld_pframes = 0, ld_level = 0;
++static int    ld_err_oom = 0, ld_err_other = 0, ld_first_oom = -1;
++static DWORD  ld_t0 = 0;
++static FILE  *ld_f = NULL;
++static void ld_log(const char *fmt, ...)
++{
++	va_list ap;
++	if(!ld_f) ld_f = fopen("wgltest_load.txt", "w");
++	if(!ld_f) return;
++	fprintf(ld_f, "[%6lu] ", (unsigned long)(GetTickCount() - ld_t0));
++	va_start(ap, fmt); vfprintf(ld_f, fmt, ap); va_end(ap);
++	fputc('\n', ld_f); fflush(ld_f);
++}
++static void ld_poll_err(const char *where, int t)
++{
++	GLenum e;
++	while((e = GL32.glGetError()) != 0)
++	{
++		if(e == 0x0505) { if(ld_first_oom < 0) { ld_first_oom = t; ld_log("first GL_OUT_OF_MEMORY at %s %d (level %d)", where, t, ld_level); } ld_err_oom++; }
++		else { if(ld_err_other < 8) ld_log("glGetError %04x at %s %d", (unsigned)e, where, t); ld_err_other++; }
++	}
++}
++static void ld_quad(float x, float y, float w, float h, float z)
++{
++	GL32.glBegin(GL_QUADS);
++	GL32.glTexCoord2f(0, 0); GL32.glVertex3f(x, y, z);
++	GL32.glTexCoord2f(1, 0); GL32.glVertex3f(x + w, y, z);
++	GL32.glTexCoord2f(1, 1); GL32.glVertex3f(x + w, y + h, z);
++	GL32.glTexCoord2f(0, 1); GL32.glVertex3f(x, y + h, z);
++	GL32.glEnd();
++}
++static void ld_begin_level(void)
++{
++	int i;
++	ld_level++;
++	ld_loaded = 0; ld_phase = 0; ld_pframes = 0;
++	ld_err_oom = 0; ld_err_other = 0; ld_first_oom = -1;
++	ld_log("level %d: loading %d textures (256x256 RGBA mipmapped, ~%d MB) + %d lightmaps", ld_level, ld_ntex, ld_ntex * 341 / 1024, LD_NLM);
++	GL32.glGenTextures(ld_ntex, ld_tex);
++	GL32.glGenTextures(LD_NLM, ld_lm);
++	for(i = 0; i < LD_NLM; i++)
++	{
++		int k; for(k = 0; k < 128 * 128 * 4; k += 4) { tex_buf[k] = (unsigned char)(i * 4); tex_buf[k + 1] = (unsigned char)(k >> 7); tex_buf[k + 2] = 200; tex_buf[k + 3] = 255; }
++		GL32.glBindTexture(GL_TEXTURE_2D, ld_lm[i]);
++		GL32.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
++		GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
++		GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++	}
++	ld_poll_err("lightmaps", 0);
++}
++static void ld_end_level(void)
++{
++	ld_log("level %d: deleting %d textures + %d lightmaps (level change)", ld_level, ld_ntex, LD_NLM);
++	GL32.glDeleteTextures(ld_ntex, ld_tex);
++	GL32.glDeleteTextures(LD_NLM, ld_lm);
++	GL32.glFinish();
++	ld_poll_err("delete", 0);
++	ld_log("level %d: deleted, glGetError polled", ld_level);
++}
++void draw_load(unsigned frame)
++{
++	static int inited = 0;
++	static const GLushort idx[6] = {0, 1, 2, 0, 2, 3};
++	static GLfloat vtx[12], tc[8] = {0,0, 1,0, 1,1, 0,1};
++	int i, level, size;
++	if(!inited)
++	{
++		inited = 1;
++		ld_t0 = GetTickCount();
++		if(ld_ntex > LD_MAXTEX) ld_ntex = LD_MAXTEX;
++		if(!tex_buf) tex_buf = (unsigned char*)malloc(256 * 256 * 4);
++		if(!tex_buf) return;
++		GL32.glMatrixMode(GL_PROJECTION); GL32.glLoadIdentity();
++		GL32.glFrustum(-1.0, 1.0, -0.75, 0.75, 1.0, 40.0);
++		GL32.glMatrixMode(GL_MODELVIEW); GL32.glLoadIdentity();
++		GL32.glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
++		GL32.glEnable(GL_TEXTURE_2D);
++		GL32.glColor4f(1, 1, 1, 1);
++		GL32.glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
++		ld_log("load scene: %d textures per level", ld_ntex);
++		ld_begin_level();
++	}
++	if(!tex_buf) return;
++	if(ld_phase == 0)
++	{
++		/* loading: a burst of uploads, then the loading screen */
++		int n = 0;
++		while(ld_loaded < ld_ntex && n < 16)
++		{
++			int t = ld_loaded;
++			GL32.glBindTexture(GL_TEXTURE_2D, ld_tex[t]);
++			for(level = 0, size = 256; size >= 1; level++, size >>= 1)
++			{
++				tex_make_level(tex_buf, size, level + t);
++				GL32.glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
++			}
++			GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
++			GL32.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++			ld_quad(-1.0f, -1.0f, 0.01f, 0.01f, -2.0f);     /* the state tracker's level-0 copy, like a game's loading screen */
++			ld_poll_err("texture", t);
++			ld_loaded++; n++;
++			if((ld_loaded & 63) == 0) ld_log("level %d: %d textures loaded, oom %d other %d", ld_level, ld_loaded, ld_err_oom, ld_err_other);
++		}
++		GL32.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
++		GL32.glBindTexture(GL_TEXTURE_2D, ld_tex[ld_loaded - 1]);
++		ld_quad(-0.5f, -0.5f, 1.0f, 1.0f, -2.0f);           /* the loading plaque */
++		ld_poll_err("loading frame", ld_loaded);
++		if(ld_loaded >= ld_ntex)
++		{
++			GL32.glFinish();
++			ld_poll_err("finish", ld_loaded);
++			ld_log("level %d: LOADED %d textures, first oom at %d, oom %d other %d", ld_level, ld_loaded, ld_first_oom, ld_err_oom, ld_err_other);
++			ld_phase = 1; ld_pframes = 0;
++		}
++		return;
++	}
++	if(ld_phase == 1)
++	{
++		/* play: the world (400 quads over all textures), lightmap patches, models */
++		DWORD t0 = GetTickCount();
++		GL32.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
++		GL32.glEnable(GL_DEPTH_TEST);
++		for(i = 0; i < 400; i++)
++		{
++			int t = (int)((frame * 400u + (unsigned)i) % (unsigned)ld_ntex);
++			float x = -8.0f + (float)(i % 20) * 0.8f, y = -6.0f + (float)(i / 20) * 0.6f;
++			GL32.glBindTexture(GL_TEXTURE_2D, ld_tex[t]);
++			ld_quad(x, y, 0.7f, 0.5f, -12.0f);
++		}
++		for(i = 0; i < 32; i++)
++		{
++			int l = (int)((frame + (unsigned)i) % LD_NLM), k;
++			for(k = 0; k < 64 * 16 * 4; k += 4) { tex_buf[k] = (unsigned char)frame; tex_buf[k + 1] = (unsigned char)i; tex_buf[k + 2] = (unsigned char)k; tex_buf[k + 3] = 255; }
++			GL32.glBindTexture(GL_TEXTURE_2D, ld_lm[l]);
++			GL32.glTexSubImage2D(GL_TEXTURE_2D, 0, (int)(i & 1) * 64, (int)(i % 7) * 16, 64, 16, GL_RGBA, GL_UNSIGNED_BYTE, tex_buf);
++			ld_quad(-8.0f + (float)i * 0.5f, 6.5f, 0.4f, 0.4f, -12.0f);
++		}
++		GL32.glEnableClientState(GL_VERTEX_ARRAY);
++		GL32.glEnableClientState(GL_TEXTURE_COORD_ARRAY);
++		GL32.glVertexPointer(3, GL_FLOAT, 0, vtx);
++		GL32.glTexCoordPointer(2, GL_FLOAT, 0, tc);
++		for(i = 0; i < 50; i++)
++		{
++			float x = -7.0f + (float)(i % 10) * 1.5f, y = -5.0f + (float)(i / 10) * 1.2f;
++			vtx[0] = x; vtx[1] = y; vtx[2] = -10.0f; vtx[3] = x + 1; vtx[4] = y; vtx[5] = -10.0f;
++			vtx[6] = x + 1; vtx[7] = y + 1; vtx[8] = -10.0f; vtx[9] = x; vtx[10] = y + 1; vtx[11] = -10.0f;
++			GL32.glBindTexture(GL_TEXTURE_2D, ld_tex[(int)((frame + (unsigned)i * 7u) % (unsigned)ld_ntex)]);
++			GL32.glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, idx);
++		}
++		GL32.glDisableClientState(GL_VERTEX_ARRAY);
++		GL32.glDisableClientState(GL_TEXTURE_COORD_ARRAY);
++		GL32.glDisable(GL_DEPTH_TEST);
++		ld_poll_err("play frame", ld_pframes);
++		ld_pframes++;
++		if(ld_pframes == 1 || (ld_pframes % 50) == 0)
++			ld_log("level %d: play frame %d took %lu ms, oom %d other %d", ld_level, ld_pframes, (unsigned long)(GetTickCount() - t0), ld_err_oom, ld_err_other);
++		if(ld_pframes >= 150 && ld_level < 3)
++		{
++			ld_end_level();
++			ld_begin_level();
++		}
++		return;
++	}
++}
++
 +/* ---- "sky" scene (3099b): the geometry Half-Life draws where its 1024x768-only
 + * corner artifacts appear. A GoldSrc-style skybox: six huge quads around the eye
 + * (half-size 64, depth test off; each quad is two triangles split along its
@@ -5091,6 +5273,15 @@ index 6c6d2fc1..8365cf46 100644
 +		else if(strcmp(argv[i], "sky") == 0)
 +		{
 +			setup_scene = 4;
++		}
++		else if(strcmp(argv[i], "load") == 0)
++		{
++			setup_scene = 5;
++			if(i+1 < argc && atoi(argv[i+1]) > 0)
++			{
++				ld_ntex = atoi(argv[i+1]);
++				i++;
++			}
 +		}
 +		else if(strcmp(argv[i], "bpp") == 0)
 +		{
@@ -5333,7 +5524,9 @@ index 6c6d2fc1..8365cf46 100644
 +			TranslateMessage(&msg);
 +			DispatchMessage(&msg);
 +		}
-+		if(setup_scene == 4)
++		if(setup_scene == 5)
++			draw_load((unsigned)timer);
++		else if(setup_scene == 4)
 +			draw_sky(0.5f * timer, (unsigned)timer);
 +		else if(setup_scene == 3)
 +			draw_texcheck((unsigned)timer, setup_width, setup_height);

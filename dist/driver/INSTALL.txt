@@ -104,6 +104,40 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3112 - SOLDIER OF FORTUNE (and any level that does not fit in VRAM). Shim only:
+mesa3d.dll, wgltest.exe, nvprobe.exe changed, nvmini.vxd/.drv only restamped - copy, no
+reboot. What the simulation showed (wgltest's new "load" scene = a Quake 2 engine level
+load, 900 mipmapped 256x256 textures, under the fake GPU on the host): the driver ran out
+of VRAM after ~150 textures - at 67 MB used of the 88 MB heap, the rest in holes too small
+for a texture - and from then on EVERY draw with a texture that never got its VRAM re-tried
+the allocation, and every try drained the GPU twice: 400,000 submits in 900 frames. On the
+T61 a submit costs about a millisecond, so a level that does not fit becomes seconds per
+frame and a loading screen that never finishes - the shape of the SoF report. 3112:
+(1) the VRAM heap grows from 88 to 103.7 MB (two more free regions: 24.25-32 MB above the
+display engine's structures, 56-64 MB above the GPU channel's); (2) best-fit allocation,
+small buffers carved from the top of their block, so the holes stop eating the heap;
+(3) the heap-full retry runs only when something was freed since the last failure;
+(4) C:\nvlast.txt holds ONE line rewritten before and after every submit (what was
+submitted when the process stopped) and nvshim.log gets 'kick SLOW' lines for submits over
+half a second. Textures beyond the heap are still MISSING (white/untextured surfaces): the
+next step is nouveau's answer, system-memory (GART) buffers through the GPU's page table,
+a VxD change.
+SoF test: start sof.exe as usual (GPU by registry default). If it hangs again, send
+C:\nvshim.log AND C:\nvlast.txt (both; the last line of nvshim.log and nvlast.txt say
+where it stopped). Also:
+  wgltest driver mesa3d.dll window load      (the level-load scene on the real GPU: loads
+     900 textures behind a loading screen, draws 150 frames with all of them, deletes and
+     reloads twice; wgltest_load.txt in the current folder lists the first out-of-memory
+     texture, the error counts and the frame times - it must finish, however slowly)
+  nvhl heap2 ...        the 3095-3111 two-region heap layout (A/B if 3112's new regions
+                        show garbage on screen: the regions are new VRAM the shim never
+                        used before)
+  nvhl exe sof.exe      run another game's exe through the launcher (logs + switches;
+                        copy nvhl.bat and mesa3d.dll next to that exe as for Half-Life)
+To rule the GPU path in or out for SoF: give sof.exe the software renderer with
+  [HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\sof.exe\mesa]  "GALLIUM_DRIVER"="llvmpipe"
+(regedit, no reboot) - if the level loads in software, the hang is the GPU path's.
+
 Build 3111 - PGRAPH CONTEXT DEFAULT = CURRENT NOUVEAU (GrCtx variant 2). 3110 is confirmed,
 so the last known difference from nouveau goes: the driver now loads the context
 generation nouveau uses today (the 3100 context plus the zcull init) unless the

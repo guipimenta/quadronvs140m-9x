@@ -28,6 +28,10 @@ rem   hitiled     ...or every tiled surface  (the buffers sit; these say which o
 rem   heaphi      everything in the 64 MB+ region (starves the HUD sprites; diagnostic only)
 rem   norblock    3109: switch OFF the row-block rule that keeps swizzled (depth) and plain
 rem               surfaces apart in VRAM (the corner-hole fix) - for A/B only
+rem   heap2       3112: the 3095-3111 two-region VRAM heap (88 MB) instead of the five
+rem               regions (103.7 MB) - A/B if the new regions show garbage
+rem   exe NAME    3112: run NAME instead of hl.exe (another game, from its own folder:
+rem               copy nvhl.bat and mesa3d.dll next to it), e.g.  nvhl exe sof.exe
 rem Logs: C:\nvshim.log (Mesa/shim), C:\nvtail.txt (VxD ring, written through while the
 rem game runs, survives a crash), C:\nvkick.txt (submit dump), C:\nvclk.txt (clocks +
 rem VxD probe). Send all four.
@@ -44,7 +48,9 @@ set NVSHIM_PRESENT_3D=
 set NVSHIM_CPU_PRESENT=
 set NVSHIM_HIKIND=
 set NVSHIM_RBLOCK=
+set NVSHIM_HEAP2=
 set NVHL_GRCTX=
+set NVHL_EXE=hl.exe
 :flags
 if "%1"=="grctx" goto f_grctx
 if "%1"=="barrier" goto f_barrier
@@ -59,6 +65,8 @@ if "%1"=="hidepth" goto f_hidepth
 if "%1"=="hicolor" goto f_hicolor
 if "%1"=="hitiled" goto f_hitiled
 if "%1"=="norblock" goto f_norblock
+if "%1"=="heap2" goto f_heap2
+if "%1"=="exe" goto f_exe
 goto run
 :f_grctx
 set NVHL_GRCTX=%2
@@ -127,10 +135,21 @@ set NVSHIM_RBLOCK=0
 echo nvhl: row-block separation OFF
 shift
 goto flags
+:f_heap2
+set NVSHIM_HEAP2=1
+echo nvhl: two-region VRAM heap (88 MB, the 3095-3111 layout)
+shift
+goto flags
+:f_exe
+set NVHL_EXE=%2
+echo nvhl: running %2
+shift
+shift
+goto flags
 :run
 if not "%GALLIUM_DRIVER%"=="nouveau" echo nvhl: WARNING out of environment space - the switches did not take (give this DOS box a bigger initial environment)
-if not exist hl.exe echo nvhl: run this from the Half-Life folder (hl.exe not found here)
-if not exist hl.exe goto end
+if not exist %NVHL_EXE% echo nvhl: run this from the game's folder (%NVHL_EXE% not found here)
+if not exist %NVHL_EXE% goto end
 if not exist mesa3d.dll echo nvhl: WARNING mesa3d.dll is not in this folder - the ICD will come from C:\WINDOWS\SYSTEM
 if not exist %NVDRV%\nvprobe.exe echo nvhl: WARNING %NVDRV%\nvprobe.exe not found - no VxD log tail, no clock dump (set NVDRV in nvhl.bat)
 if "%NVHL_GRCTX%"=="" goto nogrctx
@@ -149,7 +168,7 @@ if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe rd 101000 1 >> C:\nvclk.txt
 if exist %NVDRV%\nvprobe.exe %NVDRV%\nvprobe >> C:\nvclk.txt
 echo nvhl > C:\nvtail.run
 if exist %NVDRV%\nvprobe.exe start /min %NVDRV%\nvprobe tail C:\nvtail.txt C:\nvtail.run
-start /w hl.exe %1 %2 %3 %4 %5 %6 %7 %8 %9
+start /w %NVHL_EXE% %1 %2 %3 %4 %5 %6 %7 %8 %9
 if exist C:\nvtail.run del C:\nvtail.run
-echo nvhl: Half-Life exited. Logs: C:\nvshim.log C:\nvtail.txt C:\nvkick.txt C:\nvclk.txt
+echo nvhl: %NVHL_EXE% exited. Logs: C:\nvshim.log C:\nvlast.txt C:\nvtail.txt C:\nvkick.txt C:\nvclk.txt
 :end

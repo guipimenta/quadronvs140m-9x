@@ -1077,6 +1077,48 @@ C:\nvkick.txt, C:\nvclk.txt.
   pending. Test: Half-Life as usual ('grctx variant 2' in nvtail.txt); A/B against grctx0.reg
   if anything regressed.
 
+### Build 3112: Soldier of Fortune hangs at level load - the VRAM heap and its retry storm
+- User report (2026-10-30): SoF's training mission runs, the real game never finishes
+  loading and the process stops responding. No SoF log on the host (nvshim.log/nvtail here
+  were the Oct 29 HL run). Simulated first (user directive): wgltest gained a `load` scene =
+  a Quake 2 engine level load (900 mipmapped 256x256 RGBA textures uploaded 16 per frame
+  behind a loading quad, 150 frames of 400 quads over ALL of them + 32 lightmap patches +
+  50 client-array glDrawElements, then delete + reload, 3 levels), with wgltest_load.txt
+  (first GL_OUT_OF_MEMORY index, error counts, frame times).
+- Fake-GPU result (analysis/fake-runs/3112-*): no hang, no crash, Mesa handles the OOM
+  (GL_OUT_OF_MEMORY per texture, draws continue). BUT: (1) the heap ran dry at texture
+  ~150 = 67 MB used of 88 - 12 MB free in pieces of at most 256 KB (first fit from the
+  bottom + the state tracker's transient 64 KiB level-0 copies and staging BOs =
+  fragmentation); (2) 400,000 kicks in 900 frames: every draw with a texture that never got
+  VRAM re-tries the allocation (st_finalize_texture) and the shim's heap-full path kicked
+  pending work TWICE per attempt (3097) - free under the fake, ~1 ms each on the T61 =
+  seconds per frame, a loading screen that never finishes. That is the hang mechanism for
+  any level that does not fit, SoF's included (its levels are far more texture-heavy than
+  HL's, which already filled 61 of 64 MiB in 3095).
+- 3112 (shim only, VxD/DRV restamped): heap 88 -> 103.7 MiB (regions 24.25-25, 25.06-32 MiB
+  above the EVO structures/boot log and 56-64 MiB above the GPU channel; 55-56 MiB kept for
+  a GART page table; NVSHIM_HEAP2=1 / `nvhl heap2` = the old layout); best-fit allocation
+  with BOs < 256 KiB carved from the top of their block; HEAP_MAXFREE 4096, SHIM_MAXBO 8192
+  (+ 'WARN BO registry full'); the heap-full retry only when g_heap_frees changed since the
+  last failure; C:\nvlast.txt (one line rewritten before/after every submit, unflushed - the
+  OS cache writes it out when the process hangs) + 'kick SLOW ms/cnt/#' (> 500 ms); FAIL
+  lines rate-limited. nvkick_decode.py's VM window starts at 24.25 MiB. nvhl.bat: `heap2`,
+  `exe <name>` (run another game's exe through the launcher).
+- Textures beyond the heap are still missing. NEXT (nouveau's way, the real fix): GART =
+  system-memory BOs through the channel VM. nouveau places VRAM-flagged BOs in GART when
+  VRAM is full (TTM busy placement) and all GART-flagged ones (fence, scratch, staging,
+  stream buffers) there always. Design sketch: PDE 1 (VM 512 MiB-1 GiB) -> a 1 MiB page
+  table of 4 KiB pages at VRAM 0x03700000 (PDE flags 0x03 = present + 4 KiB pages, size
+  flag 0 = full), PTE lo = page_phys | 0x21 (present, target 2 = snooped system memory),
+  hi = 0 (2.6.36 nouveau_sgdma.c nv50 path, current vmmnv50.c target<<4). VxD: pages from
+  _PageReserve(PR_SHARED)+_PageCommit(PC_USER|PC_WRITEABLE|PC_FIXED) - shared arena, so
+  ring 3 maps them DIRECTLY (no bounce, no shadow: the big win for staging/vertex uploads
+  too), physical addresses via _CopyPageTable, TLB flush as in NV_gpu_vmkind; ioctls
+  OP_NV_GART_ALLOC(pages)->{gart_off, linear}, OP_NV_GART_FREE; freed at DIOC_CLOSEHANDLE
+  with the channel. Shim: BO backing = VRAM phys or GART (off, ptr); base.offset = 512 MiB
+  + off; map = ptr; flush/verify/scan skip GART BOs (coherent); registry keyed by VM
+  address; fake GPU: GART = malloc. Cap GART at 128 MiB (registry), NVSHIM_GART=0 A/B.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

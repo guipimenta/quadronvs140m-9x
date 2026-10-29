@@ -63,6 +63,22 @@
  * were unused; Half-Life's first map filled 61 of the 64 MiB above. */
 #define NVSHIM_HEAP_LO     0x02010000UL  /* 32 MiB + 64 KiB (page-aligned, above NVFB_RESERVED_END) */
 #define NVSHIM_HEAP_LO_END 0x03000000UL  /* 48 MiB = NVGPU_RAMIN */
+/* 3112: three more regions. (a) 24.25-25 MiB and 25.06-32 MiB: the EVO
+ * reservation holds only the display pushbuffer, notifier, LUT and cursor at
+ * 24-24.25 MiB and the boot log at 25 MiB (nv50_evo.c NVFB_BOOTLOG_OFFSET, a
+ * few hundred bytes); the display driver's window ends at 24 MiB
+ * (NVFB_WINDOW_MAX) and the display instance memory starts at 32 MiB.
+ * (b) 56-64 MiB: the VxD channel's structures end at 55 MiB (nv50_gpu.c
+ * NVGPU_HEAP_END 0x03700000); 55-56 MiB stays free for a GART page table.
+ * 15.7 MiB more: 103.7 MiB in all. NVSHIM_HEAP2=1 ('nvhl heap2') keeps the
+ * 3095-3111 two-region layout for an A/B. */
+#define NVSHIM_HEAP_EVO_A     0x01840000UL  /* 24.25 MiB: above the cursor (NVFB_CURSOR_VRAM_OFFSET + 64 KiB) */
+#define NVSHIM_HEAP_EVO_A_END 0x01900000UL  /* 25 MiB: the boot log */
+#define NVSHIM_HEAP_EVO_B     0x01910000UL  /* 25 MiB + 64 KiB */
+#define NVSHIM_HEAP_EVO_B_END 0x02000000UL  /* 32 MiB = NVFB_RAMIN_VRAM_OFFSET */
+#define NVSHIM_HEAP_MID       0x03800000UL  /* 56 MiB */
+#define NVSHIM_HEAP_MID_END   0x04000000UL  /* 64 MiB = NVSHIM_HEAP_BASE */
+#define NVSHIM_HEAP_MIN       NVSHIM_HEAP_EVO_A   /* lowest heap address (VM window checks) */
 
 /* ========================= VxD transport ============================== */
 static HANDLE g_vxd = INVALID_HANDLE_VALUE;
@@ -279,7 +295,7 @@ static int shim_scanreset(void)
 }
 
 #define FAKE_PAGE_SHIFT 20                         /* 1 MiB pages, allocated on first touch */
-#define FAKE_BASE  0x02000000UL                    /* 3095: covers both heap regions */
+#define FAKE_BASE  0x01800000UL                    /* 3112: covers every heap region (24 MiB up) */
 #define FAKE_PAGES ((NVSHIM_HEAP_END - FAKE_BASE) >> FAKE_PAGE_SHIFT)
 static uint8_t *g_fake_page[FAKE_PAGES];
 static uint32_t g_fake_handles[64];
@@ -349,7 +365,7 @@ static int fake_run(const uint32_t *m, uint32_t count)
 				else if(mm == 0x1b08) qseq = v;
 				else if(mm == 0x1b0c)
 				{
-					if(qaddr < NVSHIM_VM_BASE + NVSHIM_HEAP_LO || qaddr >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
+					if(qaddr < NVSHIM_VM_BASE + NVSHIM_HEAP_MIN || qaddr >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
 					{ NVLOG3("FAKE WEDGE QUERY address outside VM window dword/addr/get", i + 1 + k, qaddr, v); return 0; }
 					fake_wr32(qaddr - NVSHIM_VM_BASE, qseq);
 				}
@@ -508,6 +524,33 @@ static void nvshim_dump_kick(int idx, const uint32_t *m, uint32_t count)
 	FlushFileBuffers(f);
 }
 #endif
+#ifndef NVSHIM_STANDALONE
+/* 3112: C:\nvlast.txt - ONE line, rewritten before and after every submit
+ * (no flush: the OS cache writes it out even when the process never returns,
+ * as long as the machine lives). 'kick >' lines stop after 400 kicks, so a
+ * hang in the ten-thousandth kick left no trace of what was submitted. */
+static void nvshim_lastkick(uint32_t phase, uint32_t n, uint32_t count, uint32_t m0, uint32_t m1)
+{
+	static HANDLE f = INVALID_HANDLE_VALUE;
+	char buf[160]; int p = 0, i; DWORD ret; uint32_t v[6]; unsigned k;
+	if(f == INVALID_HANDLE_VALUE)
+	{
+		f = CreateFileA("C:\\nvlast.txt", GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+		                0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+		if(f == INVALID_HANDLE_VALUE) return;
+	}
+	v[0] = phase; v[1] = n; v[2] = count; v[3] = m0; v[4] = m1; v[5] = GetTickCount();
+	{ const char *h = "last kick: phase(0 in,1 ok,2 fail)/n/cnt/m0/m1/tick"; while(*h) buf[p++] = *h++; }
+	for(k = 0; k < 6; k++)
+	{
+		buf[p++] = ' ';
+		for(i = 28; i >= 0; i -= 4) { int d = (int)((v[k] >> i) & 0xf); buf[p++] = (char)(d < 10 ? '0' + d : 'a' + d - 10); }
+	}
+	buf[p++] = '\r'; buf[p++] = '\n';
+	SetFilePointer(f, 0, NULL, FILE_BEGIN);
+	WriteFile(f, buf, (DWORD)p, &ret, NULL);
+}
+#endif
 /* 3092: per-run counters, read by wgl.c's present stats line (nvshim_stats) */
 static uint32_t g_st_kicks = 0, g_st_flush_dw = 0, g_st_read_dw = 0, g_st_traps = 0, g_st_kick_dw = 0;
 static uint32_t g_st_warn = 0;   /* 3094: KICK WARN count (dead or unflushed DMA sources) */
@@ -570,10 +613,14 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 		shim_kick_scan(methods, count, 1);
 	memset(&sb, 0, sizeof(sb));
 	t0 = GetTickCount();
+#ifndef NVSHIM_STANDALONE
+	nvshim_lastkick(0, (uint32_t)nkick, count, methods[0], count > 1 ? methods[1] : 0);
+#endif
 	if(!shim_ioctl(OP_NV_SUBMIT, (void*)methods, count * 4,
 	               &sb, sizeof(sb), &ret) || !sb.ok)
 	{
 #ifndef NVSHIM_STANDALONE
+		nvshim_lastkick(2, (uint32_t)nkick, count, methods[0], count > 1 ? methods[1] : 0);
 		/* Log the failure with the GPU state so a TRAP during screen_create/draw
 		 * is visible, then stop submitting: the app keeps running on the CPU side
 		 * (garbage window, complete log) instead of freezing the machine in the
@@ -592,6 +639,13 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 	}
 	t1 = GetTickCount(); g_st_submit_ms += t1 - t0;
 #ifndef NVSHIM_STANDALONE
+	nvshim_lastkick(1, (uint32_t)nkick, count, methods[0], count > 1 ? methods[1] : 0);
+	if(t1 - t0 > 500)
+	{	/* 3112: a submit that took longer than half a second (the VxD's polls ran
+		 * long, or a trap was recovered) - the kind of kick a hang grows from */
+		static int nslow = 0;
+		if(nslow++ < 32) NVLOG3("kick SLOW ms/cnt/#", t1 - t0, count, (uint32_t)nkick);
+	}
 	if(nkick < 400) NVLOG3("kick ok cnt/put/pgi", count, sb.put_off, sb.pgraph_intr);
 	else if((nkick & 255) == 0) NVLOG3("kick #/ms/cnt", nkick, t1 - t0, count);   /* 3095: one sample per 256 kicks */
 	nkick++;
@@ -720,7 +774,8 @@ static void shim_flush_pending(void)
  * First-fit over an address-sorted free list; frees coalesce with neighbours.
  * Granularity 256 bytes; tiled BOs (config.nv50.tile_mode) are aligned to the
  * 64 KiB VM page like nouveau does, everything else to the caller's align. */
-#define HEAP_MAXFREE 1024
+#define HEAP_MAXFREE 4096   /* 3112: was 1024 - a level's worth of textures leaves thousands of holes */
+#define HEAP_SMALL   0x40000 /* 3112: BOs below 256 KiB are carved from the top of their free block */
 static struct { uint32_t start, size; } g_free[HEAP_MAXFREE];
 static int g_nfree = -1;                      /* -1 = not initialised */
 static uint32_t g_heap_used = 0, g_heap_allocs = 0;
@@ -798,17 +853,33 @@ static void heap_rblock_init(void)
 	NVLOG3("heap: memcfg 100200/100204/100250", r0, r4, rt);
 	NVLOG2("heap: parts(1540)/rblock", r1540, g_rblock);
 }
+static int shim_heap2(void)
+{
+	static int v = -1;
+	if(v < 0)
+	{
+		char b[8]; DWORD n = GetEnvironmentVariableA("NVSHIM_HEAP2", b, sizeof(b));
+		v = (n > 0 && n < sizeof(b) && b[0] != '0') ? 1 : 0;
+	}
+	return v;
+}
 static void heap_init(void)
 {
-	/* 3095: lowest first, so the first-fit allocator fills the 15.9 MiB gap
-	 * below the GPU channel before the 64 MiB above it (88 MiB in all) */
+	/* 3095: lowest first, so the allocator fills the gaps below the GPU
+	 * channel before the 64 MiB above it. 3112: five regions (see the
+	 * NVSHIM_HEAP_EVO_* / _MID comment), 103.7 MiB in all. */
+	uint32_t t = 0; int i;
 	heap_rblock_init();
-	g_free[0].start = NVSHIM_HEAP_LO;
-	g_free[0].size  = NVSHIM_HEAP_LO_END - NVSHIM_HEAP_LO;
-	g_free[1].start = NVSHIM_HEAP_BASE;
-	g_free[1].size  = NVSHIM_HEAP_END - NVSHIM_HEAP_BASE;
-	g_nfree = 2;
-	if(shim_heaphi()) { g_free[0] = g_free[1]; g_nfree = 1; NVLOG0("heap: high region only (NVSHIM_HEAPHI)"); }
+	g_free[0].start = NVSHIM_HEAP_EVO_A; g_free[0].size = NVSHIM_HEAP_EVO_A_END - NVSHIM_HEAP_EVO_A;
+	g_free[1].start = NVSHIM_HEAP_EVO_B; g_free[1].size = NVSHIM_HEAP_EVO_B_END - NVSHIM_HEAP_EVO_B;
+	g_free[2].start = NVSHIM_HEAP_LO;    g_free[2].size = NVSHIM_HEAP_LO_END - NVSHIM_HEAP_LO;
+	g_free[3].start = NVSHIM_HEAP_MID;   g_free[3].size = NVSHIM_HEAP_MID_END - NVSHIM_HEAP_MID;
+	g_free[4].start = NVSHIM_HEAP_BASE;  g_free[4].size = NVSHIM_HEAP_END - NVSHIM_HEAP_BASE;
+	g_nfree = 5;
+	if(shim_heap2())  { g_free[0] = g_free[2]; g_free[1] = g_free[4]; g_nfree = 2; NVLOG0("heap: 3095 two-region layout (NVSHIM_HEAP2)"); }
+	if(shim_heaphi()) { g_free[0] = g_free[g_nfree - 1]; g_nfree = 1; NVLOG0("heap: high region only (NVSHIM_HEAPHI)"); }
+	for(i = 0; i < g_nfree; i++) t += g_free[i].size;
+	NVLOG2("heap: regions/bytes", g_nfree, t);
 }
 static void heap_stats(uint32_t *free_total, uint32_t *largest)
 {
@@ -855,26 +926,52 @@ static int shim_class_ending_at(uint32_t addr);
 static int shim_class_starting_at(uint32_t addr);
 static uint32_t heap_alloc_in(uint32_t size, uint32_t align, uint32_t lowest, int cls)
 {
-	int i;
+	/* 3112: BEST FIT (the free block that leaves the least over), and BOs
+	 * below HEAP_SMALL carved from the TOP of their block, so the big aligned
+	 * runs at the bottoms survive. First fit from the bottom fragmented the
+	 * heap into 64 KiB holes (the state tracker's level-0 texture copies and
+	 * the upload staging buffers come and go between the resident textures):
+	 * wgltest's level-load scene ran dry at 67 MB used of 88 - 12 MB free in
+	 * pieces of at most 256 KB, none of which takes a 384 KB mipmapped 256x256
+	 * texture. */
+	int i, best = -1; uint32_t best_a = 0, best_left = 0xffffffffUL;
+	const int small = (size < HEAP_SMALL);
 	for(i = 0; i < g_nfree; i++)
 	{
 		uint32_t bs = g_free[i].start, be = g_free[i].start + g_free[i].size;
-		uint32_t s = bs, e = be, a;
+		uint32_t s = bs, e = be, a, left;
 		if(g_rblock)
 		{	/* nvkm_mm_head: keep away from differently-classed neighbours */
 			if(shim_class_ending_at(bs) != cls)   s = (bs + g_rblock - 1) / g_rblock * g_rblock;
 			if(shim_class_starting_at(be) != cls) e = be / g_rblock * g_rblock;
 			if(s < bs || e > be || s >= e) continue;
 		}
-		a = (s + (align - 1)) & ~(align - 1);
-		if(a < lowest) a = (lowest + (align - 1)) & ~(align - 1);
-		if(a < s || a + size > e || a + size < a)
-			continue;
+		if(small)
+		{
+			if(e < size) continue;
+			a = (e - size) & ~(align - 1);
+			if(a < s || a < lowest) continue;
+		}
+		else
+		{
+			a = (s + (align - 1)) & ~(align - 1);
+			if(a < lowest) a = (lowest + (align - 1)) & ~(align - 1);
+			if(a < s || a + size > e || a + size < a)
+				continue;
+		}
+		left = (e - s) - size;
+		if(left < best_left) { best_left = left; best = i; best_a = a; if(left == 0) break; }
+	}
+	if(best < 0)
+		return 0;                                   /* out of VRAM */
+	{
+		uint32_t a = best_a, bs = g_free[best].start, be = g_free[best].start + g_free[best].size;
+		i = best;
 		/* carve [a, a+size) out of block i: head [bs,a) stays as block i (or
 		 * is removed), tail [a+size, be) becomes a new block after it */
 		if(a + size < be)
 		{
-			if(g_nfree >= HEAP_MAXFREE) continue;          /* no room to split */
+			if(g_nfree >= HEAP_MAXFREE) return 0;          /* no room to split: out of VRAM */
 			memmove(&g_free[i + 1], &g_free[i], (size_t)(g_nfree - i) * sizeof(g_free[0]));
 			g_nfree++;
 			g_free[i + 1].start = a + size;
@@ -891,7 +988,6 @@ static uint32_t heap_alloc_in(uint32_t size, uint32_t align, uint32_t lowest, in
 		g_heap_allocs++;
 		return a;
 	}
-	return 0;                                   /* out of VRAM */
 }
 static uint32_t heap_alloc(uint32_t size, uint32_t align, int hi, int cls)
 {
@@ -957,7 +1053,7 @@ struct shim_bo {
 	uint32_t klo, khi;    /* 3095: union of the byte ranges this kick's stream reads (BO offsets) */
 	int      kwhole;      /* 3095: referenced in a way the walk cannot bound: flush it whole */
 };
-#define SHIM_MAXBO 4096
+#define SHIM_MAXBO 8192   /* 3112: was 4096 - a Quake 2 engine level keeps more BOs than that alive */
 static struct shim_bo *g_bos[SHIM_MAXBO];   /* live BOs, for address -> BO lookups */
 static int             g_nbos = 0;
 /* 3095: the registry is kept sorted by phys and searched by bisection - the
@@ -997,7 +1093,12 @@ static int shim_class_starting_at(uint32_t addr)
 static void shim_bo_register(struct shim_bo *b)
 {
 	int i;
-	if(g_nbos >= SHIM_MAXBO) return;
+	if(g_nbos >= SHIM_MAXBO)
+	{	/* 3112: an unregistered BO still works (flushed whole, never range-bounded) */
+		static int w = 0;
+		if(w++ < 4) NVLOG2("WARN BO registry full n/phys", g_nbos, b->phys);
+		return;
+	}
 	i = shim_bo_index(b->phys) + 1;          /* insert after the last BO at or below */
 	memmove(&g_bos[i + 1], &g_bos[i], (size_t)(g_nbos - i) * sizeof(g_bos[0]));
 	g_bos[i] = b;
@@ -1055,7 +1156,7 @@ static void range_add(uint32_t vm, uint32_t len, int whole, int what, int verify
 {
 	struct shim_bo *b; uint32_t phys, off;
 	static int nwarn = 0;
-	if(vm < NVSHIM_VM_BASE + NVSHIM_HEAP_LO || vm >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
+	if(vm < NVSHIM_VM_BASE + NVSHIM_HEAP_MIN || vm >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
 		return;                              /* scanout surface / instance area: not ours */
 	phys = vm - NVSHIM_VM_BASE;
 	b = shim_bo_at(phys);
@@ -1553,8 +1654,18 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 		 * runs after the kick after this one. A level load uploads thousands of
 		 * textures between two draws; wgltest's texcheck ran the heap dry. */
 		static int n = 0;
+		static uint32_t frees_at_fail = 0xffffffffUL;
 		int tries;
 		uint32_t ft0, lg0; heap_stats(&ft0, &lg0);
+		/* 3112: retry (two synchronous GPU drains) only if something was FREED
+		 * since the last failed attempt - otherwise nothing the kicks could
+		 * release has changed. wgltest's level-load scene (900 textures, ~150
+		 * fit) made 400,000 kicks in 900 frames: every draw with a texture that
+		 * never got its VRAM re-tried the allocation (st_finalize_texture), and
+		 * each try drained the GPU twice; on the T61 (~1 ms a kick) that is
+		 * seconds per frame - a game that "stops responding" once a level does
+		 * not fit. */
+		if(g_heap_frees != frees_at_fail)
 		for(tries = 0; !phys && tries < 2; tries++)
 		{
 			if(!g_cur_push || g_cur_push->cur == (uint32_t*)((struct shim_push_hdr*)g_cur_push)->buf) break;
@@ -1563,14 +1674,17 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 			phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f),
 			                  shim_kind_class(tiled ? (config->nv50.memtype & 0x7f) : 0));
 		}
-		if(n++ < 16) NVLOG3("bo_new: heap full - kicked pending work; size/free before/phys after", (uint32_t)size, ft0, phys);
+		if(!phys) frees_at_fail = g_heap_frees;
+		if(n < 16 || (n & 255) == 0) NVLOG3("bo_new: heap full - kicked pending work; size/free before/phys after", (uint32_t)size, ft0, phys);
+		n++;
 	}
 	if(!phys)
 	{
 #ifndef NVSHIM_STANDALONE
-		static int ndump = 0;
+		static int ndump = 0, nfail = 0;
 		uint32_t ft, lg; heap_stats(&ft, &lg);
-		NVLOG3("bo_new FAIL heap full sz/free/largest", (uint32_t)size, ft, lg);
+		if(nfail < 32 || (nfail & 255) == 0) NVLOG3("bo_new FAIL heap full sz/free/largest", (uint32_t)size, ft, lg);
+		nfail++;
 		if(ndump++ < 2)
 		{
 			/* 3097: who holds the heap - live BOs by class */
