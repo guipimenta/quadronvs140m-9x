@@ -24,6 +24,7 @@
 #define OP_NV_DBG_PUTS    0x5018  /* append a trace string to the VxD debug ring */
 #define OP_NV_VM_KIND     0x5019  /* 3091: set the PTE storage kind of a BO's pages  */
 #define OP_NV_VRAM_READ2  0x501A  /* 3092: read up to 1024 VRAM dwords into the caller's buffer */
+#define OP_NV_GPU_ACQUIRE   0x501B  /* 3110: this process takes the GPU channel (out[0] = 1 ok / 0 busy, out[1] = owner tag) */
 
 /* OP_NV_SUBMIT result (nv50_gpu.h: nv_gpu_submit_t). nvshim.c reads .ok only;
  * the rest keeps the layout identical to the VxD's so the ioctl memcpy fits. */

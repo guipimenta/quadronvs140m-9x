@@ -2390,7 +2390,7 @@ index d7db69a2..97b7426c 100644
     return bestindex;
  }
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..e3f22935 100644
+index 8017cd00..668adc36 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,12 @@
@@ -2478,7 +2478,7 @@ index 8017cd00..e3f22935 100644
     winsys = gdi_create_sw_winsys(gdi_sw_acquire_hdc_by_value, gdi_sw_release_hdc_by_value);
     if (!winsys)
        return NULL;
-@@ -175,7 +225,9 @@ wgl_screen_create(HDC hDC)
+@@ -175,15 +225,30 @@ wgl_screen_create(HDC hDC)
     	  }
  #endif
     	
@@ -2488,15 +2488,29 @@ index 8017cd00..e3f22935 100644
        if (screen) {
           created_driver_name = drivers[i];
           return screen;
-@@ -184,6 +236,7 @@ wgl_screen_create(HDC hDC)
+       }
+-      if (i == 0 && drivers[i][0] != '\0')
++      if (i == 0 && drivers[i][0] != '\0') {
++#if defined(WIN9X) && defined(GALLIUM_NOUVEAU)
++         /* 3110: GALLIUM_DRIVER=nouveau is the registry default for every GL
++          * program now; when the hardware screen cannot be created (the GPU
++          * channel is owned by another process, the VxD is not the native one,
++          * a bring-up fault) the program must still get OpenGL: go on to
++          * llvmpipe instead of giving up. */
++         if (strcmp(drivers[i], "nouveau") == 0) {
++            nvt("wgl: nouveau screen failed - falling back to software", NULL, 1, GetLastError(), 0);
++            continue;
++         }
++#endif
           break;
++      }
     }
  
 +   nvt("wgl: NO SCREEN - all drivers failed, lasterr", NULL, 1, GetLastError(), 0);
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +290,199 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +302,199 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2696,7 +2710,7 @@ index 8017cd00..e3f22935 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
-@@ -326,6 +572,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -326,6 +584,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  
        stw_init(&stw_winsys, hinstDLL);
        stw_init_thread();
@@ -2710,7 +2724,7 @@ index 8017cd00..e3f22935 100644
        break;
  
     case DLL_THREAD_ATTACH:
-@@ -337,6 +590,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -337,6 +602,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
        break;
  
     case DLL_PROCESS_DETACH:

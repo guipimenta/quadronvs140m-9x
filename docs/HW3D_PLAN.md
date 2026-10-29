@@ -1039,6 +1039,30 @@ C:\nvkick.txt, C:\nvclk.txt.
   carries hardware rules that are invisible until a buffer lands on the wrong boundary.
 - T61: mesa3d.dll (next to hl.exe) + nvhl.bat, no reboot: `nvhl` at 1024x768 -> holes
   gone? `nvhl norblock` -> holes back? Send nvshim.log (the rblock line).
+- **3109 CONFIRMED on the T61 (2026-10-29 night): plain nvhl clean at 1024x768, `nvhl
+  norblock` brings the holes back. Released as v3109.**
+
+### Build 3110: no batch file - GPU OpenGL by registry default, one owner per channel
+- User: "a version that I don't need to execute games using .bat files, that loads mesa3d
+  with opengl support when it's needed". What nvhl.bat actually supplied: GALLIUM_DRIVER=
+  nouveau (mesa3d.dll's os_get_option on Win9x = getenv, then vmhal_setup_str("mesa", name)
+  = HKLM\Software\vmdisp9x\apps\<exe>\mesa, then apps\global\mesa), MESA_EXTENSION_MAX_YEAR
+  (already in the registry for hl.exe since 3051), the mesa3d.dll copy next to hl.exe (only
+  because an old copy there wins over C:\WINDOWS\SYSTEM), and diagnostics.
+- 3110: (1) nvgl-on.reg / INF: apps\global\mesa GALLIUM_DRIVER=nouveau -> every OpenGL
+  program gets the hardware screen; per-exe opt-out GALLIUM_DRIVER=llvmpipe; nvgl-off.reg.
+  (2) wgl.c: when the named driver "nouveau" fails to create a screen, continue to llvmpipe
+  (upstream breaks out of the loop when GALLIUM_DRIVER is set -> no OpenGL at all).
+  (3) VxD OP_NV_GPU_ACQUIRE 0x501B: NV_gpu_acquire(tagProcess) - one owner at a time,
+  taken at the shim's device_new, a different live owner = busy -> device_new fails ->
+  software for that process; released by NV_gpu_release at DIOC_CLOSEHANDLE (CloseHandle,
+  process exit, crash). A new owner gets a cold channel (gpu_chan_restart, shared with the
+  3104 bound-again path, which stays as the safety net for old shims). Old VxD + new shim:
+  the ioctl fails -> treated as ok (old behaviour). (4) nvhl.bat stays for diagnostics.
+- Untested on the T61. Test: import nvgl-on.reg, delete the mesa3d.dll next to hl.exe,
+  reboot (VxD changed), start hl.exe directly; nvshim.log must show 'GPU channel acquired
+  ok/owner'. Then start a second GL program while HL runs (wgltest window) - it must come
+  up in software ('GPU channel BUSY' in its log) and HL must survive.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim

@@ -88,9 +88,9 @@ GPU OPENGL - HALF-LIFE (build 3093+)
 Hardware-accelerated OpenGL (Mesa's nv50 driver on the G86) is opt-in per
 program through the environment: set GALLIUM_DRIVER=nouveau in the DOS box
 that starts the program. Without it the ICD renders in software as before.
-Half-Life: copy nvhl.bat and mesa3d.dll from this package into the Half-Life
-folder (next to hl.exe), edit NVDRV in nvhl.bat to this package's folder, then
-in a DOS box in the Half-Life folder run:  nvhl  (or nvhl -width 640 -height 480).
+Half-Life (3110+): import nvgl-on.reg once and start hl.exe from its folder; no
+mesa3d.dll copy next to hl.exe, no batch file. For diagnostics, nvhl.bat (logs and A/B
+switches) still works: copy it into the Half-Life folder, set NVDRV, run nvhl.
 The batch sets GALLIUM_DRIVER=nouveau and MESA_EXTENSION_MAX_YEAR=2000 (the
 GoldSrc extension-string overflow), starts the VxD log tail, runs hl.exe and
 leaves C:\nvshim.log, C:\nvtail.txt, C:\nvkick.txt for diagnosis. In the
@@ -104,6 +104,23 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3110 - NO BATCH FILE NEEDED. Import nvgl-on.reg once (a fresh INF install writes
+the same key): GALLIUM_DRIVER=nouveau becomes the default for every OpenGL program,
+read by mesa3d.dll itself from HKLM\Software\vmdisp9x\apps\global\mesa. Then start
+hl.exe (or any OpenGL program) directly from its own folder. Clean-up: DELETE the
+mesa3d.dll copies next to hl.exe (and any other game) - the only one must be the
+C:\WINDOWS\SYSTEM one from this package, otherwise an old copy wins. Half-Life's
+MESA_EXTENSION_MAX_YEAR=2000 is already in the registry (d3dsetup.reg / INF).
+A program that must stay on software OpenGL gets its own key:
+  [HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\foo.exe\mesa]  "GALLIUM_DRIVER"="llvmpipe"
+nvgl-off.reg removes the global default again.
+Safety: one process owns the GPU channel at a time - a second OpenGL process (a 3D
+screensaver while a game runs, a second game) is refused by the VxD and renders in
+software; when the GPU screen cannot be created at all, the program also falls back
+to software instead of getting no OpenGL. nvmini.vxd changed (copy + reboot).
+nvhl.bat stays for diagnostics (logs, A/B switches); it is no longer required.
+C:\nvshim.log is still written by every GPU run ("GPU channel acquired ok/owner").
+
 Build 3109 - THE CORNER HOLES, from your 3108 run (plain / grctx 1 / grctx 2 still had
 them, "nvhl hidepth" did not): the depth buffer was being corrupted at both ends by its
 neighbours in VRAM. nouveau's source for this chip classes every surface kind as

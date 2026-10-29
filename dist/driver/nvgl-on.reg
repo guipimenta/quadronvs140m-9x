@@ -1,0 +1,20 @@
+REGEDIT4
+
+; nvgl-on.reg (build 3110): hardware OpenGL for EVERY program, no batch file.
+; GALLIUM_DRIVER=nouveau in the "global" application key makes mesa3d.dll (the
+; OpenGL ICD) drive the G86's 3D engine through nvmini.vxd for any process that
+; creates an OpenGL context. mesa3d.dll reads these keys itself (os_get_option:
+; the environment first, then HKLM\Software\vmdisp9x\apps\<exe>\mesa, then
+; apps\global\mesa), so hl.exe can simply be started from its folder.
+;
+; Safety: one process owns the GPU channel at a time (the VxD refuses a second
+; one, which then renders in software), and when the hardware screen cannot be
+; created the program falls back to software OpenGL instead of getting none.
+;
+; Per-program opt-out: a value in that program's own key wins over "global":
+;   [HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\foo.exe\mesa]
+;   "GALLIUM_DRIVER"="llvmpipe"
+; Everything off again: nvgl-off.reg.
+
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\global\mesa]
+"GALLIUM_DRIVER"="nouveau"

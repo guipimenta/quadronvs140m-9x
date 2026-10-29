@@ -1337,6 +1337,59 @@ static int nv_class_is_gfx(unsigned long oclass)
 	return 0;
 }
 
+/* 3110: tear the live channel down so the next bind builds it from cold (PGRAPH
+ * reset + context with the variant re-read, RAMIN/RAMHT/RAMFC, PFIFO, pushbuffer
+ * and IB indices, object area, wedge and drain latches, bound-handle table). */
+static void gpu_chan_restart(void)
+{
+	(void)gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 2000000UL);
+	NV_wr32(PFIFO_CACHES, 0);
+	g_chan_ready   = 0;
+	g_gpu_wedged   = 0;
+	g_drain_off    = 0;
+	g_drain_logged = 0;
+	g_nsub         = 0;
+	g_obj_next     = NVGPU_OBJAREA;
+	g_gl_nh        = 0;
+}
+
+/* 3110: ONE GL process owns the GPU channel at a time. The shim asks for it at
+ * device_new (OP_NV_GPU_ACQUIRE, tag = the caller's ring-3 process from the
+ * DIOCParams); the owner is released when that process closes its VxD handle
+ * (DIOC_CLOSEHANDLE arrives at CloseHandle and at process exit, crash
+ * included). A second GL process while the first lives is told "busy" and
+ * Mesa falls back to llvmpipe in that process, instead of two processes
+ * pushing into one channel (garbage, hangs). Needed once the hardware path
+ * is the registry default for every OpenGL program (a 3D screensaver can
+ * start while a game runs). A new owner gets a cold channel. */
+static unsigned long g_gpu_owner = 0;
+
+int NV_gpu_acquire(unsigned long tag, unsigned long *owner)
+{
+	if(owner) *owner = g_gpu_owner;
+	if(g_gpu_owner && g_gpu_owner != tag)
+	{
+		dbg_printf("NV_gpu_acquire: tag %lX refused, channel owned by %lX\n", tag, g_gpu_owner);
+		return 0;
+	}
+	if(g_gpu_owner != tag)
+	{
+		dbg_printf("NV_gpu_acquire: tag %lX takes the channel (was %lX, ready=%d)\n", tag, g_gpu_owner, g_chan_ready);
+		g_gpu_owner = tag;
+		if(g_chan_ready) gpu_chan_restart();
+	}
+	return 1;
+}
+
+void NV_gpu_release(unsigned long tag)
+{
+	if(g_gpu_owner && g_gpu_owner == tag)
+	{
+		dbg_printf("NV_gpu_release: tag %lX closed its handle, channel free\n", tag);
+		g_gpu_owner = 0;
+	}
+}
+
 int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out)
 {
 	unsigned long inst;
@@ -1364,14 +1417,7 @@ int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out)
 	if(g_chan_ready && gl_handle_seen(handle))
 	{
 		dbg_printf("NV_gpu_bind: handle %lX bound again -> new GL process, rebuilding the channel\n", handle);
-		(void)gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 2000000UL);
-		NV_wr32(PFIFO_CACHES, 0);
-		g_chan_ready   = 0;
-		g_gpu_wedged   = 0;
-		g_drain_off    = 0;
-		g_drain_logged = 0;
-		g_nsub         = 0;
-		g_obj_next     = NVGPU_OBJAREA;
+		gpu_chan_restart();
 	}
 	if(!g_chan_ready)
 	{

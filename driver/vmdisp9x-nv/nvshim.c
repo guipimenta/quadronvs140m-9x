@@ -1244,6 +1244,22 @@ int nouveau_device_new(struct nouveau_object *parent, struct nouveau_device **pd
 		else
 			NVLOG2("vxd build UNKNOWN (fake backend or probe failed; ret) / shim build", ret, (uint32_t)NVSHIM_BUILD);
 	}
+	if(!shim_fake())
+	{
+		/* 3110: one GL process owns the GPU channel. A VxD before 3110 does not
+		 * know the ioctl (call fails) - then behave as before (the bind-time
+		 * "handle bound again" rebuild). Busy = another live process has it:
+		 * fail device_new, so the nouveau screen fails and Mesa's WGL falls
+		 * back to llvmpipe for this process (3110 wgl.c). */
+		DWORD out[2] = { 1, 0 }; DWORD ret = 0;
+		if(shim_ioctl(OP_NV_GPU_ACQUIRE, NULL, 0, out, sizeof(out), &ret) && ret >= 4 && out[0] == 0)
+		{
+			NVLOG1("GPU channel BUSY: owned by another GL process (tag) - this process gets software rendering", out[1]);
+			free(dev);
+			return -1;
+		}
+		NVLOG2("GPU channel acquired ok/owner", out[0], out[1]);
+	}
 	dev->object.parent = parent;
 	dev->object.oclass = 0x80000000;   /* NV_DEVICE */
 	dev->chipset  = 0x86;              /* G86 (Quadro NVS 140M) */

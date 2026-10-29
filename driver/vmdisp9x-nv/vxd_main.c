@@ -1020,6 +1020,9 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			break;
 		case DIOC_CLOSEHANDLE:
 			io_open_cnt--;
+#ifdef NV_DETECT
+			NV_gpu_release(params->tagProcess);   /* 3110: the GPU channel's owner is gone */
+#endif
 #ifdef SVGA
 			if(io_open_cnt == 0)
 			{
@@ -1375,6 +1378,17 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			 * (Mesa's nv50 memtype & 0x7f; 0 = linear). Tiled surfaces need it in
 			 * the PTEs or the ROP path (PROP) faults on the first tiled RT. */
 			outBuf[0] = NV_gpu_vmkind(inBuf[0], inBuf[1], inBuf[2]);
+			rc = 0;
+			break;
+		}
+		case OP_NV_GPU_ACQUIRE:
+		{
+			/* 3110: out[0] = 1 if this process may use the GPU channel, 0 if another
+			 * live process owns it; out[1] = the owner tag (DIOCParams.tagProcess) */
+			unsigned long owner = 0;
+			outBuf[0] = (DWORD)NV_gpu_acquire(params->tagProcess, &owner);
+			outBuf[1] = (DWORD)owner;
+			if(params->lpcbBytesReturned) *(DWORD*)params->lpcbBytesReturned = 8;
 			rc = 0;
 			break;
 		}

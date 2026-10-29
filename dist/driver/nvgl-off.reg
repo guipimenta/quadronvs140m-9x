@@ -1,0 +1,8 @@
+REGEDIT4
+
+; nvgl-off.reg: remove the global hardware-OpenGL default set by nvgl-on.reg
+; (programs fall back to llvmpipe software OpenGL; per-program keys such as
+; nouveau.reg's wgltest/icdtest entries stay as they are).
+
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\global\mesa]
+"GALLIUM_DRIVER"=-
