@@ -1067,6 +1067,15 @@ C:\nvkick.txt, C:\nvclk.txt.
   batch file, renders on the GPU. Released as v3110.** Milestone: a plain install (vxd +
   drv + mesa3d.dll in SYSTEM + nvgl-on.reg) runs OpenGL games on the hardware.
 
+### Build 3111: PGRAPH context default = variant 2 (current nouveau)
+- With 3110 confirmed the only known divergence from nouveau was the default context
+  generation: variant 0 (2.6.36) leaves tesla UNK1968 = 3 where nouveau writes 0. 3100's
+  garbage was the shared channel (3104), and on 3108 grctx 2 rendered like grctx 0 (holes
+  from the row-block bug). 3111: g_grctx_variant defaults to 2 when the GrCtx key is
+  absent; grctx0.reg selects the old one without a reboot. VxD changed (reboot).
+- Untested on the T61. Test: Half-Life as usual ('grctx variant 2' in nvtail.txt); A/B
+  against grctx0.reg if anything regressed.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

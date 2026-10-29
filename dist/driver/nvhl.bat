@@ -12,7 +12,8 @@ rem Run from the Half-Life folder:  nvhl [switches] [hl.exe options]
 rem   e.g.  nvhl -width 800 -height 600
 rem         nvhl grctx 4 present3d -width 1024 -height 768
 rem Switches (any order, before the hl.exe options; all off by default):
-rem   grctx N     apply %NVDRV%\grctxN.reg first (N = 0..4: the PGRAPH context variant;
+rem   grctx N     apply %NVDRV%\grctxN.reg first (N = 0..4: the PGRAPH context variant,
+rem               2 = current nouveau is the default since 3111, 0 = the 3099 one;
 rem               since 3104 it is read at every GL program start, no reboot)
 rem   barrier     cache barrier (GRAPH SERIALIZE + TEX_CACHE_CTL) before the present blit
 rem   present3d   present with the 3D engine (textured quad) instead of the 2D-engine blit

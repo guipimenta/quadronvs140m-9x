@@ -257,9 +257,12 @@ int NV_gpu_grinit(nv_gpu_grinit_t *out)
 /* 3101: which PGRAPH context generation to load, HKLM\Software\vmdisp9x\vesa\GrCtx,
  * read at every PGRAPH init = every channel creation, so a GL program started after
  * editing the registry gets the new one without a reboot:
- *   0 = nouveau v2.6.36 generation (builds 3091-3099, the proven one) - DEFAULT
+ *   0 = nouveau v2.6.36 generation (builds 3091-3099; the default up to 3110)
  *   1 = the same layout/ctxprog with current nouveau's three differing G86 values
- *   2 = current nouveau generation + the zcull/ctxctl zeroing (build 3100)
+ *   2 = current nouveau generation + the zcull/ctxctl zeroing (build 3100) - DEFAULT
+ *       since 3111: 3110 is confirmed, and this is what nouveau runs today (the
+ *       2.6.36 generation leaves tesla UNK1968 = 3 where nouveau now writes 0; 3100's
+ *       "garbage" was the shared channel, fixed in 3104). grctx0.reg = the old one.
  * 3102 (M5.5 step 11), from NVIDIA's own XP miniport for this chip (nv4_mini.sys, see
  * analysis/xp_grctx/): its golden context agrees with nouveau's 3D-state defaults almost
  * entirely, but three PGRAPH unit registers differ - 0x401c00 (TRAST, the triangle
@@ -269,7 +272,7 @@ int NV_gpu_grinit(nv_gpu_grinit_t *out)
  *   3 = the XP way: XP's context microcode, XP's golden context values, XP's MMIO list
  *       written to the registers at init, XP's unit init (TPC 0x408000=0x30, clock gating)
  *   4 = variant 0 (the proven 3099 context) with only the three XP register values */
-static unsigned long g_grctx_variant = 0;
+static unsigned long g_grctx_variant = 2;
 static const char GRCTX_conf_path[] = "Software\\vmdisp9x\\vesa";
 
 /* variant 4: the three XP values on the 2.6.36 layout (MMIO part: 0x400828 at dword 1,
@@ -282,11 +285,11 @@ static const unsigned long nv50_ctxvals_2636_xp[3][2] = {
 static void grctx_read_variant(void)
 {
 	DWORD v = 0;
-	g_grctx_variant = (RegReadConf(HKEY_LOCAL_MACHINE, (const char*)GRCTX_conf_path, "GrCtx", &v) && v <= 4) ? v : 0;
+	g_grctx_variant = (RegReadConf(HKEY_LOCAL_MACHINE, (const char*)GRCTX_conf_path, "GrCtx", &v) && v <= 4) ? v : 2;
 	dbg_printf("grctx variant %lu (%s)\n", g_grctx_variant,
 		g_grctx_variant == 0 ? "nouveau 2.6.36 = 3099" :
 		g_grctx_variant == 1 ? "2.6.36 layout + current nouveau values" :
-		g_grctx_variant == 2 ? "current nouveau + zcull init = 3100" :
+		g_grctx_variant == 2 ? "current nouveau + zcull init = 3100 (default since 3111)" :
 		g_grctx_variant == 3 ? "NVIDIA XP miniport context (ctxprog + golden values + MMIO init)" :
 		"2.6.36 + XP's TRAST/CCACHE/0x400844 values");
 }
