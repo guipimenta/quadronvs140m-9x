@@ -1007,6 +1007,39 @@ C:\nvkick.txt, C:\nvclk.txt.
 - T61 order on 3108 (vxd + reboot), 1024x768, same spot: `nvhl` (PDE fix alone) -> `nvhl
   grctx 1` -> `nvhl grctx 2` -> `nvhl hidepth` / `nvhl hicolor`. Blocks yes/no each.
 
+### 3108 on the T61 -> ROOT CAUSE -> build 3109: nouveau's row-block rule for storage kinds
+- User: plain 3108 = blocks; grctx 1 = blocks; grctx 2 = blocks; `nvhl hidepth` = CLEAN.
+  So neither the PDE flag nor the context: the DEPTH BUFFER'S ADDRESS decides.
+- nouveau (nvkm/subdev/mmu/nv50.c, nv50_mmu_kind): every storage kind is classed 0x01 "no
+  bank swizzle" or 0x02 "bank swizzled" (0x7f invalid) - "values understood by the VRAM
+  allocator, and required to avoid mixing the two types within a certain range". All
+  depth/stencil kinds are 0x02 (Z24S8 0x28, X8Z24 0x18, Z16 0x6c), linear 0x00 and the
+  render-target/texture colour kind 0x70 are 0x01 (the scanout kind 0x7a is 0x02).
+  nvkm_mm_head (core/mm.c) rounds an allocation's start UP and its end DOWN to
+  mm->block_size whenever the neighbouring node has another type; for VRAM that block is
+  nv50_fb_vram_rblock (fb/ramnv50.c): rowsize = partitions(0x1540 bits 16-23, G86: 1) x
+  banks (0x100204 bits 24-25 -> 8) x columns (bits 12-15 -> 512) x 8 = 32 KiB, x3 when
+  0x100250 bit 0 is set (96 KiB). The memory controller bank-swizzles the 0x02 kinds, so
+  within one row block a swizzled surface and an unswizzled one occupy the same DRAM
+  cells: the shim's allocator (64 KiB-aligned tiled BOs back to back, linear BOs at 256 B)
+  put the 0x28 depth buffer (0x02560000) right after the 0x70 colour buffer and right
+  before a linear BO -> its first and last tiles were overwritten -> depth test fails in
+  those tiles -> one untouched tile top-left + one bottom-right. Matches every fact: the
+  gl_clear red (the colour clear wrote them, the geometry failed the depth test), the
+  alternation (which neighbour wrote last), the resolution (800x600 buffers land on other
+  boundaries), heaphi/hidepth (an isolated depth buffer), texcheck fine (no depth), nvsky
+  1024x768 clean. 3108's PDE flag fix stays (it is nouveau's value).
+- 3109 (shim): nv50_kind_class[] = nouveau's table; heap_init reads 0x100200/0x100204/
+  0x100250/0x1540 through OP_NV_RD32 and computes the row block like nouveau (fake GPU or
+  read failure: 96 KiB); heap_alloc_in applies nvkm_mm_head's rounding against the classes
+  of the live BOs ending at / starting at the free block's edges (no BO = class 1, so the
+  EVO area and the VxD's channel structures count as linear). NVSHIM_RBLOCK=<bytes>
+  overrides, =0 disables (`nvhl norblock` for the A/B). Log: 'heap: memcfg ...' and
+  'heap: parts(1540)/rblock'. Lesson: the user directive was right - nouveau's allocator
+  carries hardware rules that are invisible until a buffer lands on the wrong boundary.
+- T61: mesa3d.dll (next to hl.exe) + nvhl.bat, no reboot: `nvhl` at 1024x768 -> holes
+  gone? `nvhl norblock` -> holes back? Send nvshim.log (the rblock line).
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

@@ -725,10 +725,84 @@ static struct { uint32_t start, size; } g_free[HEAP_MAXFREE];
 static int g_nfree = -1;                      /* -1 = not initialised */
 static uint32_t g_heap_used = 0, g_heap_allocs = 0;
 
+/* 3109: nouveau's nv50 storage-kind classes (nvkm/subdev/mmu/nv50.c
+ * nv50_mmu_kind): 0x01 = no bank swizzle, 0x02 = bank swizzled, 0x7f =
+ * invalid. The Tesla memory controller swizzles the DRAM banks of 0x02 kinds
+ * (every depth/stencil format - Z24S8 is 0x28 -, Z16 0x6c, the scanout colour
+ * kind 0x7a, ...) and not those of 0x01 kinds (linear 0x00, the 0x70 colour
+ * kind of render targets and textures). Two surfaces of different classes
+ * must not share one memory ROW BLOCK, or their bytes land on the same DRAM
+ * cells: nouveau's VRAM allocator (nvkm_mm_head) rounds an allocation away
+ * from a differently-classed neighbour to the row block, which it sizes from
+ * the memory controller (nv50_fb_vram_rblock). The shim packed every BO back
+ * to back, so the depth buffer of Half-Life's 1024x768 window (0x28, between
+ * the 0x70 colour buffer and a linear BO) had its first and its last tile
+ * corrupted by its neighbours: the depth test failed there and the screen
+ * showed one untouched tile at the top-left and one at the bottom-right
+ * (T61 photos, build 3105; 'nvhl hidepth' - the depth buffer alone in the
+ * empty 64 MiB+ region - was clean). */
+static const uint8_t nv50_kind_class[128] = {
+	0x01, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, /* 0x00 */
+	0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f,
+	0x01, 0x01, 0x01, 0x01, 0x7f, 0x7f, 0x7f, 0x7f, /* 0x10 */
+	0x02, 0x02, 0x02, 0x02, 0x7f, 0x7f, 0x7f, 0x7f,
+	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x7f, /* 0x20 */
+	0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x7f,
+	0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, /* 0x30 */
+	0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f,
+	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x02, /* 0x40 */
+	0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x7f, 0x7f,
+	0x7f, 0x7f, 0x7f, 0x7f, 0x01, 0x01, 0x01, 0x7f, /* 0x50 */
+	0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f,
+	0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x7f, /* 0x60 */
+	0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x02, 0x02,
+	0x01, 0x7f, 0x02, 0x7f, 0x01, 0x7f, 0x02, 0x7f, /* 0x70 */
+	0x01, 0x01, 0x02, 0x02, 0x01, 0x01, 0x7f, 0x7f
+};
+static int shim_kind_class(uint32_t kind)
+{
+	uint8_t c = (kind < 128) ? nv50_kind_class[kind] : 0x7f;
+	return (c == 0x02) ? 2 : 1;          /* unknown kinds count as unswizzled */
+}
+static uint32_t shim_rd32(uint32_t off);
+static uint32_t g_rblock = 0;            /* row block in bytes, 0 = separation off */
+static void heap_rblock_init(void)
+{
+	char b[16]; DWORD n = GetEnvironmentVariableA("NVSHIM_RBLOCK", b, sizeof(b));
+	uint32_t r0 = 0, r4 = 0, rt = 0, r1540 = 0, parts = 0, banks, colbits, rowsize;
+	if(n > 0 && n < sizeof(b))             /* NVSHIM_RBLOCK=0 off, =<bytes> override */
+	{
+		g_rblock = (uint32_t)strtoul(b, NULL, 0);
+		NVLOG1("heap: rblock from NVSHIM_RBLOCK", g_rblock);
+		return;
+	}
+	if(!shim_fake())
+	{
+		r0 = shim_rd32(0x100200); r4 = shim_rd32(0x100204);
+		rt = shim_rd32(0x100250); r1540 = shim_rd32(0x001540);
+	}
+	if(r4 == 0xffffffffUL || r4 == 0 || r1540 == 0xffffffffUL)
+	{
+		g_rblock = 0x18000;                  /* no registers (fake GPU): the T61's worst case */
+		NVLOG1("heap: rblock default (no PFB regs)", g_rblock);
+		return;
+	}
+	/* nouveau nv50_fb_vram_rblock + nv50_ram_ctor (parts = partitions in 0x1540) */
+	{ uint32_t m = (r1540 >> 16) & 0xff; while(m) { parts += m & 1; m >>= 1; } }
+	if(!parts) parts = 1;
+	colbits = (r4 & 0x0000f000) >> 12;
+	banks   = 1u << (((r4 & 0x03000000) >> 24) + 2);
+	rowsize = parts * banks * (1u << colbits) * 8;
+	g_rblock = (rt & 1) ? rowsize * 3 : rowsize;
+	if(g_rblock < 0x1000 || g_rblock > 0x100000) g_rblock = 0x18000;
+	NVLOG3("heap: memcfg 100200/100204/100250", r0, r4, rt);
+	NVLOG2("heap: parts(1540)/rblock", r1540, g_rblock);
+}
 static void heap_init(void)
 {
 	/* 3095: lowest first, so the first-fit allocator fills the 15.9 MiB gap
 	 * below the GPU channel before the 64 MiB above it (88 MiB in all) */
+	heap_rblock_init();
 	g_free[0].start = NVSHIM_HEAP_LO;
 	g_free[0].size  = NVSHIM_HEAP_LO_END - NVSHIM_HEAP_LO;
 	g_free[1].start = NVSHIM_HEAP_BASE;
@@ -774,15 +848,27 @@ static int shim_kind_wants_hi(uint32_t kind)
 	 * X8Z24 0x18, Z32F 0x40, Z16 0x6c), 0x70+ colour */
 	return hk == 3 || (hk == 1 && kind < 0x70) || (hk == 2 && kind >= 0x70);
 }
-static uint32_t heap_alloc_in(uint32_t size, uint32_t align, uint32_t lowest)
+/* 3109: the class of the live BO that ends exactly at / starts exactly at an
+ * address; a boundary with no BO (region edges: the EVO area below the low
+ * region, the VxD's channel structures above it) counts as class 1 (linear). */
+static int shim_class_ending_at(uint32_t addr);
+static int shim_class_starting_at(uint32_t addr);
+static uint32_t heap_alloc_in(uint32_t size, uint32_t align, uint32_t lowest, int cls)
 {
 	int i;
 	for(i = 0; i < g_nfree; i++)
 	{
 		uint32_t bs = g_free[i].start, be = g_free[i].start + g_free[i].size;
-		uint32_t a = (bs + (align - 1)) & ~(align - 1);
+		uint32_t s = bs, e = be, a;
+		if(g_rblock)
+		{	/* nvkm_mm_head: keep away from differently-classed neighbours */
+			if(shim_class_ending_at(bs) != cls)   s = (bs + g_rblock - 1) / g_rblock * g_rblock;
+			if(shim_class_starting_at(be) != cls) e = be / g_rblock * g_rblock;
+			if(s < bs || e > be || s >= e) continue;
+		}
+		a = (s + (align - 1)) & ~(align - 1);
 		if(a < lowest) a = (lowest + (align - 1)) & ~(align - 1);
-		if(a < bs || a + size > be || a + size < a)
+		if(a < s || a + size > e || a + size < a)
 			continue;
 		/* carve [a, a+size) out of block i: head [bs,a) stays as block i (or
 		 * is removed), tail [a+size, be) becomes a new block after it */
@@ -807,14 +893,14 @@ static uint32_t heap_alloc_in(uint32_t size, uint32_t align, uint32_t lowest)
 	}
 	return 0;                                   /* out of VRAM */
 }
-static uint32_t heap_alloc(uint32_t size, uint32_t align, int hi)
+static uint32_t heap_alloc(uint32_t size, uint32_t align, int hi, int cls)
 {
 	uint32_t a;
 	if(g_nfree < 0) heap_init();
 	if(align < 0x100) align = 0x100;
 	size = (size + 0xff) & ~0xffUL;
-	if(hi && (a = heap_alloc_in(size, align, NVSHIM_HEAP_BASE)) != 0) return a;
-	return heap_alloc_in(size, align, 0);
+	if(hi && (a = heap_alloc_in(size, align, NVSHIM_HEAP_BASE, cls)) != 0) return a;
+	return heap_alloc_in(size, align, 0, cls);
 }
 static uint32_t g_heap_frees = 0;
 static void heap_free(uint32_t start, uint32_t size)
@@ -893,6 +979,20 @@ static struct shim_bo *shim_bo_at(uint32_t phys)
 	if(i >= 0 && phys < g_bos[i]->phys + (uint32_t)g_bos[i]->base.size)
 		return g_bos[i];
 	return NULL;
+}
+static int shim_class_ending_at(uint32_t addr)
+{
+	int i = addr ? shim_bo_index(addr - 1) : -1;
+	if(i >= 0 && g_bos[i]->phys + g_bos[i]->asize == addr && !g_bos[i]->external)
+		return shim_kind_class(g_bos[i]->kind);
+	return 1;
+}
+static int shim_class_starting_at(uint32_t addr)
+{
+	int i = shim_bo_index(addr);
+	if(i >= 0 && g_bos[i]->phys == addr && !g_bos[i]->external)
+		return shim_kind_class(g_bos[i]->kind);
+	return 1;
 }
 static void shim_bo_register(struct shim_bo *b)
 {
@@ -1425,7 +1525,8 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 		if(align < 0x10000) align = 0x10000;
 		size = ((uint32_t)size + 0xffffUL) & ~0xffffUL;
 	}
-	phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f));
+	phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f),
+	                  shim_kind_class(tiled ? (config->nv50.memtype & 0x7f) : 0));
 	if(!phys)
 	{
 		/* 3097: nothing is evicted here, but pending work holds the staging BOs
@@ -1443,7 +1544,8 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 			if(!g_cur_push || g_cur_push->cur == (uint32_t*)((struct shim_push_hdr*)g_cur_push)->buf) break;
 			g_kick_src = 6; nouveau_pushbuf_kick(g_cur_push); g_kick_src = 0;
 			push_kref_bufctx((struct shim_push *)g_cur_push);
-			phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f));
+			phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f),
+			                  shim_kind_class(tiled ? (config->nv50.memtype & 0x7f) : 0));
 		}
 		if(n++ < 16) NVLOG3("bo_new: heap full - kicked pending work; size/free before/phys after", (uint32_t)size, ft0, phys);
 	}

@@ -25,6 +25,8 @@ rem   hidepth     put depth buffers in the 64 MB+ VRAM region (3108: the 1024x76
 rem   hicolor     ...or the colour buffers; heaphi showed the holes depend on where in VRAM
 rem   hitiled     ...or every tiled surface  (the buffers sit; these say which one)
 rem   heaphi      everything in the 64 MB+ region (starves the HUD sprites; diagnostic only)
+rem   norblock    3109: switch OFF the row-block rule that keeps swizzled (depth) and plain
+rem               surfaces apart in VRAM (the corner-hole fix) - for A/B only
 rem Logs: C:\nvshim.log (Mesa/shim), C:\nvtail.txt (VxD ring, written through while the
 rem game runs, survives a crash), C:\nvkick.txt (submit dump), C:\nvclk.txt (clocks +
 rem VxD probe). Send all four.
@@ -40,6 +42,7 @@ set NVSHIM_PRESENT_BARRIER=
 set NVSHIM_PRESENT_3D=
 set NVSHIM_CPU_PRESENT=
 set NVSHIM_HIKIND=
+set NVSHIM_RBLOCK=
 set NVHL_GRCTX=
 :flags
 if "%1"=="grctx" goto f_grctx
@@ -54,6 +57,7 @@ if "%1"=="heaphi" goto f_heaphi
 if "%1"=="hidepth" goto f_hidepth
 if "%1"=="hicolor" goto f_hicolor
 if "%1"=="hitiled" goto f_hitiled
+if "%1"=="norblock" goto f_norblock
 goto run
 :f_grctx
 set NVHL_GRCTX=%2
@@ -115,6 +119,11 @@ goto flags
 :f_hitiled
 set NVSHIM_HIKIND=tiled
 echo nvhl: tiled surfaces in the 64 MB+ region
+shift
+goto flags
+:f_norblock
+set NVSHIM_RBLOCK=0
+echo nvhl: row-block separation OFF
 shift
 goto flags
 :run
