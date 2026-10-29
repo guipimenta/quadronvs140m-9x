@@ -23,6 +23,7 @@
 #include "nv50_gpu.h"
 #include "nv50_grctx_g86.h"
 #include "nv50_grctx_g86_2636.h"
+#include "nv50_grctx_g86_xp.h"
 #include "code32.h"
 
 extern nv_hwinfo_t nv_hwinfo;
@@ -253,17 +254,36 @@ int NV_gpu_grinit(nv_gpu_grinit_t *out)
  * editing the registry gets the new one without a reboot:
  *   0 = nouveau v2.6.36 generation (builds 3091-3099, the proven one) - DEFAULT
  *   1 = the same layout/ctxprog with current nouveau's three differing G86 values
- *   2 = current nouveau generation + the zcull/ctxctl zeroing (build 3100) */
+ *   2 = current nouveau generation + the zcull/ctxctl zeroing (build 3100)
+ * 3102 (M5.5 step 11), from NVIDIA's own XP miniport for this chip (nv4_mini.sys, see
+ * analysis/xp_grctx/): its golden context agrees with nouveau's 3D-state defaults almost
+ * entirely, but three PGRAPH unit registers differ - 0x401c00 (TRAST, the triangle
+ * rasterizer: XP 0x042500df, nouveau 0x044d00df for the G86), 0x405000 (CCACHE: XP
+ * 0x000e0080, nouveau 0x00000080) and 0x400844 (XP 0, nouveau 2) - the rasterizer one is
+ * the candidate for the 1024x768-only corner holes (uncovered pixels of huge triangles):
+ *   3 = the XP way: XP's context microcode, XP's golden context values, XP's MMIO list
+ *       written to the registers at init, XP's unit init (TPC 0x408000=0x30, clock gating)
+ *   4 = variant 0 (the proven 3099 context) with only the three XP register values */
 static unsigned long g_grctx_variant = 0;
 static const char GRCTX_conf_path[] = "Software\\vmdisp9x\\vesa";
+
+/* variant 4: the three XP values on the 2.6.36 layout (MMIO part: 0x400828 at dword 1,
+ * then 0x400808.. from dword 0x40 in ctxprog order; 0x401c00 = dword 171, 0x405000 = 189,
+ * 0x400844 = 75 - checked against the 2636 ctxvals holding 0x044d00df / 0x80 / 2 there) */
+static const unsigned long nv50_ctxvals_2636_xp[3][2] = {
+	{171UL, 0x042500dfUL}, {189UL, 0x000e0080UL}, {75UL, 0x00000000UL},
+};
 
 static void grctx_read_variant(void)
 {
 	DWORD v = 0;
-	g_grctx_variant = (RegReadConf(HKEY_LOCAL_MACHINE, (const char*)GRCTX_conf_path, "GrCtx", &v) && v <= 2) ? v : 0;
+	g_grctx_variant = (RegReadConf(HKEY_LOCAL_MACHINE, (const char*)GRCTX_conf_path, "GrCtx", &v) && v <= 4) ? v : 0;
 	dbg_printf("grctx variant %lu (%s)\n", g_grctx_variant,
 		g_grctx_variant == 0 ? "nouveau 2.6.36 = 3099" :
-		g_grctx_variant == 1 ? "2.6.36 layout + current nouveau values" : "current nouveau + zcull init = 3100");
+		g_grctx_variant == 1 ? "2.6.36 layout + current nouveau values" :
+		g_grctx_variant == 2 ? "current nouveau + zcull init = 3100" :
+		g_grctx_variant == 3 ? "NVIDIA XP miniport context (ctxprog + golden values + MMIO init)" :
+		"2.6.36 + XP's TRAST/CCACHE/0x400844 values");
 }
 
 /* zero a channel's grctx and write the selected generation's initial values */
@@ -276,6 +296,13 @@ static void grctx_fill(unsigned long grctx)
 		for(i = 0; i < NV50_CTXVALS_CNT; i++)
 			NV_vram_wr32(grctx + nv50_ctxvals[i][0] * 4, nv50_ctxvals[i][1]);
 	}
+	else if(g_grctx_variant == 3)
+	{
+		/* XP context create (nv4_mini 0x2a1780): zero 0x5bca0 bytes, write the 723 pairs;
+		 * dword 0 (= ramin>>12, written by the caller) feeds the ctxprog's 0x406ff0 slot */
+		for(i = 0; i < NV50_XP_CTXVALS_CNT; i++)
+			NV_vram_wr32(grctx + nv50_ctxvals_xp[i][0] * 4, nv50_ctxvals_xp[i][1]);
+	}
 	else
 	{
 		for(i = 0; i < NV50_CTXVALS_2636_CNT; i++)
@@ -283,8 +310,29 @@ static void grctx_fill(unsigned long grctx)
 		if(g_grctx_variant == 1)
 			for(i = 0; i < NV50_CTXVALS_2636_FIX_CNT; i++)
 				NV_vram_wr32(grctx + nv50_ctxvals_2636_fix[i][0] * 4, nv50_ctxvals_2636_fix[i][1]);
+		if(g_grctx_variant == 4)
+			for(i = 0; i < 3; i++)
+				NV_vram_wr32(grctx + nv50_ctxvals_2636_xp[i][0] * 4, nv50_ctxvals_2636_xp[i][1]);
 	}
 }
+
+/* 3102, variant 3: XP's per-chip PGRAPH unit init (nv4_mini.sys 0x2506c0, G86 method 0x2f)
+ * beyond what nouveau does: the TPC register 0x408000 = 0x30 and the unit clock-gating
+ * registers (envytools G80_CG: VFETCH, VATTR, VCLIP, STRMOUT, TRAST, RATTR, APLANE, ZCULL,
+ * ENG2D, CCACHE, the two ROP partitions' CROP/ZROP, TPC MPC/GEOM/TEX/RAST/PROP). */
+static const unsigned long nv50_unitinit_xp[][2] = {
+	{0x408000UL, 0x00000030UL},
+	{0x400c00UL, 0x00f0c242UL}, {0x401000UL, 0x00f0c242UL}, {0x401530UL, 0x00f0c242UL},
+	{0x401818UL, 0x00f0c242UL}, {0x401c04UL, 0x00f0c242UL}, {0x402404UL, 0x00f0c242UL},
+	{0x402804UL, 0x00f0c242UL}, {0x402cbcUL, 0x00f0c242UL}, {0x403000UL, 0x00f0c2c2UL},
+	{0x405028UL, 0x00f0c242UL}, {0x40700cUL, 0x00f00042UL}, {0x40710cUL, 0x00f00042UL},
+	{0x407090UL, 0x00f00042UL}, {0x407190UL, 0x00f00042UL}, {0x408310UL, 0x00f800c8UL},
+	{0x408414UL, 0x00f0c545UL}, {0x408824UL, 0x00f0c242UL}, {0x40882cUL, 0x00f0c242UL},
+	{0x408830UL, 0x00f0c242UL}, {0x408834UL, 0x00f0c242UL}, {0x408838UL, 0x00f0c242UL},
+	{0x40883cUL, 0x00f0c242UL}, {0x408840UL, 0x00f0c242UL}, {0x408844UL, 0x00f0c242UL},
+	{0x408848UL, 0x00f0c242UL}, {0x408c04UL, 0x00f0c242UL}, {0x408e28UL, 0x00f0c242UL},
+};
+#define NV50_UNITINIT_XP_CNT (sizeof(nv50_unitinit_xp) / sizeof(nv50_unitinit_xp[0]))
 
 /* Shared: PGRAPH reset + register init + context-microcode upload.
  * Returns 1 on success. Leaves PGRAPH powered and idle. */
@@ -336,6 +384,36 @@ static int gpu_pgraph_init(void)
 			NV_wr32(0x402c20 + i * 0x10, 0); NV_wr32(0x402c24 + i * 0x10, 0);
 			NV_wr32(0x402c28 + i * 0x10, 0); NV_wr32(0x402c2c + i * 0x10, 0);
 		}
+	}
+	else if(g_grctx_variant == 3)
+	{
+		/* 3102: the XP miniport's G86 sequence (nv4_mini.sys methods 0x2f, 0x06, 0x1f).
+		 * Its context microcode, then the ctxctl flag registers cleared (0x400824 keeps
+		 * our 0x4000 XFER_ENABLE: XP switches contexts through PFIFO, we load by hand
+		 * with 0x40|RUN exactly as nouveau 2.6.33 did with these very blob ctxprogs),
+		 * the zcull regions zeroed, the extra unit init, then every register of XP's
+		 * MMIO list written with its init value (XP's engine init does this before the
+		 * first channel; its ctxprog only context-switches the TPC registers when
+		 * 0x400830 bit 0 is set, so this is the only way they get their values), and
+		 * 0x400828 bit 0 set as XP's engine init ends. The 230 ICMD 3D-method writes
+		 * XP's engine init also does are not replayed: the golden context carries the
+		 * resulting 3D state. */
+		for(i = 0; i < NV50_XP_CTXPROG_LEN; i++)
+			NV_wr32(PGRAPH_CTXCTL_UCODE_DAT, nv50_ctxprog_xp[i]);
+		NV_wr32(0x400824, 0x00004000UL); NV_wr32(0x40082c, 0); NV_wr32(0x400830, 0);
+		for(i = 0; i < 8; i++)
+		{
+			NV_wr32(0x402c20 + i * 0x10, 0); NV_wr32(0x402c24 + i * 0x10, 0);
+			NV_wr32(0x402c28 + i * 0x10, 0); NV_wr32(0x402c2c + i * 0x10, 0);
+		}
+		for(i = 0; i < NV50_UNITINIT_XP_CNT; i++)
+			NV_wr32(nv50_unitinit_xp[i][0], nv50_unitinit_xp[i][1]);
+		NV_wr32(0x405020, 1);
+		for(i = 0; i < NV50_XP_MMIO_CNT; i++)
+			NV_wr32(nv50_mmio_xp[i][0], nv50_mmio_xp[i][1]);
+		NV_wr32(0x400828, NV_rd32(0x400828) | 1UL);
+		dbg_printf("grctx xp: 0x400800=%lX (XP accepts 5049E8AC/7EE17CC6) 0x401c00=%lX 0x405000=%lX 0x400824=%lX\n",
+			NV_rd32(0x400800), NV_rd32(0x401c00), NV_rd32(0x405000), NV_rd32(0x400824));
 	}
 	else
 	{

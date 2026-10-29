@@ -1,0 +1,7 @@
+REGEDIT4
+
+; grctx3.reg - PGRAPH context generation 3: NVIDIA XP miniport context (ctxprog, golden values, MMIO init) - build 3102
+; read by nvmini.vxd at every GL start (no reboot)
+
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\vesa]
+"GrCtx"="3"

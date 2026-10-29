@@ -104,6 +104,24 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3102 - the 1024x768-only corner holes checked against NVIDIA's own Windows XP driver
+for this chip. nv4_mini.sys carries the G86's complete PGRAPH context setup (context
+microcode, golden context values, the register init list); its golden 3D state is the same
+as nouveau's except three PGRAPH unit registers, and one of them is the triangle rasterizer
+(TRAST 0x401c00: XP uses 0x042500df, every nouveau generation 0x044d00df for the G86) -
+the natural suspect for pixels that huge triangles leave uncovered only at the largest
+viewport. Two more registry-selected context variants, same mechanism as 3101 (no reboot):
+  grctx4.reg = GrCtx 4: the proven 3099 context with only the three XP register values
+               (TRAST, CCACHE 0x405000, 0x400844) - the minimal test, try it FIRST
+  grctx3.reg = GrCtx 3: the XP way - XP's context microcode, XP's golden context, XP's
+               register init list and unit init (clock gating, TPC 0x408000)
+Install: copy nvmini.vxd to C:\WINDOWS\SYSTEM and reboot once. Then: grctx4 + nvsky
+(corner blocks? magenta?), grctx4 + nvhl at 1024x768 (holes?); then the same with grctx3
+(a garbage screen or a hang is possible with 3 - it is the first run of NVIDIA's own
+microcode under our manual context load; grctx0 restores 3099 without a reboot).
+C:\nvtail.txt shows 'grctx variant N' and, for variant 3, 'grctx xp: 0x400800=...' (XP
+only accepts chips answering 5049E8AC or 7EE17CC6 there - please send that line).
+
 Build 3101 - 3100's context made the screen garbage on the T61 (nvsky 800x600 and
 Half-Life; the first nvsky at 1024x768 after the reboot was clean). This build carries all
 three PGRAPH context generations and picks one from the registry at every GL start, so

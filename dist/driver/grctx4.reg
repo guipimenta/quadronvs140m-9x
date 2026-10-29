@@ -1,0 +1,7 @@
+REGEDIT4
+
+; grctx4.reg - PGRAPH context generation 4: the proven 3099 context + XP's TRAST/CCACHE/0x400844 values - build 3102
+; read by nvmini.vxd at every GL start (no reboot)
+
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\vesa]
+"GrCtx"="4"

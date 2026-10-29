@@ -790,6 +790,56 @@ C:\nvkick.txt, C:\nvclk.txt.
   context switch (engine-context slot at inst+0x20, no manual USER_LOAD poke), nv50_fifo
   RAMFC/playlist - rather than the 2.6.36 manual load with a current ctxprog.
 
+### M5.5 step 11 (build 3102): the corner holes checked against NVIDIA's XP driver (nv4_mini.sys)
+- User's ask 2026-10-29: 640x480/800x600 clean, 1024x768 shows small blocks in the screen
+  corners - look at what the XP driver does differently and fix the 98 one. The XP miniport
+  (analysis/xp_extracted/nv4_mini.sys, objdump in analysis/reverse/XP_nv4_mini.asm, VA =
+  file offset + 0x10000) is the authoritative G86 reference: it ran this exact chip.
+- How the XP G86 PGRAPH data was found: chip objects are registered by constructors that
+  store a predicate and a method table ({engine<<24|id, fn} pairs); the G86 one is 0xe0280
+  (predicate 0xe0230 = BOOT0 0x086xxxxx minus rev A1, table 0x44ba18 with 0x50c pairs, class
+  list 0x449178 naming 8297/5097/5039/502d/50c0). Engine 6 = PGRAPH, 61 methods, three of
+  them G86-specific: 0x2f = 0x2506c0 (unit init), 0x30 = 0x250ae0 (installs the context
+  data after a 0x400800 signature check: 0x5049e8ac or 0x7ee17cc6), 0x40 = 0x250d10.
+  0x250ae0 points at: ctxprog = 224 dwords at 0x47a2b8; context size 0x5bca0; 723 {byte
+  offset, value} golden context pairs at 0x3aeaf0 (written by context create, 0x2a1780,
+  into a zeroed buffer); 512 {register, grctx offset, init value} triples at 0x3b0188 (the
+  MMIO list; engine init 0x2a8b40 = method 0x1f writes every register, TPC ones gated by
+  the TPC mask); 230 {method>>2, value} pairs at 0x47a638 that the same engine init feeds
+  to PGRAPH through ICMD (0x400200/0x400204) = the 3D class defaults. Context switches:
+  first bind 0x2a8760 (0x400824 |= 0x800, CTXCTL_CUR written directly), later ones
+  0x2a38c0 (0x400824 |= 0x20 save / 0x40 load, then 0x400304 |= 1) - the same flag bits
+  nouveau 2.6.33 used when it loaded these blob ctxprogs as firmware, i.e. our manual load.
+  analysis/xp_grctx/extract_xp_g86.py regenerates nv50_grctx_g86_xp.h and the listing
+  analysis/xp_grctx/g86_xp_context.txt (ctxprog disassembly, MMIO list, golden values,
+  ICMD methods decoded with Mesa's nv50_3d.xml.h).
+- What differs from nouveau (ctxprog disassembled with the CP_* opcode table of ctxnv50.c):
+  same 502+10 MMIO registers in the same order (the blob also lists the second ROP
+  partition's 0x4071xx, which this 1-ROP G86 does not have; XP writes them anyway), MMIO
+  part at grctx byte 0x100 with 0x400828 at 0x11c (nouveau: dword 1), xfer areas 0x100
+  bytes later than nouveau's (0xa00 / 0x52d00, same strand size 0x2916 and 0x442), the TPC
+  registers context-switched only when 0x400830 bit 0 is set, and the manual-load path
+  with CMD 0x11 / NEWCTXDMA that our load triggers. The golden xfer values are nouveau's
+  (current and 2.6.36) plus the second ROP partition's strand-3 values and nothing else;
+  the MMIO init values differ in exactly three registers: 0x401c00 TRAST (XP 0x042500df,
+  nouveau 0x044d00df - ctxnv50.c groups the G86 with G84/G94, the blob gives it the
+  G92/G96/G98 value), 0x405000 CCACHE (0x000e0080 vs 0x00000080 - again the G84 value) and
+  0x400844 (0 vs 2). The per-TP 0x40821c/0x40829c = 0x018c0000 of current nouveau is what
+  XP writes too (variant 1 was right about that). envytools names the 0xf0c242 family XP
+  also writes at init as the units' clock-gating registers; TPC 0x408000 = 0x30 is unnamed.
+- 3102: GrCtx = 3 (the XP way: XP ctxprog, XP golden context, the 512 MMIO registers
+  written at init, XP unit init, 0x400828 |= 1; 0x400824 keeps 0x4000 for our manual load)
+  and GrCtx = 4 (variant 0 = 3099 + the three XP values at their 2.6.36-layout slots: dwords
+  171/189/75). grctx3.reg/grctx4.reg; the ICMD methods are not replayed (the golden
+  context carries that state). Validation here: VxD builds, LE header parses, both
+  tables in the binary; the fake GPU cannot judge rasterizer config, so the T61 decides.
+- T61 order: install (reboot once), grctx4 nvsky / nvsky 800 600 / nvhl (holes gone =>
+  the TRAST/CCACHE values are the fix, then make 4 the default), then grctx3 the same way
+  (garbage or hang possible: first run of the blob microcode under our manual load; note
+  the 'grctx xp: 0x400800=' line). If neither helps: an A/B of VIEW_VOLUME_CLIP_CTRL
+  (Mesa's NV50_SCISSORS_CLIPPING = 0 vs 0x1080, a shim-side method override), and the
+  XP ICMD defaults for methods Mesa never writes (list in g86_xp_context.txt).
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into
