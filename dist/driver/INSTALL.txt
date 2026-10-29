@@ -113,9 +113,16 @@ VxD told the GPU its page table covers 32 MB while the buffers are mapped at 32-
 (the table really covers all of it); 3108 declares the full table, as nouveau does.
 Tests at 1024x768, grctx0, same spot:
   nvhl                 holes gone? (the PDE fix alone)
-  if not:  nvhl hidepth    then  nvhl hicolor   - only that buffer goes to 64 MB+;
-           the one that cures it names the buffer. (nvhl heaphi is back as a switch.)
-The 3106 present switches (barrier/present3d) are no longer the first thing to try.
+  nvhl grctx 1         the 3099 context with current nouveau's three corrected values -
+                       one of them is the clipping unit's default for a register Mesa
+                       never writes (0x1968: ours says 3, nouveau says 0). Your photos
+                       show one-tile blocks at opposite corners = the far tips of huge
+                       triangles, which is exactly a clipping-unit symptom. This variant
+                       was only ever tried under the channel-reuse bug, never validly.
+  nvhl grctx 2         current nouveau's whole context (same caveat)
+  nvhl hidepth / nvhl hicolor   only that buffer goes to 64 MB+ (names the buffer if
+                       the holes are really about VRAM placement; heaphi is back too)
+Report each run: blocks yes/no. The 3106 present switches are no longer relevant.
 
 Build 3107 - nvhl.bat reviewed (copy it over the one in the Half-Life folder; the
 driver itself is unchanged since 3104). "nvhl grctx N" applies grctxN.reg before the

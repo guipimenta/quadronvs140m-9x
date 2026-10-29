@@ -985,6 +985,27 @@ C:\nvkick.txt, C:\nvclk.txt.
   documented diagnostic switch.
 - T61: nvmini.vxd + reboot; plain `nvhl` at 1024x768 (holes gone?); if not, `nvhl hidepth`,
   `nvhl hicolor`. Photos of the blocks (before/after gl_clear 1) still wanted.
+- Photos received (analysis/t61-logs/3105-photos-*): with gl_clear 1, two RED blocks at the
+  top-left corner, each ~16 px wide x ~64 px tall = ONE nv50 memory tile of a 32-bpp
+  surface (64 B x 64 rows); with gl_clear 0 the same places show stale content and a block
+  at the bottom-right corner; the two corners alternate. On the main menu a thin
+  rainbow-striped band across the 'Console' line. One-tile blocks at the far corners,
+  alternating with the view = the far tips of the two triangles of a screen-filling quad,
+  per-tile coverage dropped by the rasterizer/clipper - the 3099 reading, which the
+  invalid 3102/3103 runs had buried.
+- Mesa sets ZCULL_REGION = 0x3f (zcull unused) -> zcull is NOT it. Mesa builds nv50 with
+  NV50_SCISSORS_CLIPPING: VIEW_VOLUME_CLIP_CTRL = 0 at init and from the rasterizer state
+  (no UNK7/UNK12 bits) - x/y clipping is left to the hardware guard band.
+- The one clipping-related divergence from nouveau we KNOW of: the 2.6.36 context (variant
+  0, the default since 3099) has the clipping strand's defaults shifted - current ctxnv50.c
+  emits FP_CTRL_UNK196C = 3 then UNK1968 = 0; the old generator put the 3 one slot later,
+  so our default context runs with tesla UNK1968 = 3, and Mesa never writes 0x1968 (it does
+  rewrite 0x196c). Variant 1 (2.6.36 layout + the three current values) and variant 2
+  (current nouveau) carry the fix, but both were only ever run under the channel-reuse bug
+  (3101/3102), i.e. never validly. On 3104+ `nvhl grctx 1` / `nvhl grctx 2` are one-command
+  tests. If variant 1 cures it: make the corrected clipping defaults the default.
+- T61 order on 3108 (vxd + reboot), 1024x768, same spot: `nvhl` (PDE fix alone) -> `nvhl
+  grctx 1` -> `nvhl grctx 2` -> `nvhl hidepth` / `nvhl hicolor`. Blocks yes/no each.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
