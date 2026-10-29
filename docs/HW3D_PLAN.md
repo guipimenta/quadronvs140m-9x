@@ -1059,10 +1059,13 @@ C:\nvkick.txt, C:\nvclk.txt.
   process exit, crash). A new owner gets a cold channel (gpu_chan_restart, shared with the
   3104 bound-again path, which stays as the safety net for old shims). Old VxD + new shim:
   the ioctl fails -> treated as ok (old behaviour). (4) nvhl.bat stays for diagnostics.
-- Untested on the T61. Test: import nvgl-on.reg, delete the mesa3d.dll next to hl.exe,
-  reboot (VxD changed), start hl.exe directly; nvshim.log must show 'GPU channel acquired
-  ok/owner'. Then start a second GL program while HL runs (wgltest window) - it must come
-  up in software ('GPU channel BUSY' in its log) and HL must survive.
+- Test: import nvgl-on.reg, delete the mesa3d.dll next to hl.exe, reboot (VxD changed),
+  start hl.exe directly; nvshim.log must show 'GPU channel acquired ok/owner'. Then start a
+  second GL program while HL runs (wgltest window) - it must come up in software ('GPU
+  channel BUSY' in its log) and HL must survive.
+- **3110 CONFIRMED on the T61 (2026-10-30): Half-Life started from its own folder, no
+  batch file, renders on the GPU. Released as v3110.** Milestone: a plain install (vxd +
+  drv + mesa3d.dll in SYSTEM + nvgl-on.reg) runs OpenGL games on the hardware.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
