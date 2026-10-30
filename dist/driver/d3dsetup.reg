@@ -13,5 +13,10 @@ REGEDIT4
 [HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\hl.exe\mesa]
 "MESA_EXTENSION_MAX_YEAR"="2000"
 
+; Soldier of Fortune (Quake 2 engine, 3112): same fixed GL_EXTENSIONS buffer - without this it dies with
+; "SOF caused an invalid page fault ... EIP=4c472032" (the return address overwritten by the text "2 GL")
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\sof.exe\mesa]
+"MESA_EXTENSION_MAX_YEAR"="2000"
+
 [HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers]
 "SOFTWARE"="mesa3d.dll"

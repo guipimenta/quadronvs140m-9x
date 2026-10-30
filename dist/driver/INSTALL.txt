@@ -134,6 +134,11 @@ where it stopped). Also:
                         used before)
   nvhl exe sof.exe      run another game's exe through the launcher (logs + switches;
                         copy nvhl.bat and mesa3d.dll next to that exe as for Half-Life)
+SoF NEEDS MESA_EXTENSION_MAX_YEAR=2000 like Half-Life (a fixed GL_EXTENSIONS buffer; without it
+the software run dies with "SOF caused an invalid page fault ... EIP=4c472032" = the return
+address overwritten by the text "2 GL"): import d3dsetup.reg again (3112 adds the key under
+apps\sof.exe\mesa; a fresh INF install writes it). Any other game with the same crash gets
+the same key under its own exe name.
 To rule the GPU path in or out for SoF: give sof.exe the software renderer with
   [HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\sof.exe\mesa]  "GALLIUM_DRIVER"="llvmpipe"
 (regedit, no reboot) - if the level loads in software, the hang is the GPU path's.
