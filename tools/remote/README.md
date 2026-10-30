@@ -41,6 +41,10 @@ Limits:
 - A file in use cannot be replaced (mesa3d.dll while a GL/D3D program runs: `kill` it first).
 - The debugger cannot see faults in 16-bit code (DDRAW16, nvmini.drv): such a process can
   vanish with exit code -1 and no exception event.
+- Closing a game: `close TITLE` posts WM_CLOSE; Half-Life then asks "Quit Half-Life
+  without saving the current game" in an UNTITLED dialog: `press "*" Ok`. Do not `kill` a
+  game that holds the screen in fullscreen DirectDraw mode: it froze the T61 once.
+  Half-Life's console needs `-console` on its command line (else the backtick opens chat).
 - Focus uses AttachThreadInput, not the usual synthetic Alt tap: Alt press+release puts
   the target's menu bar in menu mode and the typed keys open menus instead.
 - `sh` captures what the batch prints to stdout; COMMAND.COM's own errors ("Bad command
