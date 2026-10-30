@@ -8,6 +8,7 @@
  *     sw = software vertex processing; repeat = create/draw/release the whole
  *     device N times in one process (dxdiag destroys its DX7 device and creates
  *     the DX8 one in the same process).
+ *   16 = fullscreen in 16-bit colour (R5G6B5), as dxdiag's DX8 test runs
  *   cube = also what dxdiag's spinning cube uses: vertex + index buffers in the
  *     default pool, a 256x256 managed texture filled through LockRect,
  *     transforms, a light and DrawIndexedPrimitive.
@@ -44,7 +45,7 @@ static LRESULT CALLBACK wndproc(HWND w, UINT m, WPARAM wp, LPARAM lp) { return D
 
 int main(int argc, char **argv)
 {
-	int i, full = 0, frames = 30, sw = 0, fails = 0, repeat = 1, rep, cube = 0;
+	int i, full = 0, frames = 30, sw = 0, fails = 0, repeat = 1, rep, cube = 0, bpp16 = 0;
 	IDirect3DVertexBuffer8 *vb = NULL; IDirect3DIndexBuffer8 *ib = NULL; IDirect3DTexture8 *tex = NULL;
 	IDirect3D8 *d3d; IDirect3DDevice8 *dev = NULL;
 	D3DPRESENT_PARAMETERS pp; D3DDISPLAYMODE dm; D3DCAPS8 caps; D3DADAPTER_IDENTIFIER8 id;
@@ -55,9 +56,11 @@ int main(int argc, char **argv)
 		else if (!strcmp(argv[i], "frames") && i + 1 < argc) frames = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "repeat") && i + 1 < argc) repeat = atoi(argv[++i]);
 		else if (!strcmp(argv[i], "cube")) cube = 1;
+		else if (!strcmp(argv[i], "16")) bpp16 = 1;
 	}
 	g_log = CreateFileA("d3d8test.txt", GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	say("d3d8test (build 3116): %s, %d frames, %s vertex processing", full ? "fullscreen 640x480" : "windowed 640x480", frames, sw ? "software" : "hardware if offered");
+	if (bpp16) full = 1;
+	say("d3d8test (build 3116): %s%s, %d frames, %s vertex processing", full ? "fullscreen 640x480" : "windowed 640x480", bpp16 ? " 16-bit" : "", frames, sw ? "software" : "hardware if offered");
 
 	memset(&wc, 0, sizeof(wc));
 	wc.lpfnWndProc = wndproc; wc.hInstance = GetModuleHandleA(NULL); wc.lpszClassName = "d3d8test";
@@ -79,14 +82,15 @@ int main(int argc, char **argv)
 	say("   DevCaps %08lx, TnL %s, PrimitiveMiscCaps %08lx, MaxTextureWidth %lu, VertexShaderVersion %08lx, PixelShaderVersion %08lx",
 	    (unsigned long)caps.DevCaps, (caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) ? "yes" : "no", (unsigned long)caps.PrimitiveMiscCaps,
 	    (unsigned long)caps.MaxTextureWidth, (unsigned long)caps.VertexShaderVersion, (unsigned long)caps.PixelShaderVersion);
-	STEP("CheckDeviceType(HAL, X8R8G8B8)", IDirect3D8_CheckDeviceType(d3d, 0, D3DDEVTYPE_HAL, dm.Format, full ? D3DFMT_X8R8G8B8 : dm.Format, !full));
+	STEP("CheckDeviceType(HAL)", IDirect3D8_CheckDeviceType(d3d, 0, D3DDEVTYPE_HAL, full ? (bpp16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8) : dm.Format,
+	     full ? (bpp16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8) : dm.Format, !full));
 	STEP("CheckDepthStencilMatch(D16)", IDirect3D8_CheckDepthStencilMatch(d3d, 0, D3DDEVTYPE_HAL, dm.Format, dm.Format, D3DFMT_D16));
 
 	memset(&pp, 0, sizeof(pp));
 	pp.Windowed = !full;
 	pp.SwapEffect = full ? D3DSWAPEFFECT_FLIP : D3DSWAPEFFECT_DISCARD;
 	pp.BackBufferWidth = 640; pp.BackBufferHeight = 480;
-	pp.BackBufferFormat = full ? D3DFMT_X8R8G8B8 : dm.Format;
+	pp.BackBufferFormat = full ? (bpp16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8) : dm.Format;
 	pp.BackBufferCount = 1;
 	pp.EnableAutoDepthStencil = TRUE;
 	pp.AutoDepthStencilFormat = D3DFMT_D16;

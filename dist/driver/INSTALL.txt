@@ -1,5 +1,5 @@
 =====================================================================
-HOW TO USE (build 3116): install the driver, play the game
+HOW TO USE (build 3117): install the driver, play the game
 =====================================================================
 New machine: Display > Settings > Advanced > Adapter > Change > Have Disk > vmdisp9x.inf,
 pick the NVS 140M entry, reboot. The INF sets everything: every OpenGL program and (3116)
@@ -128,6 +128,18 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3117 - DXDIAG'S DIRECTX 8 TEST FIX. nvmini.vxd only: copy it to C:\WINDOWS\SYSTEM
+and reboot (mesa3d.dll, nvmini.drv and the rest stay 3116).
+What was wrong: dxdiag's DirectX 7 test ran on the GPU, then the DirectX 8 test closed
+dxdiag. The Direct3D layer (vmhal3d.dll) opens its own handle to nvmini.vxd and closes it
+when Windows unloads it between the two tests; the VxD freed the program's GPU channel
+and its system memory (GART) at EVERY handle close, so the GPU screen Mesa still used
+lost its memory and the DirectX 8 test read a dead page. Now the VxD frees them only
+when the program closes its LAST handle (or exits). Found with the remote test tools
+(a debug vmhal3d.dll caught the access violation in Mesa's fence read).
+Any program that loads and unloads Direct3D more than once (a game's menu -> level ->
+menu, a launcher) could hit the same thing.
+T61 test: DXDIAG -> Display -> Test Direct3D, all three tests must complete.
 Build 3116 - DIRECT3D ON THE GPU. mesa3d.dll only: copy it to C:\WINDOWS\SYSTEM, no
 reboot (nvmini.vxd / nvmini.drv / nvprobe.exe restamped, copying them is optional; new:
 ostest.exe -> C:\NVMINI). UNTESTED ON HARDWARE - the simulation passed, the T61 decides.

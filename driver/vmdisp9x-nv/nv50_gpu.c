@@ -1589,6 +1589,48 @@ void NV_gpu_release(unsigned long tag)
 	}
 }
 
+/* 3117: the GPU channel and the GART pages belong to the process until its LAST
+ * handle to this VxD closes. DIOCParams.tagProcess is per process, not per
+ * handle (probed on the T61: two CreateFile handles of one process carry the
+ * same tag), and a process can hold several: Mesa's shim keeps one for the
+ * screen's lifetime while vmhal3d.dll opens its own in DLL_PROCESS_ATTACH and
+ * closes it in DLL_PROCESS_DETACH. dxdiag unloads vmhal3d.dll after its
+ * Direct3D 7 test, so releasing at every close freed the GART pages under the
+ * live nouveau screen (its fence page among them) and the DirectX 8 test's first
+ * kick read the fence through a dead mapping (mesa3d nv50_screen_fence_update,
+ * access violation caught by the HAL; dxdiag then quit with code -1). nouveau
+ * ties these resources to the open DRM file; with only a process tag on 9x,
+ * counting the process's opens is the equivalent: released when the process
+ * closes its last handle, which Windows does for every handle at exit. */
+#define NV_PROC_MAX 64
+static struct { unsigned long tag, opens; } g_proc[NV_PROC_MAX];
+
+void NV_proc_open(unsigned long tag)
+{
+	int i, free_slot = -1;
+	if(!tag) return;
+	for(i = 0; i < NV_PROC_MAX; i++)
+	{
+		if(g_proc[i].opens && g_proc[i].tag == tag) { g_proc[i].opens++; return; }
+		if(!g_proc[i].opens && free_slot < 0) free_slot = i;
+	}
+	if(free_slot >= 0) { g_proc[free_slot].tag = tag; g_proc[free_slot].opens = 1; }
+	/* table full: that process is not counted and its first close releases (the 3115 rule) */
+}
+
+int NV_proc_close(unsigned long tag)
+{
+	int i;
+	for(i = 0; i < NV_PROC_MAX; i++)
+		if(g_proc[i].opens && g_proc[i].tag == tag)
+		{
+			if(--g_proc[i].opens) return 0;     /* the process still holds a handle */
+			g_proc[i].tag = 0;
+			return 1;
+		}
+	return 1;
+}
+
 int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out)
 {
 	unsigned long inst;

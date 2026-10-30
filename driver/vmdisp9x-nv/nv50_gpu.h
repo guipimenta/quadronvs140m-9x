@@ -92,5 +92,7 @@ void NV_gart_release(unsigned long tag);                      /* DIOC_CLOSEHANDL
 int  NV_gart_kind(unsigned long vmoff, unsigned long size, unsigned long kind);
 int NV_gpu_acquire(unsigned long tag, unsigned long *owner);   /* 3110: 1 = tag owns the channel, 0 = busy */
 void NV_gpu_release(unsigned long tag);                        /* 3110: DIOC_CLOSEHANDLE of the owner */
+void NV_proc_open(unsigned long tag);                          /* 3117: DIOC_OPEN */
+int  NV_proc_close(unsigned long tag);                         /* 3117: DIOC_CLOSEHANDLE; 1 = that was the process's last handle */
 
 #endif /* NV50_GPU_H */

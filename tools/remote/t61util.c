@@ -32,6 +32,7 @@
  *   click <x> <y> [right|double] mouse click at screen coordinates
  *   key <combo>...              keys: enter, tab*3, ctrl+tab, alt+f4, shift+a ...
  *   text <string>               type a string
+ *   pending <dst> <src>         WININIT.INI [rename] dst=src: replace a file in use at the next boot
  *   autostart on|off|show       HKLM Run key "W98Remote" = <this folder>\t61boot.exe supervise
  *   supervise                   (from the Run key) keep w98agent.exe running, log t61boot.log
  *
@@ -986,6 +987,19 @@ int main(int argc, char **argv)
 	if (!strcmp(c, "key") && argc >= 3) { int i, r = 0; for (i = 2; i < argc && !r; i++) r = cmd_key(argv[i]); return r; }
 	if (!strcmp(c, "text") && argc == 3) return cmd_text(argv[2]);
 	if (!strcmp(c, "autostart") && argc == 3) return cmd_autostart(argv[2]);
+	if (!strcmp(c, "pending") && argc == 4) {
+		/* WININIT.INI [rename] dst=src: applied at the next boot before Windows loads
+		 * anything, the only way to replace a DLL in use (the shared-arena HAL).
+		 * Both names must be short (8.3) paths. */
+		char sd[MAX_PATH], ss[MAX_PATH], ini[MAX_PATH];
+		if (!GetShortPathNameA(argv[3], ss, sizeof(ss))) return fail("short name of", argv[3]);
+		if (!GetShortPathNameA(argv[2], sd, sizeof(sd))) lstrcpynA(sd, argv[2], sizeof(sd));
+		GetWindowsDirectoryA(ini, sizeof(ini));
+		lstrcatA(ini, "\\WININIT.INI");
+		if (!WritePrivateProfileStringA("rename", sd, ss, ini)) return fail("write", ini);
+		out("%s: [rename] %s=%s (at the next boot)\n", ini, sd, ss);
+		return 0;
+	}
 	if (!strcmp(c, "reboot") && (argc == 2 || argc == 3)) {
 		/* Default: the Start menu's restart (SHExitWindowsEx), run by a watcher
 		 * detached from the agent's console that answers the console's "quit

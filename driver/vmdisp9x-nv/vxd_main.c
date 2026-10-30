@@ -1016,13 +1016,20 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 		case DIOC_OPEN:
 			dbg_printf("DIOC_OPEN\n");
 			io_open_cnt++;
+#ifdef NV_DETECT
+			NV_proc_open(params->tagProcess);     /* 3117: count the process's handles */
+#endif
 			rc = 0;
 			break;
 		case DIOC_CLOSEHANDLE:
 			io_open_cnt--;
 #ifdef NV_DETECT
-			NV_gpu_release(params->tagProcess);   /* 3110: the GPU channel's owner is gone */
-			NV_gart_release(params->tagProcess);  /* 3115: and its system-memory buffers with it */
+			/* 3117: only when the process closes its LAST handle (see NV_proc_close) */
+			if(NV_proc_close(params->tagProcess))
+			{
+				NV_gpu_release(params->tagProcess);   /* 3110: the GPU channel's owner is gone */
+				NV_gart_release(params->tagProcess);  /* 3115: and its system-memory buffers with it */
+			}
 #endif
 #ifdef SVGA
 			if(io_open_cnt == 0)

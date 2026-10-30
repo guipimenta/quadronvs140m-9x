@@ -1252,6 +1252,34 @@ C:\nvkick.txt, C:\nvclk.txt.
     DXTn? - mipmaps, a 16-bit back buffer, D3DCREATE flags, a separate test thread) and add
     it to d3d8test until it reproduces; logs: analysis/t61-remote/3116-dxdiag-debug.txt.
 
+### Build 3117: DirectX 8 after DirectX 7 in one process - the VxD released per process at every handle close (CONFIRMED on the T61, remotely)
+
+- Root cause, found remotely on the T61 (2026-10-30): a DEBUG vmhal9x/vmhal3d (DDDEBUG=3,
+  upstream 8bc480e, installed through WININIT.INI + remote reboot) logged
+  `E|EXCEPTION` in MesaBufferFBOSetup of the DX8 test's first context, and its
+  C:\vmhal.dump gave the address: mesa3d.dll+0x3FF7A (named with a relinked map of the
+  same objects) = nv50_screen_fence_update, `screen->fence.map[0]`, the map pointer
+  0x841D6000 dead. The fence BO is in GART since 3115.
+- Why the page was gone: vmhal3d.dll opens its own nvmini.vxd handle in
+  DLL_PROCESS_ATTACH (FBHDA_load) and closes it in DLL_PROCESS_DETACH; dxdiag unloads
+  vmhal3d.dll after the DX7 test and loads it again for DX8. DIOC_CLOSEHANDLE released the
+  process's GPU channel ownership (3110) and ALL its GART pages (3115) by
+  DIOCParams.tagProcess - and tagProcess is per PROCESS (probe on the T61: two
+  CreateFile handles of one process carry the same tag; closing one released the channel
+  the other still used). Mesa's screen (one per process, kept by the shim's own handle)
+  lived on with freed pages. The HAL's exception filter swallowed the fault, the test
+  thread reported failure and dxdiag quit with -1 - nothing reached a Win32 debugger.
+- Fix (nvmini.vxd only): NV_proc_open/NV_proc_close count each process's open handles;
+  the channel and GART are released when the process closes its LAST handle (Windows
+  closes them all at exit). nouveau ties these resources to the open DRM file; with only
+  a process tag on 9x, the process's last close is the equivalent.
+- T61 (remote): the handle probe keeps the owner after one of two handles closes; DXDIAG
+  Test Direct3D: D3D7, D3D8 and D3D9 "All tests were successful" on the GPU
+  (analysis/t61-remote/3117-dxdiag.txt). d3d8test.exe (16-bit fullscreen, cube,
+  repeat) also passes.
+- Any program that loads/unloads Direct3D more than once (menu -> level -> menu,
+  launchers) could have hit it.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

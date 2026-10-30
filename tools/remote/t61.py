@@ -14,7 +14,8 @@ automatically. Lifts the agent's limits: absolute Windows paths, files over
   t61.py start EXE [ARGS...]             (do not wait: GUI programs, games)
   t61.py logs [LOCALDIR]                 (C:\\nvshim.log, nvlast, nvkick, nvtail, nvclk)
   t61.py shot LOCAL.png
-  t61.py install FILE...                 (into C:\\WINDOWS\\SYSTEM, old copy kept in C:\\NVBACKUP)
+  t61.py install FILE...                 (into C:\\WINDOWS\\SYSTEM, old copy kept in C:\\NVBACKUP;
+                                          a file in use is replaced at the next reboot via WININIT.INI)
   t61.py reboot [-t SECS] [force]        (Start-menu restart; waits up to SECS, default 600,
                                           for the agent, skips the network logon, waits for the desktop)
   t61.py endtasks                        (a shutdown stuck on End Task prompts: answer them, then as reboot)
@@ -270,7 +271,18 @@ def main():
                 if t.util("crc", dst, echo=False, check=False)[0] == 0:
                     t.util("copy", dst, f"{BACKUP}\\{name}", echo=False)
                     print(f"backed up {dst} -> {BACKUP}\\{name}")
-                t.put(f, dst)
+                try:
+                    t.put(f, dst)
+                except RuntimeError as exc:
+                    if "error 32" not in str(exc):
+                        raise
+                    # in use (a DLL DirectDraw keeps loaded): stage it and let
+                    # WININIT.INI replace it at the next boot
+                    stem, ext = name.rsplit(".", 1) if "." in name else (name, "")
+                    staged = (stem[:7] + "n." + ext[:3]).lower()
+                    t.put(f, staged)
+                    t.util("pending", dst, "C:\\remote\\" + staged)
+                    print(f"{dst} is in use: replaced at the next reboot")
         elif v in ("wins", "kids", "focus", "close", "press", "waitwin", "click", "key", "text", "autostart", "debug") and (x or v == "wins"):
             secs = int(x[1]) + 15 if v == "waitwin" and len(x) == 2 else 60
             code, _ = t.util(v, *x, timeout=min(secs, 600), check=False)
