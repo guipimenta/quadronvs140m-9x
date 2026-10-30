@@ -1280,6 +1280,24 @@ C:\nvkick.txt, C:\nvclk.txt.
 - Any program that loads/unloads Direct3D more than once (menu -> level -> menu,
   launchers) could have hit it.
 
+### Half-Life 1.0.1.0 in Direct3D mode on 3117 (T61, remote, 2026-10-30)
+
+- `hl.exe -d3d -console +map c0a0`: runs on the GPU (OSMesa -> nouveau screen, channel
+  acquired, VxD 3117 / shim 3116); the tram ride plays, input works (arrow keys turn the
+  view); `timerefresh` = 3.24 s / 128 frames = 39.5 fps at 640x480x16.
+- RENDERING IS WRONG, and the SAME with Half-Life on llvmpipe (registry override for hl.exe
+  only): white wedges/slivers along polygon edges, and on `+map c1a0` stretched textures
+  and stray polygons over the whole screen. So it is the HAL path (vmhal3d.dll's handling of
+  Half-Life 1.0's Direct3D renderer: pre-transformed vertices / clipping / state), not
+  nouveau. Screenshots: analysis/t61-remote/hl-d3d/ (c1a0-gpu.png vs c1a0-sw.png).
+- Killing hl.exe while it held the screen in exclusive mode (llvmpipe run) left the T61
+  unreachable (agent gone, supervisor did not restart it): the hl.exe llvmpipe override
+  may still be set - revert with `nvapp hl.exe gpu`. Half-Life's renderer setting was
+  saved before the test (analysis/t61-remote/hl-d3d/hlreg-before.txt: EngineType 3).
+- NEXT: reproduce HL's Direct3D draw pattern in d3d8test-style (DX6/7 TLVERTEX, clip
+  status, guard band caps) or trace it with the debug HAL; compare with upstream vmhal9x
+  issues for Half-Life D3D.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into
