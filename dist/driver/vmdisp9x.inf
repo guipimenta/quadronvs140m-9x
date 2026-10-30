@@ -153,11 +153,10 @@ HKLM,Software\vmdisp9x\apps\global\mesa,LP_NATIVE_VECTOR_WIDTH,,128
 ; removes the global value). mesa3d.dll falls back to software if the GPU screen fails.
 HKLM,Software\vmdisp9x\apps\global\mesa,GALLIUM_DRIVER,,"nouveau"
 ; (3113: the GL_EXTENSIONS year cap 2000 old engines need is mesa3d.dll's own default, no key)
-; GPU compatibility list (3114): programs whose levels do not fit the GPU driver's VRAM
-; heap yet (they hang at level load) run on software OpenGL out of the box. The list
-; shrinks as the GPU driver learns to use system memory (GART); a line goes when the
-; game is confirmed on the GPU.
-HKLM,Software\vmdisp9x\apps\sof.exe\mesa,GALLIUM_DRIVER,,"llvmpipe"
+; GPU compatibility list (3114): programs that have to run on software OpenGL get
+; GALLIUM_DRIVER,,"llvmpipe" under apps\<exe>\mesa here. EMPTY since 3115 (GART: levels
+; that do not fit video memory spill into system memory) - Soldier of Fortune, the only
+; entry, is confirmed on the GPU; VM.DelReg clears the 3114 override on an upgrade.
 ; OpenGL ICD (3046+): opengl32.dll asks the display driver (OPENGL_GETINFO
 ; escape) for an ICD name, nvmini.drv answers "SOFTWARE", and this key maps it
 ; to mesa3d.dll. Only valid with the mesa3d.dll built against this driver's
@@ -272,6 +271,7 @@ HKLM,Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers,SOFTWARE
 HKLM,Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers,VMWSVGA
 HKLM,Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers,QEMUFX
 HKLM,Software\Microsoft\Windows\CurrentVersion\Run,Tray3D
+HKLM,Software\vmdisp9x\apps\sof.exe\mesa,GALLIUM_DRIVER
 HKLM,Software\vmdisp9x\svga
 HKLM,Software\vmdisp9x\vesa
 

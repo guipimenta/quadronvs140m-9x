@@ -1,11 +1,11 @@
 =====================================================================
-HOW TO USE (build 3114): install the driver, play the game
+HOW TO USE (build 3115): install the driver, play the game
 =====================================================================
 New machine: Display > Settings > Advanced > Adapter > Change > Have Disk > vmdisp9x.inf,
-pick the NVS 140M entry, reboot. The INF sets everything, including which programs run
-on the GPU (all of them) and which run on software OpenGL for now (the compatibility
-list at the end of the INF: Soldier of Fortune, whose levels do not fit the GPU
-driver's video memory yet). Then double-click the game on the desktop.
+pick the NVS 140M entry, reboot. The INF sets everything: every OpenGL program runs on
+the GPU (the compatibility list at the end of the INF, for programs that must stay on
+software OpenGL, is empty since 3115 - Soldier of Fortune left it). Then double-click
+the game on the desktop.
 
 Updating a machine that already runs 3110 or later: copy from this folder
     mesa3d.dll   -> C:\WINDOWS\SYSTEM   (overwrite)
@@ -128,7 +128,7 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
-Build 3115 - GART: SYSTEM-MEMORY BUFFERS (the Soldier of Fortune level-load fix, nouveau's
+Build 3115 (CONFIRMED on the T61, released v3115) - GART: SYSTEM-MEMORY BUFFERS (the Soldier of Fortune level-load fix, nouveau's
 way). nvmini.vxd AND mesa3d.dll changed: copy both to C:\WINDOWS\SYSTEM and reboot once
 (nvprobe.exe, wgltest.exe restamped; nvmini.drv restamped). UNTESTED ON HARDWARE - the
 simulation (fake GPU on the host) passed, the T61 decides.
@@ -142,19 +142,23 @@ buffers there: the ones Mesa asks for in system memory anyway (fences, upload st
 vertex/stream buffers: no more copy-to-VRAM bounce for them, the program writes straight
 into the pages the GPU reads) and, when video memory is full, textures too, instead of
 failing. The GART grows on demand in 4 MB slabs, up to half of the machine's RAM (at
-most 384 MB); everything is given back when the program exits. The INF's compatibility
-list still runs sof.exe on software OpenGL - it leaves the list once the T61 confirms
-SoF on the GPU.
-T61 test, in this order:
+most 384 MB); everything is given back when the program exits.
+CONFIRMED ON THE T61 (2026-10-30): wgltest load (900 textures resident on all 3 levels,
+no out-of-memory), Half-Life, and Soldier of Fortune on the GPU all pass. MILESTONE: SoF
+plays on the GPU. So sof.exe left the INF's compatibility list: a fresh INF install puts
+it on the GPU like everything else. A machine that got 3114's software override (the INF
+or d3dsetup.reg of 3114, or "nvapp sof.exe sw") needs it removed ONCE, any of: reinstall
+the INF, import d3dsetup.reg, or nvapp sof.exe gpu.
+The T61 test that confirmed it, in this order (for the record / another machine):
   1. wgltest driver mesa3d.dll window load      - must finish loading: wgltest_load.txt
      (next to wgltest.exe) must say "LOADED 900 textures, first oom at -1, oom 0" for
      level 1 (it did under the fake GPU), then play 150 frames, delete, reload (3 levels).
      Then nvlogs load1. If it hangs or the screen is wrong: nvlogs load1 after the reset.
   2. Half-Life as usual (the vertex and staging buffers are now in system memory - the
      frame rate should be the same or better; any new artifact = nvlogs hl1).
-  3. SoF on the GPU: nvapp sof.exe gpu (a diagnostic switch; nvapp sof.exe sw puts it
-     back on the list), start sof.exe from the desktop, training, then a real level. On a
-     hang: reset, nvlogs sof1 (C:\nvshim.log + C:\nvlast.txt say where it stopped).
+  3. SoF on the GPU: start sof.exe from the desktop, training, then a real level (on a
+     machine with the 3114 override: nvapp sof.exe gpu first; nvapp sof.exe sw = the A/B).
+     On a hang: reset, nvlogs sof1 (C:\nvshim.log + C:\nvlast.txt say where it stopped).
 A/B if the GPU path misbehaves: NVSHIM_GART=0 in HKLM\Software\vmdisp9x\apps\global\mesa
 (or apps\<exe>\mesa; nvapp <exe> show prints the keys) puts every buffer back in video
 memory = the 3114 behaviour; NVSHIM_GART=<MB> caps it. nvshim.log lines to look for:

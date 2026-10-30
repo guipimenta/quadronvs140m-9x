@@ -1119,7 +1119,7 @@ C:\nvkick.txt, C:\nvclk.txt.
   + off; map = ptr; flush/verify/scan skip GART BOs (coherent); registry keyed by VM
   address; fake GPU: GART = malloc. Cap GART at 128 MiB (registry), NVSHIM_GART=0 A/B.
 
-### Build 3115: GART - system-memory buffer objects (nouveau's way; UNTESTED on the T61)
+### Build 3115: GART - system-memory buffer objects (nouveau's way; CONFIRMED on the T61 2026-10-30, released v3115)
 - What: the channel VM gets PDE 1 (VM 512 MiB-1 GiB) -> a 4 KiB-page table of 1 MiB at
   VRAM 0x03700000 (55-56 MiB, reserved since 3112). Encodings checked against
   nvkm/subdev/mmu/vmmnv50.c (cached in the b92b7198 scratchpad nvref/): PDE lo = table |
@@ -1175,6 +1175,12 @@ C:\nvkick.txt, C:\nvclk.txt.
   with a GART address in nvtail = the PTE target/kind encoding; black or stale textures =
   cache coherency of the locked pages; a hang in the first kick after "gart slab" = the
   PDE. A/B: NVSHIM_GART=0 (registry) = 3114 behaviour.
+- T61 RESULT (2026-10-30): all three pass - wgltest load (900 textures resident on every
+  level, no GL_OUT_OF_MEMORY), Half-Life as usual, and Soldier of Fortune on the GPU
+  (training + a real level). MILESTONE: SoF plays on the GPU; the 3112 level-load hang is
+  gone. Package follow-up in the same release: sof.exe left the INF's compatibility list
+  (the list is empty), VM.DelReg and d3dsetup.reg ("GALLIUM_DRIVER"=-) remove the 3114
+  override on an upgrade; the 3115 binaries are unchanged. Released as v3115.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
