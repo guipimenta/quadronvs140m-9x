@@ -59,7 +59,11 @@ driver is a working implementation of the same contract for the same GPU.
    **reference picture** for a Win98 rendering bug. Booting XP needs the user at the boot
    menu (or a boot.ini default change, which is a system change: ask first), and the
    win98-remote agent is only set up on Win98 (tools/remote/README.md), so plan an XP
-   session with the user. Check first that XP still has this driver installed.
+   session with the user. Verified 2026-10-31: XP's partition is NTFS and Win98 on the T61
+   reads it as **D:** (`t61.py dir D:\WINDOWS`); XP's installed `nv4_disp.dll`,
+   `nvoglnt.dll` and `drivers\nv4_mini.sys` are byte-identical to `analysis/xp_extracted/`,
+   and XP has DirectX 9 (d3d8.dll/d3d9.dll). So results an XP session saves in XP's
+   `C:\xpref` can be read back from Win98 at `D:\xpref`.
 2. **Static, from the binaries.** Symbols are stripped; find code through:
    - strings and constants: DDI GUID bytes, `D3DCAPS8/9` field values, FourCC/`D3DFMT_*`
      codes, registry value names (`strings -n 6 analysis/xp_extracted/nv4_disp.dll`);
