@@ -1232,6 +1232,25 @@ C:\nvkick.txt, C:\nvclk.txt.
   `ostest threads 1` (first context left current on an exited worker thread) PASS (2100).
   Report: analysis/t61-remote/3116-ostest-threads.txt. So the context sequence itself works
   on the hardware; the DX8 crash is specific to what vmhal3d.dll's DX8 path does next.
+- DX8 investigation, all run remotely on the T61 (2026-10-30, tools/remote/t61.py driving
+  dxdiag's buttons; d3d8test.exe = driver/vmdisp9x-nv/tools/d3d8test.c):
+  - dxdiag's DX7 test renders on the GPU (screenshot: the spinning DirectX cube).
+  - dxdiag's DX8 test: d3d8.dll loads, Mesa creates its context, ~0.1 s later the process
+    exits with code -1. NO exception reaches a Win32 debugger (t61util debug), no GPF box,
+    no Dr. Watson record. At exit dxdiag's main thread is in its own shutdown path
+    (WaitForSingleObject on the test thread, dxdiag.exe+1d077) and the test thread is in
+    SendMessageA (+1c122): dxdiag quit by itself, most likely after its test thread caught
+    a fault that never reached the debugger (a fault in 16-bit code reached via a thunk
+    does not), so the culprit is on the DDRAW16/16-bit side or an SEH-swallowed fault.
+  - SAME with dxdiag on llvmpipe (registry GALLIUM_DRIVER=llvmpipe for dxdiag.exe only,
+    restored afterwards): NOT the nouveau/GPU path.
+  - d3d8test.exe PASSES on the GPU: windowed and fullscreen 640x480, HAL device with
+    hardware TnL, Clear/DrawPrimitiveUP/Present; `repeat 3` (device destroyed and created
+    again in one process); `cube` (default-pool VB + IB, managed texture via LockRect,
+    transforms, light, DrawIndexedPrimitive, 120 frames).
+  - NEXT: find what dxdiag's DX8 test does that d3d8test does not (its texture format -
+    DXTn? - mipmaps, a 16-bit back buffer, D3DCREATE flags, a separate test thread) and add
+    it to d3d8test until it reproduces; logs: analysis/t61-remote/3116-dxdiag-debug.txt.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim

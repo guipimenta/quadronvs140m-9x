@@ -1,0 +1,200 @@
+debugging pid fffbb38f: "C:\WINDOWS\SYSTEM\dxdiag.exe" 
+load 01000000-010ec000 exe
+[10] load 65340000-653db000 OLEAUT32.dll
+[12] load 65f00000-65fc2000 ole32.dll
+[14] load 66800000-668fb000 SHELL32.dll
+[16] load 63180000-631cc000 SHLWAPI.dll
+[18] load 7fe10000-7fe3c000 comdlg32.dll
+[20] load bfb70000-bfbf8000 COMCTL32.dll
+[21] load bfc00000-bfc11000 USER32.dll
+[23] load bff20000-bff46000 GDI32.dll
+[25] load bfe80000-bfe90000 ADVAPI32.dll
+[26] load bff70000-bffea000 KERNEL32.dll
+[32] load bfe70000-bfe76000 VERSION.dll
+[33] load bfdd0000-bfde0000 WINMM.dll
+[35] load 00ca0000-00e49000 DxDiagn.DLL
+[38] load 70100000-70155000 RPCRT4.dll
+[41] load bfee0000-bfee5000 NTDLL.dll
+[43] load 7f810000-7f81b000 CFGMGR32.dll
+[45] load 75a00000-75a13000 Cabinet.dll
+[46] load 7fe40000-7fe49000 WINSPOOL.DRV
+[48] load 7fbf0000-7fbfe000 MPR.dll
+[49] load bfe60000-bfe66000 LZ32.dll
+[50] load 011f0000-012cb000 SETUPAPI.dll
+[54] load 76c90000-76cb9000 IMAGEHLP.dll
+[56] load 77430000-77441000 MSASN1.dll
+[57] load 5cf00000-5cf75000 CRYPT32.dll
+[59] load 7c000000-7c054000 MSVCR70.dll
+[61] load 47600000-4762a000 WINTRUST.dll
+[97] load beaf0000-beb70000 DSOUND.dll
+[99] unload DSOUND.dll
+[156] load beaf0000-beb70000 DSOUND.dll
+[160] unload DSOUND.dll
+[189] thread fffbc10f start 01025876
+[190] load 48000000-4806c000 RICHED20.dll
+[446] load baaa0000-bab09000 DDRAW.dll
+[448] load 018f0000-01a8d000 d3d9.dll
+[465] load 10000000-10038000 vmhal3d.dll
+[477] unload d3d9.dll
+[478] unload DDRAW.dll
+[506] load baaa0000-bab09000 DDRAW.dll
+[514] load 56660000-56702000 d3dim.dll
+[603] load beaf0000-beb70000 DSOUND.dll
+[608] load 5ef80000-5ef84000 ksuser.dll
+[617] thread fffb2f43 start beb42b17
+[618] thread fffb2f43 exit 0
+[619] unload DSOUND.dll
+[649] load beaf0000-beb70000 DSOUND.dll
+[651] load 7b620000-7b639000 MSACM32.dll
+[652] load 77180000-7719e000 dmusic.dll
+[657] load 60300000-60307000 dmusic32.dll
+[659] load 77480000-7749d000 dmsynth.DLL
+[709] load 70000000-700b2000 DINPUT8.dll
+[711] load 7d060000-7d069000 HID.DLL
+[865] unload DINPUT8.dll
+[871] unload HID.DLL
+[908] load 75fa0000-75faa000 WSOCK32.dll
+[910] load 01f00000-01fb1000 DPNet.dll
+[912] load 75fe0000-75fe6000 WS2HELP.dll
+[913] load 76000000-76012000 WS2_32.dll
+[915] load 7f960000-7f97e000 TAPI32.dll
+[917] load 63000000-63079000 WININET.dll
+[919] load 794d0000-794e5000 MSWSOCK.dll
+[925] load 01f00000-01f5e000 DPVOICE.dll
+[927] load 00fd0000-00fd8000 DPVACM.dll
+[931] load 00fe0000-00fe8000 tsd32.dll
+[932] load 75d30000-75d35000 TSSOFT32.acm
+[935] load 75d40000-75d49000 MSGSM32.acm
+[937] load 75d80000-75d88000 MSADP32.acm
+[940] load 01f60000-01f7e000 DPVVOX.dll
+[986] load 35680000-356a3000 DEVENUM.DLL
+[990] load 00ff0000-00ff7000 msdmo.dll
+[993] load 73ae0000-73b25000 MSVCRT20.dll
+[994] load 7e080000-7e086000 DCIMAN32.dll
+[995] load 79630000-79654000 MSVFW32.dll
+[997] load 7f690000-7f6a1000 AVICAP32.dll
+[998] load bfde0000-bfde5000 WOW32.dll
+[1002] unload AVICAP32.dll
+[1002] unload MSVCRT20.dll
+[1003] unload MSVFW32.dll
+[1004] unload WOW32.dll
+[1004] unload DCIMAN32.dll
+[1008] load 01f80000-0216b000 QUARTZ.dll
+[1079] load 7e080000-7e086000 DCIMAN32.dll
+[1085] load 79630000-79654000 MSVFW32.dll
+[1086] load bfde0000-bfde5000 WOW32.dll
+[1093] unload MSVFW32.dll
+[1094] unload WOW32.dll
+[1095] unload DCIMAN32.dll
+[1105] load 6b100000-6b10b000 lhacm.dll
+[1108] load 75da0000-75da8000 IMAADP32.acm
+[1110] load 7e2b0000-7e2b6000 MSG711.acm
+[1113] load 6ba00000-6ba1d000 msg723.dll
+[1115] load 02170000-021a9000 IAC25_32.ax
+[14371] load 027c0000-0747a000 mesa3d.w98me.dll
+[14378] load 32500000-32512000 vmdisp9x.dll
+[14389] load 077e0000-078c0000 d3dim700.dll
+[27950] load 083f0000-08527000 d3d8.dll
+[28058] thread fffbc10f exit 4294967295
+eax 00000000 ebx 000013ae ecx 00bd3080 edx 00000008 esi 00000000 edi 00008002
+ebp 00faff64 esp 00fafdcc eip 0101c128 (exe+1c128) efl 00200246
+ebp chain:
+  00000000 ?+0
+stack words that point into modules (esp+offset):
+  +03c bff713e2 KERNEL32.dll+13e2
+  +044 bff99b6b KERNEL32.dll+29b6b
+  +058 bff7c8b3 KERNEL32.dll+c8b3
+  +068 bff957e5 KERNEL32.dll+257e5
+  +07c bff89ad2 KERNEL32.dll+19ad2
+  +094 bff899ee KERNEL32.dll+199ee
+  +1b0 bffc0684 KERNEL32.dll+50684
+  +1c0 01026d0c exe+26d0c
+  +1c4 01007a58 exe+7a58
+  +1d0 bff88f20 KERNEL32.dll+18f20
+  +1f4 bffc0684 KERNEL32.dll+50684
+  +1f8 bff79050 KERNEL32.dll+9050
+  +204 bff869ef KERNEL32.dll+169ef
+  +208 01025876 exe+25876
+  +224 bffc0684 KERNEL32.dll+50684
+  +228 bff79060 KERNEL32.dll+9060
+[28081] process exit code ffffffff, thread fffb76c3
+eax 00000010 ebx 00000000 ecx c180ba20 edx 00000002 esi 01004740 edi 01033f50
+ebp 0056fd10 esp 0056f9d0 eip 0101d07d (exe+1d07d) efl 00200246
+ebp chain:
+  010249ff exe+249ff
+  bff957d9 KERNEL32.dll+257d9
+  00000000 ?+0
+stack words that point into modules (esp+offset):
+  +008 bff741f7 KERNEL32.dll+41f7
+  +00c bffcd490 KERNEL32.dll+5d490
+  +010 bff86b47 KERNEL32.dll+16b47
+  +014 bffcd490 KERNEL32.dll+5d490
+  +018 bfdd1d70 WINMM.dll+1d70
+  +040 65f01676 ole32.dll+1676
+  +05c bfc0d6c0 USER32.dll+d6c0
+  +084 65f221eb ole32.dll+221eb
+  +088 bff741f7 KERNEL32.dll+41f7
+  +090 bff733ad KERNEL32.dll+33ad
+  +09c bff741f7 KERNEL32.dll+41f7
+  +0a0 bffcd490 KERNEL32.dll+5d490
+  +0a4 bff88eab KERNEL32.dll+18eab
+  +0a8 bffcd490 KERNEL32.dll+5d490
+  +0e8 bff7a10e KERNEL32.dll+a10e
+  +0ec bff7b326 KERNEL32.dll+b326
+  +10c bff7469c KERNEL32.dll+469c
+  +128 bff7a10e KERNEL32.dll+a10e
+  +12c bff7b326 KERNEL32.dll+b326
+  +14c bff7469c KERNEL32.dll+469c
+  +174 bff940dc KERNEL32.dll+240dc
+  +184 bff719b8 KERNEL32.dll+19b8
+  +190 bff7186d KERNEL32.dll+186d
+  +1b0 05cf0002 mesa3d.w98me.dll+3530002
+  +1d4 037d8bb0 mesa3d.w98me.dll+1018bb0
+  +1dc 05cf0001 mesa3d.w98me.dll+3530001
+  +1f0 05cf0000 mesa3d.w98me.dll+3530000
+  +1f8 045f0425 mesa3d.w98me.dll+1e30425
+  +200 045f03bb mesa3d.w98me.dll+1e303bb
+  +20c 05cf1ae6 mesa3d.w98me.dll+3531ae6
+  +220 05cf186d mesa3d.w98me.dll+353186d
+  +23c 03ec05cf mesa3d.w98me.dll+17005cf
+  +240 07081ae6 mesa3d.w98me.dll+48c1ae6
+  +24c 045f0f9f mesa3d.w98me.dll+1e30f9f
+  +268 0400fffb mesa3d.w98me.dll+184fffb
+  +284 bff728a2 KERNEL32.dll+28a2
+  +294 bff7b9c5 KERNEL32.dll+b9c5
+  +2a4 bfc025c0 USER32.dll+25c0
+  +2ac bff7a10e KERNEL32.dll+a10e
+  +2b0 bff7deaa KERNEL32.dll+deaa
+  +2c0 bff741f7 KERNEL32.dll+41f7
+  +2c8 bff7698b KERNEL32.dll+698b
+  +2cc bffcd4c0 KERNEL32.dll+5d4c0
+  +2d4 bff769d5 KERNEL32.dll+69d5
+  +2dc bff81627 KERNEL32.dll+11627
+  +2f0 01025b13 exe+25b13
+  +2f4 01025b0d exe+25b0d
+  +2f8 01033028 exe+33028
+  +2fc 0103300c exe+3300c
+  +304 01030a74 exe+30a74
+  +314 01026d0c exe+26d0c
+  +318 01007a68 exe+7a68
+  +320 01025b0d exe+25b0d
+  +324 01025b26 exe+25b26
+  +328 01030a74 exe+30a74
+  +334 0102b7bd exe+2b7bd
+  +344 010249ff exe+249ff
+  +348 01000000 exe+0
+  +364 040a08ae mesa3d.w98me.dll+18e08ae
+  +3e8 01024891 exe+24891
+  +43c bffcd490 KERNEL32.dll+5d490
+  +454 bff7ffff KERNEL32.dll+ffff
+  +45c bff713e2 KERNEL32.dll+13e2
+  +464 bff92da6 KERNEL32.dll+22da6
+  +46c bff957d9 KERNEL32.dll+257d9
+  +478 bff89ac0 KERNEL32.dll+19ac0
+  +490 bff899ee KERNEL32.dll+199ee
+  +4a4 bff768a0 KERNEL32.dll+68a0
+  +59c bffc0684 KERNEL32.dll+50684
+  +5a0 bff79138 KERNEL32.dll+9138
+  +5ac bff8b412 KERNEL32.dll+1b412
+  +620 bffc0684 KERNEL32.dll+50684
+  +624 bff79060 KERNEL32.dll+9060

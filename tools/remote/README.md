@@ -22,15 +22,27 @@ stores it as `t61u<crc32>.exe` and uploads it only when that version is missing.
 | `t61.py logs DIR` | fetch C:\nvshim.log, nvlast, nvkick, nvtail, nvclk |
 | `t61.py shot screen.png` | screenshot of the T61 desktop |
 | `t61.py install FILE...` | copy into C:\WINDOWS\SYSTEM, previous copy kept in C:\NVBACKUP |
-| `t61.py reboot` | restart Windows |
+| `t61.py reboot [force]` | restart like the Start menu, wait for the agent, skip the network logon (Cancel, nothing typed), wait for the desktop |
+| `t61.py autostart on\|off\|show` | start the agent at boot: RunServices (before logon) + Run, both `C:\remote\t61boot.exe supervise` |
+| `t61.py wins [TITLE]` / `kids TITLE` | visible windows / a window's controls (class, id, rectangle, text) |
+| `t61.py press TITLE BUTTON` | click a dialog button by its text (works without focus or coordinates) |
+| `t61.py focus TITLE` / `close TITLE` / `waitwin TITLE SECS` | foreground, WM_CLOSE, wait for a window |
+| `t61.py click X Y [right\|double]` / `key ctrl+tab tab*3 enter` / `text "abc"` | mouse and keyboard |
+| `t61.py debug C:\path\x.exe [ARGS]` | run detached under a Win32 debugger: DLL loads, exceptions (module+offset, registers, stack), the exiting thread's stack, to `C:\remote\t61debug.txt` |
+| `t61.py endtasks` | a shutdown stuck on the agent console's End Task prompt: answer it, then as `reboot` |
 
 Limits:
 
-- The agent does not start by itself after a reboot or crash: the user restarts it
-  (until it is put in the Startup folder). So `install` of a file that needs a reboot
-  (nvmini.vxd) and `reboot` end the remote session until the user is back.
+- Autostart is ON since 2026-10-30: `t61boot.exe supervise` (a copy of the helper) keeps
+  `w98agent.exe` running and retries every 10 s while the network is not up; its log is
+  `C:\remote\t61boot.log`. A hang at boot or shutdown still needs a power cycle by hand.
+- `reboot force` (ExitWindowsEx EWX_FORCE from the console helper) hung the T61 once after
+  the display driver's Disable; the default goes through SHExitWindowsEx like the Start menu.
 - A file in use cannot be replaced (mesa3d.dll while a GL/D3D program runs: `kill` it first).
-- There is no mouse/keyboard input: GUI tests (dxdiag's buttons) still need the user.
+- The debugger cannot see faults in 16-bit code (DDRAW16, nvmini.drv): such a process can
+  vanish with exit code -1 and no exception event.
+- Focus uses AttachThreadInput, not the usual synthetic Alt tap: Alt press+release puts
+  the target's menu bar in menu mode and the typed keys open menus instead.
 - `sh` captures what the batch prints to stdout; COMMAND.COM's own errors ("Bad command
   or file name") go to the console and are lost. The T61's PATH is C:\WINDOWS and
   C:\WINDOWS\COMMAND: the package's .bat helpers need their folder (`cd \nvmini`).

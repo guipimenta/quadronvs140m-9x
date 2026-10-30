@@ -15,7 +15,16 @@ automatically. Lifts the agent's limits: absolute Windows paths, files over
   t61.py logs [LOCALDIR]                 (C:\\nvshim.log, nvlast, nvkick, nvtail, nvclk)
   t61.py shot LOCAL.png
   t61.py install FILE...                 (into C:\\WINDOWS\\SYSTEM, old copy kept in C:\\NVBACKUP)
-  t61.py reboot
+  t61.py reboot [-t SECS] [force]        (Start-menu restart; waits up to SECS, default 600,
+                                          for the agent, skips the network logon, waits for the desktop)
+  t61.py endtasks                        (a shutdown stuck on End Task prompts: answer them, then as reboot)
+  t61.py wait [SECS]                     (wait for the agent to answer)
+  t61.py autostart on|off|show           (HKLM RunServices + Run start t61boot.exe supervise at boot)
+  t61.py wins [TITLE] | kids TITLE | focus TITLE | close TITLE
+  t61.py press TITLE BUTTON              (click a dialog button by its text)
+  t61.py waitwin TITLE SECS | click X Y [right|double] | key COMBO... | text STRING
+  t61.py debug EXE [ARGS]                (run EXE detached under a debugger: crash module+offset,
+                                          registers, stack in C:\\remote\\t61debug.txt)
 
 Environment: W98REMOTE_DIR (default ~/projects/win98-remote) holds
 controller/w98ctl.py and controller.json.
@@ -157,6 +166,49 @@ def bmp_to_png(bmp, png):
                           + chunk(b"IDAT", zlib.compress(b"".join(rows), 6)) + chunk(b"IEND", b""))
 
 
+def wait_back(t, limit, down_first=True):
+    """After a reboot: wait for the agent to go away, then to answer again."""
+    import time
+    t0 = time.time()
+
+    def up():
+        try:
+            t.c.ping()
+            return True
+        except (OSError, w98.ProtocolError):
+            return False
+    if down_first:
+        while up():
+            if time.time() - t0 > 240:
+                print("T61 still up after 240 s: the shutdown is stuck (look at `t61.py wins`)")
+                return 1
+            time.sleep(3)
+        print(f"T61 went down after {time.time() - t0:.0f} s")
+    while time.time() - t0 < limit:
+        if up():
+            print(f"T61 agent back after {time.time() - t0:.0f} s")
+            return 0
+        time.sleep(10)
+    print(f"T61 agent not back after {limit} s (hung at boot? agent not autostarted?)")
+    return 1
+
+
+def logon(t):
+    """The agent is back before the logon (RunServices). Skip the Microsoft
+    Networking logon with Cancel (empty user and password: no credentials
+    are entered) and wait for the desktop."""
+    code, out = t.util("waitwin", "Program Manager", "5", echo=False, check=False)
+    for _ in range(3):
+        if code == 0:
+            print("desktop up")
+            return 0
+        t.util("press", "Enter Network Password", "Cancel", echo=False, check=False)
+        t.util("press", "Welcome to Windows", "Cancel", echo=False, check=False)
+        code, out = t.util("waitwin", "Program Manager", "90", timeout=110, echo=False, check=False)
+    print("no desktop yet")
+    return 1
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("verb")
@@ -219,8 +271,25 @@ def main():
                     t.util("copy", dst, f"{BACKUP}\\{name}", echo=False)
                     print(f"backed up {dst} -> {BACKUP}\\{name}")
                 t.put(f, dst)
+        elif v in ("wins", "kids", "focus", "close", "press", "waitwin", "click", "key", "text", "autostart", "debug") and (x or v == "wins"):
+            secs = int(x[1]) + 15 if v == "waitwin" and len(x) == 2 else 60
+            code, _ = t.util(v, *x, timeout=min(secs, 600), check=False)
+            return 0 if code == 0 else 1
         elif v == "reboot":
-            t.util("reboot")
+            try:
+                t.util("reboot", *x[:1])
+            except (OSError, w98.ProtocolError):
+                pass                      # the reply can be lost as Windows shuts down
+            if wait_back(t, a.timeout if a.timeout != 60 else 600):
+                return 1
+            return logon(t)
+        elif v == "endtasks":
+            t.util("endtasks")
+            if wait_back(t, a.timeout if a.timeout != 60 else 600):
+                return 1
+            return logon(t)
+        elif v == "wait":
+            return wait_back(t, int(x[0]) if x else 600, down_first=False)
         else:
             ap.print_help()
             return 2
