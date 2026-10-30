@@ -1119,6 +1119,63 @@ C:\nvkick.txt, C:\nvclk.txt.
   + off; map = ptr; flush/verify/scan skip GART BOs (coherent); registry keyed by VM
   address; fake GPU: GART = malloc. Cap GART at 128 MiB (registry), NVSHIM_GART=0 A/B.
 
+### Build 3115: GART - system-memory buffer objects (nouveau's way; UNTESTED on the T61)
+- What: the channel VM gets PDE 1 (VM 512 MiB-1 GiB) -> a 4 KiB-page table of 1 MiB at
+  VRAM 0x03700000 (55-56 MiB, reserved since 3112). Encodings checked against
+  nvkm/subdev/mmu/vmmnv50.c (cached in the b92b7198 scratchpad nvref/): PDE lo = table |
+  0x03 (present, 4 KiB pages; size flag 0 = a full 1 MiB table; PDE 2's 64 KiB VRAM table
+  keeps 0x01), PTE lo = page physical | 0x21 (bit 0 valid, aperture 2 = snooped host in
+  bits 4-5; 3 = non-snooped), PTE hi = kind << 8 (bits 40-46), TLB flush = 0x100c80 =
+  (engine 0 << 16) | 1 and wait for bit 0 (nv50_vmm_flush; the same flush NV_gpu_vmkind
+  used since 3091, now shared as gpu_tlb_flush). nv_chan_init zeroes the table once and
+  writes PDE 1 on every channel (re)build; live slabs are re-mapped (kinds kept, VRAM
+  holds the hi words).
+- VxD (nv50_gpu.c): NV_gart_alloc(pages, tag) = _PageReserve(PR_SHARED, n, PR_FIXED) +
+  _PageCommit(PD_FIXED, PC_FIXED | PC_WRITEABLE | PC_USER) - the vxd_halloc.c recipe, so
+  the pages are locked, resident and mapped at ONE linear address every process sees from
+  ring 3 - memset 0 from ring 0, physical addresses from _CopyPageTable (64 pages a
+  chunk, present bit checked), PTEs written, TLB flushed; a VM-page bitmap (first fit) and
+  a 512-entry slab table tagged by DIOCParams.tagProcess; NV_gart_free, NV_gart_kind
+  (kind of the 4 KiB PTEs: a tiled texture that fell back to GART keeps its kind, as
+  nouveau's nv50 map_sg writes memtype into system-page PTEs), NV_gart_release(tag) from
+  DIOC_CLOSEHANDLE next to NV_gpu_release. Cap 384 MiB (98304 pages). Bus mastering was
+  already on (PCI_SetMemEnable sets command bits 0-2 in NV_probe). Ioctls OP_NV_GART_ALLOC
+  0x501C (in[0] = pages -> nv_gart_alloc_t {build, ok, lin, vmoff, npages, total_pages,
+  used_pages}), OP_NV_GART_FREE 0x501D (in[0] = lin), OP_NV_GART_KIND 0x501E.
+- Shim (nvshim.c): the heap allocator became `struct shim_heap` x 2 - g_vheap (the fixed
+  VRAM regions, the 3109 row-block rule untouched) and g_gheap (regions = 4 MiB slabs from
+  the VxD, a BO bigger than that gets its own slab). Placement like TTM: NOUVEAU_BO_GART
+  without VRAM (fence, staging, stream/vertex buffers) -> GART always; a VRAM request ->
+  VRAM heap, and when that is full -> GART instead of GL_OUT_OF_MEMORY (nouveau evicts
+  older BOs to GART; without BO moves the newest one lands there); GART off/exhausted ->
+  VRAM as before (the 3097 kick-retry stays for that case only). A GART BO's CPU map is
+  its memory (no shadow, no clean copy, no OP_NV_VRAM_WRITE bounce; snooped = coherent);
+  flush/verify skip it, the kick walk accepts both VM ranges (registry keyed by VM address
+  now, not VRAM phys), nouveau_pushbuf_data reads the bytes from the slab, the fence
+  QUERY in a GART BO needs no refresh. Cap: NVSHIM_GART=<MiB> (env or the apps\<exe>\mesa
+  registry key via os_get_option), default half of physical RAM (GlobalMemoryStatus),
+  max 384, 0 = off. Fake GPU: slabs = VirtualAlloc, the fence write resolves GART
+  addresses. nvkick_decode.py accepts QUERY addresses in 512 MiB-1 GiB. A pre-3115 VxD
+  (no OP_NV_GART_ALLOC) is detected on the first slab request -> every BO in VRAM.
+- Fake run (analysis/fake-runs/3115-*): the first load run found a real bug before any
+  hardware did: slabs get CONSECUTIVE VM ranges (the VxD's first-fit page runs, the fake's
+  bump) but separate CPU mappings, and the free list coalesced two slabs' ranges into one
+  block, so a BO carved across the seam had contiguous GPU addresses and a CPU pointer that
+  ran off the end of the first slab (Wine: page fault one page past slab 2, at level 2 of
+  the load scene when the freed regions were reused). Fix: the last 4 KiB page of every
+  slab stays out of the heap, so slab ranges never touch. Final run: texture, stress and
+  load validator-clean; load scene LOADED 900 textures with oom 0 on every level (VRAM
+  heap full at ~300, the rest in GART: 69 slabs = 276 MiB held, 255 MiB in use at the end,
+  1693 GART BOs), the 8 logged fences in GART signalled; texture 718 / stress 569 GART BOs.
+- T61 must show: `wgltest driver mesa3d.dll window load` -> wgltest_load.txt "LOADED 900
+  textures, first oom at -1, oom 0" and 3 levels; nvshim.log "gart slab vm/lin/bytes"
+  lines and "fence in GART"; nvtail "S> gart alloc"; then Half-Life as usual (vertex and
+  staging buffers now live in system memory - the first hardware test of GPU reads from
+  GART); then SoF on the GPU (nvapp sof.exe gpu). Risks to watch: a PROP/TEXTURE trap
+  with a GART address in nvtail = the PTE target/kind encoding; black or stale textures =
+  cache coherency of the locked pages; a hang in the first kick after "gart slab" = the
+  PDE. A/B: NVSHIM_GART=0 (registry) = 3114 behaviour.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

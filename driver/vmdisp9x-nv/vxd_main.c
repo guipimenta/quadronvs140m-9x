@@ -1022,6 +1022,7 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			io_open_cnt--;
 #ifdef NV_DETECT
 			NV_gpu_release(params->tagProcess);   /* 3110: the GPU channel's owner is gone */
+			NV_gart_release(params->tagProcess);  /* 3115: and its system-memory buffers with it */
 #endif
 #ifdef SVGA
 			if(io_open_cnt == 0)
@@ -1381,6 +1382,27 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			rc = 0;
 			break;
 		}
+		case OP_NV_GART_ALLOC:
+		{
+			/* 3115: inBuf[0] = 4 KiB pages; out = nv_gart_alloc_t (lin = ring-3 address of
+			 * the pages, vmoff = their GPU VM address). Tagged by process like the channel. */
+			nv_gart_alloc_t ga;
+			NV_gart_alloc(inBuf[0], params->tagProcess, &ga);
+			memcpy(outBuf, &ga, sizeof(ga));
+			if(params->lpcbBytesReturned) *(DWORD*)params->lpcbBytesReturned = sizeof(ga);
+			rc = 0;
+			break;
+		}
+		case OP_NV_GART_FREE:
+			outBuf[0] = NV_gart_free(inBuf[0], params->tagProcess);
+			if(params->lpcbBytesReturned) *(DWORD*)params->lpcbBytesReturned = 4;
+			rc = 0;
+			break;
+		case OP_NV_GART_KIND:
+			outBuf[0] = NV_gart_kind(inBuf[0], inBuf[1], inBuf[2]);
+			if(params->lpcbBytesReturned) *(DWORD*)params->lpcbBytesReturned = 4;
+			rc = 0;
+			break;
 		case OP_NV_GPU_ACQUIRE:
 		{
 			/* 3110: out[0] = 1 if this process may use the GPU channel, 0 if another

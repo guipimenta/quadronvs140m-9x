@@ -81,6 +81,15 @@ typedef struct nv_gpu_bind
 
 int NV_gpu_bind(unsigned long handle, unsigned long oclass, nv_gpu_bind_t *out);
 int NV_gpu_vmkind(unsigned long phys, unsigned long size, unsigned long kind);  /* 3091 */
+/* 3115: GART (system-memory BOs through PDE 1 of the channel VM) */
+typedef struct nv_gart_alloc
+{
+	unsigned long build, ok, lin, vmoff, npages, total_pages, used_pages;
+} nv_gart_alloc_t;
+int  NV_gart_alloc(unsigned long npages, unsigned long tag, nv_gart_alloc_t *out);
+int  NV_gart_free(unsigned long lin, unsigned long tag);
+void NV_gart_release(unsigned long tag);                      /* DIOC_CLOSEHANDLE */
+int  NV_gart_kind(unsigned long vmoff, unsigned long size, unsigned long kind);
 int NV_gpu_acquire(unsigned long tag, unsigned long *owner);   /* 3110: 1 = tag owns the channel, 0 = busy */
 void NV_gpu_release(unsigned long tag);                        /* 3110: DIOC_CLOSEHANDLE of the owner */
 

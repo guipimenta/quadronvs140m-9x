@@ -850,6 +850,7 @@ static int           nsub_verbose = 0;
 #define PFIFO_USER_IBPUT(c) (PFIFO_USER(c) + 0x8cUL)  /* nv50 IB put index         */
 #define PFIFO_USER_IBGET(c) (PFIFO_USER(c) + 0x88UL)  /* nv50 IB get index         */
 
+static void gart_pt_init(void);   /* 3115 */
 static unsigned long nv_chan_init(void)
 {
 	const unsigned long chid = NVGPU_CHID, ramin = NVGPU_RAMIN, grctx = NVGPU_GRCTX;
@@ -893,6 +894,7 @@ static unsigned long nv_chan_init(void)
 	 * 0x60 declared a 32 MiB table while the 1:1 window maps 128 MiB. */
 	NV_vram_wr32(NVGPU_VMPD + 0x10, NVGPU_VRAMPT | 0x01UL);   /* PDE 2 -> the PT */
 	NV_vram_wr32(NVGPU_VMPD + 0x14, 0);
+	gart_pt_init();                                           /* 3115: PDE 1 -> the 4 KiB-page GART table */
 
 	NV_vram_fill(NVGPU_CACHE, 0x1000 / 4, 0);
 	NV_vram_wr32(NVGPU_OBJ2D + 0,  NV50_2D_CLASS_);
@@ -1044,9 +1046,10 @@ static int gpu_trap_recover(unsigned long stat, unsigned long *units_acc)
  * PGRAPH's TLB (0x100c80, engine id 0, after nv50_vmm_flush). Tiled surfaces
  * (RT_TILE_MODE/ZETA_TILE_MODE != 0) need the PTE kind that matches their
  * format or the ROP path faults (3090 on the T61: PROP trap at the first RT). */
+static void gpu_tlb_flush(void);   /* 3115 */
 int NV_gpu_vmkind(unsigned long phys, unsigned long size, unsigned long kind)
 {
-	unsigned long first, last, i, t;
+	unsigned long first, last, i;
 	if(!g_chan_ready)
 	{
 		if(!nv_chan_init()) return 0;
@@ -1059,11 +1062,204 @@ int NV_gpu_vmkind(unsigned long phys, unsigned long size, unsigned long kind)
 	for(i = first; i <= last; i++)
 		NV_vram_wr32(NVGPU_VRAMPT + i * 8 + 4, (kind & 0x7fUL) << 8);
 	(void)NV_vram_rd32(NVGPU_VRAMPT + last * 8 + 4);
+	gpu_tlb_flush();
+	dbg_printf("S> vmkind phys=%08lX size=%08lX kind=%02lX pages=%lu\n",
+	           phys, size, kind, last - first + 1);
+	return 1;
+}
+
+/* ===================== 3115: GART - system-memory buffer objects ============
+ * nouveau's way. The channel VM gets a second page directory entry: PDE 1 (VM
+ * 512 MiB - 1 GiB, dword pair at PD + 0x08) points at a 4 KiB-page table of
+ * 1 MiB in VRAM at 55 MiB (NVGPU_GARTPT: 131072 PTEs x 8 bytes = the whole
+ * 512 MiB window, so the PDE size flag is 0). Encodings from
+ * nvkm/subdev/mmu/vmmnv50.c: PDE lo = table | 0x03 (present, 4 KiB pages,
+ * target VRAM; 0x01 is the 64 KiB-page VRAM table at PDE 2), PTE lo =
+ * page physical | 0x21 (bit 0 valid, aperture 2 = snooped system memory in
+ * bits 4-5; 0x30 would be non-snooped), PTE hi = storage kind << 8 (bits
+ * 40-46), 0 = linear. Pages come from the Win9x memory manager the way
+ * vxd_halloc.c gets its ring-3 heaps: _PageReserve in the SHARED arena +
+ * _PageCommit PD_FIXED with PC_FIXED | PC_USER | PC_WRITEABLE, i.e. locked,
+ * physically resident, zeroed here, and mapped at ONE linear address every
+ * process sees from ring 3 - the GL process writes its buffers straight into
+ * the pages the GPU reads (no shadow, no bounce ioctl). Physical addresses
+ * from _CopyPageTable. A TLB flush after every table change, as NV_gpu_vmkind
+ * does (0x100c80, PGRAPH = engine 0, bounded wait). Bus mastering is on since
+ * NV_probe (PCI_SetMemEnable sets command bits 0-2). The shim sub-allocates
+ * BOs inside the slabs it gets here; everything a process allocated is freed
+ * when it closes its VxD handle (NV_gart_release from DIOC_CLOSEHANDLE), the
+ * same moment the GPU channel is released. */
+#define NVGPU_GARTPT        0x03700000UL  /* 1 MiB 4 KiB-page table (55-56 MiB, kept free since 3112) */
+#define NVGPU_VM_GART_BASE  0x20000000UL  /* PDE 1: GART BO at page p has VM address 512 MiB + p * 4 KiB */
+#define NV_GART_PAGES_MAX   98304UL       /* 384 MiB of system memory at most (the shim caps itself at half of RAM) */
+#define NV_GART_MAXALLOC    512           /* live slabs (the shim asks for 4 MiB ones) */
+
+static struct { unsigned long lin, page, npages, tag; } g_gart[NV_GART_MAXALLOC];
+static unsigned long g_gart_map[NV_GART_PAGES_MAX / 32];   /* VM page bitmap, bit set = in use */
+static unsigned long g_gart_pages = 0;                      /* pages in use */
+static unsigned long g_gart_ptbuf[64];                      /* _CopyPageTable chunk */
+
+static void gpu_tlb_flush(void)
+{
+	unsigned long t;
 	NV_wr32(0x100c80UL, (0UL << 16) | 1UL);
 	for(t = 0; t < 1000000UL; t++)
 		if(!(NV_rd32(0x100c80UL) & 1UL)) break;
-	dbg_printf("S> vmkind phys=%08lX size=%08lX kind=%02lX pages=%lu flushloops=%lu\n",
-	           phys, size, kind, last - first + 1, t);
+}
+
+/* write the PTEs of one slab (physical addresses re-read from the page table) */
+static int gart_map_entry(int e, unsigned long kind_keep)
+{
+	unsigned long done = 0, i, lin = g_gart[e].lin, n = g_gart[e].npages, page = g_gart[e].page;
+	while(done < n)
+	{
+		unsigned long chunk = n - done; if(chunk > 64) chunk = 64;
+		memset(g_gart_ptbuf, 0, sizeof(g_gart_ptbuf));
+		if(!_CopyPageTable((lin >> 12) + done, chunk, (DWORD *)g_gart_ptbuf, 0))
+			return 0;
+		for(i = 0; i < chunk; i++)
+		{
+			unsigned long pte = g_gart_ptbuf[i], off = NVGPU_GARTPT + (page + done + i) * 8;
+			if(!(pte & 1UL)) return 0;                 /* not present: cannot hand it to the GPU */
+			NV_vram_wr32(off + 0, (pte & 0xFFFFF000UL) | 0x21UL);
+			if(!kind_keep) NV_vram_wr32(off + 4, 0);
+		}
+		done += chunk;
+	}
+	return 1;
+}
+
+/* nv_chan_init: the table from scratch, PDE 1, then every live slab again (a
+ * channel rebuilt under a running process keeps its GART) */
+static int g_gart_pt_zeroed = 0;
+static void gart_pt_init(void)
+{
+	int e;
+	if(!g_gart_pt_zeroed) { NV_vram_fill(NVGPU_GARTPT, 0x100000UL / 4, 0); g_gart_pt_zeroed = 1; }
+	NV_vram_wr32(NVGPU_VMPD + 0x08, NVGPU_GARTPT | 0x03UL);   /* PDE 1 -> 4 KiB-page table, full size */
+	NV_vram_wr32(NVGPU_VMPD + 0x0c, 0);
+	for(e = 0; e < NV_GART_MAXALLOC; e++)                     /* VRAM keeps the table: lo words refreshed, kinds kept */
+		if(g_gart[e].lin) (void)gart_map_entry(e, 1);
+}
+
+static int gart_find_run(unsigned long npages, unsigned long *first)
+{
+	unsigned long p, run = 0;
+	for(p = 0; p < NV_GART_PAGES_MAX; p++)
+	{
+		if(g_gart_map[p >> 5] & (1UL << (p & 31))) { run = 0; continue; }
+		if(++run == npages) { *first = p + 1 - npages; return 1; }
+	}
+	return 0;
+}
+static void gart_mark(unsigned long first, unsigned long npages, int set)
+{
+	unsigned long p;
+	for(p = first; p < first + npages; p++)
+	{
+		if(set) g_gart_map[p >> 5] |= (1UL << (p & 31));
+		else    g_gart_map[p >> 5] &= ~(1UL << (p & 31));
+	}
+}
+
+int NV_gart_alloc(unsigned long npages, unsigned long tag, nv_gart_alloc_t *out)
+{
+	unsigned long lin, first;
+	int e;
+
+	memset(out, 0, sizeof(*out));
+	out->build = NV_BUILD;
+	out->total_pages = NV_GART_PAGES_MAX;
+	out->used_pages  = g_gart_pages;
+	if(npages == 0 || npages > NV_GART_PAGES_MAX - g_gart_pages) return 0;
+	if(!g_chan_ready)
+	{
+		if(!nv_chan_init()) return 0;
+		g_chan_ready = 1; g_chan_put = 0; g_ib_put = 0;
+	}
+	for(e = 0; e < NV_GART_MAXALLOC && g_gart[e].lin; e++) ;
+	if(e >= NV_GART_MAXALLOC) { dbg_printf("S> gart: slab table full\n"); return 0; }
+	if(!gart_find_run(npages, &first)) { dbg_printf("S> gart: no VM run of %lu pages\n", npages); return 0; }
+
+	lin = _PageReserve(PR_SHARED, npages, PR_FIXED);
+	if(lin == 0 || lin == 0xFFFFFFFFUL) { dbg_printf("S> gart: _PageReserve(%lu) failed\n", npages); return 0; }
+	if(!_PageCommit(lin >> 12, npages, PD_FIXED, 0, PC_FIXED | PC_WRITEABLE | PC_USER))
+	{
+		dbg_printf("S> gart: _PageCommit(%lu) failed\n", npages);
+		_PageFree((PVOID)lin, 0);
+		return 0;
+	}
+	memset((void *)lin, 0, npages << 12);           /* present + zeroed before the GPU sees them */
+
+	g_gart[e].lin = lin; g_gart[e].page = first; g_gart[e].npages = npages; g_gart[e].tag = tag;
+	if(!gart_map_entry(e, 0))
+	{
+		dbg_printf("S> gart: page table read failed (lin %08lX)\n", lin);
+		g_gart[e].lin = 0;
+		_PageDecommit(lin >> 12, npages, 0);
+		_PageFree((PVOID)lin, 0);
+		return 0;
+	}
+	(void)NV_vram_rd32(NVGPU_GARTPT + (first + npages - 1) * 8);
+	gpu_tlb_flush();
+	gart_mark(first, npages, 1);
+	g_gart_pages += npages;
+	out->ok = 1; out->lin = lin; out->vmoff = NVGPU_VM_GART_BASE + (first << 12);
+	out->npages = npages; out->used_pages = g_gart_pages;
+	dbg_printf("S> gart alloc tag=%lX lin=%08lX vm=%08lX pages=%lu (used %lu of %lu)\n",
+	           tag, lin, out->vmoff, npages, g_gart_pages, NV_GART_PAGES_MAX);
+	return 1;
+}
+
+static void gart_free_entry(int e)
+{
+	unsigned long i;
+	for(i = 0; i < g_gart[e].npages; i++)
+	{
+		NV_vram_wr32(NVGPU_GARTPT + (g_gart[e].page + i) * 8 + 0, 0);
+		NV_vram_wr32(NVGPU_GARTPT + (g_gart[e].page + i) * 8 + 4, 0);
+	}
+	(void)NV_vram_rd32(NVGPU_GARTPT + g_gart[e].page * 8);
+	gpu_tlb_flush();
+	gart_mark(g_gart[e].page, g_gart[e].npages, 0);
+	g_gart_pages -= g_gart[e].npages;
+	_PageDecommit(g_gart[e].lin >> 12, g_gart[e].npages, 0);
+	_PageFree((PVOID)g_gart[e].lin, 0);
+	dbg_printf("S> gart free tag=%lX lin=%08lX pages=%lu (used %lu)\n",
+	           g_gart[e].tag, g_gart[e].lin, g_gart[e].npages, g_gart_pages);
+	g_gart[e].lin = 0; g_gart[e].npages = 0;
+}
+
+int NV_gart_free(unsigned long lin, unsigned long tag)
+{
+	int e;
+	for(e = 0; e < NV_GART_MAXALLOC; e++)
+		if(g_gart[e].lin == lin && g_gart[e].tag == tag) { gart_free_entry(e); return 1; }
+	return 0;
+}
+
+/* DIOC_CLOSEHANDLE: everything the process allocated goes with it */
+void NV_gart_release(unsigned long tag)
+{
+	int e;
+	for(e = 0; e < NV_GART_MAXALLOC; e++)
+		if(g_gart[e].lin && g_gart[e].tag == tag) gart_free_entry(e);
+}
+
+/* the storage kind of the 4 KiB PTEs covering [vmoff, vmoff+size) - a tiled
+ * texture that fell back to GART keeps its kind, as nouveau's nv50_vm_map_sg
+ * writes mem->memtype into system-page PTEs */
+int NV_gart_kind(unsigned long vmoff, unsigned long size, unsigned long kind)
+{
+	unsigned long first, last, i;
+	if(vmoff < NVGPU_VM_GART_BASE || size == 0) return 0;
+	first = (vmoff - NVGPU_VM_GART_BASE) >> 12;
+	last  = (vmoff - NVGPU_VM_GART_BASE + size - 1) >> 12;
+	if(last >= NV_GART_PAGES_MAX || first > last) return 0;
+	for(i = first; i <= last; i++)
+		NV_vram_wr32(NVGPU_GARTPT + i * 8 + 4, (kind & 0x7fUL) << 8);
+	(void)NV_vram_rd32(NVGPU_GARTPT + last * 8 + 4);
+	gpu_tlb_flush();
 	return 1;
 }
 

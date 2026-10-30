@@ -150,6 +150,7 @@ def decode(kick, lookups, out):
         i += 1 + count
 
 VM_BASE, HEAP_BASE, HEAP_END = 0x40000000, 0x01840000, 0x08000000   # 3112: heap regions from 24.25 MiB (nvshim.c NVSHIM_HEAP_MIN)
+GART_BASE, GART_END = 0x20000000, 0x40000000   # 3115: GART BOs (system memory through PDE 1) live at VM 512 MiB-1 GiB
 FIXED_HANDLES = {0xbeef502d, 0xbeef0002, 0xbeef0003}   # nv_chan_init's own RAMHT entries
 
 def bound_handles(logpath, tailpath):
@@ -196,8 +197,8 @@ def check(kicks, handles, out):
                 if subc == 3:
                     if mm == 0x1b04: qaddr = v
                     elif mm == 0x1b0c and qaddr is not None:
-                        if not (VM_BASE + HEAP_BASE <= qaddr < VM_BASE + HEAP_END):
-                            out(f"CHECK: kick {kick['idx']} dword {i + 1 + k}: QUERY address {qaddr:08x} outside the VM window"); faults += 1
+                        if not (VM_BASE + HEAP_BASE <= qaddr < VM_BASE + HEAP_END) and not (GART_BASE <= qaddr < GART_END):
+                            out(f"CHECK: kick {kick['idx']} dword {i + 1 + k}: QUERY address {qaddr:08x} outside the VM window (VRAM heap or GART)"); faults += 1
             i += 1 + cnt
     return faults
 

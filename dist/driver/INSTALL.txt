@@ -128,6 +128,39 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3115 - GART: SYSTEM-MEMORY BUFFERS (the Soldier of Fortune level-load fix, nouveau's
+way). nvmini.vxd AND mesa3d.dll changed: copy both to C:\WINDOWS\SYSTEM and reboot once
+(nvprobe.exe, wgltest.exe restamped; nvmini.drv restamped). UNTESTED ON HARDWARE - the
+simulation (fake GPU on the host) passed, the T61 decides.
+What it is: until now every buffer the GPU uses (textures, vertex data, the upload
+staging areas, the fence) had to sit in the 104 MB of video memory the driver manages,
+and a level bigger than that lost its textures (3112) and crawled (the retry storm). The
+GPU can also read and write SYSTEM memory through its page table - that is what nouveau
+calls GART, and what the stock drivers do - so the VxD now maps a second region of the
+GPU's address space (512 MB-1 GB) onto pages it locks in RAM, and mesa3d.dll places
+buffers there: the ones Mesa asks for in system memory anyway (fences, upload staging,
+vertex/stream buffers: no more copy-to-VRAM bounce for them, the program writes straight
+into the pages the GPU reads) and, when video memory is full, textures too, instead of
+failing. The GART grows on demand in 4 MB slabs, up to half of the machine's RAM (at
+most 384 MB); everything is given back when the program exits. The INF's compatibility
+list still runs sof.exe on software OpenGL - it leaves the list once the T61 confirms
+SoF on the GPU.
+T61 test, in this order:
+  1. wgltest driver mesa3d.dll window load      - must finish loading: wgltest_load.txt
+     (next to wgltest.exe) must say "LOADED 900 textures, first oom at -1, oom 0" for
+     level 1 (it did under the fake GPU), then play 150 frames, delete, reload (3 levels).
+     Then nvlogs load1. If it hangs or the screen is wrong: nvlogs load1 after the reset.
+  2. Half-Life as usual (the vertex and staging buffers are now in system memory - the
+     frame rate should be the same or better; any new artifact = nvlogs hl1).
+  3. SoF on the GPU: nvapp sof.exe gpu (a diagnostic switch; nvapp sof.exe sw puts it
+     back on the list), start sof.exe from the desktop, training, then a real level. On a
+     hang: reset, nvlogs sof1 (C:\nvshim.log + C:\nvlast.txt say where it stopped).
+A/B if the GPU path misbehaves: NVSHIM_GART=0 in HKLM\Software\vmdisp9x\apps\global\mesa
+(or apps\<exe>\mesa; nvapp <exe> show prints the keys) puts every buffer back in video
+memory = the 3114 behaviour; NVSHIM_GART=<MB> caps it. nvshim.log lines to look for:
+"gart: cap MiB", "gart slab vm/lin/bytes" (each 4 MB slab the VxD handed out),
+"bo_new GART sz/vm/flags", "fence in GART"; nvtail.txt: "S> gart alloc tag=...".
+
 Build 3114 - GPU COMPATIBILITY LIST IN THE INF. Package only (INF, d3dsetup.reg; binaries
 restamped). The INF (and d3dsetup.reg for an existing install) now sets
 GALLIUM_DRIVER=llvmpipe for sof.exe: Soldier of Fortune plays on software OpenGL out of the

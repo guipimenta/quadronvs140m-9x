@@ -9,6 +9,9 @@
  *  - VRAM is managed by a ring-3 BUMP allocator over a fixed heap window
  *    (NVSHIM_HEAP_BASE..END) that the persistent channel's 1:1 VM map covers.
  *    A buffer object's GPU address is its physical offset + 1 GiB.
+ *  - 3115: a BO is VRAM- or GART-backed; a GART BO (system pages the VxD
+ *    locked and mapped into ring 3, reached by the GPU through PDE 1) maps
+ *    to its own memory - no shadow, no bounce. VRAM BOs keep the model below.
  *  - nouveau_bo_map returns a CPU SHADOW (malloc); the real VRAM lives behind
  *    BAR1 which is ring-0 only, so we bounce: flush referenced shadows into
  *    VRAM (OP_NV_VRAM_WRITE) just before a submit, and refresh a shadow from
@@ -79,6 +82,22 @@
 #define NVSHIM_HEAP_MID       0x03800000UL  /* 56 MiB */
 #define NVSHIM_HEAP_MID_END   0x04000000UL  /* 64 MiB = NVSHIM_HEAP_BASE */
 #define NVSHIM_HEAP_MIN       NVSHIM_HEAP_EVO_A   /* lowest heap address (VM window checks) */
+/* 3115: GART. Mesa's GART BOs (the screen fence, transfer staging, stream and
+ * vertex buffers) and VRAM BOs that do not fit the heap live in SYSTEM memory
+ * the GPU reaches through PDE 1 of the channel VM (nv50_gpu.c: a 4 KiB-page
+ * table, PTEs = page physical | present | snooped-host target, nouveau's
+ * vmmnv50.c encoding). The VxD hands out page-locked slabs already mapped at
+ * a ring-3 address (OP_NV_GART_ALLOC); BOs are carved out of them here with
+ * the same best-fit heap as VRAM. A GART BO's CPU map IS its memory: no
+ * shadow, no bounce, snooped = coherent. VM address = NVSHIM_VM_GART + offset.
+ * NVSHIM_GART=<MiB> (env or the apps\<exe>\mesa registry key) caps it:
+ * default = half of physical RAM, at most 384 MiB (TTM's rule of thumb for
+ * locked system pages), 0 = off (every BO in VRAM, the 3114 behaviour). */
+#define NVSHIM_VM_GART      0x20000000UL   /* 512 MiB: PDE 1 */
+#define NVSHIM_VM_GART_END  0x40000000UL   /* 1 GiB: PDE 2 = the VRAM 1:1 window */
+#define NVSHIM_GART_SLAB    0x00400000UL   /* 4 MiB per VxD allocation (bigger BOs get their own) */
+#define NVSHIM_GART_MAXSLAB 128
+#define NVSHIM_GART_MAX     384            /* MiB; the VxD's own cap (NV_GART_PAGES_MAX) */
 
 /* ========================= VxD transport ============================== */
 static HANDLE g_vxd = INVALID_HANDLE_VALUE;
@@ -298,6 +317,19 @@ static int shim_scanreset(void)
 #define FAKE_BASE  0x01800000UL                    /* 3112: covers every heap region (24 MiB up) */
 #define FAKE_PAGES ((NVSHIM_HEAP_END - FAKE_BASE) >> FAKE_PAGE_SHIFT)
 static uint8_t *g_fake_page[FAKE_PAGES];
+/* 3115: fake GART slabs - page-aligned zeroed host memory standing in for the
+ * VxD's locked pages; VM offsets handed out from 512 MiB up */
+static struct { uint32_t vm, size; uint8_t *ptr; } g_fake_gart[NVSHIM_GART_MAXSLAB];
+static int      g_fake_ngart = 0;
+static uint32_t g_fake_gart_next = NVSHIM_VM_GART;
+static uint8_t *fake_gart_ptr(uint32_t vm)
+{
+	int i;
+	for(i = 0; i < g_fake_ngart; i++)
+		if(g_fake_gart[i].ptr && vm >= g_fake_gart[i].vm && vm < g_fake_gart[i].vm + g_fake_gart[i].size)
+			return g_fake_gart[i].ptr + (vm - g_fake_gart[i].vm);
+	return NULL;
+}
 static uint32_t g_fake_handles[64];
 static int      g_fake_nhandles = 0;
 static uint32_t g_fake_sub[8];                    /* handle bound per subchannel (channel state) */
@@ -365,9 +397,18 @@ static int fake_run(const uint32_t *m, uint32_t count)
 				else if(mm == 0x1b08) qseq = v;
 				else if(mm == 0x1b0c)
 				{
-					if(qaddr < NVSHIM_VM_BASE + NVSHIM_HEAP_MIN || qaddr >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
-					{ NVLOG3("FAKE WEDGE QUERY address outside VM window dword/addr/get", i + 1 + k, qaddr, v); return 0; }
-					fake_wr32(qaddr - NVSHIM_VM_BASE, qseq);
+					if(qaddr >= NVSHIM_VM_GART && qaddr < NVSHIM_VM_GART_END)
+					{	/* 3115: a fence in a GART BO - the write lands in the slab's memory */
+						uint8_t *gp = fake_gart_ptr(qaddr);
+						if(!gp) { NVLOG3("FAKE WEDGE QUERY address in an unmapped GART page dword/addr/get", i + 1 + k, qaddr, v); return 0; }
+						memcpy(gp, &qseq, 4);
+					}
+					else
+					{
+						if(qaddr < NVSHIM_VM_BASE + NVSHIM_HEAP_MIN || qaddr >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
+						{ NVLOG3("FAKE WEDGE QUERY address outside VM window dword/addr/get", i + 1 + k, qaddr, v); return 0; }
+						fake_wr32(qaddr - NVSHIM_VM_BASE, qseq);
+					}
 				}
 			}
 		}
@@ -445,8 +486,41 @@ static BOOL fake_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, D
 		return TRUE;
 	}
 	case OP_NV_VM_KIND:
+	case OP_NV_GART_KIND:
 		if(out && outsz >= 4) *(uint32_t *)out = 1;   /* accepted (no page tables to tag) */
 		return TRUE;
+	case OP_NV_GART_ALLOC:
+	{
+		/* 3115: a slab of zeroed, page-aligned host memory at the next VM offset */
+		nv_gart_alloc_t *ga = (nv_gart_alloc_t *)out; uint32_t pages, i;
+		if(insz < 4 || outsz < sizeof(*ga)) return FALSE;
+		memset(ga, 0, sizeof(*ga));
+		ga->build = 3115UL;   /* the shim takes build == 0 as "a VxD without this ioctl" */
+		pages = w[0]; ga->total_pages = (uint32_t)NVSHIM_GART_MAX << 8;
+		for(i = 0; i < (uint32_t)g_fake_ngart; i++) ga->used_pages += g_fake_gart[i].ptr ? g_fake_gart[i].size >> 12 : 0;
+		if(pages == 0 || ga->used_pages + pages > ga->total_pages || g_fake_ngart >= NVSHIM_GART_MAXSLAB) { if(ret) *ret = sizeof(*ga); return TRUE; }
+		g_fake_gart[g_fake_ngart].ptr = (uint8_t *)VirtualAlloc(NULL, (SIZE_T)pages << 12, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+		if(!g_fake_gart[g_fake_ngart].ptr) { if(ret) *ret = sizeof(*ga); return TRUE; }
+		g_fake_gart[g_fake_ngart].vm   = g_fake_gart_next;
+		g_fake_gart[g_fake_ngart].size = pages << 12;
+		g_fake_gart_next += pages << 12;
+		ga->ok = 1; ga->lin = (uint32_t)(uintptr_t)g_fake_gart[g_fake_ngart].ptr;
+		ga->vmoff = g_fake_gart[g_fake_ngart].vm; ga->npages = pages; ga->used_pages += pages;
+		g_fake_ngart++;
+		if(ret) *ret = sizeof(*ga);
+		return TRUE;
+	}
+	case OP_NV_GART_FREE:
+	{
+		int i;
+		if(insz < 4) return FALSE;
+		for(i = 0; i < g_fake_ngart; i++)
+			if(g_fake_gart[i].ptr && (uint32_t)(uintptr_t)g_fake_gart[i].ptr == w[0])
+			{ VirtualFree(g_fake_gart[i].ptr, 0, MEM_RELEASE); g_fake_gart[i].ptr = NULL; break; }
+		if(out && outsz >= 4) *(uint32_t *)out = (i < g_fake_ngart) ? 1 : 0;
+		if(ret) *ret = 4;
+		return TRUE;
+	}
 	case OP_NV_RD32:
 	{
 		/* 3094: the one MMIO read on Mesa's path - PMC 0x1540 (GRAPH_UNITS) */
@@ -776,9 +850,15 @@ static void shim_flush_pending(void)
  * 64 KiB VM page like nouveau does, everything else to the caller's align. */
 #define HEAP_MAXFREE 4096   /* 3112: was 1024 - a level's worth of textures leaves thousands of holes */
 #define HEAP_SMALL   0x40000 /* 3112: BOs below 256 KiB are carved from the top of their free block */
-static struct { uint32_t start, size; } g_free[HEAP_MAXFREE];
-static int g_nfree = -1;                      /* -1 = not initialised */
-static uint32_t g_heap_used = 0, g_heap_allocs = 0;
+/* 3115: the allocator serves two heaps - VRAM (regions fixed at init, the
+ * row-block rule) and GART (regions = the slabs the VxD hands out, no rule) */
+struct shim_heap {
+	struct { uint32_t start, size; } free[HEAP_MAXFREE];
+	int      nfree;                  /* -1 = not initialised */
+	uint32_t used, allocs, frees;
+};
+static struct shim_heap g_vheap = { {{0, 0}}, -1, 0, 0, 0 };
+static struct shim_heap g_gheap = { {{0, 0}}, 0, 0, 0, 0 };
 
 /* 3109: nouveau's nv50 storage-kind classes (nvkm/subdev/mmu/nv50.c
  * nv50_mmu_kind): 0x01 = no bank swizzle, 0x02 = bank swizzled, 0x7f =
@@ -870,22 +950,22 @@ static void heap_init(void)
 	 * NVSHIM_HEAP_EVO_* / _MID comment), 103.7 MiB in all. */
 	uint32_t t = 0; int i;
 	heap_rblock_init();
-	g_free[0].start = NVSHIM_HEAP_EVO_A; g_free[0].size = NVSHIM_HEAP_EVO_A_END - NVSHIM_HEAP_EVO_A;
-	g_free[1].start = NVSHIM_HEAP_EVO_B; g_free[1].size = NVSHIM_HEAP_EVO_B_END - NVSHIM_HEAP_EVO_B;
-	g_free[2].start = NVSHIM_HEAP_LO;    g_free[2].size = NVSHIM_HEAP_LO_END - NVSHIM_HEAP_LO;
-	g_free[3].start = NVSHIM_HEAP_MID;   g_free[3].size = NVSHIM_HEAP_MID_END - NVSHIM_HEAP_MID;
-	g_free[4].start = NVSHIM_HEAP_BASE;  g_free[4].size = NVSHIM_HEAP_END - NVSHIM_HEAP_BASE;
-	g_nfree = 5;
-	if(shim_heap2())  { g_free[0] = g_free[2]; g_free[1] = g_free[4]; g_nfree = 2; NVLOG0("heap: 3095 two-region layout (NVSHIM_HEAP2)"); }
-	if(shim_heaphi()) { g_free[0] = g_free[g_nfree - 1]; g_nfree = 1; NVLOG0("heap: high region only (NVSHIM_HEAPHI)"); }
-	for(i = 0; i < g_nfree; i++) t += g_free[i].size;
-	NVLOG2("heap: regions/bytes", g_nfree, t);
+	g_vheap.free[0].start = NVSHIM_HEAP_EVO_A; g_vheap.free[0].size = NVSHIM_HEAP_EVO_A_END - NVSHIM_HEAP_EVO_A;
+	g_vheap.free[1].start = NVSHIM_HEAP_EVO_B; g_vheap.free[1].size = NVSHIM_HEAP_EVO_B_END - NVSHIM_HEAP_EVO_B;
+	g_vheap.free[2].start = NVSHIM_HEAP_LO;    g_vheap.free[2].size = NVSHIM_HEAP_LO_END - NVSHIM_HEAP_LO;
+	g_vheap.free[3].start = NVSHIM_HEAP_MID;   g_vheap.free[3].size = NVSHIM_HEAP_MID_END - NVSHIM_HEAP_MID;
+	g_vheap.free[4].start = NVSHIM_HEAP_BASE;  g_vheap.free[4].size = NVSHIM_HEAP_END - NVSHIM_HEAP_BASE;
+	g_vheap.nfree = 5;
+	if(shim_heap2())  { g_vheap.free[0] = g_vheap.free[2]; g_vheap.free[1] = g_vheap.free[4]; g_vheap.nfree = 2; NVLOG0("heap: 3095 two-region layout (NVSHIM_HEAP2)"); }
+	if(shim_heaphi()) { g_vheap.free[0] = g_vheap.free[g_vheap.nfree - 1]; g_vheap.nfree = 1; NVLOG0("heap: high region only (NVSHIM_HEAPHI)"); }
+	for(i = 0; i < g_vheap.nfree; i++) t += g_vheap.free[i].size;
+	NVLOG2("heap: regions/bytes", g_vheap.nfree, t);
 }
 static void heap_stats(uint32_t *free_total, uint32_t *largest)
 {
 	int i; uint32_t t = 0, l = 0;
-	if(g_nfree < 0) heap_init();
-	for(i = 0; i < g_nfree; i++) { t += g_free[i].size; if(g_free[i].size > l) l = g_free[i].size; }
+	if(g_vheap.nfree < 0) heap_init();
+	for(i = 0; i < g_vheap.nfree; i++) { t += g_vheap.free[i].size; if(g_vheap.free[i].size > l) l = g_vheap.free[i].size; }
 	*free_total = t; *largest = l;
 }
 /* 3108: NVSHIM_HIKIND=depth|color|tiled ('nvhl hidepth' / 'hicolor' / 'hitiled'):
@@ -924,7 +1004,7 @@ static int shim_kind_wants_hi(uint32_t kind)
  * region, the VxD's channel structures above it) counts as class 1 (linear). */
 static int shim_class_ending_at(uint32_t addr);
 static int shim_class_starting_at(uint32_t addr);
-static uint32_t heap_alloc_in(uint32_t size, uint32_t align, uint32_t lowest, int cls)
+static uint32_t heap_alloc_in(struct shim_heap *h, uint32_t size, uint32_t align, uint32_t lowest, int cls)
 {
 	/* 3112: BEST FIT (the free block that leaves the least over), and BOs
 	 * below HEAP_SMALL carved from the TOP of their block, so the big aligned
@@ -936,11 +1016,11 @@ static uint32_t heap_alloc_in(uint32_t size, uint32_t align, uint32_t lowest, in
 	 * texture. */
 	int i, best = -1; uint32_t best_a = 0, best_left = 0xffffffffUL;
 	const int small = (size < HEAP_SMALL);
-	for(i = 0; i < g_nfree; i++)
+	for(i = 0; i < h->nfree; i++)
 	{
-		uint32_t bs = g_free[i].start, be = g_free[i].start + g_free[i].size;
+		uint32_t bs = h->free[i].start, be = h->free[i].start + h->free[i].size;
 		uint32_t s = bs, e = be, a, left;
-		if(g_rblock)
+		if(g_rblock && h == &g_vheap)
 		{	/* nvkm_mm_head: keep away from differently-classed neighbours */
 			if(shim_class_ending_at(bs) != cls)   s = (bs + g_rblock - 1) / g_rblock * g_rblock;
 			if(shim_class_starting_at(be) != cls) e = be / g_rblock * g_rblock;
@@ -965,73 +1045,190 @@ static uint32_t heap_alloc_in(uint32_t size, uint32_t align, uint32_t lowest, in
 	if(best < 0)
 		return 0;                                   /* out of VRAM */
 	{
-		uint32_t a = best_a, bs = g_free[best].start, be = g_free[best].start + g_free[best].size;
+		uint32_t a = best_a, bs = h->free[best].start, be = h->free[best].start + h->free[best].size;
 		i = best;
 		/* carve [a, a+size) out of block i: head [bs,a) stays as block i (or
 		 * is removed), tail [a+size, be) becomes a new block after it */
 		if(a + size < be)
 		{
-			if(g_nfree >= HEAP_MAXFREE) return 0;          /* no room to split: out of VRAM */
-			memmove(&g_free[i + 1], &g_free[i], (size_t)(g_nfree - i) * sizeof(g_free[0]));
-			g_nfree++;
-			g_free[i + 1].start = a + size;
-			g_free[i + 1].size  = be - (a + size);
+			if(h->nfree >= HEAP_MAXFREE) return 0;          /* no room to split: out of VRAM */
+			memmove(&h->free[i + 1], &h->free[i], (size_t)(h->nfree - i) * sizeof(h->free[0]));
+			h->nfree++;
+			h->free[i + 1].start = a + size;
+			h->free[i + 1].size  = be - (a + size);
 		}
 		if(a > bs)
-			g_free[i].size = a - bs;
+			h->free[i].size = a - bs;
 		else
 		{
-			memmove(&g_free[i], &g_free[i + 1], (size_t)(g_nfree - i - 1) * sizeof(g_free[0]));
-			g_nfree--;
+			memmove(&h->free[i], &h->free[i + 1], (size_t)(h->nfree - i - 1) * sizeof(h->free[0]));
+			h->nfree--;
 		}
-		g_heap_used += size;
-		g_heap_allocs++;
+		h->used += size;
+		h->allocs++;
 		return a;
 	}
 }
 static uint32_t heap_alloc(uint32_t size, uint32_t align, int hi, int cls)
 {
 	uint32_t a;
-	if(g_nfree < 0) heap_init();
+	if(g_vheap.nfree < 0) heap_init();
 	if(align < 0x100) align = 0x100;
 	size = (size + 0xff) & ~0xffUL;
-	if(hi && (a = heap_alloc_in(size, align, NVSHIM_HEAP_BASE, cls)) != 0) return a;
-	return heap_alloc_in(size, align, 0, cls);
+	if(hi && (a = heap_alloc_in(&g_vheap, size, align, NVSHIM_HEAP_BASE, cls)) != 0) return a;
+	return heap_alloc_in(&g_vheap, size, align, 0, cls);
 }
-static uint32_t g_heap_frees = 0;
-static void heap_free(uint32_t start, uint32_t size)
+/* 3115: insert [start, start+size) into the heap's free list, coalescing */
+static void heap_add_region(struct shim_heap *h, uint32_t start, uint32_t size)
 {
-	g_heap_frees++;
 	int i;
 	size = (size + 0xff) & ~0xffUL;
-	if(g_nfree < 0 || size == 0) return;
-	for(i = 0; i < g_nfree && g_free[i].start < start; i++) ;
+	if(h->nfree < 0 || size == 0) return;
+	for(i = 0; i < h->nfree && h->free[i].start < start; i++) ;
 	/* coalesce with the previous block */
-	if(i > 0 && g_free[i - 1].start + g_free[i - 1].size == start)
+	if(i > 0 && h->free[i - 1].start + h->free[i - 1].size == start)
 	{
-		g_free[i - 1].size += size;
-		if(i < g_nfree && g_free[i - 1].start + g_free[i - 1].size == g_free[i].start)
+		h->free[i - 1].size += size;
+		if(i < h->nfree && h->free[i - 1].start + h->free[i - 1].size == h->free[i].start)
 		{
-			g_free[i - 1].size += g_free[i].size;
-			memmove(&g_free[i], &g_free[i + 1], (size_t)(g_nfree - i - 1) * sizeof(g_free[0]));
-			g_nfree--;
+			h->free[i - 1].size += h->free[i].size;
+			memmove(&h->free[i], &h->free[i + 1], (size_t)(h->nfree - i - 1) * sizeof(h->free[0]));
+			h->nfree--;
 		}
 	}
-	else if(i < g_nfree && start + size == g_free[i].start)
+	else if(i < h->nfree && start + size == h->free[i].start)
 	{
-		g_free[i].start = start;
-		g_free[i].size += size;
+		h->free[i].start = start;
+		h->free[i].size += size;
 	}
 	else
 	{
-		if(g_nfree >= HEAP_MAXFREE) return;             /* leak rather than corrupt */
-		memmove(&g_free[i + 1], &g_free[i], (size_t)(g_nfree - i) * sizeof(g_free[0]));
-		g_free[i].start = start;
-		g_free[i].size  = size;
-		g_nfree++;
+		if(h->nfree >= HEAP_MAXFREE) return;             /* leak rather than corrupt */
+		memmove(&h->free[i + 1], &h->free[i], (size_t)(h->nfree - i) * sizeof(h->free[0]));
+		h->free[i].start = start;
+		h->free[i].size  = size;
+		h->nfree++;
 	}
-	g_heap_used -= size;
 }
+static void heap_free(struct shim_heap *h, uint32_t start, uint32_t size)
+{
+	size = (size + 0xff) & ~0xffUL;
+	h->frees++;
+	heap_add_region(h, start, size);
+	h->used -= size;
+}
+
+/* ========================= GART (3115) ================================ */
+static struct { uint32_t vm, size; uint8_t *ptr; } g_gslab[NVSHIM_GART_MAXSLAB];
+static int      g_ngslab = 0;
+static uint32_t g_gart_total = 0;        /* bytes of slabs held */
+static int      g_gart_dead = 0;         /* the VxD refused (pre-3115 VxD, or its cap): stop asking */
+static uint32_t g_gart_allocs = 0, g_gart_frees = 0;
+#ifndef NVSHIM_STANDALONE
+const char *os_get_option(const char *name);   /* Mesa util: env, then HKLM\Software\vmdisp9x\apps\<exe>\mesa */
+#endif
+static uint32_t shim_gart_cap(void)      /* bytes; 0 = GART off */
+{
+	static int32_t cap = -1;
+	if(cap < 0)
+	{
+		char b[16]; DWORD n = GetEnvironmentVariableA("NVSHIM_GART", b, sizeof(b));
+		const char *v = (n > 0 && n < sizeof(b)) ? b : NULL;
+#ifndef NVSHIM_STANDALONE
+		if(!v) v = os_get_option("NVSHIM_GART");
+#endif
+		if(v) cap = (int32_t)strtoul(v, NULL, 0);
+		else
+		{	/* half of physical RAM, like TTM's locked-memory limit */
+			MEMORYSTATUS ms; memset(&ms, 0, sizeof(ms)); ms.dwLength = sizeof(ms);
+			GlobalMemoryStatus(&ms);
+			cap = (int32_t)((ms.dwTotalPhys >> 20) / 2);
+			if(cap < 32) cap = 32;
+		}
+		if(cap < 0) cap = 0;
+		if(cap > NVSHIM_GART_MAX) cap = NVSHIM_GART_MAX;
+		NVLOG2("gart: cap MiB / set by NVSHIM_GART (0 = every BO in VRAM)", (uint32_t)cap, v ? 1 : 0);
+	}
+	return (uint32_t)cap << 20;
+}
+static uint8_t *gart_ptr(uint32_t vm)    /* CPU address of a GART VM address */
+{
+	int i;
+	for(i = 0; i < g_ngslab; i++)
+		if(vm >= g_gslab[i].vm && vm < g_gslab[i].vm + g_gslab[i].size)
+			return g_gslab[i].ptr + (vm - g_gslab[i].vm);
+	return NULL;
+}
+static int gart_grow(uint32_t need)
+{
+	nv_gart_alloc_t ga; DWORD ret = 0; uint32_t slab = NVSHIM_GART_SLAB, pages;
+	if(g_gart_dead || g_ngslab >= NVSHIM_GART_MAXSLAB) return 0;
+	if(need > slab) slab = (need + 0xffffUL) & ~0xffffUL;
+	if(g_gart_total + slab > shim_gart_cap()) { NVLOG2("gart: cap reached total/need", g_gart_total, need); return 0; }
+	if(!nvshim_open()) return 0;
+	pages = slab >> 12;
+	memset(&ga, 0, sizeof(ga));
+	if(!shim_ioctl(OP_NV_GART_ALLOC, &pages, sizeof(pages), &ga, sizeof(ga), &ret) || ret < sizeof(ga) || ga.build == 0)
+	{
+		g_gart_dead = 1;
+		NVLOG2("gart: VxD has no OP_NV_GART_ALLOC (pre-3115) - every BO in VRAM; ret/build", ret, ga.build);
+		return 0;
+	}
+	if(!ga.ok)
+	{
+		g_gart_dead = 1;   /* the VxD's cap or a locked-page failure: do not retry per BO */
+		NVLOG3("gart: VxD refused slab pages/used/total", pages, ga.used_pages, ga.total_pages);
+		return 0;
+	}
+	g_gslab[g_ngslab].vm = ga.vmoff; g_gslab[g_ngslab].size = slab; g_gslab[g_ngslab].ptr = (uint8_t *)(uintptr_t)ga.lin;
+	g_ngslab++;
+	g_gart_total += slab;
+	/* The slab's last 4 KiB page stays OUT of the heap: slabs get consecutive VM
+	 * ranges (the VxD's first-fit page runs, the fake's bump) but separate CPU
+	 * mappings, and a free list that let two slabs' ranges touch coalesced them
+	 * into one block - a BO carved across the seam had contiguous GPU addresses
+	 * and a CPU pointer that ran off the end of the first slab (the fake run's
+	 * page fault one page past slab 2, build 3115's first load scene). */
+	heap_add_region(&g_gheap, ga.vmoff, slab - 0x1000);
+	NVLOG3("gart slab vm/lin/bytes", ga.vmoff, ga.lin, slab);
+	NVLOG2("gart slabs/total bytes", (uint32_t)g_ngslab, g_gart_total);
+	return 1;
+}
+/* a GART BO: VM address (0 = none) and its CPU pointer */
+static uint32_t gart_alloc(uint32_t size, uint32_t align, uint8_t **ptr)
+{
+	uint32_t a;
+	if(shim_gart_cap() == 0 || g_gart_dead) return 0;
+	if(align < 0x100) align = 0x100;
+	size = (size + 0xff) & ~0xffUL;
+	a = heap_alloc_in(&g_gheap, size, align, 0, 1);
+	if(!a && gart_grow(size + align + 0x1000)) a = heap_alloc_in(&g_gheap, size, align, 0, 1);
+	if(!a) return 0;
+	*ptr = gart_ptr(a);
+	if(!*ptr) { heap_free(&g_gheap, a, size); return 0; }
+	g_gart_allocs++;
+	return a;
+}
+static void gart_free(uint32_t vm, uint32_t size)
+{
+	g_gart_frees++;
+	heap_free(&g_gheap, vm, size);
+}
+/* 3115: the storage kind of a GART BO's 4 KiB PTEs (a tiled texture that fell
+ * back to system memory keeps its kind, as nouveau's nv50 map_sg does) */
+static void vxd_gart_kind(uint32_t vm, uint32_t size, uint32_t kind)
+{
+	uint32_t in[3]; DWORD r = 0, ret = 0;
+	if(!nvshim_open()) return;
+	in[0] = vm; in[1] = size; in[2] = kind;
+	shim_ioctl(OP_NV_GART_KIND, in, sizeof(in), &r, sizeof(r), &ret);
+	{
+		static uint32_t nk = 0;
+		if(nk < 512 || (nk & 255) == 0 || !r) NVLOG3("bo_kind GART vm/size/kind", vm, size, kind | (r ? 0 : 0x80000000UL));
+		nk++;
+	}
+}
+
 
 /* ========================= private structs ============================ */
 #define SHIM_MAXREF 2048   /* 3095: was 512 - a GoldSrc frame references several hundred texture BOs */
@@ -1040,7 +1237,9 @@ struct shim_push;
 struct shim_bo {
 	struct nouveau_bo base;
 	int      refcnt;
-	uint32_t phys;        /* VRAM byte offset */
+	uint32_t phys;        /* VRAM byte offset (VRAM BOs) */
+	uint32_t vm;          /* 3115: GPU VM address = the registry key (VRAM: phys + 1 GiB; GART: 512 MiB + offset) */
+	uint8_t *gart;        /* 3115: CPU address of a GART BO's memory (NULL = VRAM-backed) */
 	uint32_t shadow_sz;   /* bytes backing base.map, 0 until first map */
 	uint32_t asize;       /* bytes actually allocated (tiled: rounded to 64 KiB) */
 	uint32_t kind;        /* 3091: PTE storage kind set for this BO (0 = linear) */
@@ -1059,34 +1258,37 @@ static int             g_nbos = 0;
 /* 3095: the registry is kept sorted by phys and searched by bisection - the
  * kick walk looks up a BO per vertex array per draw (thousands a frame in a
  * game) and Half-Life keeps ~2,000 BOs alive. */
-static int shim_bo_index(uint32_t phys)      /* index of the last BO with ->phys <= phys, or -1 */
+/* 3115: keyed by VM address, so GART BOs (512 MiB-1 GiB) and VRAM BOs (1 GiB+)
+ * share one registry and the kick walk resolves either kind of address */
+static int shim_bo_index(uint32_t vm)        /* index of the last BO with ->vm <= vm, or -1 */
 {
 	int lo = 0, hi = g_nbos - 1, r = -1;
 	while(lo <= hi)
 	{
 		int mid = (lo + hi) >> 1;
-		if(g_bos[mid]->phys <= phys) { r = mid; lo = mid + 1; } else hi = mid - 1;
+		if(g_bos[mid]->vm <= vm) { r = mid; lo = mid + 1; } else hi = mid - 1;
 	}
 	return r;
 }
-static struct shim_bo *shim_bo_at(uint32_t phys)
+static struct shim_bo *shim_bo_at(uint32_t vm)
 {
-	int i = shim_bo_index(phys);
-	if(i >= 0 && phys < g_bos[i]->phys + (uint32_t)g_bos[i]->base.size)
+	int i = shim_bo_index(vm);
+	if(i >= 0 && vm < g_bos[i]->vm + (uint32_t)g_bos[i]->base.size)
 		return g_bos[i];
 	return NULL;
 }
+/* (VRAM physical addresses: the row-block rule) */
 static int shim_class_ending_at(uint32_t addr)
 {
-	int i = addr ? shim_bo_index(addr - 1) : -1;
-	if(i >= 0 && g_bos[i]->phys + g_bos[i]->asize == addr && !g_bos[i]->external)
+	int i = addr ? shim_bo_index(addr - 1 + NVSHIM_VM_BASE) : -1;
+	if(i >= 0 && g_bos[i]->vm + g_bos[i]->asize == addr + NVSHIM_VM_BASE && !g_bos[i]->external && !g_bos[i]->gart)
 		return shim_kind_class(g_bos[i]->kind);
 	return 1;
 }
 static int shim_class_starting_at(uint32_t addr)
 {
-	int i = shim_bo_index(addr);
-	if(i >= 0 && g_bos[i]->phys == addr && !g_bos[i]->external)
+	int i = shim_bo_index(addr + NVSHIM_VM_BASE);
+	if(i >= 0 && g_bos[i]->vm == addr + NVSHIM_VM_BASE && !g_bos[i]->external && !g_bos[i]->gart)
 		return shim_kind_class(g_bos[i]->kind);
 	return 1;
 }
@@ -1096,18 +1298,18 @@ static void shim_bo_register(struct shim_bo *b)
 	if(g_nbos >= SHIM_MAXBO)
 	{	/* 3112: an unregistered BO still works (flushed whole, never range-bounded) */
 		static int w = 0;
-		if(w++ < 4) NVLOG2("WARN BO registry full n/phys", g_nbos, b->phys);
+		if(w++ < 4) NVLOG2("WARN BO registry full n/vm", g_nbos, b->vm);
 		return;
 	}
-	i = shim_bo_index(b->phys) + 1;          /* insert after the last BO at or below */
+	i = shim_bo_index(b->vm) + 1;            /* insert after the last BO at or below */
 	memmove(&g_bos[i + 1], &g_bos[i], (size_t)(g_nbos - i) * sizeof(g_bos[0]));
 	g_bos[i] = b;
 	g_nbos++;
 }
 static void shim_bo_unregister(struct shim_bo *b)
 {
-	int i = shim_bo_index(b->phys);
-	while(i >= 0 && g_bos[i]->phys == b->phys && g_bos[i] != b) i--;   /* external twins share a phys */
+	int i = shim_bo_index(b->vm);
+	while(i >= 0 && g_bos[i]->vm == b->vm && g_bos[i] != b) i--;   /* external twins share an address */
 	if(i < 0 || g_bos[i] != b) return;
 	memmove(&g_bos[i], &g_bos[i + 1], (size_t)(g_nbos - i - 1) * sizeof(g_bos[0]));
 	g_nbos--;
@@ -1154,12 +1356,12 @@ static void range_mark(struct shim_bo *b, uint32_t off, uint32_t len, int whole)
 /* what: 0 M2MF source, 1 vertex array, 2 constant buffer, 3 2D source */
 static void range_add(uint32_t vm, uint32_t len, int whole, int what, int verify)
 {
-	struct shim_bo *b; uint32_t phys, off;
+	struct shim_bo *b; uint32_t off;
 	static int nwarn = 0;
-	if(vm < NVSHIM_VM_BASE + NVSHIM_HEAP_MIN || vm >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
+	if(!(vm >= NVSHIM_VM_GART && vm < NVSHIM_VM_GART_END) &&          /* 3115: GART BOs */
+	   (vm < NVSHIM_VM_BASE + NVSHIM_HEAP_MIN || vm >= NVSHIM_VM_BASE + NVSHIM_HEAP_END))
 		return;                              /* scanout surface / instance area: not ours */
-	phys = vm - NVSHIM_VM_BASE;
-	b = shim_bo_at(phys);
+	b = shim_bo_at(vm);
 	if(!b)
 	{
 		if(!verify) return;
@@ -1173,9 +1375,9 @@ static void range_add(uint32_t vm, uint32_t len, int whole, int what, int verify
 		}
 		return;
 	}
-	off = phys - b->phys;
+	off = vm - b->vm;
 	if(!verify) { range_mark(b, off, len, whole); return; }
-	if(!b->base.map || !b->clean || b->external) return;
+	if(!b->base.map || !b->clean || b->external || b->gart) return;   /* GART: the CPU writes are the GPU's bytes */
 	if(off >= b->shadow_sz) return;
 	if(whole) { off = 0; len = b->shadow_sz; }
 	else if(len == 0 || off + len > b->shadow_sz) len = b->shadow_sz - off;
@@ -1276,18 +1478,23 @@ static void shim_refresh_queries(const uint32_t *m, uint32_t count)
 			{
 				uint32_t mm = typ == 0 ? mthd + 4 * k : mthd, v = m[i + 1 + k];
 				if(mm == 0x1b04) qaddr = v;
-				else if(mm == 0x1b0c && qaddr >= NVSHIM_VM_BASE)
+				else if(mm == 0x1b0c && qaddr >= NVSHIM_VM_GART)
 				{
-					uint32_t phys = qaddr - NVSHIM_VM_BASE;
-					struct shim_bo *b = shim_bo_at(phys);
-					if(b && b->base.map && (phys - b->phys) + 16 <= b->shadow_sz)
+					struct shim_bo *b = shim_bo_at(qaddr);
+					if(b && b->gart)
+					{	/* 3115: the GPU wrote the sequence into system memory; nothing to pull */
+						static int ng = 0;
+						if(ng++ < 8) NVLOG2("fence in GART vm/seq", qaddr, *(uint32_t*)(b->gart + (qaddr - b->vm)));
+					}
+					else if(b && b->base.map && (qaddr - b->vm) + 16 <= b->shadow_sz)
 					{
 						static int nq = 0;
-						vxd_vram_read(phys, (uint32_t*)((char*)b->base.map + (phys - b->phys)), 4);
-						if(b->clean) memcpy(b->clean + (phys - b->phys), (char*)b->base.map + (phys - b->phys), 16);
-						if(nq++ < 24) NVLOG2("fence refresh phys/seq", phys, *(uint32_t*)((char*)b->base.map + (phys - b->phys)));
+						uint32_t phys = qaddr - NVSHIM_VM_BASE;
+						vxd_vram_read(phys, (uint32_t*)((char*)b->base.map + (qaddr - b->vm)), 4);
+						if(b->clean) memcpy(b->clean + (qaddr - b->vm), (char*)b->base.map + (qaddr - b->vm), 16);
+						if(nq++ < 24) NVLOG2("fence refresh phys/seq", phys, *(uint32_t*)((char*)b->base.map + (qaddr - b->vm)));
 					}
-					else { static int nb = 0; if(nb++ < 8) NVLOG2("fence refresh: QUERY target not a mapped BO phys/bo", phys, b ? b->phys : 0); }
+					else { static int nb = 0; if(nb++ < 8) NVLOG2("fence refresh: QUERY target not a mapped BO vm/bo", qaddr, b ? b->vm : 0); }
 				}
 			}
 		i += 1 + n;
@@ -1366,8 +1573,9 @@ int nouveau_device_new(struct nouveau_object *parent, struct nouveau_device **pd
 	dev->chipset  = 0x86;              /* G86 (Quadro NVS 140M) */
 	/* VRAM the shim manages. The card has more; the VM 1:1 window caps us. */
 	dev->vram_size = NVSHIM_HEAP_END;
-	dev->gart_size = 0;
+	dev->gart_size = shim_gart_cap();        /* 3115: system-memory BOs through the channel VM */
 	dev->vram_limit = (dev->vram_size * 3) / 4;
+	dev->gart_limit = (dev->gart_size * 3) / 4;
 	*pdev = dev;
 	return 0;
 }
@@ -1630,10 +1838,19 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
                    uint64_t size, union nouveau_bo_config *config, struct nouveau_bo **pbo)
 {
 	struct shim_bo *b;
-	uint32_t phys;
-	int tiled;
+	uint32_t phys = 0, gvm = 0;
+	uint8_t *gptr = NULL;
+	int tiled, want_gart, gart_on;
 	uint64_t t = shim_tsc();
 	if(size == 0) size = 0x100;
+	/* 3115: placement the way nouveau's TTM does it - a GART request (fence,
+	 * staging, stream buffers: NOUVEAU_BO_GART without VRAM) goes to system
+	 * memory; a VRAM request goes to the VRAM heap and, when that is full, to
+	 * system memory instead of failing (nouveau evicts to GART; without BO moves
+	 * the newest BO is the one that lands there). GART off or exhausted: VRAM
+	 * for everything, as before. */
+	want_gart = (flags & NOUVEAU_BO_GART) && !(flags & NOUVEAU_BO_VRAM);
+	gart_on   = shim_gart_cap() != 0 && !g_gart_dead;
 	/* 3091: a tiled surface (tile_mode / memtype set) gets whole 64 KiB pages
 	 * of its own, because its pages carry a storage kind in the PTEs. */
 	tiled = (config && (config->nv50.tile_mode || config->nv50.memtype)) ? 1 : 0;
@@ -1642,9 +1859,10 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 		if(align < 0x10000) align = 0x10000;
 		size = ((uint32_t)size + 0xffffUL) & ~0xffffUL;
 	}
-	phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f),
-	                  shim_kind_class(tiled ? (config->nv50.memtype & 0x7f) : 0));
-	if(!phys)
+	if(!want_gart || !gart_on)
+		phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f),
+		                  shim_kind_class(tiled ? (config->nv50.memtype & 0x7f) : 0));
+	if(!phys && !gart_on)
 	{
 		/* 3097: nothing is evicted here, but pending work holds the staging BOs
 		 * that Mesa frees once its fences signal: submit it, re-validate the
@@ -1665,7 +1883,7 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 		 * each try drained the GPU twice; on the T61 (~1 ms a kick) that is
 		 * seconds per frame - a game that "stops responding" once a level does
 		 * not fit. */
-		if(g_heap_frees != frees_at_fail)
+		if(g_vheap.frees != frees_at_fail)
 		for(tries = 0; !phys && tries < 2; tries++)
 		{
 			if(!g_cur_push || g_cur_push->cur == (uint32_t*)((struct shim_push_hdr*)g_cur_push)->buf) break;
@@ -1674,11 +1892,24 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 			phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f),
 			                  shim_kind_class(tiled ? (config->nv50.memtype & 0x7f) : 0));
 		}
-		if(!phys) frees_at_fail = g_heap_frees;
+		if(!phys) frees_at_fail = g_vheap.frees;
 		if(n < 16 || (n & 255) == 0) NVLOG3("bo_new: heap full - kicked pending work; size/free before/phys after", (uint32_t)size, ft0, phys);
 		n++;
 	}
-	if(!phys)
+	if(!phys && gart_on)
+	{
+		gvm = gart_alloc((uint32_t)size, align, &gptr);
+		if(!gvm && want_gart)   /* GART exhausted: VRAM, as every BO was before 3115 */
+			phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f),
+			                  shim_kind_class(tiled ? (config->nv50.memtype & 0x7f) : 0));
+		if(!gvm && !phys && !want_gart)
+		{	/* VRAM full and no GART either: say so once in a while */
+			static int ng = 0;
+			if(ng < 16 || (ng & 255) == 0) NVLOG3("bo_new: VRAM full and GART exhausted sz/gart total/cap", (uint32_t)size, g_gart_total, shim_gart_cap());
+			ng++;
+		}
+	}
+	if(!phys && !gvm)
 	{
 #ifndef NVSHIM_STANDALONE
 		static int ndump = 0, nfail = 0;
@@ -1719,34 +1950,40 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 		return -1;
 	}
 #ifndef NVSHIM_STANDALONE
-	if((g_heap_allocs & 255) == 0)
+	if(((g_vheap.allocs + g_gart_allocs) & 255) == 0)
 	{
 		uint32_t ft, lg; heap_stats(&ft, &lg);
-		NVLOG3("heap allocs/used/largest", g_heap_allocs, g_heap_used, lg);
-		NVLOG2("heap frees/kicks", g_heap_frees, g_st_kicks);
+		NVLOG3("heap allocs/used/largest", g_vheap.allocs, g_vheap.used, lg);
+		NVLOG2("heap frees/kicks", g_vheap.frees, g_st_kicks);
+		NVLOG3("gart allocs/used/slabs bytes", g_gart_allocs, g_gheap.used, g_gart_total);
 	}
 #endif
 	b = calloc(1, sizeof(*b));
-	if(!b) return -1;
+	if(!b) { if(gvm) gart_free(gvm, ((uint32_t)size + 0xffUL) & ~0xffUL); return -1; }
 	b->refcnt       = 1;
 	b->phys         = phys;
+	b->gart         = gptr;
+	b->vm           = gvm ? gvm : phys + NVSHIM_VM_BASE;
 	b->base.device  = dev;
-	b->base.handle  = phys;                           /* opaque; we key on phys */
+	b->base.handle  = b->vm;                          /* opaque; we key on the VM address */
 	b->base.size    = size;
 	b->base.flags   = flags;
-	b->base.offset  = (uint64_t)phys + NVSHIM_VM_BASE; /* GPU (VM) address */
+	b->base.offset  = (uint64_t)b->vm;                /* GPU (VM) address */
 	b->base.map     = NULL;
 	if(config) b->base.config = *config;
 	b->asize = ((uint32_t)size + 0xffUL) & ~0xffUL;
 	b->kind  = tiled ? (config->nv50.memtype & 0x7f) : 0;
 	{	/* 3095: the first 512 allocations, then one in 256 (a game allocates a
 		 * staging BO per texture update: ~34 a frame) */
-		static uint32_t nb = 0;
-		if(nb < 512 || (nb & 255) == 0) NVLOG3("bo_new sz/phys/vmoff", (uint32_t)size, phys, (uint32_t)b->base.offset);
-		nb++;
+		static uint32_t nb = 0, ngb = 0;
+		if(gvm) { if(ngb < 512 || (ngb & 255) == 0) NVLOG3("bo_new GART sz/vm/flags", (uint32_t)size, gvm, flags); ngb++; }
+		else    { if(nb < 512 || (nb & 255) == 0) NVLOG3("bo_new sz/phys/vmoff", (uint32_t)size, phys, (uint32_t)b->base.offset); nb++; }
 	}
 	if(b->kind)
-		vxd_vmkind(phys, b->asize, b->kind);
+	{
+		if(gvm) vxd_gart_kind(gvm, b->asize, b->kind);
+		else    vxd_vmkind(phys, b->asize, b->kind);
+	}
 	shim_bo_register(b);
 	*pbo = &b->base;
 	g_st_kc[4] += shim_tsc() - t;
@@ -1775,6 +2012,12 @@ int nouveau_bo_map(struct nouveau_bo *bo, uint32_t access, struct nouveau_client
 	 * kicks per frame (a lightmap update or draw buffer map each) = 13 s/frame. */
 	if((access & (NOUVEAU_BO_RD | NOUVEAU_BO_WR)) && b->nkref)
 		shim_kick_bo(b, 3);
+	if(b->gart)
+	{	/* 3115: the map IS the memory the GPU reads and writes (snooped) */
+		b->base.map = b->gart;
+		g_st_kc[4] += shim_tsc() - t;
+		return 0;
+	}
 	if(!b->base.map)
 	{
 		b->shadow_sz = (uint32_t)b->base.size;
@@ -1827,12 +2070,20 @@ void nouveau_bo_ref(struct nouveau_bo *bo, struct nouveau_bo **pref)
 	if(old && --old->refcnt == 0)
 	{
 		shim_bo_unregister(old);
-		if(old->base.map) free(old->base.map);
-		if(old->clean) free(old->clean);
-		if(!old->external)
+		if(old->gart)
+		{	/* 3115: the map was the slab memory itself */
+			if(old->kind) vxd_gart_kind(old->vm, old->asize, 0);
+			gart_free(old->vm, old->asize);
+		}
+		else
 		{
-			if(old->kind) vxd_vmkind(old->phys, old->asize, 0);   /* back to linear */
-			heap_free(old->phys, old->asize);
+			if(old->base.map) free(old->base.map);
+			if(old->clean) free(old->clean);
+			if(!old->external)
+			{
+				if(old->kind) vxd_vmkind(old->phys, old->asize, 0);   /* back to linear */
+				heap_free(&g_vheap, old->phys, old->asize);
+			}
 		}
 		free(old);
 	}
@@ -1849,7 +2100,7 @@ int nouveau_bo_wait(struct nouveau_bo *bo, uint32_t access, struct nouveau_clien
 	 * wait, pull the latest VRAM contents into the shadow. */
 	if((access & (NOUVEAU_BO_RD | NOUVEAU_BO_WR)) && b->nkref)
 		shim_kick_bo(b, 4);
-	if((access & NOUVEAU_BO_RD) && b->base.map)
+	if((access & NOUVEAU_BO_RD) && b->base.map && !b->gart)
 	{
 		vxd_vram_read(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
 		if(b->clean) memcpy(b->clean, b->base.map, b->shadow_sz);
@@ -1885,7 +2136,8 @@ int nouveau_bo_name_ref(struct nouveau_device *dev, uint32_t name, struct nouvea
 	b->base.handle = g_front_phys;
 	b->base.size   = g_front_size;
 	b->base.flags  = NOUVEAU_BO_VRAM;
-	b->base.offset = (uint64_t)g_front_phys + NVSHIM_VM_BASE;
+	b->vm          = g_front_phys + NVSHIM_VM_BASE;
+	b->base.offset = (uint64_t)b->vm;
 	NVLOG2("bo_front phys/vmoff", b->phys, (uint32_t)b->base.offset);
 	*pbo = &b->base;
 	return 0;
@@ -2033,7 +2285,7 @@ nouveau_pushbuf_bufctx(struct nouveau_pushbuf *push, struct nouveau_bufctx *bc)
 static void shim_bo_flush(struct shim_bo *b)
 {
 	uint32_t off, run_start = 0, run_len = 0, lo, hi;
-	if(!b->base.map || !b->shadow_sz || b->external) return;
+	if(!b->base.map || !b->shadow_sz || b->external || b->gart) return;   /* 3115: GART = no shadow to flush */
 	if(!b->clean)
 	{
 		vxd_vram_write(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
@@ -2075,7 +2327,7 @@ static void shim_verify_bo(struct shim_bo *b)
 	static uint32_t *tmp = NULL;
 	static uint32_t nwarn = 0;
 	uint32_t lo, hi, off, n;
-	if(!b->base.map || !b->shadow_sz || b->external || b->kgen != g_kgen) return;
+	if(!b->base.map || !b->shadow_sz || b->external || b->gart || b->kgen != g_kgen) return;
 	lo = 0; hi = b->shadow_sz;
 	if(!b->kwhole && b->klo < b->khi && b->klo < b->shadow_sz)
 	{
@@ -2264,15 +2516,17 @@ void nouveau_pushbuf_data(struct nouveau_pushbuf *push, struct nouveau_bo *bo, u
 	struct shim_push *p = (struct shim_push *)push;
 	struct shim_bo *b = (struct shim_bo *)bo;
 	uint32_t dwords = (uint32_t)(length / 4);
+	const char *src;
 	if(!bo || dwords == 0)
 		return;
+	src = b->gart ? (const char *)b->gart : (const char *)b->base.map;   /* 3115 */
 	/* The payload of a VB_ELEMENT_* header Mesa just wrote (nv50_vbo.c:
 	 * BEGIN_NL50 + nouveau_pushbuf_data = index data read from a BO). libdrm
 	 * hands the BO to the kernel as its own IB entry; 3095 COPIES the bytes
 	 * inline right after the header - the puller sees the same stream - where
 	 * 3083-3094 made two submits per indexed draw (the methods so far, then the
 	 * data), each a synchronous GPU drain. */
-	if(b->base.map && push->cur > p->buf && dwords + 1 < p->cap)
+	if(src && push->cur > p->buf && dwords + 1 < p->cap)
 	{
 		if((uint32_t)(push->cur - p->buf) + dwords > p->cap)
 		{
@@ -2284,16 +2538,16 @@ void nouveau_pushbuf_data(struct nouveau_pushbuf *push, struct nouveau_bo *bo, u
 			push_kref_bufctx(p);
 			*push->cur++ = hdr;
 		}
-		memcpy(push->cur, (char*)b->base.map + offset, (size_t)dwords * 4);
+		memcpy(push->cur, src + offset, (size_t)dwords * 4);
 		push->cur += dwords;
 		return;
 	}
 	/* fallback (BO without a CPU shadow): the two-submit path */
 	if(push->cur != p->buf) { g_kick_src = 5; nouveau_pushbuf_kick(push); g_kick_src = 0; }
-	if(b->base.map)
+	if(src)
 	{
 		g_submit_data = 1;                     /* 3094: index payload, not methods (dump tag, no kick check) */
-		(void)vxd_submit((const uint32_t*)((char*)b->base.map + offset), dwords);
+		(void)vxd_submit((const uint32_t*)(src + offset), dwords);
 		g_submit_data = 0;
 	}
 }
