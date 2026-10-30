@@ -12,6 +12,11 @@ request?* It answers questions the DDK docs leave open (which caps a real G86 dr
 reports, which formats it exposes, how it treats pre-transformed vertices, guard band,
 z-bias, flips) and hardware questions (init values, contexts, VM).
 
+**Read [disassembly-findings.md](disassembly-findings.md) first**: everything already
+disassembled from NVIDIA's XP and Win9x drivers, with exact addresses (G86 chip object and
+PGRAPH context data in the XP miniport, why the Win9x stack crashes on a G86, where to start
+in `nv4_disp.dll` for Direct3D). Do not redo that work; extend that file when you learn more.
+
 ## What is where
 
 | Path | Contents |
@@ -69,8 +74,15 @@ driver is a working implementation of the same contract for the same GPU.
 
 ## Known uses so far
 
-- 3101-3102: XP G86 PGRAPH context vs nouveau's (only three MMIO init values differed).
-- Chip detection: the XP miniport has the G86 predicate the 9x 81.98 driver lacks.
+- 3101-3102: XP G86 PGRAPH context vs nouveau's: only three MMIO init values differ; neither
+  XP variant fixed the corner holes (their cause was our VRAM heap, 3109). Details and
+  addresses in disassembly-findings.md.
+- Chip detection: the XP miniport has the G86 predicate (0xe0230) that the Win9x NVCORE lacks;
+  the Win9x crash is an unchecked null call at NVCORE 0x18bd4b.
 - Direct3D (open, 2026-10-31): Half-Life 1.0's Direct3D renderer draws wrong through
   vmhal3d on Win98 on BOTH nouveau and llvmpipe (`analysis/t61-remote/hl-d3d/`); the XP
-  driver is the reference for what the DDI should do with Half-Life's draws.
+  driver (live under XP, or `nv4_disp.dll`) is the reference for what the DDI should do with
+  Half-Life's draws. `nv4_disp.dll` has not been disassembled yet.
+
+When you learn something new from these binaries, add it to disassembly-findings.md (exact
+addresses, the conventions used) so it is never re-derived.
