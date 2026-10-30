@@ -182,9 +182,8 @@ where it stopped). Also:
                         used before)
   nvhl exe sof.exe      run another game's exe through the launcher (logs + switches;
                         copy nvhl.bat and mesa3d.dll next to that exe as for Half-Life)
-SOF WITHOUT REGEDIT (3112 package): double-click sof-gpu.reg (GPU driver + the year cap SoF
-needs) or sof-sw.reg (software llvmpipe + the year cap); no reboot, takes effect at the next
-start of sof.exe. For any other game: nvapp.bat from a DOS box in C:\NVMINI -
+SOF WITHOUT REGEDIT (3112 package; the sof-*.reg files were replaced by the INF's
+compatibility list in 3114). For any game: nvapp.bat from a DOS box in C:\NVMINI -
   nvapp kingpin.exe sw        software OpenGL for that exe (nvapp kingpin.exe gpu = back)
   nvapp kingpin.exe y2000     GL_EXTENSIONS year cap (start-up "invalid page fault" crashes)
   nvapp kingpin.exe show      what the registry holds for it, and the global default
