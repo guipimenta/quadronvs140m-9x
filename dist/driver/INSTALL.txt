@@ -144,9 +144,12 @@ crashes there, 3116 does not). If you saw that, it was this.
 T61 test, in this order:
   1. From C:\NVMINI in a DOS box: ostest      - draws the way Direct3D does (a render
      target with depth + stencil, the screen surface uploaded, drawing, read back) at
-     32 and 16 bpp, 60 frames each, and checks the pixels. ostest.txt (same folder) must
-     say "renderer: NV86", "screen: GPU" and "RESULT: PASS (1200 checks, 0 mismatches,
-     0 GL errors)". It also prints the per-frame upload / draw / readback times.
+     32 and 16 bpp and checks the pixels; since the dxdiag report it also opens a SECOND
+     context while the first is alive (dxdiag's DirectX 7 -> DirectX 8 sequence) and uses
+     the HAL's float depth format. ostest.txt (same folder) must say "renderer: NV86",
+     "screen: GPU" and "RESULT: PASS (1500 checks, 0 mismatches, 0 GL errors)"; then
+     "ostest threads 1" (the first context on a worker thread that exits): "RESULT: PASS
+     (2100 checks, ...)". It also prints the per-frame upload / draw / readback times.
   2. DXDIAG -> Display -> Test Direct3D (all of it) - the spinning cubes.
   3. A Direct3D game as usual (double-click it).
 On a crash or wrong picture: nvlogs d3d1 (C:\nvshim.log has "osmesa:" lines that say

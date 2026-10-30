@@ -14,7 +14,11 @@
  * quad, a nearest-filtered checker texture, a 50% alpha blend over the
  * background, and a stencil-masked quad.
  *
- *   ostest [dll mesa3d.dll] [frames 60] [width 640] [height 480]
+ *   ostest [dll mesa3d.dll] [frames 60] [width 640] [height 480] [threads 1] [zfloat 0|1]
+ *
+ * Passes: 32 bpp on context A, 16 bpp on a second context B created while A is
+ * alive (dxdiag's DirectX 7 -> DirectX 8 sequence), 32 bpp back on A, B
+ * destroyed, 16 bpp on A.
  *
  * Writes ostest.txt in the current folder (and the same to stdout). The
  * renderer line says which screen OSMesa got: NV86 = the GPU (3116), llvmpipe =
@@ -81,6 +85,8 @@ typedef void          GLvoid;
 #define GL_DEPTH_STENCIL            0x84F9
 #define GL_UNSIGNED_INT_24_8        0x84FA
 #define GL_DEPTH24_STENCIL8         0x88F0
+#define GL_DEPTH32F_STENCIL8        0x8CAD
+#define GL_FLOAT_32_UNSIGNED_INT_24_8_REV 0x8DAD
 #define GL_READ_FRAMEBUFFER         0x8CA8
 #define GL_DRAW_FRAMEBUFFER         0x8CA9
 #define GL_FRAMEBUFFER_COMPLETE     0x8CD5
@@ -168,7 +174,33 @@ static void *getp(const char *name)
 #define LOAD(f) *(void **)&gl.f = getp("gl" #f)
 
 static int W = 640, H = 480;
+static int g_threads = 0;
+static int g_zfloat = -1;   /* -1 = like the HAL: DEPTH32F_STENCIL8 when GL >= 3 */
+static int run_pass(int bpp, int frames);
+static OSMesaCreateContextExt_t pCreate;
+static OSMesaMakeCurrent_t pMake;
+static OSMesaDestroyContext_t pDestroy;
+static OSMesaPixelStore_t pPixelStore;
+static OSMesaContext g_tctx;
+static unsigned char g_tbuf[320 * 240 * 4];
+static int g_tframes;
+
+/* threads 1: the first context is created, made current and rendered on a worker
+ * thread that then EXITS with the context still current and alive - what a
+ * program does when it runs each Direct3D test on its own thread. */
+static DWORD WINAPI thread_pass(LPVOID arg)
+{
+	(void)arg;
+	g_tctx = pCreate(OSMESA_RGBA, 24, 8, 0, NULL);
+	if(!g_tctx) { rep("thread: OSMesaCreateContextExt failed\n"); return 1; }
+	if(!pMake(g_tctx, g_tbuf, GL_UNSIGNED_BYTE, 320, 240)) { rep("thread: OSMesaMakeCurrent failed\n"); return 1; }
+	pPixelStore(OSMESA_Y_UP, 1);
+	run_pass(32, g_tframes);
+	rep("worker thread exits with its context current\n");
+	return 0;
+}
 static int g_errors = 0, g_bad = 0, g_checks = 0, g_judge = 1;
+static int run_pass(int bpp, int frames);
 
 static void glerr(const char *where, int frame)
 {
@@ -245,7 +277,7 @@ static int run_pass(int bpp, int frames)
 	GLenum st;
 
 	if(!surf || !texel) { rep("out of memory\n"); return 0; }
-	rep("--- %d bpp pass: %dx%d, %d frames ---\n", bpp, W, H, frames);
+	rep("--- %d bpp pass: %dx%d, %d frames, depth %s ---\n", bpp, W, H, frames, g_zfloat ? "DEPTH32F_STENCIL8" : "DEPTH24_STENCIL8");
 
 	/* the plane FBO, as MesaFBOChange creates it */
 	gl.GenFramebuffers(1, &plane_fb);
@@ -259,7 +291,11 @@ static int run_pass(int bpp, int frames)
 	gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	gl.FramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, plane_color, 0);
 	gl.BindTexture(GL_TEXTURE_2D, plane_depth);
-	gl.TexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, W, H, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+	/* vmhal3d: env.zfloat (default TRUE, FALSE only below GL 3) picks the plane's depth format */
+	if(g_zfloat)
+		gl.TexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, W, H, 0, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, NULL);
+	else
+		gl.TexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, W, H, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 	gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	gl.FramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, plane_depth, 0);
@@ -427,10 +463,6 @@ int main(int argc, char **argv)
 	const char *dll = "mesa3d.dll";
 	int frames = 60, i;
 	HMODULE lib;
-	OSMesaCreateContextExt_t pCreate;
-	OSMesaMakeCurrent_t pMake;
-	OSMesaDestroyContext_t pDestroy;
-	OSMesaPixelStore_t pPixelStore;
 	OSMesaContext ctx;
 	static unsigned char osbuf[320 * 240 * 4];
 	const char *ren, *ver, *ven;
@@ -442,6 +474,8 @@ int main(int argc, char **argv)
 		else if(!strcmp(argv[i], "frames")) frames = atoi(argv[i + 1]);
 		else if(!strcmp(argv[i], "width")) W = atoi(argv[i + 1]);
 		else if(!strcmp(argv[i], "height")) H = atoi(argv[i + 1]);
+		else if(!strcmp(argv[i], "threads")) g_threads = atoi(argv[i + 1]);
+		else if(!strcmp(argv[i], "zfloat")) g_zfloat = atoi(argv[i + 1]);
 	}
 	if(frames < 1) frames = 1;
 	if(W < 640) W = 640;
@@ -489,16 +523,54 @@ int main(int argc, char **argv)
 		rep("screen:   %s\n", gpu ? "GPU (nouveau) - Direct3D will render on the G86"
 		                         : "SOFTWARE - Direct3D renders on the CPU (see the header of ostest.c for why)");
 	}
+	if(g_zfloat < 0)
+		g_zfloat = ver && ver[0] >= '3';
 	if(fake && atoi(fake))
 	{
 		g_judge = 0;
 		rep("NVSHIM_FAKE=1: the fake GPU draws nothing - pixel checks are counted, not judged\n");
 	}
 
+	/* dxdiag's Direct3D test: the DirectX 7 part renders on one context, then
+	 * the DirectX 8 part creates a SECOND device - a second OSMesa context while
+	 * the first one still exists (3116 T61: dxdiag crashed right after the second
+	 * nv50 context was created). Do the same: pass 1 on context A, pass 2 on a new
+	 * context B with A alive, pass 3 back on A, then B and A destroyed. */
+	if(g_threads)
+	{
+		HANDLE th; DWORD tid;
+		g_tframes = frames;
+		rep("--- threads 1: pass 1 on a worker thread that exits with its context current ---\n");
+		th = CreateThread(NULL, 0, thread_pass, NULL, 0, &tid);
+		if(th) { WaitForSingleObject(th, INFINITE); CloseHandle(th); }
+		rep("--- main thread: its own context, the worker's still alive ---\n");
+		if(!pMake(ctx, osbuf, GL_UNSIGNED_BYTE, 320, 240)) { rep("OSMesaMakeCurrent(main) failed\n"); g_bad++; }
+		pPixelStore(OSMESA_Y_UP, 1);
+	}
 	run_pass(32, frames);
-	run_pass(16, frames);
+	{
+		static unsigned char osbuf2[320 * 240 * 4];
+		OSMesaContext ctx2;
+		rep("--- second context (A stays alive), as dxdiag's DirectX 8 test does ---\n");
+		ctx2 = pCreate(OSMESA_RGBA, 24, 8, 0, NULL);
+		if(!ctx2) { rep("second OSMesaCreateContextExt failed\n"); g_bad++; }
+		else if(!pMake(ctx2, osbuf2, GL_UNSIGNED_BYTE, 320, 240)) { rep("second OSMesaMakeCurrent failed\n"); g_bad++; }
+		else
+		{
+			pPixelStore(OSMESA_Y_UP, 1);
+			run_pass(16, frames);
+			rep("--- back to the first context ---\n");
+			if(!pMake(ctx, osbuf, GL_UNSIGNED_BYTE, 320, 240)) { rep("OSMesaMakeCurrent(A) failed\n"); g_bad++; }
+			else run_pass(32, frames / 4 ? frames / 4 : 1);
+			pDestroy(ctx2);
+			rep("second context destroyed\n");
+			if(pMake(ctx, osbuf, GL_UNSIGNED_BYTE, 320, 240))
+				run_pass(16, frames / 4 ? frames / 4 : 1);
+		}
+	}
 
 	pDestroy(ctx);
+	if(g_tctx) { pDestroy(g_tctx); rep("worker thread's context destroyed\n"); }
 	if(g_judge)
 		rep("RESULT: %s (%d checks, %d mismatches, %d GL errors)\n",
 		    (g_bad == 0 && g_errors == 0) ? "PASS" : "FAIL", g_checks, g_bad, g_errors);
