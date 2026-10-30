@@ -2830,6 +2830,27 @@ index 4b060881..9022600d 100644
     if (!st) {
        *error = ST_CONTEXT_ERROR_NO_MEMORY;
        pipe->destroy(pipe);
+diff --git a/mesa-25.1.x/src/util/os_misc.c b/mesa-25.1.x/src/util/os_misc.c
+index 187d18a7..e737dbaf 100644
+--- a/mesa-25.1.x/src/util/os_misc.c
++++ b/mesa-25.1.x/src/util/os_misc.c
+@@ -235,6 +235,16 @@ os_get_option(const char *name)
+   {
+   	env = vmhal_setup_str("mesa", name, FALSE);
+ 	}
++
++  /* G86 driver (nvmini 3113): Windows 98 era engines copy GL_EXTENSIONS into a
++   * fixed buffer (GoldSrc hl.exe, Quake 2's sof.exe: an invalid page fault at
++   * an address that spells "2 GL"). A 2000 cap fits all of them, so it is the
++   * default; a program that needs the later extensions gets its own value in
++   * HKLM\Software\vmdisp9x\apps\<exe>\mesa (or apps\global\mesa). */
++  if(env == NULL && strcmp(name, "MESA_EXTENSION_MAX_YEAR") == 0)
++  {
++  	env = "2000";
++  }
+   
+   if(env == NULL)
+   {
 diff --git a/mesa-25.1.x/src/util/u_debug.c b/mesa-25.1.x/src/util/u_debug.c
 index 96f7ccaa..8efc4c31 100644
 --- a/mesa-25.1.x/src/util/u_debug.c
@@ -2847,10 +2868,10 @@ index 96f7ccaa..8efc4c31 100644
  _debug_vprintf(const char *format, va_list ap)
  {
 diff --git a/wgltest.c b/wgltest.c
-index 6c6d2fc1..efaa5fcd 100644
+index 6c6d2fc1..f8a8ed03 100644
 --- a/wgltest.c
 +++ b/wgltest.c
-@@ -1,979 +1,1726 @@
+@@ -1,979 +1,1739 @@
 -/******************************************************************************
 - * Copyright (c) 2023-2024 Jaroslav Hensl                                     *
 - *                                                                            *
@@ -5512,6 +5533,19 @@ index 6c6d2fc1..efaa5fcd 100644
 +				ptr++;
 +			}
 +			*dst = '\0';
++		}
++	}
++
++	/* 3113: the GL strings as the program sees them, in wgltest_ext.txt (the report
++	 * window is not copy-friendly on Win98; also the check that the GL_EXTENSIONS
++	 * year cap, mesa3d.dll's built-in default of 2000, is in effect). */
++	{
++		FILE *fe = fopen("wgltest_ext.txt", "w");
++		if(fe)
++		{
++			fprintf(fe, "GL_VENDOR   %s\nGL_RENDERER %s\nGL_VERSION  %s\nGL_EXTENSIONS (%d, %u chars):\n%s\n",
++				gl_vendor, gl_renderer, gl_version, gl_ext_cnt, (unsigned)strlen(gl_ext), gl_ext);
++			fclose(fe);
 +		}
 +	}
 +	

@@ -152,8 +152,7 @@ HKLM,Software\vmdisp9x\apps\global\mesa,LP_NATIVE_VECTOR_WIDTH,,128
 ; program; per-program opt-out = GALLIUM_DRIVER=llvmpipe in apps\<exe>\mesa (nvgl-off.reg
 ; removes the global value). mesa3d.dll falls back to software if the GPU screen fails.
 HKLM,Software\vmdisp9x\apps\global\mesa,GALLIUM_DRIVER,,"nouveau"
-HKLM,Software\vmdisp9x\apps\hl.exe\mesa,MESA_EXTENSION_MAX_YEAR,,2000
-HKLM,Software\vmdisp9x\apps\sof.exe\mesa,MESA_EXTENSION_MAX_YEAR,,2000
+; (3113: the GL_EXTENSIONS year cap 2000 old engines need is mesa3d.dll's own default, no key)
 ; OpenGL ICD (3046+): opengl32.dll asks the display driver (OPENGL_GETINFO
 ; escape) for an ICD name, nvmini.drv answers "SOFTWARE", and this key maps it
 ; to mesa3d.dll. Only valid with the mesa3d.dll built against this driver's

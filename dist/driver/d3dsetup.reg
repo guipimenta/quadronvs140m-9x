@@ -9,14 +9,10 @@ REGEDIT4
 [HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\global\mesa]
 "LP_NATIVE_VECTOR_WIDTH"="128"
 
-; Half-Life (GoldSrc 1.0.x) copies GL_EXTENSIONS into a fixed buffer; keep Mesa's list short (3051)
-[HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\hl.exe\mesa]
-"MESA_EXTENSION_MAX_YEAR"="2000"
-
-; Soldier of Fortune (Quake 2 engine, 3112): same fixed GL_EXTENSIONS buffer - without this it dies with
-; "SOF caused an invalid page fault ... EIP=4c472032" (the return address overwritten by the text "2 GL")
-[HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\sof.exe\mesa]
-"MESA_EXTENSION_MAX_YEAR"="2000"
+; GL_EXTENSIONS year cap: since 3113 mesa3d.dll defaults MESA_EXTENSION_MAX_YEAR to 2000 itself
+; (Half-Life, Soldier of Fortune and other 1998-2001 engines copy the list into a fixed buffer),
+; so no per-game key is needed; a program that wants the later extensions sets its own value
+; under apps\<exe>\mesa, e.g. "MESA_EXTENSION_MAX_YEAR"="9999".
 
 [HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers]
 "SOFTWARE"="mesa3d.dll"
