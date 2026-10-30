@@ -41,6 +41,11 @@ Limits:
 - A file in use cannot be replaced (mesa3d.dll while a GL/D3D program runs: `kill` it first).
 - The debugger cannot see faults in 16-bit code (DDRAW16, nvmini.drv): such a process can
   vanish with exit code -1 and no exception event.
+- `shot` captures what GDI sees. OpenGL programs on the GPU present through our own
+  path straight into the scanout, so `shot` shows the last GDI picture (e.g. Half-Life's
+  "Loading...") while the game runs. Direct3D (vmhal3d) frames do show. A VRAM scanout
+  grabber is still to be written; until then judge OpenGL runs by C:\nvlast.txt progress
+  and the user's eyes.
 - Closing a game: `close TITLE` posts WM_CLOSE; Half-Life then asks "Quit Half-Life
   without saving the current game" in an UNTITLED dialog: `press "*" Ok`. Do not `kill` a
   game that holds the screen in fullscreen DirectDraw mode: it froze the T61 once.
