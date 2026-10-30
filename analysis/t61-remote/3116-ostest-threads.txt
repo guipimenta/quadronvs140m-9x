@@ -1,0 +1,44 @@
+ostest (build 3116): mesa3d.dll's OSMesa path the way vmhal3d.dll's Direct3D uses it
+renderer: NV86
+version:  3.3 (Compatibility Profile) Mesa 9x 25.1.6.1
+vendor:   Mesa
+screen:   GPU (nouveau) - Direct3D will render on the G86
+--- threads 1: pass 1 on a worker thread that exits with its context current ---
+--- 32 bpp pass: 640x480, 60 frames, depth DEPTH32F_STENCIL8 ---
+plane FBO status 0x8CD5 (complete)
+frame 1: upload 33 ms, draw 20 ms, readback 38 ms (totals), mismatches so far 0, GL errors 0
+frame 20: upload 390 ms, draw 94 ms, readback 461 ms (totals), mismatches so far 0, GL errors 0
+frame 40: upload 628 ms, draw 167 ms, readback 776 ms (totals), mismatches so far 0, GL errors 0
+frame 60: upload 858 ms, draw 236 ms, readback 1039 ms (totals), mismatches so far 0, GL errors 0
+32 bpp: 60 frames, 600 checks, 0 mismatches, 0 GL errors; per frame upload 14.3 / draw 3.9 / readback 17.3 ms
+worker thread exits with its context current
+--- main thread: its own context, the worker's still alive ---
+--- 32 bpp pass: 640x480, 60 frames, depth DEPTH32F_STENCIL8 ---
+plane FBO status 0x8CD5 (complete)
+frame 1: upload 8 ms, draw 11 ms, readback 4 ms (totals), mismatches so far 0, GL errors 0
+frame 20: upload 94 ms, draw 20 ms, readback 70 ms (totals), mismatches so far 0, GL errors 0
+frame 40: upload 167 ms, draw 28 ms, readback 153 ms (totals), mismatches so far 0, GL errors 0
+frame 60: upload 241 ms, draw 45 ms, readback 212 ms (totals), mismatches so far 0, GL errors 0
+32 bpp: 60 frames, 600 checks, 0 mismatches, 0 GL errors; per frame upload 4.0 / draw 0.8 / readback 3.5 ms
+--- second context (A stays alive), as dxdiag's DirectX 8 test does ---
+--- 16 bpp pass: 640x480, 60 frames, depth DEPTH32F_STENCIL8 ---
+plane FBO status 0x8CD5 (complete)
+colour16 FBO status 0x8CD5 (complete)
+frame 1: upload 0 ms, draw 21 ms, readback 0 ms (totals), mismatches so far 0, GL errors 0
+frame 20: upload 52 ms, draw 32 ms, readback 26 ms (totals), mismatches so far 0, GL errors 0
+frame 40: upload 87 ms, draw 43 ms, readback 70 ms (totals), mismatches so far 0, GL errors 0
+frame 60: upload 97 ms, draw 54 ms, readback 145 ms (totals), mismatches so far 0, GL errors 0
+16 bpp: 60 frames, 600 checks, 0 mismatches, 0 GL errors; per frame upload 1.6 / draw 0.9 / readback 2.4 ms
+--- back to the first context ---
+--- 32 bpp pass: 640x480, 15 frames, depth DEPTH32F_STENCIL8 ---
+plane FBO status 0x8CD5 (complete)
+frame 1: upload 5 ms, draw 0 ms, readback 0 ms (totals), mismatches so far 0, GL errors 0
+32 bpp: 15 frames, 150 checks, 0 mismatches, 0 GL errors; per frame upload 3.1 / draw 0.7 / readback 3.1 ms
+second context destroyed
+--- 16 bpp pass: 640x480, 15 frames, depth DEPTH32F_STENCIL8 ---
+plane FBO status 0x8CD5 (complete)
+colour16 FBO status 0x8CD5 (complete)
+frame 1: upload 0 ms, draw 5 ms, readback 0 ms (totals), mismatches so far 0, GL errors 0
+16 bpp: 15 frames, 150 checks, 0 mismatches, 0 GL errors; per frame upload 1.3 / draw 0.7 / readback 3.0 ms
+worker thread's context destroyed
+RESULT: PASS (2100 checks, 0 mismatches, 0 GL errors)

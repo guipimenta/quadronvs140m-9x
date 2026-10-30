@@ -1224,6 +1224,14 @@ C:\nvkick.txt, C:\nvclk.txt.
   (VRAM -> GART staging -> CPU) and uploads it again before drawing - expect the
   per-frame upload/readback times in ostest.txt to bound the frame rate until a GPU-side
   present exists; Direct3D and OpenGL in one process share the screen (untested on HW).
+- T61 RESULT (2026-10-30, user): DXDIAG's DirectX 7 test renders on the GPU; the DirectX 8
+  test crashes dxdiag right after Mesa creates a SECOND nv50 context (log ends at
+  st_create_context; nvlast: last kick completed -> a CPU-side fault). Logs: d3d8/.
+- T61 RESULT (2026-10-30, run remotely with tools/remote/t61.py): first ostest PASS (1200);
+  extended ostest (second context alive, switching back, DEPTH32F_STENCIL8) PASS (1500);
+  `ostest threads 1` (first context left current on an exited worker thread) PASS (2100).
+  Report: analysis/t61-remote/3116-ostest-threads.txt. So the context sequence itself works
+  on the hardware; the DX8 crash is specific to what vmhal3d.dll's DX8 path does next.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
