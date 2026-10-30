@@ -134,6 +134,16 @@ where it stopped). Also:
                         used before)
   nvhl exe sof.exe      run another game's exe through the launcher (logs + switches;
                         copy nvhl.bat and mesa3d.dll next to that exe as for Half-Life)
+SOF WITHOUT REGEDIT (3112 package): double-click sof-gpu.reg (GPU driver + the year cap SoF
+needs) or sof-sw.reg (software llvmpipe + the year cap); no reboot, takes effect at the next
+start of sof.exe. For any other game: nvapp.bat from a DOS box in C:\NVMINI -
+  nvapp kingpin.exe sw        software OpenGL for that exe (nvapp kingpin.exe gpu = back)
+  nvapp kingpin.exe y2000     GL_EXTENSIONS year cap (start-up "invalid page fault" crashes)
+  nvapp kingpin.exe show      what the registry holds for it, and the global default
+After a hang or crash, BEFORE starting any other OpenGL program: nvlogs sof1 (copies
+C:\nvshim.log, C:\nvlast.txt, C:\nvkick.txt, C:\nvtail.txt, C:\nvclk.txt and the wgltest
+reports from the current folder to C:\NVLOGS\sof1); send me the C:\NVLOGS folder.
+GPU test of SoF: sof-gpu.reg, run sof.exe, training -> game; if it hangs, reset, nvlogs sof1.
 SoF NEEDS MESA_EXTENSION_MAX_YEAR=2000 like Half-Life (a fixed GL_EXTENSIONS buffer; without it
 the software run dies with "SOF caused an invalid page fault ... EIP=4c472032" = the return
 address overwritten by the text "2 GL"): import d3dsetup.reg again (3112 adds the key under

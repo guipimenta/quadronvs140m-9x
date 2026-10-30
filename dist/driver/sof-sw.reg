@@ -1,0 +1,9 @@
+REGEDIT4
+
+; sof-sw.reg: Soldier of Fortune on software OpenGL (llvmpipe) - double-click, no reboot.
+; The A/B for the GPU path: if a level loads here and hangs with sof-gpu.reg, the hang is
+; the GPU driver's. Keeps the GL_EXTENSIONS year cap SoF needs.
+
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\sof.exe\mesa]
+"MESA_EXTENSION_MAX_YEAR"="2000"
+"GALLIUM_DRIVER"="llvmpipe"
