@@ -14,7 +14,7 @@
 /* VxD DeviceIoControl opcodes (vxd_nv.h). */
 #define OP_NV_PROBE         0x5000  /* 3099: nv_hwinfo_t (29 dwords, vxd_nv.h); [22] = the VxD's NV_BUILD */
 #define NVSHIM_HWINFO_BUILD 22      /* dword index of nv_hwinfo_t.build                                   */
-#define NVSHIM_BUILD        3113UL  /* this shim's own build (bump with every nvshim.c change; the        */
+#define NVSHIM_BUILD        3114UL  /* this shim's own build (bump with every nvshim.c change; the        */
                                     /* standalone nvprobe build uses NV_BUILD from vxd_nv.h instead)      */
 #define OP_NV_RD32          0x5001  /* 3094: read BAR0 MMIO dwords: in[0]=byte offset, in[1]=count -> out dwords (GRAPH_UNITS 0x1540) */
 #define OP_NV_SUBMIT      0x5013  /* submit a ring-3 method stream to the channel */

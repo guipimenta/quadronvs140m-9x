@@ -1,27 +1,25 @@
 =====================================================================
-HOW TO USE (build 3113) - no registry editing, no batch files
+HOW TO USE (build 3114): install the driver, play the game
 =====================================================================
+New machine: Display > Settings > Advanced > Adapter > Change > Have Disk > vmdisp9x.inf,
+pick the NVS 140M entry, reboot. The INF sets everything, including which programs run
+on the GPU (all of them) and which run on software OpenGL for now (the compatibility
+list at the end of the INF: Soldier of Fortune, whose levels do not fit the GPU
+driver's video memory yet). Then double-click the game on the desktop.
+
 Updating a machine that already runs 3110 or later: copy from this folder
     mesa3d.dll   -> C:\WINDOWS\SYSTEM   (overwrite)
     nvmini.vxd   -> C:\WINDOWS\SYSTEM   (overwrite; reboot only when the notes below say so)
     everything else -> C:\NVMINI          (test tools; only needed when I ask for a log)
+and double-click d3dsetup.reg once (it carries the same compatibility list as the INF).
 Delete any mesa3d.dll that sits next to a game's exe: an old copy there wins over the
 one in C:\WINDOWS\SYSTEM.
-
-Then double-click the game. Every OpenGL program runs on the GPU and sees the extension
-list its era expects (Half-Life, Soldier of Fortune, Quake, ...); nothing per game.
-
-One-time undo of the SoF software test (the GALLIUM_DRIVER=llvmpipe value you added in
-regedit by hand): double-click sof-gpu.reg once. After that, nothing.
 
 If a game hangs or crashes: after the reset, copy C:\nvshim.log and C:\nvlast.txt
 somewhere (the next OpenGL program overwrites them) and send me both. That is all.
 
-New machine: Display > Settings > Advanced > Adapter > Change > Have Disk > vmdisp9x.inf,
-pick the NVS 140M entry, reboot. The INF sets everything.
-
-The .reg and .bat files in this folder are diagnostics (A/B switches, log capture) for
-when I ask; the rest of this file is the build history.
+The .bat files in this folder are diagnostics (A/B switches, log capture) for when I
+ask; the rest of this file is the build history.
 =====================================================================
 
 M2 package - NVIDIA G86 hardware detection (scans out via VESA, adds native probe)
@@ -130,6 +128,14 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3114 - GPU COMPATIBILITY LIST IN THE INF. Package only (INF, d3dsetup.reg; binaries
+restamped). The INF (and d3dsetup.reg for an existing install) now sets
+GALLIUM_DRIVER=llvmpipe for sof.exe: Soldier of Fortune plays on software OpenGL out of the
+box instead of hanging at level load on the GPU. Everything else keeps the GPU default.
+The list is temporary: the GPU driver's next step is system-memory buffers (GART), the
+way nouveau handles levels that do not fit video memory; sof.exe leaves the list once it
+is confirmed on the GPU. sof-gpu.reg / sof-sw.reg are gone (nvapp.bat covers the A/B).
+
 Build 3113 - NOTHING PER GAME. mesa3d.dll only (copy to C:\WINDOWS\SYSTEM, no reboot;
 nvmini.vxd/.drv restamped). The GL_EXTENSIONS year cap (MESA_EXTENSION_MAX_YEAR=2000) that
 Half-Life and Soldier of Fortune needed from the registry is now mesa3d.dll's own default:
@@ -142,8 +148,9 @@ HKLM\Software\vmdisp9x\apps\<exe>\mesa, e.g. "MESA_EXTENSION_MAX_YEAR"="9999".
 wgltest now writes wgltest_ext.txt (vendor/renderer/version + the extension list the
 program sees) next to itself on every run.
 T61: SoF on 3112 loaded and played its levels on llvmpipe (so the level-load hang is the
-GPU path's); the GPU-path run is still open: sof-gpu.reg once, then sof.exe from the
-desktop, training -> game; on a hang send C:\nvshim.log + C:\nvlast.txt.
+GPU path's); the GPU-path run is still open (nvapp sof.exe gpu, then sof.exe from the
+desktop, training -> game; on a hang send C:\nvshim.log + C:\nvlast.txt; nvapp sof.exe sw puts
+it back on the compatibility list).
 
 Build 3112 - SOLDIER OF FORTUNE (and any level that does not fit in VRAM). Shim only:
 mesa3d.dll, wgltest.exe, nvprobe.exe changed, nvmini.vxd/.drv only restamped - copy, no

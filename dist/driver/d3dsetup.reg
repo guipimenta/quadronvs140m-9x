@@ -14,5 +14,11 @@ REGEDIT4
 ; so no per-game key is needed; a program that wants the later extensions sets its own value
 ; under apps\<exe>\mesa, e.g. "MESA_EXTENSION_MAX_YEAR"="9999".
 
+; GPU compatibility list (3114, same as the INF): programs whose levels do not fit the GPU
+; driver's VRAM heap yet run on software OpenGL out of the box (Soldier of Fortune hangs at
+; level load on the GPU). A line goes once the game is confirmed on the GPU.
+[HKEY_LOCAL_MACHINE\Software\vmdisp9x\apps\sof.exe\mesa]
+"GALLIUM_DRIVER"="llvmpipe"
+
 [HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\OpenGLdrivers]
 "SOFTWARE"="mesa3d.dll"
