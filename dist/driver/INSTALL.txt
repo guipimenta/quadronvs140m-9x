@@ -128,7 +128,7 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
-Build 3117 - DXDIAG'S DIRECTX 8 TEST FIX. nvmini.vxd only: copy it to C:\WINDOWS\SYSTEM
+Build 3117 (CONFIRMED on the T61, released v3117) - DXDIAG'S DIRECTX 8 TEST FIX. nvmini.vxd only: copy it to C:\WINDOWS\SYSTEM
 and reboot (mesa3d.dll, nvmini.drv and the rest stay 3116).
 What was wrong: dxdiag's DirectX 7 test ran on the GPU, then the DirectX 8 test closed
 dxdiag. The Direct3D layer (vmhal3d.dll) opens its own handle to nvmini.vxd and closes it

@@ -1252,7 +1252,7 @@ C:\nvkick.txt, C:\nvclk.txt.
     DXTn? - mipmaps, a 16-bit back buffer, D3DCREATE flags, a separate test thread) and add
     it to d3d8test until it reproduces; logs: analysis/t61-remote/3116-dxdiag-debug.txt.
 
-### Build 3117: DirectX 8 after DirectX 7 in one process - the VxD released per process at every handle close (CONFIRMED on the T61, remotely)
+### Build 3117: DirectX 8 after DirectX 7 in one process - the VxD released per process at every handle close (CONFIRMED on the T61, remotely; RELEASED v3117)
 
 - Root cause, found remotely on the T61 (2026-10-30): a DEBUG vmhal9x/vmhal3d (DDDEBUG=3,
   upstream 8bc480e, installed through WININIT.INI + remote reboot) logged
