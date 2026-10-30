@@ -1,0 +1,261 @@
+--- a/config.mk
++++ b/config.mk
+@@ -13,16 +13,16 @@
+ HOST_CC=gcc
+ 
+ # optimize for release
+-RELEASE=1
++#RELEASE=1
+ 
+ # compile D3D driver as one file
+ CODENUKED=1
+ 
+ # generate debug informations (not usable with RELEASE=1)
+-#DEBUG=1
++DEBUG=1
+ 
+ # how much can be debuging information verbose, efective (not usable with RELEASE=1)
+-#DDDEBUG=4
++DDDEBUG=3
+ 
+ #
+ # Some heavy debug options
+@@ -44,7 +44,7 @@
+ TUNE += -pipe
+ 
+ # Remove all debug symbols, so reduce file size by a lot, turn off only if you wish debug
+-TUNE_LD=,--strip-all
++#TUNE_LD=,--strip-all
+ 
+ # Example to build multi target HAL:
+ #ifdef i486
+--- a/debug.c
++++ b/debug.c
+@@ -48,6 +48,31 @@
+   va_list vl;
+   FILE *fa;  
+   
++	{
++		/* T61 HL investigation build: only these topics, at most 150000 lines */
++		/* only while C:\vmhal.go exists (checked every 300 ms), selected topics, capped */
++		static int dbg_lines = 0;
++		static DWORD dbg_last = 0;
++		static BOOL dbg_on = FALSE;
++		static const char *const dbg_topics[] = {"RS","DRAW","DEPTHCONV","CLEAR","FLIP","TARGET","SURFACE",
++			"EXE","EXEBUF","DEPTH","ZVIEW","ENTRY","FRAMEBUFFER","FBSWAP","SURFEX","TLV",NULL};
++		DWORD now = GetTickCount();
++		int ti, ok;
++		if(now - dbg_last > 300) { dbg_on = GetFileAttributesA("C:\\vmhal.go") != INVALID_FILE_ATTRIBUTES; dbg_last = now; }
++		if(!dbg_on) return;
++		/* C:\vmhal.all present too: every line (init capture), else the selected topics */
++		if(GetFileAttributesA("C:\\vmhal.all") == INVALID_FILE_ATTRIBUTES)
++		{
++			if(topic != NULL)
++			{
++				for(ok = 0, ti = 0; dbg_topics[ti]; ti++) if(strcmp(topic, dbg_topics[ti]) == 0) ok = 1;
++				if(!ok) return;
++			}
++			if(topic == NULL && prefix != NULL && ((strcmp(prefix, "T|") == 0) || (strcmp(prefix, "D|") == 0))) return;
++		}
++		else if(topic != NULL && strcmp(topic, "READBACK") == 0) return;
++		if(++dbg_lines > 400000) return;
++	}
+ #ifdef DEBUG_TOPIC
+ 	if(topic == NULL)
+ 	{
+--- a/mesa3d.c
++++ b/mesa3d.c
+@@ -313,11 +313,15 @@
+ 
+ 	mesa3d_entry_t *entry = ctx->entry;
+ 	BOOL have_depth = FALSE;
++	static DWORD nd_last = 0; static BOOL nd_on = FALSE;
+ 
+ 	if(ctx->depth_bpp)
+ 	{
+ 		have_depth = TRUE;
+ 	}
++	/* investigation switch: C:\vmhal.nodepth -> no depth test at all */
++	if(GetTickCount() - nd_last > 500) { nd_on = GetFileAttributesA("C:\\vmhal.nodepth") != INVALID_FILE_ATTRIBUTES; nd_last = GetTickCount(); }
++	if(nd_on) have_depth = FALSE;
+ 
+ 	if(have_depth && ctx->state.depth.enabled)
+ 	{
+@@ -2343,6 +2347,24 @@
+ 					switch(state->dwState)
+ 					{
+ 						case 0: /* just before flip (end scene) */
++						{
++							extern float g_tlv_zmin, g_tlv_zmax; extern int g_tlv_count, g_tlv_zon;
++							TOPIC("TLV", "scene end: tl vertices %d, with z test %d, z %f..%f, depth_bpp %d depth sid %d, zfunc enabled %d",
++								g_tlv_count, g_tlv_zon, g_tlv_zmin, g_tlv_zmax, ctx->depth_bpp, ctx->depth, ctx->state.depth.enabled);
++							g_tlv_zmin = 1e30f; g_tlv_zmax = -1e30f; g_tlv_count = 0; g_tlv_zon = 0;
++							if(ctx->depth_bpp && ctx->state.sw > 8 && ctx->state.sh > 8)
++							{
++								GLfloat dz[5]; int k;
++								int px[5] = {ctx->state.sw/2, 4, ctx->state.sw-5, 4, ctx->state.sw-5};
++								int py[5] = {ctx->state.sh/2, 4, 4, ctx->state.sh-5, ctx->state.sh-5};
++								for(k = 0; k < 5; k++)
++								{
++									dz[k] = -7.0f;
++									ctx->entry->proc.pglReadPixels(px[k], py[k], 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &dz[k]);
++								}
++								TOPIC("TLV", "depth readback center %f corners %f %f %f %f", dz[0], dz[1], dz[2], dz[3], dz[4]);
++							}
++						}
+ 							MesaSceneEnd(ctx);
+ 							break;
+ 						case 1: /* after clear (start scene) */
+--- a/mesa3d_draw.c
++++ b/mesa3d_draw.c
+@@ -55,6 +55,7 @@
+ 	_v[1] = ((((_y) - ctx->matrix.vpnorm[1]) * ctx->matrix.vpnorm[3]) - 1.0f)*_v[3]; \
+ 	_v[2] = ((_z)*ctx->matrix.zscale)*_v[3];
+ 
++float g_tlv_zmin = 1e30f, g_tlv_zmax = -1e30f; int g_tlv_count = 0, g_tlv_zon = 0;
+ #define SV_UNPROJECT_NTP(_v, _x, _y, _z) \
+ 	_v[3] = 1.0f; \
+ 	_v[0] = ((((_x) - ctx->matrix.vpnorm[0]) * ctx->matrix.vpnorm[2]) - 1.0f); \
+@@ -254,6 +255,10 @@
+ 			ctx->state.vertex.pos.xyzw = 0;
+ 		}
+ 
++		{
++			static DWORD last_fvf = 0xffffffff;
++			if(fvf_code != last_fvf) { TOPIC("TLV", "fvf 0x%X", fvf_code); last_fvf = fvf_code; }
++		}
+ 		switch(fvf_code & D3DFVF_POSITION_MASK)
+ 		{
+ 			case D3DFVF_XYZ:
+@@ -567,6 +572,24 @@
+ 		GLfloat *fv = ctx->state.vertex.ptr.xyzw + ctx->state.vertex.ptr.xyzw_stride32*index;
+ 		entry->proc.pglNormal3f(0.0, 0.0, 1.0);
+ 
++		{
++			static int tlv_n = 0, tlv_all = 0;
++			GLfloat ax = fv[0], ay = fv[1], az = fv[2], ar = fv[3];
++			GLfloat vw = (GLfloat)ctx->matrix.viewport[2], vh = (GLfloat)ctx->matrix.viewport[3];
++			tlv_all++;
++			g_tlv_count++;
++			if(ctx->state.depth.enabled) { g_tlv_zon++; if(az < g_tlv_zmin) g_tlv_zmin = az; if(az > g_tlv_zmax) g_tlv_zmax = az; }
++			if(tlv_n < 4000 && (!(ar > 0.0f) || ar > 1.0e6f || az < 0.0f || az > 1.0f ||
++				ax < -64.0f || ay < -64.0f || ax > vw + 64.0f || ay > vh + 64.0f))
++			{
++				tlv_n++;
++				TOPIC("TLV", "odd v#%d x=%f y=%f z=%f rhw=%f vp=%d,%d,%d,%d zscale=%f",
++					tlv_all, ax, ay, az, ar, ctx->matrix.viewport[0], ctx->matrix.viewport[1],
++					ctx->matrix.viewport[2], ctx->matrix.viewport[3], ctx->matrix.zscale);
++			}
++			if((tlv_all % 200000) == 1) TOPIC("TLV", "tl vertices so far %d, odd logged %d", tlv_all, tlv_n);
++		}
++
+ 		SV_UNPROJECT(tmp4, fv[0], fv[1], fv[2], fv[3]);
+ 		entry->proc.pglVertex4fv(&tmp4[0]);
+ 	}
+@@ -724,6 +747,24 @@
+ 		GLfloat *fv = ((GLfloat*)(buf + index*stride8))+ctx->state.vertex.pos.xyzw;
+ 		entry->proc.pglNormal3f(0.0, 0.0, 1.0);
+ 
++		{
++			static int tlv_n = 0, tlv_all = 0;
++			GLfloat ax = fv[0], ay = fv[1], az = fv[2], ar = fv[3];
++			GLfloat vw = (GLfloat)ctx->matrix.viewport[2], vh = (GLfloat)ctx->matrix.viewport[3];
++			tlv_all++;
++			g_tlv_count++;
++			if(ctx->state.depth.enabled) { g_tlv_zon++; if(az < g_tlv_zmin) g_tlv_zmin = az; if(az > g_tlv_zmax) g_tlv_zmax = az; }
++			if(tlv_n < 4000 && (!(ar > 0.0f) || ar > 1.0e6f || az < 0.0f || az > 1.0f ||
++				ax < -64.0f || ay < -64.0f || ax > vw + 64.0f || ay > vh + 64.0f))
++			{
++				tlv_n++;
++				TOPIC("TLV", "odd v#%d x=%f y=%f z=%f rhw=%f vp=%d,%d,%d,%d zscale=%f",
++					tlv_all, ax, ay, az, ar, ctx->matrix.viewport[0], ctx->matrix.viewport[1],
++					ctx->matrix.viewport[2], ctx->matrix.viewport[3], ctx->matrix.zscale);
++			}
++			if((tlv_all % 200000) == 1) TOPIC("TLV", "tl vertices so far %d, odd logged %d", tlv_all, tlv_n);
++		}
++
+ 		SV_UNPROJECT(tmp4, fv[0], fv[1], fv[2], fv[3]);
+ 
+ 		entry->proc.pglVertex4fv(&tmp4[0]);
+--- a/mesa3d_draw6.c
++++ b/mesa3d_draw6.c
+@@ -1143,6 +1143,7 @@
+ #ifdef TRACE_ON
+ 						D3DHAL_DP2ZRANGE *zrange = (D3DHAL_DP2ZRANGE*)prim;
+ 						TOPIC("DEPTH", "D3DDP2OP_ZRANGE = %f %f", zrange->dvMinZ, zrange->dvMaxZ);
++						TOPIC("TLV", "D3DDP2OP_ZRANGE = %f %f", zrange->dvMinZ, zrange->dvMaxZ);
+ 						// entry->glDepthRange(zrange->dvMinZ, zrange->dvMaxZ);
+ 						// ^JH: I only sees values 0.0 and 1.0, so nothing set when
+ 						// something sets here some junk
+--- a/mesa3d_matrix.c
++++ b/mesa3d_matrix.c
+@@ -277,6 +277,7 @@
+ 	ctx->matrix.viewport[2] = w;
+ 	ctx->matrix.viewport[3] = h;
+ 
++	TOPIC("TLV", "viewport [%d %d %d %d]", x, y, w, h);
+ 	TOPIC("SHADER", "Viewport: [%d %d %d %d]", ctx->matrix.viewport[0], ctx->matrix.viewport[1], ctx->matrix.viewport[2], ctx->matrix.viewport[3]);
+ 
+ 	ctx->matrix.vpnorm[0] = ctx->matrix.viewport[0];
+--- a/d3d.c
++++ b/d3d.c
+@@ -317,7 +317,7 @@
+ 			caps.PrimitiveMiscCaps =
+ 				D3DPMISCCAPS_BLENDOP | // Device supports the alpha-blending operations defined in the D3DBLENDOP enumerated type. 
+ 				D3DPMISCCAPS_CLIPPLANESCALEDPOINTS | // Device correctly clips scaled points of size greater than 1.0 to user-defined clipping planes. 
+-				//D3DPMISCCAPS_CLIPTLVERTS | // Device clips post-transformed vertex primitives. 
++				D3DPMISCCAPS_CLIPTLVERTS | // Device clips post-transformed vertex primitives. (XP nv4_disp sets it) 
+ 				//D3DPMISCCAPS_COLORWRITEENABLE | // Device supports per-channel writes for the render target color buffer through the D3DRS_COLORWRITEENABLE state. 
+ 				D3DPMISCCAPS_CULLCCW | // The driver supports counterclockwise culling through the D3DRS_CULLMODE state. (This applies only to triangle primitives.) This flag corresponds to the D3DCULL_CCW member of the D3DCULL enumerated type. 
+ 				D3DPMISCCAPS_CULLCW | // The driver supports clockwise triangle culling through the D3DRS_CULLMODE state. (This applies only to triangle primitives.) This flag corresponds to the D3DCULL_CW member of the D3DCULL enumerated type. 
+@@ -377,10 +377,10 @@
+ 			
+ 			/* some happy values from ref driver */
+ 			caps.MaxVertexW      = 1.0e10;
+-			caps.GuardBandLeft   = -8192.0f;
+-			caps.GuardBandTop    = -8192.0f;
+-			caps.GuardBandRight  = 8192.0f;
+-			caps.GuardBandBottom = 8192.0f;
++			caps.GuardBandLeft   = -1.0e8f; /* XP nv4_disp */
++			caps.GuardBandTop    = -1.0e8f;
++			caps.GuardBandRight  = 1.0e8f;
++			caps.GuardBandBottom = 1.0e8f;
+ 			caps.ExtentsAdjust   = 0.0f; //  AA kernel is 1.0 x 1.0
+ 			caps.StencilCaps = MYSTENCIL_CAPS;
+ 			caps.FVFCaps = 8;
+@@ -682,10 +682,10 @@
+ 		dxcaps.dwStencilCaps = MYSTENCIL_CAPS;
+ 
+ 		/* some happy values from ref driver */
+-		dxcaps.dvGuardBandLeft   = -32768.0f;
+-		dxcaps.dvGuardBandTop    = -32768.0f;
+-		dxcaps.dvGuardBandRight  = 32767.0f;
+-		dxcaps.dvGuardBandBottom = 32767.0f;
++		dxcaps.dvGuardBandLeft   = -1.0e8f; /* XP nv4_disp */
++		dxcaps.dvGuardBandTop    = -1.0e8f;
++		dxcaps.dvGuardBandRight  = 1.0e8f;
++		dxcaps.dvGuardBandBottom = 1.0e8f;
+ 		dxcaps.dvExtentsAdjust = 0.0f; //  AA kernel is 1.0 x 1.0
+ 		dxcaps.dvMaxVertexW = 1.0e10;
+ 
+--- a/d3d_caps.h
++++ b/d3d_caps.h
+@@ -100,7 +100,8 @@
+ #define triCaps6 {               \
+ 	sizeof(D3DPRIMCAPS),          \
+ 	/* miscCaps */                \
+-	D3DPMISCCAPS_CULLNONE         \
++	D3DPMISCCAPS_CLIPTLVERTS /* XP nv4_disp: tri/line misc 0x272 */ \
++	| D3DPMISCCAPS_CULLNONE         \
+ 	| D3DPMISCCAPS_CULLCW         \
+ 	| D3DPMISCCAPS_CULLCCW        \
+ 	| D3DPMISCCAPS_MASKZ          \
+@@ -264,8 +265,6 @@
+ 	| D3DDEVCAPS_EXECUTESYSTEMMEMORY /* must be set */
+ 	| D3DDEVCAPS_DRAWPRIMITIVES2
+ 	| D3DDEVCAPS_DRAWPRIMITIVES2EX
+-	| D3DDEVCAPS_SORTINCREASINGZ
+-	| D3DDEVCAPS_SORTEXACT
+ 	| D3DDEVCAPS_HWVERTEXBUFFER
+ 	| D3DDEVCAPS_CANRENDERAFTERFLIP /* must be set on 2k driver */
+ 	| D3DDEVCAPS_HWINDEXBUFFER, /* DX8 */

@@ -143,15 +143,51 @@ G86's family 0x08 matches none. Example: constructor 0x2854d9 installs predicate
 crash into a refusal. Accepting the G86 in an old predicate would bind NV4x method tables. The
 XP code is NT kernel-mode (imports ntoskrnl, HAL, VIDEOPRT, WIN32K), so it cannot be transplanted.
 
-## XP display driver `nv4_disp.dll` (DirectDraw / Direct3D DDI): NOT yet disassembled
+## XP display driver `nv4_disp.dll` (DirectDraw / Direct3D DDI)
 
-Known so far:
+### The Direct3D caps it reports (found 2026-10-31)
+
+Disassemble once with `i686-w64-mingw32-objdump -d -M intel analysis/xp_extracted/nv4_disp.dll`
+(about 1.85 M lines; ImageBase 0x10000, VAs as printed). The caps are not a static table:
+a caps-fill function writes them field by field into the driver's per-device structure
+(`edx` = that structure). It exists three times, one per chip generation (the
+`mov [edx+0x734c], 0x501502f9` = MaxVertexW 1e10 store is at **0x12ffc7**, **0x130511** and
+**0x130a20**). The first one (function containing 0x12fd69 .. 0x130155) fills:
+
+- **`D3DDEVICEDESC_V1` (the DX5-7 HAL device description) at `edx+0x7248`**, size 0xac:
+  dwFlags 0x1e3, dcmColorModel 2 (RGB), **dwDevCaps 0x21bbef1**, dtcTransformCaps
+  {8, 1}, **bClipping = 1**, dlcLightingCaps {0x10, 7, ...}, dpcLineCaps and dpcTriCaps
+  {0x38, **dwMiscCaps 0x272**, dwRasterCaps 0x3379b1, ...}. 0x272 = MASKZ | CULLNONE |
+  CULLCW | CULLCCW | **CLIPTLVERTS**. Compared with vmhal9x's `myCaps6` (d3d_caps.h): XP
+  has no SORTINCREASINGZ / SORTEXACT (ours did) and adds CLIPTLVERTS (ours had it off).
+- **`D3DHAL_D3DEXTENDEDCAPS` at `edx+0x72f4`**: **dvGuardBandLeft/Top = -1e8,
+  Right/Bottom = +1e8** (`0xccbebc20` / `0x4cbebc20` at +0x7324..+0x7330), dvExtentsAdjust 0,
+  dwFVFCaps 0x180008 (+0x733c), dwTextureOpCaps 0xfeffff, dvMaxVertexW 1e10 (+0x734c),
+  wMaxVertexBlendMatrices 4, dwVertexProcessingCaps 0x3f.
+- **`D3DCAPS8` at `edx+0x7368`** (offsets = D3DCAPS8 field offsets): DevCaps 0x61bbef1
+  (+0x7384), **PrimitiveMiscCaps 0xeeef2** (+0x7388, includes CLIPTLVERTS 0x200),
+  RasterCaps 0x7f379b1, ZCmp/AlphaCmp 0xff, Src/DestBlend 0x3fff, MaxTextureWidth/Height
+  from the device (+0x2628/+0x262c), MaxVertexW 1e10 (+0x73d8), **GuardBand ±1e8**
+  (+0x73dc..+0x73e8), FVFCaps 0x180008, TextureOpCaps 0x3feffff.
+
+So NVIDIA clips pre-transformed (TL) primitives itself (the G86 clips in homogeneous
+space) and reports a practically unlimited guard band; the Direct3D runtime never clips TL
+triangles in software for it. vmhal9x upstream reported ±8192 (D3DCAPS8) / ±32768 (DX7
+extended caps) and no CLIPTLVERTS. Tested 2026-10-31 with Half-Life 1.0 (Direct3D): giving
+the HAL XP's values (CLIPTLVERTS, ±1e8, no SORT* devcaps) changed NOTHING - the TL vertex
+extents were identical (Half-Life clips at its own near plane, z=0 / rhw=0.25, x/y out to
+about ±8150), so these caps are not the cause of Half-Life's missing world (see
+docs/HW3D_PLAN.md, "Half-Life 1.0.1.0 in Direct3D"). Matching XP's caps is still the
+reference choice if another title depends on them.
+
+### Entry points and strings
+
 - XPDM kernel-mode display driver; imports only WIN32K.SYS.
 - One export: DrvEnableDriver at RVA 0x2eaf60.
 - Strings show shared D3D/OpenGL registry settings (`D3DOGL_*`, e.g.
   `D3DOGL_EnableConsumerStereoSupport`) and `ZDirection`.
 
-How to get into the Direct3D code when needed:
+How to get into the rest of the Direct3D code (DrawPrimitives2 etc.) when needed:
 1. DrvEnableDriver fills a DRVENABLEDATA table of {INDEX_Drv*, function} pairs. The
    DirectDraw entries are INDEX_DrvGetDirectDrawInfo (59), INDEX_DrvEnableDirectDraw (60)
    and INDEX_DrvDisableDirectDraw (61).

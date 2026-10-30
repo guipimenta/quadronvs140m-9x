@@ -1297,6 +1297,28 @@ C:\nvkick.txt, C:\nvclk.txt.
 - NEXT: reproduce HL's Direct3D draw pattern in d3d8test-style (DX6/7 TLVERTEX, clip
   status, guard band caps) or trace it with the debug HAL; compare with upstream vmhal9x
   issues for Half-Life D3D.
+- Investigation (2026-10-31, remote, debug vmhal9x/vmhal3d from the upstream 8bc480e tree
+  in the scratchpad: DDDEBUG=3 with a flag-file gate C:\vmhal.go, topics RS/DRAW/CLEAR/...,
+  per-scene TL z range and a GL depth readback at scene end):
+  - Half-Life's D3D renderer: DX6 interface (dxif DX6), 640x480x16 target with a 16-bit
+    VRAM z-buffer (surface 3), TL vertices only (D3DDP2OP_INDEXEDTRIANGLELIST2 +
+    TRIANGLEFAN_IMM), two passes per surface group: base texture (blend off, z write on,
+    LESSEQUAL) then lightmap (SRCBLEND ZERO / DESTBLEND SRCCOLOR, z write off; ZFUNC EQUAL
+    for one group). Presents by Blt (ROP copy) back->primary, not Flip. Clears are
+    TARGET only, no z clear by any route (no DP2 CLEAR z, no DEPTHFILL Blt), with or
+    without +gl_ztrick 0; per-frame z spans 0..0.998 (no z-trick halving).
+  - `+gl_clear 1` (clear to red) shows the WORLD'S BASE PASS NEVER LANDS: with the depth test
+    forced off (debug switch) the scene appears red-tinted = the lightmap pass modulating
+    the red clear. With depth on almost nothing shows. GL depth readback = 0.7475 at the
+    center and two corners every frame (= z 0.5 through the HAL's zscale 0.99 mapping).
+    No GL errors. Same in 32-bit colour, same on llvmpipe -> HAL-level.
+  - Ruled out: Direct3D runtime clipping / guard band / CLIPTLVERTS (XP's values changed
+    nothing), flipping (Blt present, copy-back address right), ZRANGE (never sent), colour
+    key (off), blend state (disabled correctly), z-buffer missing (attached, 16-bit).
+  - NEXT: find why the base pass's colour does not reach the frame buffer: dump one base-pass
+    batch (vertices + the bound texture's format and first texels) and the full-screen
+    z=0.5 draw; then compare with the XP driver (nv4_disp.dll DrawPrimitives2) for the same
+    DP2 ops. Run HL D3D under XP on the T61 for the reference picture (needs the user).
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
