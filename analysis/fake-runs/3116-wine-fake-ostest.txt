@@ -1,0 +1,18 @@
+ostest (build 3116): mesa3d.dll's OSMesa path the way vmhal3d.dll's Direct3D uses it
+renderer: NV86
+version:  3.3 (Compatibility Profile) Mesa 9x 25.1.6.1
+vendor:   Mesa
+screen:   GPU (nouveau) - Direct3D will render on the G86
+NVSHIM_FAKE=1: the fake GPU draws nothing - pixel checks are counted, not judged
+--- 32 bpp pass: 640x480, 20 frames ---
+plane FBO status 0x8CD5 (complete)
+frame 1: upload 12 ms, draw 6 ms, readback 10 ms (totals), mismatches so far 10, GL errors 0
+frame 20: upload 154 ms, draw 52 ms, readback 178 ms (totals), mismatches so far 124, GL errors 0
+32 bpp: 20 frames, 200 checks, 124 mismatches, 0 GL errors; per frame upload 7.7 / draw 2.6 / readback 8.9 ms
+--- 16 bpp pass: 640x480, 20 frames ---
+plane FBO status 0x8CD5 (complete)
+colour16 FBO status 0x8CD5 (complete)
+frame 1: upload 6 ms, draw 2 ms, readback 8 ms (totals), mismatches so far 6, GL errors 0
+frame 20: upload 83 ms, draw 49 ms, readback 142 ms (totals), mismatches so far 120, GL errors 0
+16 bpp: 20 frames, 200 checks, 120 mismatches, 0 GL errors; per frame upload 4.2 / draw 2.5 / readback 7.1 ms
+RESULT: RAN under the fake GPU (400 checks not judged, 0 GL errors)

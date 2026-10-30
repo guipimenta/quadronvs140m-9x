@@ -1182,6 +1182,49 @@ C:\nvkick.txt, C:\nvclk.txt.
   (the list is empty), VM.DelReg and d3dsetup.reg ("GALLIUM_DRIVER"=-) remove the 3114
   override on an upgrade; the 3115 binaries are unchanged. Released as v3115.
 
+### Build 3116: Direct3D on the GPU - the OSMesa target makes the nouveau screen (UNTESTED on the T61)
+- Why Direct3D was still software: vmhal3d.dll (the DDI 8 Direct3D HAL, JHRobotics/vmhal9x)
+  loads mesa3d.dll and, because it exports OSMesaGetProcAddress, renders every frame
+  through OSMesa (mesa3d.c Mesa3DCreate: OSMesa first, the Drv* ICD path only when a DLL has
+  no OSMesa). The OSMesa target (targets/osmesa/osmesa_target.c) only calls
+  sw_screen_create. Mesa9x's answer for VMware is a second OSMesa target that makes the
+  hardware screen (win9x/ossvga_target.c in vmwsgl32.dll); 3116 does the same for nouveau.
+- Mesa side (driver/mesa9x-bin/nouveau-build-win9x.patch, 3 files changed):
+  osmesa_target.c under -DGALLIUM_NOUVEAU (only the _simd object, i.e. only
+  mesa3d.w98me.dll): GALLIUM_DRIVER=nouveau (registry default since 3110) and not
+  LIBGL_ALWAYS_SOFTWARE and not NVSHIM_D3D=0 -> nouveau_drm_screen_create(0); NULL ->
+  software. nouveau_drm_winsys.c (WIN9X): one refcounted screen per process, shared by the
+  WGL and OSMesa frontends (upstream's u_pipe_screen_lookup_or_create semantics; the shim
+  drives one GPU channel per process, a second nv50 screen would re-init it).
+- FOUND ON THE WAY (a 3110 regression): sw_screen_create tries GALLIUM_DRIVER first and,
+  when it names a driver it does not know ("nouveau"), returns NULL without trying
+  llvmpipe. So since 3110 the OSMesa path had NO screen and OSMesaCreateContextExt crashed
+  (read of 0x5b0) - every Direct3D program on the T61 most likely died at context
+  creation. Reproduced with the 3115 DLL under Wine. Fix: when GALLIUM_DRIVER is not
+  llvmpipe/softpipe, the OSMesa software fallback names llvmpipe, then softpipe.
+- Shim: nouveau_device_new fails when nvmini.vxd cannot be opened (not fake): before, a
+  screen came up whose every ioctl failed silently (drew nothing); now WGL and OSMesa fall
+  back to software there.
+- ostest.exe (driver/vmdisp9x-nv/tools/ostest.c, shipped): the HAL's GL pattern without
+  DirectDraw - OSMesaCreateContextExt(RGBA, 24, 8) on a 320x240 buffer, a plane FBO (RGBA
+  colour + DEPTH24_STENCIL8 texture as depth AND stencil), the surface uploaded
+  (TexSubImage2D BGRA at 32 bpp; at 16 bpp an RGB 5-6-5 texture in its own FBO +
+  BlitFramebuffer), depth / nearest checker texture / 50% blend / stencil-masked draws,
+  glFinish + ReadPixels (BGRA or 5-6-5), 10 pixel checks per frame. ostest.txt.
+- Simulation: llvmpipe reference PASS (400 checks at 20 frames, 0 mismatches); fake GPU
+  renderer NV86, 284 kicks all validator-clean (both bpp passes, the 16 bpp blit, the
+  readbacks), 0 GL errors, clean exit; NVSHIM_D3D=0 -> llvmpipe; no VxD -> llvmpipe PASS
+  (the 3115 DLL crashes in the same setup). OpenGL regressions: texture / stress clean,
+  load see below. (Wine hangs at exit after an llvmpipe OSMesa run with any DLL -
+  pre-existing, not 3116.)
+- T61 must show: ostest -> "renderer: NV86", "RESULT: PASS (1200 checks, 0 mismatches,
+  0 GL errors)" (the first hardware pixel check of the HAL's FBO/readback path); DXDIAG Test
+  Direct3D; a Direct3D game. A/B: NVSHIM_D3D=0 (registry, global or per exe).
+- Risks: the HAL reads every frame back with glReadPixels into the DirectDraw surface
+  (VRAM -> GART staging -> CPU) and uploads it again before drawing - expect the
+  per-frame upload/readback times in ostest.txt to bound the frame rate until a GPU-side
+  present exists; Direct3D and OpenGL in one process share the screen (untested on HW).
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

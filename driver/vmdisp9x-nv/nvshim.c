@@ -1542,6 +1542,15 @@ int nouveau_device_new(struct nouveau_object *parent, struct nouveau_device **pd
 	struct nouveau_device *dev = calloc(1, sizeof(*dev));
 	NVLOG0("device_new");
 	if(!dev) return -1;
+	if(!nvshim_open())
+	{
+		/* 3116: no nvmini.vxd (another display driver, or Wine without the fake
+		 * GPU): no GPU screen, so WGL and OSMesa fall back to software instead of
+		 * creating a screen whose every ioctl fails silently (it drew nothing). */
+		NVLOG0("device_new: nvmini.vxd cannot be opened - no GPU screen, software rendering");
+		free(dev);
+		return -1;
+	}
 	{
 		/* 3099: name the VxD this log came from. The 3097 T61 round was read as a
 		 * 3098 run until nvtail/nvclk showed the 3096 VxD and nvprobe 3097. */

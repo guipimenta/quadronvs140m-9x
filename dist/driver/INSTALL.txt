@@ -1,11 +1,11 @@
 =====================================================================
-HOW TO USE (build 3115): install the driver, play the game
+HOW TO USE (build 3116): install the driver, play the game
 =====================================================================
 New machine: Display > Settings > Advanced > Adapter > Change > Have Disk > vmdisp9x.inf,
-pick the NVS 140M entry, reboot. The INF sets everything: every OpenGL program runs on
-the GPU (the compatibility list at the end of the INF, for programs that must stay on
-software OpenGL, is empty since 3115 - Soldier of Fortune left it). Then double-click
-the game on the desktop.
+pick the NVS 140M entry, reboot. The INF sets everything: every OpenGL program and (3116)
+every Direct3D program runs on the GPU (the compatibility list at the end of the INF,
+for programs that must stay on software rendering, is empty since 3115 - Soldier of
+Fortune left it). Then double-click the game on the desktop.
 
 Updating a machine that already runs 3110 or later: copy from this folder
     mesa3d.dll   -> C:\WINDOWS\SYSTEM   (overwrite)
@@ -102,7 +102,7 @@ Check: DXDIAG -> Display tab -> "DirectDraw Acceleration: Enabled", then
 DIRECT3D (build 3045+)
 ----------------------
 Direct3D (DDI 8: DirectX 6/7/8-era, and DX9 titles without shaders) renders
-in software through Mesa9x. Needed in C:\WINDOWS\SYSTEM: vmhal3d.dll (from
+through Mesa9x - in software until 3115, on the GPU since 3116 (see Build 3116). Needed in C:\WINDOWS\SYSTEM: vmhal3d.dll (from
 3044) and mesa3d.dll (44 MB, from 3045). The INF copies both; on an existing
 install copy mesa3d.dll there and import d3dsetup.reg. Check: DXDIAG ->
 Display -> "Direct3D Acceleration: Enabled", then "Test Direct3D".
@@ -128,6 +128,33 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3116 - DIRECT3D ON THE GPU. mesa3d.dll only: copy it to C:\WINDOWS\SYSTEM, no
+reboot (nvmini.vxd / nvmini.drv / nvprobe.exe restamped, copying them is optional; new:
+ostest.exe -> C:\NVMINI). UNTESTED ON HARDWARE - the simulation passed, the T61 decides.
+What it is: Direct3D games go through vmhal3d.dll, which renders every frame through
+mesa3d.dll's off-screen OpenGL interface (OSMesa). That interface could only make a
+SOFTWARE renderer, so Direct3D never touched the GPU. Now it opens the same GPU screen
+the OpenGL games use (the GALLIUM_DRIVER=nouveau default the INF sets; Mesa9x does the
+same for VMware's virtual GPU), so Direct3D renders on the G86 too. When the GPU cannot
+be used (another program holds it, no nvmini.vxd) it falls back to software.
+ALSO FIXED: since 3110 (when "nouveau" became the default) the OSMesa path got NO
+renderer at all and crashed while creating its context - a Direct3D program since 3110
+most likely died at start (found by ostest under the simulator; the 3115 mesa3d.dll
+crashes there, 3116 does not). If you saw that, it was this.
+T61 test, in this order:
+  1. From C:\NVMINI in a DOS box: ostest      - draws the way Direct3D does (a render
+     target with depth + stencil, the screen surface uploaded, drawing, read back) at
+     32 and 16 bpp, 60 frames each, and checks the pixels. ostest.txt (same folder) must
+     say "renderer: NV86", "screen: GPU" and "RESULT: PASS (1200 checks, 0 mismatches,
+     0 GL errors)". It also prints the per-frame upload / draw / readback times.
+  2. DXDIAG -> Display -> Test Direct3D (all of it) - the spinning cubes.
+  3. A Direct3D game as usual (double-click it).
+On a crash or wrong picture: nvlogs d3d1 (C:\nvshim.log has "osmesa:" lines that say
+which renderer the Direct3D path got) and ostest.txt.
+A/B: NVSHIM_D3D=0 in HKLM\Software\vmdisp9x\apps\global\mesa puts Direct3D back on
+software while OpenGL stays on the GPU; for one game only: nvapp <game>.exe sw (that one
+game, OpenGL or Direct3D, on software).
+
 Build 3115 (CONFIRMED on the T61, released v3115) - GART: SYSTEM-MEMORY BUFFERS (the Soldier of Fortune level-load fix, nouveau's
 way). nvmini.vxd AND mesa3d.dll changed: copy both to C:\WINDOWS\SYSTEM and reboot once
 (nvprobe.exe, wgltest.exe restamped; nvmini.drv restamped). UNTESTED ON HARDWARE - the

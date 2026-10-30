@@ -1,0 +1,17 @@
+ostest (build 3116): mesa3d.dll's OSMesa path the way vmhal3d.dll's Direct3D uses it
+renderer: llvmpipe (LLVM 18.18, 256 bits)
+version:  4.5 (Compatibility Profile) Mesa 9x 25.1.6.1
+vendor:   Mesa
+screen:   SOFTWARE - Direct3D renders on the CPU (see the header of ostest.c for why)
+--- 32 bpp pass: 640x480, 20 frames ---
+plane FBO status 0x8CD5 (complete)
+frame 1: upload 1 ms, draw 305 ms, readback 3 ms (totals), mismatches so far 0, GL errors 0
+frame 20: upload 17 ms, draw 322 ms, readback 59 ms (totals), mismatches so far 0, GL errors 0
+32 bpp: 20 frames, 200 checks, 0 mismatches, 0 GL errors; per frame upload 0.8 / draw 16.1 / readback 3.0 ms
+--- 16 bpp pass: 640x480, 20 frames ---
+plane FBO status 0x8CD5 (complete)
+colour16 FBO status 0x8CD5 (complete)
+frame 1: upload 82 ms, draw 3 ms, readback 3 ms (totals), mismatches so far 0, GL errors 0
+frame 20: upload 115 ms, draw 47 ms, readback 58 ms (totals), mismatches so far 0, GL errors 0
+16 bpp: 20 frames, 200 checks, 0 mismatches, 0 GL errors; per frame upload 5.8 / draw 2.4 / readback 2.9 ms
+RESULT: PASS (400 checks, 0 mismatches, 0 GL errors)

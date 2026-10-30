@@ -1,0 +1,98 @@
+[     1] load scene: 900 textures per level
+[     1] level 1: loading 900 textures (256x256 RGBA mipmapped, ~299 MB) + 64 lightmaps
+[   419] level 1: 64 textures loaded, oom 0 other 0
+[   544] level 1: 128 textures loaded, oom 0 other 0
+[   660] level 1: 192 textures loaded, oom 0 other 0
+[   776] level 1: 256 textures loaded, oom 0 other 0
+[   891] level 1: 320 textures loaded, oom 0 other 0
+[  1008] level 1: 384 textures loaded, oom 0 other 0
+[  1124] level 1: 448 textures loaded, oom 0 other 0
+[  1240] level 1: 512 textures loaded, oom 0 other 0
+[  1357] level 1: 576 textures loaded, oom 0 other 0
+[  1477] level 1: 640 textures loaded, oom 0 other 0
+[  1604] level 1: 704 textures loaded, oom 0 other 0
+[  1720] level 1: 768 textures loaded, oom 0 other 0
+[  1834] level 1: 832 textures loaded, oom 0 other 0
+[  1951] level 1: 896 textures loaded, oom 0 other 0
+[  1967] level 1: LOADED 900 textures, first oom at -1, oom 0 other 0
+[  2019] level 1: play frame 1 took 51 ms, oom 0 other 0
+[  4579] level 1: play frame 50 took 47 ms, oom 0 other 0
+[  7143] level 1: play frame 100 took 51 ms, oom 0 other 0
+[  9698] level 1: play frame 150 took 49 ms, oom 0 other 0
+[  9698] level 1: deleting 900 textures + 64 lightmaps (level change)
+[  9827] level 1: deleted, glGetError polled
+[  9827] level 2: loading 900 textures (256x256 RGBA mipmapped, ~299 MB) + 64 lightmaps
+[  9985] level 2: 64 textures loaded, oom 0 other 0
+[ 10072] level 2: 128 textures loaded, oom 0 other 0
+[ 10156] level 2: 192 textures loaded, oom 0 other 0
+[ 10246] level 2: 256 textures loaded, oom 0 other 0
+[ 10332] level 2: 320 textures loaded, oom 0 other 0
+[ 10418] level 2: 384 textures loaded, oom 0 other 0
+[ 10510] level 2: 448 textures loaded, oom 0 other 0
+[ 10596] level 2: 512 textures loaded, oom 0 other 0
+[ 10679] level 2: 576 textures loaded, oom 0 other 0
+[ 10767] level 2: 640 textures loaded, oom 0 other 0
+[ 10857] level 2: 704 textures loaded, oom 0 other 0
+[ 10946] level 2: 768 textures loaded, oom 0 other 0
+[ 11030] level 2: 832 textures loaded, oom 0 other 0
+[ 11113] level 2: 896 textures loaded, oom 0 other 0
+[ 11119] level 2: LOADED 900 textures, first oom at -1, oom 0 other 0
+[ 11169] level 2: play frame 1 took 50 ms, oom 0 other 0
+[ 13640] level 2: play frame 50 took 50 ms, oom 0 other 0
+[ 16131] level 2: play frame 100 took 51 ms, oom 0 other 0
+[ 18740] level 2: play frame 150 took 53 ms, oom 0 other 0
+[ 18740] level 2: deleting 900 textures + 64 lightmaps (level change)
+[ 18867] level 2: deleted, glGetError polled
+[ 18867] level 3: loading 900 textures (256x256 RGBA mipmapped, ~299 MB) + 64 lightmaps
+[ 19022] level 3: 64 textures loaded, oom 0 other 0
+[ 19108] level 3: 128 textures loaded, oom 0 other 0
+[ 19197] level 3: 192 textures loaded, oom 0 other 0
+[ 19292] level 3: 256 textures loaded, oom 0 other 0
+[ 19380] level 3: 320 textures loaded, oom 0 other 0
+[ 19466] level 3: 384 textures loaded, oom 0 other 0
+[ 19552] level 3: 448 textures loaded, oom 0 other 0
+[ 19636] level 3: 512 textures loaded, oom 0 other 0
+[ 19724] level 3: 576 textures loaded, oom 0 other 0
+[ 19812] level 3: 640 textures loaded, oom 0 other 0
+[ 19897] level 3: 704 textures loaded, oom 0 other 0
+[ 19986] level 3: 768 textures loaded, oom 0 other 0
+[ 20073] level 3: 832 textures loaded, oom 0 other 0
+[ 20157] level 3: 896 textures loaded, oom 0 other 0
+[ 20163] level 3: LOADED 900 textures, first oom at -1, oom 0 other 0
+[ 20210] level 3: play frame 1 took 47 ms, oom 0 other 0
+[ 22671] level 3: play frame 50 took 47 ms, oom 0 other 0
+[ 25194] level 3: play frame 100 took 48 ms, oom 0 other 0
+[ 27737] level 3: play frame 150 took 48 ms, oom 0 other 0
+[ 30195] level 3: play frame 200 took 54 ms, oom 0 other 0
+[ 32720] level 3: play frame 250 took 54 ms, oom 0 other 0
+[ 35152] level 3: play frame 300 took 46 ms, oom 0 other 0
+[ 37642] level 3: play frame 350 took 48 ms, oom 0 other 0
+[ 40092] level 3: play frame 400 took 51 ms, oom 0 other 0
+[ 42682] level 3: play frame 450 took 51 ms, oom 0 other 0
+[ 45184] level 3: play frame 500 took 56 ms, oom 0 other 0
+[ 47652] level 3: play frame 550 took 55 ms, oom 0 other 0
+[ 50106] level 3: play frame 600 took 46 ms, oom 0 other 0
+[ 52594] level 3: play frame 650 took 49 ms, oom 0 other 0
+[ 55081] level 3: play frame 700 took 48 ms, oom 0 other 0
+[ 57510] level 3: play frame 750 took 48 ms, oom 0 other 0
+[ 60020] level 3: play frame 800 took 46 ms, oom 0 other 0
+[ 62530] level 3: play frame 850 took 47 ms, oom 0 other 0
+[ 65024] level 3: play frame 900 took 47 ms, oom 0 other 0
+[ 67515] level 3: play frame 950 took 48 ms, oom 0 other 0
+[ 70024] level 3: play frame 1000 took 54 ms, oom 0 other 0
+[ 72552] level 3: play frame 1050 took 48 ms, oom 0 other 0
+[ 75033] level 3: play frame 1100 took 47 ms, oom 0 other 0
+[ 77520] level 3: play frame 1150 took 49 ms, oom 0 other 0
+[ 80093] level 3: play frame 1200 took 54 ms, oom 0 other 0
+[ 82615] level 3: play frame 1250 took 49 ms, oom 0 other 0
+[ 85103] level 3: play frame 1300 took 46 ms, oom 0 other 0
+[ 87582] level 3: play frame 1350 took 48 ms, oom 0 other 0
+[ 90144] level 3: play frame 1400 took 47 ms, oom 0 other 0
+[ 92680] level 3: play frame 1450 took 48 ms, oom 0 other 0
+[ 95288] level 3: play frame 1500 took 48 ms, oom 0 other 0
+[ 97785] level 3: play frame 1550 took 49 ms, oom 0 other 0
+[100358] level 3: play frame 1600 took 80 ms, oom 0 other 0
+[102844] level 3: play frame 1650 took 49 ms, oom 0 other 0
+[105379] level 3: play frame 1700 took 48 ms, oom 0 other 0
+[107941] level 3: play frame 1750 took 50 ms, oom 0 other 0
+[110403] level 3: play frame 1800 took 48 ms, oom 0 other 0

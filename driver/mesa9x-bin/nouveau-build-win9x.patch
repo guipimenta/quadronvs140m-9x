@@ -1,8 +1,8 @@
 diff --git a/Makefile b/Makefile
-index 12b3e391..2e6d88e2 100644
+index 12b3e391..c8356359 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -1,908 +1,944 @@
+@@ -1,908 +1,948 @@
 -#
 -# This is GNU make file DON'T use it with nmake/wmake or whatever even if you
 -# plan to use MS compiler!
@@ -1688,6 +1688,10 @@ index 12b3e391..2e6d88e2 100644
 +# wgl_icd.c #includes wgl.c: declare it so wgl.c edits rebuild the ICD object (3082: that object had been stale since 10-24)
 +$(MESA_VER)/src/gallium/targets/wgl/wgl_icd.c_simd$(OBJ): $(MESA_VER)/src/gallium/targets/wgl/wgl.c
 +$(MESA_VER)/src/gallium/targets/wgl/wgl_icd.c_simd$(OBJ): SIMD_CFLAGS += -DGALLIUM_NOUVEAU
++# 3116: the OSMesa target in mesa3d.dll (the path vmhal3d.dll's Direct3D renders
++# through) offers the nouveau screen too; only the SIMD object, which only
++# mesa3d.w98me.dll links (the w95 DLL uses the _gen object and stays software).
++$(MESA_VER)/src/gallium/targets/osmesa/osmesa_target.c_simd$(OBJ): SIMD_CFLAGS += -DGALLIUM_NOUVEAU
 +
 +mesa3d.w98me.dll: $(DEPS) $(LIBS_TO_BUILD) $(LIBPREFIX)MesaNouveauLib$(LIBSUFFIX) $(MesaOSSimd_OBJS) mesa3d.res $(LD_DEPS) fixlink.exe
 +	$(LD) $(SIMD_LDFLAGS) $(MesaWglLibSimd_OBJS) $(MesaGdiLibICDSimd_OBJS) $(MesaOSSimd_OBJS) -Wl,--start-group $(LIBPREFIX)MesaNouveauLib$(LIBSUFFIX) $(opengl_simd_LIBS) -Wl,--end-group $(MESA_SIMD_LIBS) mesa3d.res $(DLLFLAGS) $(MESA3D_DEF)
@@ -2389,6 +2393,113 @@ index d7db69a2..97b7426c 100644
 +   M9XT("stw: choose count/best", count, bestindex);
     return bestindex;
  }
+diff --git a/mesa-25.1.x/src/gallium/targets/osmesa/osmesa_target.c b/mesa-25.1.x/src/gallium/targets/osmesa/osmesa_target.c
+index 25985dd9..7892078f 100644
+--- a/mesa-25.1.x/src/gallium/targets/osmesa/osmesa_target.c
++++ b/mesa-25.1.x/src/gallium/targets/osmesa/osmesa_target.c
+@@ -26,6 +26,62 @@
+ 
+ #include "sw/null/null_sw_winsys.h"
+ 
++#ifdef GALLIUM_NOUVEAU
++/* 3116 (nvmini G86 driver): the OSMesa frontend is what the Direct3D HAL
++ * (vmhal3d.dll) renders through - it loads mesa3d.dll, finds
++ * OSMesaGetProcAddress and creates OSMesa contexts, rendering into FBOs and
++ * reading them back into the DirectDraw surfaces. Upstream this target only
++ * makes software screens (sw_screen_create ignores GALLIUM_DRIVER=nouveau and
++ * falls through to llvmpipe), so every Direct3D game rendered on the CPU.
++ * Mesa9x's own answer for VMware's GPU is a second OSMesa target that creates
++ * the hardware screen (win9x/ossvga_target.c, linked into vmwsgl32.dll); this
++ * is the same thing for the nouveau screen: GALLIUM_DRIVER=nouveau (the
++ * registry default since 3110, per-exe opt-out apps\<exe>\mesa = llvmpipe)
++ * -> nouveau_drm_screen_create, which opens nvmini.vxd through the libdrm shim
++ * and is shared with the WGL path inside one process. When the GPU screen
++ * cannot be created (another process owns the GPU channel, an old VxD, a
++ * bring-up fault) the software screen is made instead, as the WGL path does.
++ * NVSHIM_D3D=0 (env or the same registry keys) keeps the OSMesa path on
++ * software while OpenGL stays on the GPU - the A/B switch for Direct3D. */
++#include <stdlib.h>
++#include <string.h>
++#include "util/u_debug.h"
++extern struct pipe_screen *nouveau_drm_screen_create(int fd);
++extern void nvshim_trace(const char *label, unsigned n, const uint32_t *v);
++extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
++
++static void
++osnv_trace(const char *label, uint32_t a0, uint32_t a1)
++{
++   uint32_t v[2];
++   v[0] = a0; v[1] = a1;
++   nvshim_trace(label, 2, v);
++}
++
++static struct pipe_screen *
++osmesa_create_nouveau_screen(void)
++{
++   const char *drv = debug_get_option("GALLIUM_DRIVER", "");
++   struct pipe_screen *screen;
++
++   if (debug_get_bool_option("LIBGL_ALWAYS_SOFTWARE", false))
++      return NULL;
++   if (strcmp(drv, "nouveau") != 0)
++      return NULL;
++   if (!debug_get_bool_option("NVSHIM_D3D", true)) {
++      osnv_trace("osmesa: NVSHIM_D3D=0 - Direct3D/OSMesa stays on software", 0, 0);
++      return NULL;
++   }
++   mesa9x_trace_hook = nvshim_trace;   /* stw/st/nv50 traces into C:\nvshim.log, as in wgl.c */
++   osnv_trace("osmesa: nouveau_drm_screen_create enter", 0, 0);
++   screen = nouveau_drm_screen_create(0);   /* fd ignored; opens the VxD */
++   osnv_trace("osmesa: nouveau_drm_screen_create exit screen", (uint32_t)(uintptr_t)screen, 0);
++   if (!screen)
++      osnv_trace("osmesa: nouveau screen failed - falling back to software", 0, 0);
++   return screen;
++}
++#endif
++
+ 
+ struct pipe_screen *
+ osmesa_create_screen(void);
+@@ -37,6 +93,12 @@ osmesa_create_screen(void)
+    struct sw_winsys *winsys;
+    struct pipe_screen *screen;
+ 
++#ifdef GALLIUM_NOUVEAU
++   screen = osmesa_create_nouveau_screen();
++   if (screen)
++      return debug_screen_wrap(screen);
++#endif
++
+    /* We use a null software winsys since we always just render to ordinary
+     * driver resources.
+     */
+@@ -45,7 +107,26 @@ osmesa_create_screen(void)
+       return NULL;
+ 
+    /* Create llvmpipe or softpipe screen */
++#ifdef GALLIUM_NOUVEAU
++   /* sw_screen_create tries GALLIUM_DRIVER first and, when that names a
++    * driver it does not know, gives up WITHOUT trying llvmpipe ("if the env
++    * var is set, don't keep trying things"). GALLIUM_DRIVER=nouveau is the
++    * registry default since 3110, so the OSMesa path got NO screen and
++    * OSMesaCreateContextExt crashed (read of NULL+0x5b0 in st) - every
++    * Direct3D program since 3110 (3116 found it with ostest under Wine). When
++    * the setting is not a software driver, name the software ones here. */
++   {
++      const char *drv = debug_get_option("GALLIUM_DRIVER", "");
++      if (strcmp(drv, "llvmpipe") != 0 && strcmp(drv, "softpipe") != 0) {
++         screen = sw_screen_create_named(winsys, "llvmpipe");
++         if (!screen)
++            screen = sw_screen_create_named(winsys, "softpipe");
++      } else
++         screen = sw_screen_create(winsys);
++   }
++#else
+    screen = sw_screen_create(winsys);
++#endif
+    if (!screen) {
+       winsys->destroy(winsys);
+       return NULL;
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 index 8017cd00..668adc36 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
@@ -2736,10 +2847,18 @@ index 8017cd00..668adc36 100644
           // We're being unloaded from the process.
           stw_cleanup_thread();
 diff --git a/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c b/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c
-index d2615102..57656890 100644
+index d2615102..f728b45c 100644
 --- a/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c
 +++ b/mesa-25.1.x/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c
-@@ -12,6 +12,13 @@
+@@ -5,6 +5,7 @@
+ #include "util/u_debug.h"
+ #include "util/u_memory.h"
+ #include "util/u_screen.h"
++#include "util/simple_mtx.h"
+ 
+ #include "renderonly/renderonly.h"
+ #include "nouveau_drm_public.h"
+@@ -12,6 +13,13 @@
  #include "nouveau/nouveau_screen.h"
  #include "nouveau/nouveau_winsys.h"
  
@@ -2753,7 +2872,7 @@ index d2615102..57656890 100644
  static struct pipe_screen *
  nouveau_screen_create(int fd, const struct pipe_screen_config *config,
                        struct renderonly *ro)
-@@ -22,13 +29,17 @@ nouveau_screen_create(int fd, const struct pipe_screen_config *config,
+@@ -22,13 +30,17 @@ nouveau_screen_create(int fd, const struct pipe_screen_config *config,
     struct nouveau_screen *screen = NULL;
     int ret;
  
@@ -2771,7 +2890,7 @@ index d2615102..57656890 100644
  
     switch (dev->chipset & ~0xf) {
     case 0x30:
-@@ -62,8 +73,10 @@ nouveau_screen_create(int fd, const struct pipe_screen_config *config,
+@@ -62,8 +74,10 @@ nouveau_screen_create(int fd, const struct pipe_screen_config *config,
     }
  
     screen = init(dev);
@@ -2782,7 +2901,27 @@ index d2615102..57656890 100644
  
     if (!screen->base.context_create)
        goto err_screen_init;
-@@ -85,6 +98,15 @@ err_dev_new:
+@@ -82,9 +96,59 @@ err_dev_new:
+    return NULL;
+ }
+ 
++#ifdef WIN9X
++static struct pipe_screen *nv9x_screen = NULL;
++
++static void
++nv9x_screen_destroy(struct pipe_screen *pscreen)
++{
++   bool destroy;
++
++   destroy = --pscreen->refcnt == 0;
++   if (destroy) {
++      nv9x_screen = NULL;
++      pscreen->destroy = pscreen->winsys_priv;
++      pscreen->destroy(pscreen);
++   }
++}
++#endif
++
  struct pipe_screen *
  nouveau_drm_screen_create(int fd)
  {
@@ -2792,7 +2931,31 @@ index d2615102..57656890 100644
 +    * which fails for fd 0 of a GUI process and returned NULL before
 +    * nouveau_screen_create ever ran (build 3079/3080: CreateContext 126, no
 +    * shim trace). Create the screen directly. */
-+   return nouveau_screen_create(fd, NULL, NULL);
++   /* 3116: one screen per process, shared by the WGL frontend (OpenGL) and the
++    * OSMesa frontend (Direct3D through vmhal3d.dll) - the shim drives ONE GPU
++    * channel per process, so a second nv50 screen would re-initialise it under
++    * the first. Upstream gets the same sharing from u_pipe_screen_lookup_or_create
++    * (keyed by the DRM fd we do not have); this is that, keyed by the process. */
++   {
++      static simple_mtx_t nv9x_mtx = SIMPLE_MTX_INITIALIZER;
++      struct pipe_screen *pscreen;
++
++      simple_mtx_lock(&nv9x_mtx);
++      pscreen = nv9x_screen;
++      if (pscreen) {
++         pscreen->refcnt++;
++      } else {
++         pscreen = nouveau_screen_create(fd, NULL, NULL);
++         if (pscreen) {
++            pscreen->refcnt = 1;
++            pscreen->winsys_priv = pscreen->destroy;
++            pscreen->destroy = nv9x_screen_destroy;
++            nv9x_screen = pscreen;
++         }
++      }
++      simple_mtx_unlock(&nv9x_mtx);
++      return pscreen;
++   }
 +#else
     return u_pipe_screen_lookup_or_create(os_dupfd_cloexec(fd), NULL, NULL,
                                           nouveau_screen_create);
