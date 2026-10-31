@@ -1,0 +1,109 @@
+vmhal3d (JHRobotics/vmhal9x 8bc480e) colour transfers between GL and a DirectDraw surface
+(MesaBufferUploadColor / MesaBufferDownloadColor) assumed rows of exactly width x bytes per
+pixel. Flip-chain surfaces have the screen's pitch, which the NV50 driver pads to a 256-byte
+multiple (800x600x16 = 1792 bytes, not 1600): every frame was copied with a 96-pixel shear
+per row (horizontal streaks). Now the target's real pitch is kept (ctx->front_pitch, from the
+surface record) and passed as GL_(UN)PACK_ROW_LENGTH when it differs. Dungeon Keeper 2 at
+800x600, found 2026-10-31. Apply after vmhal3d-ddfifo.patch and vmhal3d-flatshade.patch.
+
+--- a/mesa3d.h
++++ b/mesa3d.h
+@@ -296,6 +296,7 @@
+ 	DWORD thread_id;
+ 	GLint front_bpp;
+ 	GLint depth_bpp;
++	DWORD front_pitch; /* bytes per row of the target surface in VRAM, 0 = packed */
+ 	//DDRAWI_DDRAWSURFACE_LCL flips[MESA3D_MAX_FLIPS];
+ 	//int flips_cnt;
+ 	DWORD backbuffer;
+--- a/mesa3d.c
++++ b/mesa3d.c
+@@ -645,6 +645,7 @@
+ 	}
+ 
+ 	ctx->front_bpp = bpp;
++	ctx->front_pitch = se->fb->pitch;
+ 	ctx->backbuffer = dds_sid;
+ 	ctx->depth_bpp = bpp_depth;
+ 	ctx->depth = ddz_sid;
+@@ -685,6 +686,7 @@
+ 	}
+ 
+ 	ctx->front_bpp = bpp;
++	ctx->front_pitch = 0;
+ 	ctx->depth_bpp = bpp_depth;
+ 	ctx->backbuffer = 0;
+ 	ctx->depth = 0;
+--- a/mesa3d_buffer.c
++++ b/mesa3d_buffer.c
+@@ -67,6 +67,22 @@
+ 	}
+ }
+ 
++/* Row length (in pixels) of the target surface for GL_(UN)PACK_ROW_LENGTH, 0 when its
++ * rows are packed. Flip-chain surfaces have the screen's pitch, which the display driver
++ * may pad (NV50: 256-byte multiple, 800x600x16 = 1792 bytes, not 1600). */
++static GLint TargetRowLength(mesa3d_ctx_t *ctx)
++{
++	DWORD bp = (ctx->front_bpp + 7) / 8;
++
++	if(ctx->front_pitch == 0 || bp == 0)
++		return 0;
++
++	if(ctx->front_pitch == SurfacePitch(ctx->state.sw, ctx->front_bpp) || (ctx->front_pitch % bp) != 0)
++		return 0;
++
++	return ctx->front_pitch / bp;
++}
++
+ NUKED_LOCAL void MesaBufferUploadColor(mesa3d_ctx_t *ctx, const void *src)
+ {
+ 	TRACE_ENTRY
+@@ -97,6 +113,12 @@
+ 
+ 	GL_CHECK(entry->proc.pglFinish());
+ 
++	GLint row_length = TargetRowLength(ctx);
++	if(row_length)
++	{
++		GL_CHECK(entry->proc.pglPixelStorei(GL_UNPACK_ROW_LENGTH, row_length));
++	}
++
+ 	if(ctx->front_bpp == 32)
+ 	{
+ 		GL_CHECK(entry->proc.pglActiveTexture(GL_TEXTURE0+ctx->fbo_tmu));
+@@ -166,6 +188,11 @@
+ 		
+ 		GL_CHECK(entry->proc.pglDisable(GL_TEXTURE_2D));
+ 	}
++
++	if(row_length)
++	{
++		GL_CHECK(entry->proc.pglPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
++	}
+ 	
+ 	if(ctx->fbo_tmu < ctx->tmu_count)
+ 	{
+@@ -211,10 +238,22 @@
+ 			break;
+ 	}
+ 
++	GLint row_length = TargetRowLength(ctx);
++
+ 	if(front_surface)
+ 		FBHDA_access_begin(0);
+ 
++	if(row_length)
++	{
++		GL_CHECK(entry->proc.pglPixelStorei(GL_PACK_ROW_LENGTH, row_length));
++	}
++
+ 	GL_CHECK(entry->proc.pglReadPixels(0, 0, ctx->state.sw, ctx->state.sh, format, type, dst));
++
++	if(row_length)
++	{
++		GL_CHECK(entry->proc.pglPixelStorei(GL_PACK_ROW_LENGTH, 0));
++	}
+ 	
+ 	if(front_surface)
+ 		FBHDA_access_end(0);

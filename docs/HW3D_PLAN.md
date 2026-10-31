@@ -1398,6 +1398,26 @@ C:\nvkick.txt, C:\nvclk.txt.
     one unprocessed until the next arrives) and marks `tmu[i]` (the hash-lookup counter)
     instead of `tmu[tmu]` for reload; the patch is in the scratch debug tree, Half-Life was
     unchanged with it.
+  - Dungeon Keeper 2 (DX6, game 800x600x16) black world + wrong menu text -> FIXED in 3121
+    (driver/vmhal9x-bin patches + nvmini.vxd; found with the DP2 capture/replay debug HAL):
+    1. vmhal9x CreateOneSurface gave flip-chain surfaces hda->pitch only on VESA; NV50 pads
+       800x600x16 rows to 1792 bytes, so the back buffer got 1600, Flip copied instead of
+       flipping and the surface registry overlapped (vmhal9x-flippitch.patch).
+    2. vmhal3d colour up/downloads ignored the target pitch -> sheared frames
+       (vmhal3d-rowlength.patch, GL_(UN)PACK_ROW_LENGTH from the real pitch).
+    3. DDBLT_DEPTHFILL (DK2 clears z that way every frame) only filled VRAM, GL's own depth
+       buffer was never cleared -> every depth-tested triangle failed
+       (vmhal-depthfill.patch: vmhal9x passes the fill to a new vmhal3d export
+       hal3d_DepthFill32, applied as MesaClear(D3DCLEAR_ZBUFFER) at the next draw).
+    4. nvmini.vxd FBHDA_DD_surface_set (same in upstream vmdisp9x) returned uid 0 for NEW
+       surfaces, so no dd_fifo item ever matched in MesaBufferTexturesChanges: no texture
+       update ever reached GL (DK2 menu text tiles showed other textures).
+    5. With 4 fixed the dd_fifo DELETE path ran for the first time and, being handled at the
+       next draw, destroyed the texture that had already reused the dxid (white walls):
+       vmhal3d-staledelete.patch drops only the stale record.
+    T61: DK2 levels, menus, Esc/End Game, Exit to Windows clean; d3d8test fullscreen 16 cube
+    repeat 2 PASS; Half-Life -d3d c1a0 identical to 3119 (analysis/t61-remote/dk2/,
+    hl-d3d/3121-c1a0*.png).
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim

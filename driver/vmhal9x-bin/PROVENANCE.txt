@@ -11,10 +11,12 @@ Built:    2026-10-17 on this host, i686-w64-mingw32-gcc, config.mk: D3DHAL=1
           applied (sections marked shared, required for a DDraw HAL).
 Source checkout: /home/guilherme/projects/audio_reverse/vmhal9x-src
 
-vmhal9x.dll and vmdisp9x.dll are that build unchanged.
+vmdisp9x.dll is that build unchanged.
 
-vmhal3d.dll (since build 3119, 2026-10-31) = the same commit and config.mk with two
-patches from this folder, applied in this order:
+vmhal9x.dll and vmhal3d.dll (since 2026-10-31, after build 3120) = the same commit and
+config.mk with the patches from this folder, applied in this order:
+  vmhal9x-flippitch.patch  (vmhal9x) flip-chain surfaces get the screen's pitch on any
+                           driver, not only VESA (NV50 pads 800x600 rows to 1792 bytes)
   vmhal3d-ddfifo.patch     MesaBufferTexturesChanges read the FBHDA dd_fifo item
                            before advancing (the newest texture change waited for
                            the next one) and marked tmu[i] instead of tmu[tmu]
@@ -22,11 +24,22 @@ patches from this folder, applied in this order:
                            all vertex colours of a DrawPrimitives2 call are equal
                            (the G86 gives clipped flat-shaded triangles a garbage
                            colour: Half-Life's white corner wedges)
+  vmhal3d-rowlength.patch  GL <-> surface colour transfers use the target's real pitch
+                           (GL_(UN)PACK_ROW_LENGTH): 800x600 frames were sheared
+  vmhal-depthfill.patch    (both DLLs) a DirectDraw DDBLT_DEPTHFILL of the z-buffer
+                           also clears GL's depth buffer (new export hal3d_DepthFill32)
+  vmhal3d-staledelete.patch a late dd_fifo DELETE no longer destroys the texture that
+                           reused its dxid (needs nvmini.vxd 3121+, which returns real
+                           surface uids; before, no dd_fifo item ever matched)
+The last four are Dungeon Keeper 2 (800x600 black world, menu text tiles; T61, GPU and
+llvmpipe).
 Rebuild: git archive the commit into an empty folder, copy config.mk and the
 fixlink/nocrt/regex submodule folders (and fixlink.bin) from the checkout, strip the
-CRs of the five patched files (upstream is CRLF), apply both patches with patch -p1
-(from the "--- a/" line on), make vmhal3d.dll. The same steps without the patches
-rebuild the shipped 3118 vmhal3d.dll byte for byte except the PE timestamp/checksum.
+CRs of the ten patched files (ddraw.c mesa3d.h mesa3d.c mesa3d_buffer.c d3dhal.c
+mesa3d_draw6.c vmhal9x.h blt32.c d3d.c vmhal3d.def; upstream is CRLF), apply the
+patches with patch -p1 (from the "--- a/" line on), make vmhal3d.dll vmhal9x.dll.
+The same steps without the patches rebuild the shipped 3118 DLLs byte for byte
+except the PE timestamp/checksum.
 
 Direct3D additionally needs mesa3d.dll from https://github.com/JHRobotics/mesa9x
 (built here, ../mesa9x-bin).

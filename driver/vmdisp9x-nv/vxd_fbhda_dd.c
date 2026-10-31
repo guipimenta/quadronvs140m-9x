@@ -392,6 +392,7 @@ BOOL FBHDA_DD_surface_set(void *flat, FBHDA_DD_surface_t *info)
 		first->off_start = ((BYTE*)flat) - ((BYTE*)hda->vram_pm32);
 		first->off_end   = first->off_start + info->size;
 		first->uid       = uid_seq++;
+		info->uid        = first->uid; /* the HAL matches dd_fifo items by this uid */
 		first->four_cc   = info->four_cc;
 		first->width     = info->width;
 		first->height    = info->height;
@@ -419,6 +420,7 @@ BOOL FBHDA_DD_surface_set(void *flat, FBHDA_DD_surface_t *info)
 		surfaces_tlb[index].off_start = off;
 		surfaces_tlb[index].off_end   = off + info->size;
 		surfaces_tlb[index].uid       = uid_seq++;
+		info->uid                     = surfaces_tlb[index].uid; /* (upstream returned 0 here) */
 		surfaces_tlb[index].four_cc   = info->four_cc;
 		surfaces_tlb[index].width     = info->width;
 		surfaces_tlb[index].height    = info->height;

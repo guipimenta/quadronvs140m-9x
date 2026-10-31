@@ -24,6 +24,8 @@ automatically. Lifts the agent's limits: absolute Windows paths, files over
   t61.py wins [TITLE] | kids TITLE | focus TITLE | close TITLE
   t61.py press TITLE BUTTON              (click a dialog button by its text)
   t61.py waitwin TITLE SECS | click X Y [right|double] | key COMBO... | text STRING
+  t61.py move DX DY [click|right|double] | gclick [right|double] | gkey COMBO...
+                                         (game input via t61input.vxd: DirectInput sees it)
   t61.py debug EXE [ARGS]                (run EXE detached under a debugger: crash module+offset,
                                           registers, stack in C:\\remote\\t61debug.txt)
 
@@ -246,6 +248,13 @@ def main():
             return 0 if code == 0 else 1
         elif v == "sh" and x:
             lines = [ln for arg in x for ln in arg.splitlines() if ln.strip()]
+            # Win98 COMMAND.COM has no "time /t": time, date and pause wait for the
+            # keyboard in a DOS box nobody sees, and the stuck sh keeps lastrun.log
+            # open, so the agent answers every later request with "ERR log".
+            for ln in lines:
+                w = ln.split()[0].lower().lstrip("@")
+                if w in ("time", "date", "pause", "choice"):
+                    sys.exit(f"t61: '{ln}' waits for keyboard input on the T61 (no /t on Win98); not sent")
             code, _ = t.util("sh", str(a.timeout), *lines, timeout=min(a.timeout + 15, 600), check=False)
             return 0 if code == 0 else 1
         elif v == "start" and x:
@@ -286,6 +295,12 @@ def main():
                     t.put(f, staged)
                     t.util("pending", dst, "C:\\remote\\" + staged)
                     print(f"{dst} is in use: replaced at the next reboot")
+        elif v in ("move", "gclick", "gkey") and (x or v == "gclick"):
+            # game input through t61input.vxd (DirectInput sees it); 4.6 KB, sent
+            # every time - it is only loaded while the helper runs
+            t.c.put(HERE / "t61input" / "t61input.vxd", "t61input.vxd")
+            code, _ = t.util(v, *x, timeout=60, check=False)
+            return 0 if code == 0 else 1
         elif v in ("wins", "kids", "focus", "close", "press", "waitwin", "click", "key", "text", "autostart", "debug") and (x or v == "wins"):
             secs = int(x[1]) + 15 if v == "waitwin" and len(x) == 2 else 60
             code, _ = t.util(v, *x, timeout=min(secs, 600), check=False)

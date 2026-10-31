@@ -1,0 +1,34 @@
+vmhal3d (JHRobotics/vmhal9x 8bc480e) MesaBufferTexturesChanges: a FBHDA_DD_DELETE
+notification is handled at the next draw, when its dxid may already belong to a surface
+created after the deleted one (Dungeon Keeper 2 streams its textures). Destroying by dxid
+then took the NEW texture's record: white, untextured walls and HUD. Now a DELETE destroys
+only while the dxid still maps to the deleted record; otherwise the stale record is just
+unlinked and freed. This path never ran before nvmini.vxd 3121: the VxD's
+FBHDA_DD_surface_set returned uid 0 for every new surface (upstream vmdisp9x does too), so
+no dd_fifo item ever matched and texture updates after the first upload never reached GL
+(Dungeon Keeper 2's menu text tiles showed other textures). Apply after vmhal-depthfill.patch.
+
+--- a/mesa3d_buffer.c
++++ b/mesa3d_buffer.c
+@@ -649,7 +649,20 @@
+ 						} // loop ddsurf = ddsurf->up
+ 						break;
+ 					case FBHDA_DD_DELETE:
+-						MesaBufferTextureDestroy(ctx, ddsurf->dxid);
++						/* notifications are handled at the next draw: by then the dxid may
++						 * belong to a surface created after this one was deleted (Dungeon
++						 * Keeper 2 streams its textures); destroying by dxid would take the
++						 * new texture's record - only drop this stale record then */
++						if(ddsurf->dxid == 0 || ddsurf_get_by_id(ctx, ddsurf->dxid) == ddsurf)
++						{
++							MesaBufferTextureDestroy(ctx, ddsurf->dxid);
++						}
++						else
++						{
++							ddsurf_unpair(ddsurf);
++							ht_delete_more(entry->ht_flat, DW_FLAT(ddsurf->flatptr), ddsurf);
++							hal3d_free((void**)&ddsurf);
++						}
+ 						break;
+ 				}
+ 				break;

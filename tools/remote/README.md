@@ -28,6 +28,7 @@ stores it as `t61u<crc32>.exe` and uploads it only when that version is missing.
 | `t61.py press TITLE BUTTON` | click a dialog button by its text (works without focus or coordinates) |
 | `t61.py focus TITLE` / `close TITLE` / `waitwin TITLE SECS` | foreground, WM_CLOSE, wait for a window |
 | `t61.py click X Y [right\|double]` / `key ctrl+tab tab*3 enter` / `text "abc"` | mouse and keyboard |
+| `t61.py move DX DY [click\|right\|double]` / `gclick [right\|double]` / `gkey esc ctrl+f5*2` | game input that DirectInput sees (DirectX games ignore `click`/`key`): relative mouse motion in mickeys and clicks through VMOUSE, keys as scan codes through VKD, by `t61input.vxd` (source `t61input/`, `make -C tools/remote/t61input`; uploaded each time, loaded only while the helper runs) |
 | `t61.py debug C:\path\x.exe [ARGS]` | run detached under a Win32 debugger: DLL loads, exceptions (module+offset, registers, stack), the exiting thread's stack, to `C:\remote\t61debug.txt` |
 | `t61.py endtasks` | a shutdown stuck on the agent console's End Task prompt: answer it, then as `reboot` |
 
@@ -41,7 +42,10 @@ Limits:
 - A file in use cannot be replaced (mesa3d.dll while a GL/D3D program runs: `kill` it first).
 - The debugger cannot see faults in 16-bit code (DDRAW16, nvmini.drv): such a process can
   vanish with exit code -1 and no exception event.
-- `shot` captures what GDI sees. OpenGL programs on the GPU present through our own
+- `shot` reads the VRAM page the display driver's FBHDA says is on screen (`surface`), so
+  page-flipping DirectDraw/Direct3D games show their visible page (until 2026-10-31 it
+  captured GDI's page, black in about 3 of 4 shots of a flipping game).
+  Without an FBHDA (or at 8 bpp) it falls back to GDI: `shot` captures what GDI sees. OpenGL programs on the GPU present through our own
   path straight into the scanout, so `shot` shows the last GDI picture (e.g. Half-Life's
   "Loading...") while the game runs. Direct3D (vmhal3d) frames do show. A VRAM scanout
   grabber is still to be written; until then judge OpenGL runs by C:\nvlast.txt progress
@@ -50,6 +54,8 @@ Limits:
   without saving the current game" in an UNTITLED dialog: `press "*" Ok`. Do not `kill` a
   game that holds the screen in fullscreen DirectDraw mode: it froze the T61 once.
   Half-Life's console needs `-console` on its command line (else the backtick opens chat).
+- `sh` refuses `time`, `date`, `pause`, `choice`: Win98 has no `time /t`, the DOS box
+  waits for the keyboard and holds lastrun.log ("ERR log" until cleared at the T61).
 - Focus uses AttachThreadInput, not the usual synthetic Alt tap: Alt press+release puts
   the target's menu bar in menu mode and the typed keys open menus instead.
 - `sh` captures what the batch prints to stdout; COMMAND.COM's own errors ("Bad command

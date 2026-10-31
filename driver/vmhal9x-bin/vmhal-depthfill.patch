@@ -1,0 +1,185 @@
+vmhal9x + vmhal3d (JHRobotics/vmhal9x 8bc480e): a z-buffer cleared with DirectDraw
+(Blt DDBLT_DEPTHFILL - Dungeon Keeper 2 does it every frame instead of a Direct3D clear) was
+only filled in VRAM; GL keeps its own depth buffer, which was never cleared, so every
+depth-tested triangle failed (black world, only the cursor hand visible). Blt32 now passes
+each depth fill (surface, value, rectangle) to vmhal3d (new export hal3d_DepthFill32, through
+the existing USER_LIB bridge, only when vmhal3d is already loaded); the context rendering
+with that z-buffer clears its GL depth at its next draw (MesaApplyDepthFill, from
+MesaBufferTexturesChanges). Found 2026-10-31. Apply after vmhal3d-rowlength.patch.
+
+--- a/vmhal9x.h
++++ b/vmhal9x.h
+@@ -119,6 +119,19 @@
+ 
+ BOOL __stdcall D3DHALCreateDriver(DWORD *lplpGlobal, DWORD *lplpHALCallbacks, LPDDHAL_DDEXEBUFCALLBACKS lpHALExeBufCallbacks, VMDAHAL_D3DCAPS_t *lpHALFlags);
+ 
++/* DDBLT_DEPTHFILL of a z-buffer, passed from Blt32 to vmhal3d (hal3d_DepthFill32): GL keeps
++ * its own depth buffer, which a fill of the surface in VRAM alone does not clear */
++typedef struct _hal3d_depthfill_t
++{
++	DWORD flat;  /* fpVidMem of the filled z-buffer */
++	DWORD value; /* fill value, shifted down to the z bits */
++	DWORD max;   /* largest z value of the format */
++	RECT  rect;
++	BOOL  full;
++} hal3d_depthfill_t;
++
++void D3DDepthFill(hal3d_depthfill_t *df);
++
+ /* FBHDA */
+ BOOL FBHDA_load_ex(VMDAHAL_t *pHal);
+ 
+--- a/blt32.c
++++ b/blt32.c
+@@ -320,6 +320,34 @@
+ 		TOPIC("DEPTHCONV", "Blt32 - DDBLT_COLORFILL | DDBLT_DEPTHFILL");
+ 
+ #ifdef D3DHAL
++		if(dwFlags & DDBLT_DEPTHFILL)
++		{
++			hal3d_depthfill_t df;
++			DWORD zmask = 0;
++			if(dstx->dwFlags & DDRAWISURF_HASPIXELFORMAT)
++			{
++				zmask = dst->ddpfSurface.dwZBitMask;
++			}
++			if(zmask == 0)
++			{
++				zmask = (bpp >= 32) ? 0xFFFFFFFFUL : ((1UL << bpp) - 1);
++			}
++			df.flat  = (DWORD)dst->fpVidMem;
++			df.value = dwFillColor & zmask;
++			df.max   = zmask;
++			while(df.max != 0 && (df.max & 1) == 0)
++			{
++				df.value >>= 1;
++				df.max >>= 1;
++			}
++			df.rect.left   = pbd->rDest.left;
++			df.rect.top    = pbd->rDest.top;
++			df.rect.right  = pbd->rDest.right;
++			df.rect.bottom = pbd->rDest.bottom;
++			df.full  = (pbd->rDest.left == 0 && pbd->rDest.top == 0 &&
++				pbd->rDest.right == dwDstWidth && pbd->rDest.bottom == dwDstHeight);
++			D3DDepthFill(&df);
++		}
+ 		FBHDA_DD_surface_modify((void*)dst->fpVidMem);
+ #endif
+ 	}
+--- a/d3d.c
++++ b/d3d.c
+@@ -139,6 +139,15 @@
+ 	return DDHAL_DRIVER_HANDLED;
+ }
+ 
++void D3DDepthFill(hal3d_depthfill_t *df)
++{
++	/* no vmhal3d in this process = no GL depth buffer to clear */
++	if(GetModuleHandleA(HAL3D_USERLIB_NAME) != NULL)
++	{
++		USER_LIB(DepthFill32, df);
++	}
++}
++
+ /**
+  *
+  * Function:    D3DGetDriverState
+--- a/d3dhal.c
++++ b/d3dhal.c
+@@ -138,6 +138,15 @@
+ 	lpClearData->ddrval = DD_OK;
+ }
+ 
++/* called by vmhal9x's Blt32 for every DDBLT_DEPTHFILL: no GL here (any thread, no context),
++ * the context whose z-buffer it was clears its GL depth at its next draw */
++void __stdcall hal3d_DepthFill32(hal3d_depthfill_t *df)
++{
++	TRACE_ENTRY
++
++	MesaDepthFillRecord(df);
++}
++
+ void __stdcall hal3d_DrawOnePrimitive32(LPD3DHAL_DRAWONEPRIMITIVEDATA lpDrawData)
+ {
+ 	TRACE_ENTRY
+--- a/vmhal3d.def
++++ b/vmhal3d.def
+@@ -6,6 +6,7 @@
+ 	hal3d_DrawPrimitives32 = hal3d_DrawPrimitives32@4
+ 	hal3d_DrawPrimitives2_32 = hal3d_DrawPrimitives2_32@4
+ 	hal3d_Clear2_32 = hal3d_Clear2_32@4
++	hal3d_DepthFill32 = hal3d_DepthFill32@4
+ 	hal3d_CreateSurfaceEx32 = hal3d_CreateSurfaceEx32@4
+ 	hal3d_DestroyDDLocal32 = hal3d_DestroyDDLocal32@4
+ 	hal3d_ContextCreate32 = hal3d_ContextCreate32@4
+--- a/mesa3d.h
++++ b/mesa3d.h
+@@ -297,6 +297,7 @@
+ 	GLint front_bpp;
+ 	GLint depth_bpp;
+ 	DWORD front_pitch; /* bytes per row of the target surface in VRAM, 0 = packed */
++	LONG depthfill_seq; /* last z-buffer DDBLT_DEPTHFILL seen (MesaApplyDepthFill) */
+ 	//DDRAWI_DDRAWSURFACE_LCL flips[MESA3D_MAX_FLIPS];
+ 	//int flips_cnt;
+ 	DWORD backbuffer;
+@@ -652,6 +653,7 @@
+ NUKED_LOCAL void MesaBufferTextureLoad(mesa3d_ctx_t *ctx, DWORD dxid, int tmu, BOOL force);
+ /* no need GL_BLOCK */
+ NUKED_LOCAL void MesaBufferTexturesChanges(mesa3d_ctx_t *ctx);
++NUKED_LOCAL void MesaDepthFillRecord(const hal3d_depthfill_t *df);
+ 
+ /* calculation */
+ /*NUKED_LOCAL BOOL MesaUnprojectf(GLfloat winx, GLfloat winy, GLfloat winz, GLfloat clipw,
+--- a/mesa3d_buffer.c
++++ b/mesa3d_buffer.c
+@@ -570,10 +570,50 @@
+ 	ddsurf_destroy(ctx, dxid);
+ }
+ 
++/* last DDBLT_DEPTHFILL (vmhal9x Blt32 -> hal3d_DepthFill32) */
++static hal3d_depthfill_t depthfill_last;
++static volatile LONG depthfill_seq = 0;
++
++NUKED_LOCAL void MesaDepthFillRecord(const hal3d_depthfill_t *df)
++{
++	depthfill_last = *df;
++	InterlockedIncrement(&depthfill_seq);
++}
++
++/* A z-buffer filled by DirectDraw (DDBLT_DEPTHFILL, e.g. Dungeon Keeper 2 every frame) is
++ * only written in VRAM; GL's depth buffer is separate, so clear it the same way here,
++ * in the context that renders with that z-buffer. */
++static void MesaApplyDepthFill(mesa3d_ctx_t *ctx)
++{
++	LONG seq = depthfill_seq;
++	hal3d_depthfill_t df;
++	void *zptr;
++
++	if(ctx->depthfill_seq == seq)
++		return;
++
++	ctx->depthfill_seq = seq;
++	df = depthfill_last;
++
++	if(ctx->depth == 0 || ctx->depth_bpp == 0)
++		return;
++
++	zptr = MesaGetVidMem(ctx, ctx->depth, MesaOldFlip(ctx));
++	if(zptr == NULL || (DWORD)zptr != df.flat)
++		return;
++
++	TOPIC("DEPTHCONV", "depth fill %X/%X full %d", df.value, df.max, df.full);
++	MesaClear(ctx, D3DCLEAR_ZBUFFER, 0,
++		df.max ? (D3DVALUE)((double)df.value / (double)df.max) : 1.0f, 0,
++		df.full ? 0 : 1, df.full ? NULL : &df.rect);
++}
++
+ NUKED_LOCAL void MesaBufferTexturesChanges(mesa3d_ctx_t *ctx)
+ {
+ 	mesa3d_entry_t *entry = ctx->entry;
+ 	FBHDA_t *hda = entry->hda;
++
++	MesaApplyDepthFill(ctx);
+ 	
+ 	while(ctx->fifo_top != hda->dd_fifo_top)
+ 	{

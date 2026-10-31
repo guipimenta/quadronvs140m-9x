@@ -369,9 +369,46 @@ static int cmd_ps(const char *kill)
 	return 0;
 }
 
+/* The display driver's FBHDA (3d_accel.h, shared memory): its first fields say
+ * which VRAM page is on screen. A game that flips (DirectDraw page flipping,
+ * Direct3D) shows a page GDI does not see, so read that page itself. */
+struct fbhda_head {
+	DWORD cb, flags, version, width, height, bpp, pitch, surface, stride, onflip;
+	BYTE *vram_pm32;
+};
+#define OP_FBHDA_SETUP 0x110B
+
+static int shot_scanout(BYTE *bits, int w, int h, DWORD stride, DWORD *page)
+{
+	struct fbhda_head *hda = NULL;
+	HDC dc = GetDC(NULL);
+	int x, y, ok;
+	ok = ExtEscape(dc, OP_FBHDA_SETUP, 0, NULL, sizeof(hda), (LPSTR)&hda) > 0;
+	ReleaseDC(NULL, dc);
+	if (!ok || !hda || IsBadReadPtr(hda, sizeof(*hda)) || !hda->vram_pm32) return 0;
+	if ((int)hda->width != w || (int)hda->height != h || (hda->bpp != 16 && hda->bpp != 32)) return 0;
+	*page = hda->surface;
+	for (y = 0; y < h; y++) {
+		const BYTE *src = hda->vram_pm32 + hda->surface + (DWORD)y * hda->pitch;
+		BYTE *d = bits + (DWORD)(h - 1 - y) * stride;
+		if (hda->bpp == 32) {
+			for (x = 0; x < w; x++, src += 4, d += 3) { d[0] = src[0]; d[1] = src[1]; d[2] = src[2]; }
+		} else {
+			for (x = 0; x < w; x++, src += 2, d += 3) {
+				WORD v = (WORD)(src[0] | (src[1] << 8));
+				d[0] = (BYTE)((v & 0x1f) << 3 | (v & 0x1f) >> 2);
+				d[1] = (BYTE)((v >> 5 & 0x3f) << 2 | (v >> 5 & 0x3f) >> 4);
+				d[2] = (BYTE)((v >> 11) << 3 | (v >> 11) >> 2);
+			}
+		}
+	}
+	return 1;
+}
+
 static int cmd_shot(const char *dst)
 {
 	int w = GetSystemMetrics(SM_CXSCREEN), h = GetSystemMetrics(SM_CYSCREEN);
+	DWORD page = 0; int scan;
 	DWORD stride = ((DWORD)w * 3 + 3) & ~3u, size = stride * (DWORD)h, wr;
 	BITMAPINFO bi; BITMAPFILEHEADER fh; void *bits = NULL;
 	HDC sdc = GetDC(NULL), mdc = CreateCompatibleDC(sdc);
@@ -385,7 +422,8 @@ static int cmd_shot(const char *dst)
 	bm = CreateDIBSection(sdc, &bi, DIB_RGB_COLORS, &bits, NULL, 0);
 	if (!bm || !bits) return fail("CreateDIBSection", "");
 	old = SelectObject(mdc, bm);
-	ok = BitBlt(mdc, 0, 0, w, h, sdc, 0, 0, SRCCOPY);
+	scan = shot_scanout(bits, w, h, stride, &page);
+	ok = scan || BitBlt(mdc, 0, 0, w, h, sdc, 0, 0, SRCCOPY);
 	GdiFlush();
 	SelectObject(mdc, old);
 	DeleteDC(mdc);
@@ -402,7 +440,8 @@ static int cmd_shot(const char *dst)
 	WriteFile(f, bits, size, &wr, NULL);
 	CloseHandle(f);
 	DeleteObject(bm);
-	out("screen %dx%d saved to %s\n", w, h, dst);
+	if (scan) out("screen %dx%d (scanout page at VRAM +0x%lx) saved to %s\n", w, h, (unsigned long)page, dst);
+	else out("screen %dx%d saved to %s\n", w, h, dst);
 	return 0;
 }
 
@@ -600,6 +639,122 @@ static int cmd_text(const char *t)
 		Sleep(15);
 	}
 	out("typed text\n");
+	return 0;
+}
+
+/* Game input: games that read DirectInput (Dungeon Keeper 2, most DirectX games)
+ * never see mouse_event/keybd_event on Win9x, which reach USER only. t61input.vxd
+ * (next to this exe, loaded on open) posts the input through VMOUSE and VKD like
+ * the real devices. */
+#define T61IN_MOUSE 0x7101
+#define T61IN_KEYS  0x7102
+static HANDLE vin = INVALID_HANDLE_VALUE;
+static int vin_open(void)
+{
+	char dir[MAX_PATH], path[MAX_PATH + 32], *s;
+	if (vin != INVALID_HANDLE_VALUE) return 1;
+	GetModuleFileNameA(NULL, dir, sizeof(dir));
+	if ((s = strrchr(dir, '\\')) != NULL) *s = 0;
+	sprintf(path, "\\\\.\\%s\\T61INPUT.VXD", dir);
+	vin = CreateFileA(path, 0, 0, NULL, 0, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+	if (vin == INVALID_HANDLE_VALUE) {
+		out("cannot load %s (error %lu): put t61input.vxd next to the helper\n", path, (unsigned long)GetLastError());
+		return 0;
+	}
+	return 1;
+}
+static int vin_mouse(long dx, long dy, DWORD buttons)
+{
+	long m[3]; DWORD r;
+	m[0] = dx; m[1] = dy; m[2] = (long)buttons;
+	if (!DeviceIoControl(vin, T61IN_MOUSE, m, sizeof(m), NULL, 0, &r, NULL)) {
+		out("T61IN_MOUSE failed (error %lu)\n", (unsigned long)GetLastError());
+		return 0;
+	}
+	return 1;
+}
+static int vin_keys(const BYTE *sc, DWORD n)
+{
+	DWORD r;
+	if (!DeviceIoControl(vin, T61IN_KEYS, (LPVOID)sc, n, NULL, 0, &r, NULL)) {
+		out("T61IN_KEYS failed (error %lu)\n", (unsigned long)GetLastError());
+		return 0;
+	}
+	return 1;
+}
+
+/* move DX DY [click|right|double]: relative motion in mickeys, small steps so
+ * nothing in between accelerates it, then an optional click where it ends. */
+static int cmd_move(int dx, int dy, const char *how)
+{
+	int sx, sy, n;
+	DWORD b;
+	if (!vin_open()) return 1;
+	while (dx || dy) {
+		sx = dx > 4 ? 4 : dx < -4 ? -4 : dx;
+		sy = dy > 4 ? 4 : dy < -4 ? -4 : dy;
+		if (!vin_mouse(sx, sy, 0)) return 1;
+		dx -= sx; dy -= sy;
+		Sleep(8);
+	}
+	if (how) {
+		b = !strcmp(how, "right") ? 2 : 1;
+		n = !strcmp(how, "double") ? 2 : 1;
+		while (n--) {
+			Sleep(60);
+			if (!vin_mouse(0, 0, b)) return 1;
+			Sleep(90);
+			if (!vin_mouse(0, 0, 0)) return 1;
+		}
+	}
+	out("moved%s%s\n", how ? ", " : "", how ? how : "");
+	return 0;
+}
+
+/* Set 1 scan code of a virtual key; the cursor block, Insert/Delete and the
+ * right-hand Ctrl/Alt are E0-prefixed. */
+static int vk_scan(BYTE vk, BYTE *out2)
+{
+	BYTE sc = (BYTE)MapVirtualKeyA(vk, 0);
+	int ext = vk == VK_UP || vk == VK_DOWN || vk == VK_LEFT || vk == VK_RIGHT || vk == VK_HOME ||
+		vk == VK_END || vk == VK_PRIOR || vk == VK_NEXT || vk == VK_INSERT || vk == VK_DELETE ||
+		vk == VK_LWIN || vk == VK_RWIN || vk == VK_APPS;
+	int n = 0;
+	if (!sc) return 0;
+	if (ext) out2[n++] = 0xE0;
+	out2[n++] = sc;
+	return n;
+}
+
+/* gkey SPEC: like key (ctrl+tab, esc, f5*3), through VKD. */
+static int cmd_gkey(const char *spec)
+{
+	char tmp[64], *parts[6], *star; BYTE vks[6], buf[48], one[2]; int n = 0, i, k, len, rep = 1;
+	if (strlen(spec) >= sizeof(tmp)) return 2;
+	strcpy(tmp, spec);
+	if ((star = strchr(tmp, '*')) != NULL) { *star = 0; rep = atoi(star + 1); if (rep < 1 || rep > 100) rep = 1; }
+	parts[n++] = strtok(tmp, "+");
+	while (n < 6 && (parts[n] = strtok(NULL, "+")) != NULL) n++;
+	for (i = 0; i < n; i++) if (!parts[i] || !key_code(parts[i], &vks[i])) { out("unknown key in %s\n", spec); return 2; }
+	if (!vin_open()) return 1;
+	while (rep--) {
+		len = 0;
+		for (i = 0; i < n; i++) {
+			if (!(k = vk_scan(vks[i], one))) { out("no scan code for %s\n", parts[i]); return 2; }
+			memcpy(buf + len, one, k); len += k;
+		}
+		if (!vin_keys(buf, len)) return 1;
+		Sleep(60);
+		len = 0;
+		for (i = n - 1; i >= 0; i--) {
+			k = vk_scan(vks[i], one);
+			one[k - 1] |= 0x80;
+			memcpy(buf + len, one, k); len += k;
+		}
+		if (!vin_keys(buf, len)) return 1;
+		Sleep(60);
+	}
+	out("gkey %s\n", spec);
 	return 0;
 }
 
@@ -983,6 +1138,9 @@ int main(int argc, char **argv)
 	if (!strcmp(c, "close") && argc == 3) return cmd_focus(argv[2], 1);
 	if (!strcmp(c, "press") && argc == 4) return cmd_press(argv[2], argv[3]);
 	if (!strcmp(c, "waitwin") && argc == 4) return cmd_waitwin(argv[2], strtoul(argv[3], NULL, 10));
+	if (!strcmp(c, "move") && (argc == 4 || argc == 5)) return cmd_move(atoi(argv[2]), atoi(argv[3]), argc == 5 ? argv[4] : NULL);
+	if (!strcmp(c, "gclick") && (argc == 2 || argc == 3)) return cmd_move(0, 0, argc == 3 ? argv[2] : "click");
+	if (!strcmp(c, "gkey") && argc >= 3) { int i, r = 0; for (i = 2; i < argc && !r; i++) r = cmd_gkey(argv[i]); return r; }
 	if (!strcmp(c, "click") && (argc == 4 || argc == 5)) return cmd_click(atoi(argv[2]), atoi(argv[3]), argc == 5 ? argv[4] : NULL);
 	if (!strcmp(c, "key") && argc >= 3) { int i, r = 0; for (i = 2; i < argc && !r; i++) r = cmd_key(argv[i]); return r; }
 	if (!strcmp(c, "text") && argc == 3) return cmd_text(argv[2]);

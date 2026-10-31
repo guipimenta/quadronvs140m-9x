@@ -1,0 +1,29 @@
+vmhal9x (JHRobotics/vmhal9x 8bc480e) CreateOneSurface gave flip-chain surfaces the screen's
+pitch only on VESA drivers (FB_VESA_MODES); otherwise the back buffer got the computed pitch
+(800x600x16 = 1600) while the primary has the driver's (NV50: 1792). With unequal pitches
+Flip32 copied the back buffer line by line instead of flipping, and the HAL registered the
+back buffer with the screen's size, overlapping the next surfaces (FBHDA_DD_surface_get FAIL).
+Found 2026-10-31 with Dungeon Keeper 2 at 800x600.
+
+--- a/ddraw.c
++++ b/ddraw.c
+@@ -258,12 +258,14 @@
+ 		DWORD s;
+ 		if(is_primary)
+ 		{
+-			if((hda->flags & FB_VESA_MODES) != 0)
++			/* Flip-chain surfaces must have the screen's pitch, not only on VESA:
++			 * the driver may pad scanout rows (NV50: 256-byte multiple, 800x600x16 =
++			 * 1792 not 1600). With the computed pitch the back buffer could not be
++			 * flipped to (copied with the wrong pitch instead) and was registered
++			 * with the screen's size, overlapping the next surfaces. */
++			if(hda->width == lpSurf->lpGbl->wWidth)
+ 			{
+-				if(hda->width == lpSurf->lpGbl->wWidth)
+-				{
+-					lpSurf->lpGbl->lPitch = hda->pitch;
+-				}
++				lpSurf->lpGbl->lPitch = hda->pitch;
+ 			}
+ 		}
+ 
