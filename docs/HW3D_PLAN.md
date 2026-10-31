@@ -1380,9 +1380,19 @@ C:\nvkick.txt, C:\nvclk.txt.
        call, when every vertex drawn has the same diffuse+specular (or none), D3D flat ==
        smooth, so GL_SMOOTH is used; varying colours keep GL_FLAT. T61: c1a0 clean, white
        pixels per frame 22,407 (3118) -> 8, turned views clean.
-  - OPEN: GL_FLAT with clipped triangles is still wrong on the G86 for OpenGL programs and
-    for Direct3D draws with varying vertex colours (nouveau nv50 relies on the hardware
-    shade model) - a nouveau-level fix (or NVIDIA's way) is still to be found.
+  - GL_FLAT for OpenGL and for D3D draws with varying colours -> FIXED in 3120 (nouveau):
+    tlvtest `glsl N` on the T61: a GLSL `flat` varying is right through clipping (1 px vs
+    llvmpipe), gl_Color under GL_FLAT (hardware SHADE_MODEL) is not (229,198 px). nv50 now
+    reports caps->flatshade = false (#ifdef WIN9X, nv50_screen.c): the frontend lowers
+    GL_FLAT with nir_lower_flatshade, the hardware shades smooth (as nv50 already does for
+    the alpha test). That exposed a latent nv50 bug: nv50_fragprog_assign_slots puts flat
+    inputs last but SEMANTIC_COLOR FFC0_ID assumed colour 0 is the first FP input, so the
+    fixed-function colour clamp (CLMP_EN) clamped the texture coordinates (streaks);
+    nv50_fp_linkage_validate now points FFC0_ID at colour 0's real result-map slot. T61:
+    flat textured == 3118 smooth (0 px, constant colours), smooth unchanged (0 px),
+    3-colour flat == llvmpipe; the user checked the games. Both hunks are in
+    driver/mesa9x-bin/nouveau-build-win9x.patch. The vmhal3d flat->smooth shortcut (3119)
+    stays (identical picture, saves the shader variant).
   - Also found on the way (upstream vmhal9x, not shipped): MesaBufferTexturesChanges reads
     the FBHDA dd_fifo item BEFORE advancing (re-reads the item it saw, leaves the newest
     one unprocessed until the next arrives) and marks `tmu[i]` (the hash-lookup counter)

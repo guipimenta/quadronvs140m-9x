@@ -1,5 +1,5 @@
 =====================================================================
-HOW TO USE (build 3119): install the driver, play the game
+HOW TO USE (build 3120): install the driver, play the game
 =====================================================================
 New machine: Display > Settings > Advanced > Adapter > Change > Have Disk > vmdisp9x.inf,
 pick the NVS 140M entry, reboot. The INF sets everything: every OpenGL program and (3116)
@@ -130,6 +130,19 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3120 - FLAT SHADING RIGHT IN OPENGL TOO. mesa3d.dll only: copy it to
+C:\WINDOWS\SYSTEM, no reboot (nvmini.vxd / nvmini.drv / nvprobe.exe restamped; vmhal3d.dll
+stays 3119). Checked by the user on the T61 in the games.
+What was wrong: the problem 3119 worked around for Half-Life's Direct3D (the G86's own flat
+shading paints triangles cut at the screen edge with a garbage colour) also hit OpenGL
+programs that use flat shading, and Direct3D draws whose vertices have different colours.
+The GPU driver no longer uses the hardware's flat shading: Mesa turns "flat" into flat
+colour inputs of the pixel shader, which the G86 handles correctly (the same way the
+driver already handles the alpha test). Making that work needed one more nouveau fix: the
+hardware was told the colour sits in the first shader input, but flat inputs come last,
+so its colour clamping hit the texture coordinates (stretched, streaky textures).
+Found with tlvtest.exe on the T61: GLSL "flat" colours right, hardware flat shading wrong;
+after the fix flat-shaded textured triangles are identical to smooth ones (same colours).
 Build 3119 - HALF-LIFE DIRECT3D: NO MORE WHITE CORNER WEDGES. vmhal3d.dll only: copy it
 to C:\WINDOWS\SYSTEM and reboot (Windows keeps it loaded, so the copy has to happen while
 it is not in use; nvmini.vxd / nvmini.drv / nvprobe.exe restamped, mesa3d.dll stays 3118).

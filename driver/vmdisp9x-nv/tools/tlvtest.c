@@ -32,6 +32,9 @@
  *           bytes) instead of the checker, GL_NEAREST_MIPMAP_NEAREST when it has levels > 0
  *   flatshade 1  glShadeModel(GL_FLAT) (D3DSHADE_FLAT, as Half-Life draws)
  *   pvfirst 1  glProvokingVertex(GL_FIRST_VERTEX_CONVENTION) (Direct3D's flat-shading vertex)
+ *   glsl N  draw with a GLSL 1.30 program instead of fixed function: 1 = colour in a user
+ *           `flat` varying, 2 = gl_FrontColor -> gl_Color (follows glShadeModel), 3 = colour
+ *           in a user `smooth` varying (no texture in any of them)
  *   count N draw only the first N records
  *   flush N glFlush after every N-th draw (nouveau kicks, like upstream nv50 does per draw)
  *
@@ -133,6 +136,16 @@ static struct
 	void (__stdcall *ReadPixels)(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, void *);
 	void (__stdcall *Finish)(void);
 	void (__stdcall *Flush)(void);
+	GLuint (__stdcall *CreateShader)(GLenum);
+	void (__stdcall *ShaderSource)(GLuint, GLsizei, const char *const *, const GLint *);
+	void (__stdcall *CompileShader)(GLuint);
+	GLuint (__stdcall *CreateProgram)(void);
+	void (__stdcall *AttachShader)(GLuint, GLuint);
+	void (__stdcall *LinkProgram)(GLuint);
+	void (__stdcall *UseProgram)(GLuint);
+	void (__stdcall *GetShaderiv)(GLuint, GLenum, GLint *);
+	void (__stdcall *GetProgramiv)(GLuint, GLenum, GLint *);
+	void (__stdcall *GetShaderInfoLog)(GLuint, GLsizei, GLsizei *, char *);
 	void (__stdcall *ShadeModel)(GLenum);
 	void (__stdcall *ProvokingVertex)(GLenum);
 	void (__stdcall *GenTextures)(GLsizei, GLuint *);
@@ -202,7 +215,7 @@ int main(int argc, char **argv)
 {
 	const char *in = argc > 1 ? argv[1] : "-", *out = argc > 2 ? argv[2] : "tlvtest.ppm";
 	const char *dll = "mesa3d.dll";
-	int i, W = 640, H = 480, fan = 0, fbo = 0, tex = 0, flush = 0, draws = 0, count = 0, mip = 0, flatshade = 0, pvfirst = 0;
+	int i, W = 640, H = 480, fan = 0, fbo = 0, tex = 0, flush = 0, draws = 0, count = 0, mip = 0, flatshade = 0, pvfirst = 0, glsl = 0;
 	const char *texfile = NULL;
 	for(i = 3; i + 1 < argc; i += 2)
 	{
@@ -218,6 +231,7 @@ int main(int argc, char **argv)
 		else if(!strcmp(argv[i], "texfile")) { texfile = argv[i + 1]; tex = 1; }
 		else if(!strcmp(argv[i], "flatshade")) flatshade = atoi(argv[i + 1]);
 		else if(!strcmp(argv[i], "pvfirst")) pvfirst = atoi(argv[i + 1]);
+		else if(!strcmp(argv[i], "glsl")) glsl = atoi(argv[i + 1]);
 	}
 
 	tri_t *t = builtin; long n = sizeof(builtin) / sizeof(builtin[0]);
@@ -250,6 +264,8 @@ int main(int argc, char **argv)
 	LOAD(ClearColor); LOAD(ClearDepth); LOAD(MatrixMode); LOAD(LoadIdentity); LOAD(Begin); LOAD(End);
 	LOAD(Vertex4fv); LOAD(Color4fv); LOAD(Normal3f); LOAD(MultiTexCoord4f); LOAD(DepthFunc);
 	LOAD(DepthMask); LOAD(CullFace); LOAD(FrontFace); LOAD(ReadPixels); LOAD(Finish);
+	LOAD(CreateShader); LOAD(ShaderSource); LOAD(CompileShader); LOAD(CreateProgram); LOAD(AttachShader);
+	LOAD(LinkProgram); LOAD(UseProgram); LOAD(GetShaderiv); LOAD(GetProgramiv); LOAD(GetShaderInfoLog);
 	LOAD(Flush); LOAD(ShadeModel); LOAD(ProvokingVertex); LOAD(GenTextures); LOAD(BindTexture); LOAD(TexImage2D); LOAD(TexParameteri); LOAD(TexEnvi);
 	LOAD(ActiveTexture); LOAD(GenFramebuffers); LOAD(BindFramebuffer); LOAD(FramebufferTexture2D);
 	LOAD(CheckFramebufferStatus);
@@ -318,6 +334,29 @@ int main(int argc, char **argv)
 
 	if(flatshade) gl.ShadeModel(0x1D00 /* GL_FLAT */);
 	if(pvfirst) gl.ProvokingVertex(0x8E4D /* GL_FIRST_VERTEX_CONVENTION */);
+	if(glsl)
+	{
+		static const char *vs[3] = {
+			"#version 130\nflat out vec4 c;\nvoid main(){ gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex; c = gl_Color; }\n",
+			"#version 130\nvoid main(){ gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex; gl_FrontColor = gl_Color; }\n",
+			"#version 130\nsmooth out vec4 c;\nvoid main(){ gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex; c = gl_Color; }\n" };
+		static const char *fs[3] = {
+			"#version 130\nflat in vec4 c;\nvoid main(){ gl_FragColor = c; }\n",
+			"#version 130\nvoid main(){ gl_FragColor = gl_Color; }\n",
+			"#version 130\nsmooth in vec4 c;\nvoid main(){ gl_FragColor = c; }\n" };
+		GLuint v = gl.CreateShader(0x8B31 /* GL_VERTEX_SHADER */), f = gl.CreateShader(0x8B30 /* GL_FRAGMENT_SHADER */), pr;
+		GLint ok = 0; char logbuf[512];
+		int k = (glsl >= 1 && glsl <= 3) ? glsl - 1 : 0;
+		gl.ShaderSource(v, 1, &vs[k], NULL); gl.CompileShader(v);
+		gl.GetShaderiv(v, 0x8B81 /* GL_COMPILE_STATUS */, &ok); if(!ok) { gl.GetShaderInfoLog(v, sizeof(logbuf), NULL, logbuf); printf("VS: %s\n", logbuf); return 2; }
+		gl.ShaderSource(f, 1, &fs[k], NULL); gl.CompileShader(f);
+		gl.GetShaderiv(f, 0x8B81, &ok); if(!ok) { gl.GetShaderInfoLog(f, sizeof(logbuf), NULL, logbuf); printf("FS: %s\n", logbuf); return 2; }
+		pr = gl.CreateProgram(); gl.AttachShader(pr, v); gl.AttachShader(pr, f); gl.LinkProgram(pr);
+		gl.GetProgramiv(pr, 0x8B82 /* GL_LINK_STATUS */, &ok); if(!ok) { printf("link failed\n"); return 2; }
+		gl.UseProgram(pr);
+		gl.Disable(GL_TEXTURE_2D);
+		printf("glsl program %d in use\n", glsl);
+	}
 	gl.Viewport(0, 0, W, H);
 	gl.FrontFace(GL_CCW);
 	gl.ClearColor(0, 0, 0, 1); gl.ClearDepth(1.0);

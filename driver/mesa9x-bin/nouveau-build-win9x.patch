@@ -2000,6 +2000,74 @@ index a41df157..53ef5e57 100644
     if (pipe->stream_uploader)
        u_upload_destroy(pipe->stream_uploader);
     if (nv50->bufctx_3d)
+diff --git a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_screen.c b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_screen.c
+index cb8b7ecc..42825a5e 100644
+--- a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_screen.c
++++ b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_screen.c
+@@ -286,6 +286,19 @@ nv50_init_screen_caps(struct nv50_screen *screen)
+     */
+    caps->alpha_test = class_3d >= NVC0_3D_CLASS;
+ 
++#ifdef WIN9X
++   /* nvidia_reverse build 3120: the G86's hardware flat shading (SHADE_MODEL_FLAT)
++    * gives a polygon the clipper has cut a garbage colour (white, or a gradient
++    * on a constant-colour triangle) whenever its provoking vertex lies outside the
++    * viewport, while flat fragment-shader inputs come through clipping right
++    * (tools/tlvtest.c: glShadeModel(GL_FLAT) vs a GLSL `flat` varying on the T61).
++    * Without the cap the frontend lowers glShadeModel(GL_FLAT) to flat colour
++    * inputs (nir_lower_flatshade) and the hardware shades smooth, as it already
++    * does for the alpha test above.
++    */
++   caps->flatshade = false;
++#endif
++
+    caps->texture_transfer_modes = PIPE_TEXTURE_TRANSFER_BLIT;
+    caps->seamless_cube_map = true; /* class_3d >= NVA0_3D_CLASS; */
+    /* supported on nva0+ */
+diff --git a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_shader_state.c b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_shader_state.c
+index be9f2520..26637906 100644
+--- a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_shader_state.c
++++ b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_shader_state.c
+@@ -436,6 +436,9 @@ nv50_fp_linkage_validate(struct nv50_context *nv50)
+    uint32_t psiz = 0x000;
+    uint32_t interp = fp->fp.interp;
+    uint32_t colors = fp->fp.colors;
++#ifdef WIN9X
++   int ffc0 = -1;
++#endif
+    uint32_t clpd_nr = util_last_bit(vp->vp.clip_enable | vp->vp.cull_enable);
+    uint32_t lin[4];
+    uint8_t map[64];
+@@ -484,6 +487,10 @@ nv50_fp_linkage_validate(struct nv50_context *nv50)
+    interp |= m << 8; /* set map id where 'normal' FP inputs start */
+ 
+    for (i = 0; i < fp->in_nr; ++i) {
++#ifdef WIN9X
++      if (i == fp->vp.bfc[0])
++         ffc0 = m; /* where front colour 0 really lands in the result map */
++#endif
+       for (n = 0; n < vp->out_nr; ++n)
+          if (vp->out[n].sn == fp->in[i].sn &&
+              vp->out[n].si == fp->in[i].si)
+@@ -518,6 +525,18 @@ nv50_fp_linkage_validate(struct nv50_context *nv50)
+       map[m++] = vp->vp.psiz;
+    }
+ 
++#ifdef WIN9X
++   /* nvidia_reverse build 3120: FFC0_ID above assumes colour 0 is the first FP
++    * input, but nv50_fragprog_assign_slots puts flat inputs after all others, so a
++    * flat colour (glShadeModel(GL_FLAT) lowered to flat inputs, see the flatshade
++    * cap in nv50_screen.c) sits at the end - and SEMANTIC_COLOR (colour clamping)
++    * was applied to whatever came first, the texture coordinates. Point FFC0_ID at
++    * the colour's real slot. */
++   if (ffc0 >= 0)
++      colors = (colors & ~NV50_3D_SEMANTIC_COLOR_FFC0_ID__MASK) |
++               (ffc0 << NV50_3D_SEMANTIC_COLOR_FFC0_ID__SHIFT);
++#endif
++
+    if (nv50->rast->pipe.clamp_vertex_color)
+       colors |= NV50_3D_SEMANTIC_COLOR_CLMP_EN;
+ 
 diff --git a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_vbo.c b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_vbo.c
 index 0a8230dd..1e6f36ca 100644
 --- a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_vbo.c
