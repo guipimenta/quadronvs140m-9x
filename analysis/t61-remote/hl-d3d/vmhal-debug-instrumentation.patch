@@ -220,7 +220,22 @@
  
  	if(have_depth && ctx->state.depth.enabled)
  	{
-@@ -2343,6 +2347,24 @@
+@@ -1860,8 +1864,13 @@
+ 				switch((D3DSHADEMODE)state->dwState)
+ 				{
+ 	        case D3DSHADE_FLAT:
+-						GL_CHECK(entry->proc.pglShadeModel(GL_FLAT));
++					{
++						/* T61 investigation: C:\\vmhal.smooth -> D3D flat drawn with GL smooth shading */
++						static DWORD sm_last = 0; static BOOL sm_on = FALSE;
++						if(GetTickCount() - sm_last > 500) { sm_on = GetFileAttributesA("C:\\vmhal.smooth") != INVALID_FILE_ATTRIBUTES; sm_last = GetTickCount(); }
++						GL_CHECK(entry->proc.pglShadeModel(sm_on ? GL_SMOOTH : GL_FLAT));
+ 						break;
++					}
+ 					case D3DSHADE_GOURAUD:
+ 					/* Note from WINE: D3DSHADE_PHONG in practice is the same as D3DSHADE_GOURAUD in D3D */
+ 					case D3DSHADE_PHONG:
+@@ -2343,6 +2352,24 @@
  					switch(state->dwState)
  					{
  						case 0: /* just before flip (end scene) */
@@ -325,7 +340,49 @@
  		SV_UNPROJECT(tmp4, fv[0], fv[1], fv[2], fv[3]);
  		entry->proc.pglVertex4fv(&tmp4[0]);
  	}
-@@ -724,6 +747,24 @@
+@@ -644,6 +667,41 @@
+ 	int i;
+ 	GLfloat tmp4[4];
+ 
++	{
++		/* T61 investigation: C:\\vmhal.vbdump -> log what reaches GL for the off-screen fan vertices
++		   (|x| > 1000) and for vertices near (461,19) (a list triangle with the same texture) */
++		static DWORD vd_last = 0; static BOOL vd_on = FALSE; static int vd_far = 0, vd_near = 0;
++		if(GetTickCount() - vd_last > 500) { vd_on = GetFileAttributesA("C:\\vmhal.vbdump") != INVALID_FILE_ATTRIBUTES; vd_last = GetTickCount(); }
++		if(vd_on && ctx->state.vertex.xyzrhw)
++		{
++			GLfloat *pv = ((GLfloat*)(buf + index*stride8)) + ctx->state.vertex.pos.xyzw;
++			BOOL far_v = (pv[0] > 1000.0f || pv[0] < -1000.0f) && vd_far < 24;
++			BOOL near_v = (pv[0] > 455.0f && pv[0] < 467.0f && pv[1] > 14.0f && pv[1] < 24.0f) && vd_near < 12;
++			if(far_v || near_v)
++			{
++				FILE *vf = fopen("C:\\vmhal.vb.txt", "a");
++				if(far_v) vd_far++; else vd_near++;
++				if(vf)
++				{
++					int ci = ctx->state.tmu[0].coordindex;
++					GLfloat *tv = ((GLfloat*)(buf + stride8*index)) + ctx->state.vertex.pos.texcoords[ci];
++					GLint b2d = -1, en = -1;
++					entry->proc.pglGetIntegerv(0x8069 /* GL_TEXTURE_BINDING_2D */, &b2d);
++					entry->proc.pglGetIntegerv(GL_TEXTURE_2D, &en);
++					fprintf(vf, "%s idx %d xyzw %.3f %.3f %.6f %.6f | tmu0 active %d dxid %d ci %d type %d pos %d calc %d proj %d | tex %.4f %.4f | stride %lu | gltex %d en %d addr %d %d wrap %lX cop %lX a1 %lX a2 %lX aop %lX min %d mag %d mip %d\n",
++						far_v ? "FAR " : "NEAR", index, pv[0], pv[1], pv[2], pv[3],
++						ctx->state.tmu[0].active, ctx->state.tmu[0].active_dxid, ci, (int)ctx->state.vertex.type.texcoords[ci],
++						(int)ctx->state.vertex.pos.texcoords[ci], ctx->state.tmu[0].coordscalc_used, ctx->state.tmu[0].projected,
++						tv[0], tv[1], (unsigned long)stride8, b2d, en,
++						(int)ctx->state.tmu[0].texaddr_u, (int)ctx->state.tmu[0].texaddr_v, (unsigned long)ctx->state.tmu[0].wrap,
++						(unsigned long)ctx->state.tmu[0].color_op, (unsigned long)ctx->state.tmu[0].color_arg1, (unsigned long)ctx->state.tmu[0].color_arg2,
++						(unsigned long)ctx->state.tmu[0].alpha_op, (int)ctx->state.tmu[0].dx_min, (int)ctx->state.tmu[0].dx_mag, (int)ctx->state.tmu[0].dx_mip);
++					fclose(vf);
++				}
++			}
++		}
++	}
++
+ 	for(i = 0; i < ctx->tmu_count; i++)
+ 	{
+ 		if(ctx->state.tmu[i].active_dxid)
+@@ -724,6 +782,24 @@
  		GLfloat *fv = ((GLfloat*)(buf + index*stride8))+ctx->state.vertex.pos.xyzw;
  		entry->proc.pglNormal3f(0.0, 0.0, 1.0);
  
@@ -352,10 +409,133 @@
  		entry->proc.pglVertex4fv(&tmp4[0]);
 --- a/mesa3d_draw6.c
 +++ b/mesa3d_draw6.c
-@@ -942,6 +942,85 @@
+@@ -941,7 +941,207 @@
+ 
  					RENDER_BEGIN(fvf);
  	    		//MesaDrawFVFs(ctx, GL_TRIANGLE_FAN, prim, 0, count);
- 	    		MesaVertexDrawBlock(ctx, GL_TRIANGLE_FAN, prim, 0, count, ctx->state.vertex.stride);
+-	    		MesaVertexDrawBlock(ctx, GL_TRIANGLE_FAN, prim, 0, count, ctx->state.vertex.stride);
++					{
++						/* C:\\vmhal.noblend -> skip blended (lightmap pass) fans */
++						static DWORD nb_last = 0; static BOOL nb_on = FALSE; GLint blend_on = 0;
++						if(GetTickCount() - nb_last > 500) { nb_on = GetFileAttributesA("C:\\vmhal.noblend") != INVALID_FILE_ATTRIBUTES; nb_last = GetTickCount(); }
++						if(nb_on) entry->proc.pglGetIntegerv(GL_BLEND, &blend_on);
++						{
++							/* C:\\vmhal.texdump -> at the first fan with a vertex beyond |x| 1000, write the bound
++							   unit-0 texture's whole mip chain to C:\\vmhal.tex.bin: per level 12 dwords
++							   (magic 'TEXL', level, w, h, internalformat, format, type, bpp, need_convert,
++							   colorkey, palette, bytes) then the bytes as the HAL hands them to glTexImage2D */
++							static DWORD td_last = 0; static BOOL td_on = FALSE, td_done = FALSE;
++							if(GetTickCount() - td_last > 500) { td_on = GetFileAttributesA("C:\\vmhal.texdump") != INVALID_FILE_ATTRIBUTES; td_last = GetTickCount(); }
++							if(td_on && !td_done && ctx->state.tmu[0].active_dxid)
++							{
++								DWORD k; BOOL far_fan = FALSE;
++								for(k = 0; k < count; k++) { GLfloat x = ((GLfloat*)(prim + k*ctx->state.vertex.stride))[0]; if(x > 1000.0f || x < -1000.0f) far_fan = TRUE; }
++								if(far_fan)
++								{
++									surfaceex_t *tse = surfex_get(ctx, ctx->state.tmu[0].active_dxid, TRUE, TRUE);
++									FILE *tf = fopen("C:\\vmhal.tex.bin", "wb");
++									td_done = TRUE;
++									if(tse && tf)
++									{
++										ddsurface_t *tdd;
++										for(tdd = tse->dd; tdd != NULL; tdd = tdd->down)
++										{
++											gldata_t gi; int lvl = 0; DWORD hdr[12];
++											memset(&gi, 0, sizeof(gi));
++											if(!ddsurf_glinfo(tdd, &gi, tdd->level & DDSURFACE_LEVEL_MASK, &lvl)) continue;
++											hdr[0] = 0x4C584554; hdr[1] = lvl; hdr[2] = gi.width; hdr[3] = gi.height; hdr[4] = gi.internalformat;
++											hdr[5] = gi.format; hdr[6] = gi.type; hdr[7] = gi.bpp; hdr[8] = gi.need_convert; hdr[9] = gi.colorkey;
++											hdr[10] = gi.palette; hdr[11] = (DWORD)gi.width * gi.height * ((gi.bpp + 7) / 8);
++											fwrite(hdr, sizeof(hdr), 1, tf);
++											fwrite(tdd->flatptr, hdr[11], 1, tf);
++										}
++									}
++									if(tf) fclose(tf);
++									if(tse && tse->tex && tse->tex->gltex && tse->gl)
++									{
++										/* and what OpenGL really holds: read texture level 0 back through a scratch FBO */
++										GLint oldfb = 0; GLuint sfb = 0; GLint w = tse->gl->width, h = tse->gl->height;
++										BYTE *px = (BYTE*)HeapAlloc(GetProcessHeap(), 0, (SIZE_T)w * h * 4 + 64);
++										FILE *gf = fopen("C:\\vmhal.gltex.bin", "wb");
++										entry->proc.pglGetIntegerv(0x8CA6 /* GL_FRAMEBUFFER_BINDING */, &oldfb);
++										entry->proc.pglGenFramebuffers(1, &sfb);
++										entry->proc.pglBindFramebuffer(GL_FRAMEBUFFER, sfb);
++										entry->proc.pglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tse->tex->gltex, 0);
++										if(px && gf)
++										{
++											DWORD hh[4];
++											hh[0] = entry->proc.pglCheckFramebufferStatus(GL_FRAMEBUFFER); hh[1] = w; hh[2] = h; hh[3] = tse->tex->gltex;
++											entry->proc.pglReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, px);
++											fwrite(hh, sizeof(hh), 1, gf);
++											fwrite(px, (size_t)w * h * 4, 1, gf);
++										}
++										if(gf) fclose(gf);
++										if(px) HeapFree(GetProcessHeap(), 0, px);
++										entry->proc.pglBindFramebuffer(GL_FRAMEBUFFER, oldfb);
++										entry->proc.pglDeleteFramebuffers(1, &sfb);
++									}
++								}
++							}
++						}
++						/* C:\\vmhal.lod0 -> fans sample mip level 0 only (LOD bias -16 on unit 0) */
++						static DWORD l0_last = 0; static BOOL l0_on = FALSE;
++						if(GetTickCount() - l0_last > 500) { l0_on = GetFileAttributesA("C:\\vmhal.lod0") != INVALID_FILE_ATTRIBUTES; l0_last = GetTickCount(); }
++						if(l0_on) { entry->proc.pglActiveTexture(GL_TEXTURE0); entry->proc.pglTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, -16.0f); }
++						if(!blend_on)
++							MesaVertexDrawBlock(ctx, GL_TRIANGLE_FAN, prim, 0, count, ctx->state.vertex.stride);
++						if(l0_on) { entry->proc.pglActiveTexture(GL_TEXTURE0); entry->proc.pglTexEnvf(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, (GLfloat)ctx->state.tmu[0].miplodbias); }
++						{
++							/* C:\\vmhal.texnc / texnd / texna -> draw the fan AGAIN through the HAL's own path
++							   with culling / the depth test / the alpha test disabled (one each) */
++							static DWORD tx_last = 0; static int tx_mode = 0;
++							if(GetTickCount() - tx_last > 500)
++							{
++								tx_last = GetTickCount();
++								tx_mode = GetFileAttributesA("C:\\vmhal.texnc") != INVALID_FILE_ATTRIBUTES ? 1 :
++								          GetFileAttributesA("C:\\vmhal.texnd") != INVALID_FILE_ATTRIBUTES ? 2 :
++								          GetFileAttributesA("C:\\vmhal.texna") != INVALID_FILE_ATTRIBUTES ? 3 : 0;
++							}
++							if(tx_mode && !blend_on)
++							{
++								static const GLenum cap[4] = {0, GL_CULL_FACE, GL_DEPTH_TEST, GL_ALPHA_TEST};
++								GLint was = 0;
++								entry->proc.pglGetIntegerv(cap[tx_mode], &was);
++								entry->proc.pglDisable(cap[tx_mode]);
++								MesaVertexDrawBlock(ctx, GL_TRIANGLE_FAN, prim, 0, count, ctx->state.vertex.stride);
++								if(was) entry->proc.pglEnable(cap[tx_mode]);
++							}
++						}
++					}
++					{
++						/* C:\\vmhal.uvfan -> overdraw non-blended fans with colour = (frac u, frac v, 0) */
++						static DWORD uv_last = 0; static BOOL uv_on = FALSE; GLint bl = 0;
++						if(GetTickCount() - uv_last > 500) { uv_on = GetFileAttributesA("C:\\vmhal.uvfan") != INVALID_FILE_ATTRIBUTES; uv_last = GetTickCount(); }
++						if(uv_on) entry->proc.pglGetIntegerv(GL_BLEND, &bl);
++						if(uv_on && !bl)
++						{
++							static const GLenum caps[5] = {GL_TEXTURE_2D, GL_ALPHA_TEST, GL_DEPTH_TEST, GL_CULL_FACE, GL_FOG};
++							GLint was[5]; DWORD k;
++							entry->proc.pglActiveTexture(GL_TEXTURE0);
++							for(k = 0; k < 5; k++) { entry->proc.pglGetIntegerv(caps[k], &was[k]); entry->proc.pglDisable(caps[k]); }
++							entry->proc.pglShadeModel(GL_SMOOTH);
++							entry->proc.pglBegin(GL_TRIANGLE_FAN);
++							for(k = 0; k < count; k++)
++							{
++								GLfloat *fv = (GLfloat*)(prim + k*ctx->state.vertex.stride), o[4];
++								GLfloat u = fv[5] - (GLfloat)(int)fv[5], v = fv[6] - (GLfloat)(int)fv[6];
++								if(u < 0) u += 1.0f; if(v < 0) v += 1.0f;
++								o[3] = 1.0f/fv[3];
++								o[0] = (((fv[0] - ctx->matrix.vpnorm[0]) * ctx->matrix.vpnorm[2]) - 1.0f)*o[3];
++								o[1] = (((fv[1] - ctx->matrix.vpnorm[1]) * ctx->matrix.vpnorm[3]) - 1.0f)*o[3];
++								o[2] = (fv[2]*ctx->matrix.zscale)*o[3];
++								entry->proc.pglColor4f(u, v, 0.0f, 1.0f);
++								entry->proc.pglVertex4fv(o);
++							}
++							entry->proc.pglEnd();
++							for(k = 0; k < 5; k++) if(was[k]) entry->proc.pglEnable(caps[k]);
++							MesaDrawRefreshState(ctx);
++						}
++					}
 +					{
 +						/* T61 investigation: C:\vmhal.redfan -> overdraw every fan in solid red,
 +						   no texture/blend/alpha/depth/cull, to see where the fans land */
@@ -438,7 +618,7 @@
  
  					prim += ctx->state.vertex.stride * count;
  					//PRIM_ALIGN;
-@@ -1143,6 +1222,7 @@
+@@ -1143,6 +1343,7 @@
  #ifdef TRACE_ON
  						D3DHAL_DP2ZRANGE *zrange = (D3DHAL_DP2ZRANGE*)prim;
  						TOPIC("DEPTH", "D3DDP2OP_ZRANGE = %f %f", zrange->dvMinZ, zrange->dvMaxZ);

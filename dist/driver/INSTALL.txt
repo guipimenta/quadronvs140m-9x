@@ -1,5 +1,5 @@
 =====================================================================
-HOW TO USE (build 3118): install the driver, play the game
+HOW TO USE (build 3119): install the driver, play the game
 =====================================================================
 New machine: Display > Settings > Advanced > Adapter > Change > Have Disk > vmdisp9x.inf,
 pick the NVS 140M entry, reboot. The INF sets everything: every OpenGL program and (3116)
@@ -9,6 +9,8 @@ Fortune left it). Then double-click the game on the desktop.
 
 Updating a machine that already runs 3110 or later: copy from this folder
     mesa3d.dll   -> C:\WINDOWS\SYSTEM   (overwrite)
+    vmhal3d.dll  -> C:\WINDOWS\SYSTEM   (overwrite; in use while Windows runs: copy it in
+                                         safe mode or let WININIT.INI do it, then reboot)
     nvmini.vxd   -> C:\WINDOWS\SYSTEM   (overwrite; reboot only when the notes below say so)
     everything else -> C:\NVMINI          (test tools; only needed when I ask for a log)
 and double-click d3dsetup.reg once (it carries the same compatibility list as the INF).
@@ -128,6 +130,22 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3119 - HALF-LIFE DIRECT3D: NO MORE WHITE CORNER WEDGES. vmhal3d.dll only: copy it
+to C:\WINDOWS\SYSTEM and reboot (Windows keeps it loaded, so the copy has to happen while
+it is not in use; nvmini.vxd / nvmini.drv / nvprobe.exe restamped, mesa3d.dll stays 3118).
+What was wrong: Half-Life's Direct3D renderer draws everything "flat shaded" (one colour
+per triangle) with white vertex colours. The G86 gives a flat-shaded triangle that it has
+to cut at the screen edge a garbage colour - the walls right next to the camera came out
+as pure white wedges. When every vertex of a draw has the same colour, flat and smooth
+shading give exactly the same picture, so vmhal3d.dll now draws those with smooth
+shading; draws whose vertices really differ in colour are untouched. Found with the T61
+remote tools and tlvtest.exe (Half-Life's real texture and triangles, flat shading on the
+GPU: white; smooth: right; software: right).
+Also: an upstream vmhal3d.dll bug that could show a texture's previous contents for a
+moment after a game replaced it (the change notice was read one step late).
+vmhal3d.dll is now built from the upstream source plus the two patches in the driver
+source (driver/vmhal9x-bin/*.patch).
+T61 test: Half-Life -d3d, look around in the tram; Half-Life in OpenGL as usual.
 Build 3118 - HALF-LIFE IN DIRECT3D DRAWS RIGHT. mesa3d.dll only: copy it to
 C:\WINDOWS\SYSTEM, no reboot (nvmini.vxd / nvmini.drv / nvprobe.exe restamped, copying
 them is optional). Also affects OpenGL games: please check Half-Life in OpenGL too.

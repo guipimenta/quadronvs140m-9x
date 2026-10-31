@@ -1359,10 +1359,30 @@ C:\nvkick.txt, C:\nvclk.txt.
     dwords / ~6.9 ms submit; the shim's validate grew 808 -> 1,210 kcycles (+0.2 ms); the
     rest (~2.5 ms) is Mesa/nouveau CPU work now that buffers are fenced (bufctx list walks,
     fence refs, fresh storage instead of reuse) - NEXT: profile and win it back.
-  - Still open: white wedges in the screen corners = single triangles of the near-plane
-    fans (e.g. #113/#59 of the capture, the base texture shared with list triangles that
-    draw fine). tlvtest with a mip chain shows no LOD/clipping problem in GL for them, so it
-    is Half-Life's texture/state on those polygons - next step.
+  - White wedges in the screen corners (single near-plane fan triangles) -> FIXED in 3119:
+    1. Debug-HAL switches on the T61 (patch analysis/t61-remote/hl-d3d/): red overdraw and
+       texcoord-as-colour overdraw cover the wedges correctly; skipping the lightmap pass,
+       forcing mip level 0 (LOD bias -16), disabling cull/depth/alpha test for a second
+       textured draw: still white. GL inputs per vertex (C:\vmhal.vbdump) identical in kind
+       to triangles that draw fine; the texture's surface and its GL copy (FBO readback,
+       C:\vmhal.texdump) are a correct wall panel at every mip level.
+    2. tlvtest with that real texture (texfile) reproduces it on the GPU only with
+       `flatshade 1` (glShadeModel(GL_FLAT); Half-Life sets D3DSHADE_FLAT); smooth = clean;
+       llvmpipe = clean; texture format/mips/attributes irrelevant; no texture at all still
+       white plus gradients on constant-colour triangles. The triangles affected have their
+       provoking vertex outside the viewport (clipped): the G86 gives a flat-shaded clipped
+       polygon a garbage colour. glProvokingVertex(first) moves the damage, all five
+       PGRAPH context variants (incl. XP's) identical, VIEW_VOLUME_CLIP_CTRL UNK7|UNK12
+       (nouveau's non-scissor mode bits) no change. nv50 uses the hardware SHADE_MODEL
+       (nvc0 can patch the FP instead; nv50's interpApply cannot). XP nv4_disp writes
+       SHADE_MODEL (0x12d4) once, constant 2, at 0x35092d - no per-draw flat switching seen.
+    3. Fix in vmhal3d (driver/vmhal9x-bin/vmhal3d-flatshade.patch): per DrawPrimitives2
+       call, when every vertex drawn has the same diffuse+specular (or none), D3D flat ==
+       smooth, so GL_SMOOTH is used; varying colours keep GL_FLAT. T61: c1a0 clean, white
+       pixels per frame 22,407 (3118) -> 8, turned views clean.
+  - OPEN: GL_FLAT with clipped triangles is still wrong on the G86 for OpenGL programs and
+    for Direct3D draws with varying vertex colours (nouveau nv50 relies on the hardware
+    shade model) - a nouveau-level fix (or NVIDIA's way) is still to be found.
   - Also found on the way (upstream vmhal9x, not shipped): MesaBufferTexturesChanges reads
     the FBHDA dd_fifo item BEFORE advancing (re-reads the item it saw, leaves the newest
     one unprocessed until the next arrives) and marks `tmu[i]` (the hash-lookup counter)

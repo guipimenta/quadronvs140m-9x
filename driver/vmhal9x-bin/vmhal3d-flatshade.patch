@@ -1,0 +1,278 @@
+vmhal3d (JHRobotics/vmhal9x 8bc480e): Direct3D flat shading drawn with GL smooth shading when
+it makes no difference (build 3119). For each DrawPrimitives2 call MesaDraw6ColorsUniform walks
+the command buffer; when every vertex it draws has the same diffuse and specular colour (or
+the FVF has none), flat and smooth shading give the same picture and MesaShadeApply sets
+GL_SMOOTH for the call. On the G86 (nouveau nv50) the hardware's flat shading gives clipped
+triangles a garbage colour: Half-Life's renderer draws everything flat with white vertices
+and its near walls, clipped against the screen, came out pure white (corner wedges). Calls
+with varying colours, DX8 vertex shaders and commands the walk does not know keep GL_FLAT.
+Apply after vmhal3d-ddfifo.patch; the files are CRLF upstream (patch --binary with CRLF hunks,
+or strip and restore CR).
+
+--- a/mesa3d.h
++++ b/mesa3d.h
+@@ -330,6 +330,9 @@
+ 		DWORD stipple[32];
+ 		GLfloat tfactor[4]; // TEXTUREFACTOR eq. GL_CONSTANT
+ 		BOOL texperspective;
++		BOOL shade_flat;    /* D3DRENDERSTATE_SHADEMODE == D3DSHADE_FLAT */
++		BOOL shade_uniform; /* every vertex this DrawPrimitives2 call draws has the same colours */
++		GLenum shade_gl;    /* glShadeModel currently set */
+ 		BOOL textarget;
+ 		struct {
+ 			BOOL     enabled;
+@@ -630,6 +633,8 @@
+ NUKED_LOCAL void MesaSetTextureState(mesa3d_ctx_t *ctx, int tmu, DWORD state, void *value);
+ 
+ NUKED_LOCAL void MesaDrawRefreshState(mesa3d_ctx_t *ctx);
++NUKED_LOCAL void MesaShadeApply(mesa3d_ctx_t *ctx);
++NUKED_LOCAL BOOL MesaDraw6ColorsUniform(mesa3d_ctx_t *ctx, LPBYTE cmdBufferStart, LPBYTE cmdBufferEnd, LPBYTE vertices, DWORD fvf, DWORD vertices_max);
+ NUKED_LOCAL void MesaDraw3(mesa3d_ctx_t *ctx, DWORD op, void *prim, LPBYTE vertices);
+ NUKED_LOCAL DWORD MesaDraw6(mesa3d_ctx_t *ctx, LPBYTE cmdBufferStart, LPBYTE cmdBufferEnd, LPBYTE vertices, LPBYTE UMVertices, DWORD fvf, DWORD *error_offset, LPDWORD RStates, DWORD vertices_size);
+ 
+--- a/mesa3d.c
++++ b/mesa3d.c
+@@ -1000,6 +1000,9 @@
+ 	ApplyBlend(ctx);
+ 
+ 	ctx->state.texperspective  = TRUE;
++	ctx->state.shade_flat = FALSE;
++	ctx->state.shade_uniform = FALSE;
++	ctx->state.shade_gl = (ctx->entry->env.lowdetail >= 3) ? GL_FLAT : GL_SMOOTH;
+ 	ctx->state.alpha.func = GL_NOTEQUAL;
+ 	ctx->state.alpha.ref = 0.0f;
+ 
+@@ -1851,25 +1854,9 @@
+ 			}
+ 			break;
+ 		RENDERSTATE(D3DRENDERSTATE_SHADEMODE) /* D3DSHADEMODE */
+-			if(ctx->entry->env.lowdetail >= 3)
+-			{
+-				GL_CHECK(entry->proc.pglShadeModel(GL_FLAT));
+-			}
+-			else
+-			{
+-				switch((D3DSHADEMODE)state->dwState)
+-				{
+-	        case D3DSHADE_FLAT:
+-						GL_CHECK(entry->proc.pglShadeModel(GL_FLAT));
+-						break;
+-					case D3DSHADE_GOURAUD:
+-					/* Note from WINE: D3DSHADE_PHONG in practice is the same as D3DSHADE_GOURAUD in D3D */
+-					case D3DSHADE_PHONG:
+-					default:
+-						GL_CHECK(entry->proc.pglShadeModel(GL_SMOOTH));
+-						break;
+-				}
+-			}
++			/* Note from WINE: D3DSHADE_PHONG in practice is the same as D3DSHADE_GOURAUD in D3D */
++			ctx->state.shade_flat = ((D3DSHADEMODE)state->dwState == D3DSHADE_FLAT) ? TRUE : FALSE;
++			MesaShadeApply(ctx);
+ 			TOPIC("LIGHT", "SHADEMODE=%d", state->dwState);
+ 			break;
+ 		RENDERSTATE(D3DRENDERSTATE_LINEPATTERN) /* D3DLINEPATTERN */
+@@ -3940,6 +3927,29 @@
+ 	}
+ }
+ 
++/*
++ * Flat shading only changes the result when the vertices of a triangle carry
++ * different colours. When the current DrawPrimitives2 call draws vertices that
++ * all have the same diffuse and specular colour (Half-Life's renderer: all
++ * white), GL_SMOOTH gives exactly the same picture, and it avoids the G86
++ * (nouveau nv50) drawing flat-shaded triangles that the hardware clips with a
++ * garbage colour (Half-Life's white wedges at the screen corners).
++ */
++NUKED_LOCAL void MesaShadeApply(mesa3d_ctx_t *ctx)
++{
++	GLenum mode = (ctx->state.shade_flat && !ctx->state.shade_uniform) ? GL_FLAT : GL_SMOOTH;
++	if(ctx->entry->env.lowdetail >= 3)
++	{
++		mode = GL_FLAT;
++	}
++
++	if(mode != ctx->state.shade_gl)
++	{
++		GL_CHECK(ctx->entry->proc.pglShadeModel(mode));
++		ctx->state.shade_gl = mode;
++	}
++}
++
+ NUKED_LOCAL void MesaDrawRefreshState(mesa3d_ctx_t *ctx)
+ {
+ 	int i;
+--- a/d3dhal.c
++++ b/d3dhal.c
+@@ -330,7 +330,11 @@
+ 			UMVertices += pd->dwVertexOffset;
+ 		}
+ 
++		ctx->state.shade_uniform = MesaDraw6ColorsUniform(ctx, cmdBufferStart, cmdBufferEnd, vertices, pd->dwVertexType, pd->dwVertexLength);
++		MesaShadeApply(ctx);
+ 		rc = MesaDraw6(ctx, cmdBufferStart, cmdBufferEnd, vertices, UMVertices, pd->dwVertexType, &pd->dwErrorOffset, RStates, pd->dwVertexLength);
++		ctx->state.shade_uniform = FALSE;
++		MesaShadeApply(ctx);
+ 
+ 		//MesaSpaceIdentityReset(ctx);
+ 	GL_BLOCK_END
+--- a/mesa3d_draw6.c
++++ b/mesa3d_draw6.c
+@@ -422,6 +422,158 @@
+ 	case 0: case 2: case 4: break; \
+ 	default: ERR("Invalid DX8 indices stride: %d", _s); return D3DERR_COMMAND_UNPARSED; break;}
+ 
++/*
++ * TRUE when every vertex the DP2 command buffer draws has the same diffuse and
++ * specular colour (or the FVF carries no colour at all), so flat and smooth
++ * shading are identical for this call (see MesaShadeApply). Only plain FVF
++ * data with the commands below is examined; anything else answers FALSE and
++ * keeps flat shading as requested. It stops at the first differing colour.
++ */
++NUKED_LOCAL BOOL MesaDraw6ColorsUniform(mesa3d_ctx_t *ctx,
++	LPBYTE cmdBufferStart, LPBYTE cmdBufferEnd, LPBYTE vertices, DWORD fvf, DWORD vertices_max)
++{
++	DWORD stride, off_diffuse = 0, off_specular = 0, n_colors = 0, i, t;
++	DWORD first[2] = {0, 0};
++	BOOL have_first = FALSE;
++	LPBYTE cp;
++
++	if(fvf & 0xFF000000UL)
++		return FALSE; /* not an FVF (DX8+ vertex shader handle) */
++
++	switch(fvf & D3DFVF_POSITION_MASK)
++	{
++		case D3DFVF_XYZ:    stride = 12; break;
++		case D3DFVF_XYZRHW: stride = 16; break;
++		case D3DFVF_XYZB1:  stride = 16; break;
++		case D3DFVF_XYZB2:  stride = 20; break;
++		case D3DFVF_XYZB3:  stride = 24; break;
++		case D3DFVF_XYZB4:  stride = 28; break;
++		case D3DFVF_XYZB5:  stride = 32; break;
++		default:
++			return FALSE;
++	}
++	if(fvf & D3DFVF_NORMAL)   stride += 12;
++	if(fvf & D3DFVF_RESERVED1) stride += 4; /* D3DFVF_PSIZE */
++	if(fvf & D3DFVF_DIFFUSE)  { off_diffuse = stride;  stride += 4; n_colors++; }
++	if(fvf & D3DFVF_SPECULAR) { off_specular = stride; stride += 4; n_colors++; }
++	for(t = 0; t < ((fvf & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT); t++)
++	{
++		switch((fvf >> (16 + t*2)) & 3)
++		{
++			case 0: stride += 8;  break; /* D3DFVF_TEXTUREFORMAT2 */
++			case 1: stride += 12; break; /* 3 */
++			case 2: stride += 16; break; /* 4 */
++			default: stride += 4; break; /* 1 */
++		}
++	}
++
++	if(n_colors == 0)
++		return TRUE; /* the default colours are constant */
++
++#define UNIFORM_V(_p) do { \
++		LPBYTE _v = (_p); \
++		DWORD _c[2]; \
++		_c[0] = (fvf & D3DFVF_DIFFUSE)  ? *(DWORD*)(_v + off_diffuse)  : 0; \
++		_c[1] = (fvf & D3DFVF_SPECULAR) ? *(DWORD*)(_v + off_specular) : 0; \
++		if(!have_first) { first[0] = _c[0]; first[1] = _c[1]; have_first = TRUE; } \
++		else if(_c[0] != first[0] || _c[1] != first[1]) return FALSE; \
++	} while(0)
++#define UNIFORM_I(_i) do { \
++		DWORD _ix = (_i); \
++		if(vertices == NULL || _ix >= vertices_max) return FALSE; \
++		UNIFORM_V(vertices + _ix * stride); \
++	} while(0)
++
++	cp = cmdBufferStart;
++	while(cp + 4 <= cmdBufferEnd)
++	{
++		LPD3DHAL_DP2COMMAND c = (LPD3DHAL_DP2COMMAND)cp;
++		LPBYTE p = cp + 4;
++		DWORD cnt = c->wPrimitiveCount;
++		switch(c->bCommand)
++		{
++			case D3DDP2OP_RENDERSTATE:
++			case D3DDP2OP_TEXTURESTAGESTATE:
++			case D3DDP2OP_WINFO:
++			case D3DDP2OP_ZRANGE:
++				p += 8 * cnt;
++				break;
++			case D3DDP2OP_VIEWPORTINFO:
++				p += 16 * cnt;
++				break;
++			case D3DDP2OP_CLEAR:
++				p += 16 + 16 * cnt;
++				break;
++			case D3DDP2OP_POINTS:
++				for(i = 0; i < cnt; i++)
++				{
++					LPD3DHAL_DP2POINTS pt = ((LPD3DHAL_DP2POINTS)p) + i;
++					for(t = 0; t < pt->wCount; t++) UNIFORM_I(pt->wVStart + t);
++				}
++				p += sizeof(D3DHAL_DP2POINTS) * cnt;
++				break;
++			case D3DDP2OP_LINELIST:
++			case D3DDP2OP_LINESTRIP:
++			case D3DDP2OP_TRIANGLELIST:
++			case D3DDP2OP_TRIANGLESTRIP:
++			case D3DDP2OP_TRIANGLEFAN:
++			{
++				DWORD start = ((LPD3DHAL_DP2STARTVERTEX)p)->wVStart, nv;
++				switch(c->bCommand)
++				{
++					case D3DDP2OP_LINELIST:     nv = cnt * 2; break;
++					case D3DDP2OP_LINESTRIP:    nv = cnt + 1; break;
++					case D3DDP2OP_TRIANGLELIST: nv = cnt * 3; break;
++					default:                    nv = cnt + 2; break;
++				}
++				for(t = 0; t < nv; t++) UNIFORM_I(start + t);
++				p += sizeof(D3DHAL_DP2STARTVERTEX);
++				break;
++			}
++			case D3DDP2OP_INDEXEDLINELIST:
++				for(t = 0; t < cnt * 2; t++) UNIFORM_I(((WORD*)p)[t]);
++				p += sizeof(D3DHAL_DP2INDEXEDLINELIST) * cnt;
++				break;
++			case D3DDP2OP_INDEXEDTRIANGLELIST:
++				for(i = 0; i < cnt; i++)
++				{
++					LPD3DHAL_DP2INDEXEDTRIANGLELIST tri = ((LPD3DHAL_DP2INDEXEDTRIANGLELIST)p) + i;
++					UNIFORM_I(tri->wV1); UNIFORM_I(tri->wV2); UNIFORM_I(tri->wV3);
++				}
++				p += sizeof(D3DHAL_DP2INDEXEDTRIANGLELIST) * cnt;
++				break;
++			case D3DDP2OP_INDEXEDLINELIST2:
++			case D3DDP2OP_INDEXEDTRIANGLELIST2:
++			{
++				DWORD base = ((LPD3DHAL_DP2STARTVERTEX)p)->wVStart;
++				DWORD per = (c->bCommand == D3DDP2OP_INDEXEDLINELIST2) ? 2 : 3;
++				WORD *ix = (WORD*)(p + sizeof(D3DHAL_DP2STARTVERTEX));
++				for(t = 0; t < cnt * per; t++) UNIFORM_I(base + ix[t]);
++				p += sizeof(D3DHAL_DP2STARTVERTEX) + cnt * per * sizeof(WORD);
++				break;
++			}
++			case D3DDP2OP_TRIANGLEFAN_IMM:
++			case D3DDP2OP_LINELIST_IMM:
++			{
++				DWORD nv = (c->bCommand == D3DDP2OP_TRIANGLEFAN_IMM) ? cnt + 2 : cnt * 2;
++				if(c->bCommand == D3DDP2OP_TRIANGLEFAN_IMM)
++					p += sizeof(D3DHAL_DP2TRIANGLEFAN_IMM);
++				p = (LPBYTE)((ULONG_PTR)(p + 3) & ~3); /* as MesaDraw6's PRIM_ALIGN */
++				if(p + nv * stride > cmdBufferEnd) return FALSE;
++				for(t = 0; t < nv; t++) UNIFORM_V(p + t * stride);
++				p += nv * stride;
++				break;
++			}
++			default:
++				return FALSE; /* a command this check does not walk */
++		}
++		cp = p;
++	}
++#undef UNIFORM_I
++#undef UNIFORM_V
++	return TRUE;
++}
++
+ NUKED_LOCAL DWORD MesaDraw6(mesa3d_ctx_t *ctx,
+ 	LPBYTE cmdBufferStart, LPBYTE cmdBufferEnd,
+ 	LPBYTE vertices, LPBYTE UMVertices, DWORD fvf,

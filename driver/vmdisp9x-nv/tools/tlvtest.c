@@ -27,6 +27,11 @@
  *   mip  1  give it a full mip chain, GL_NEAREST_MIPMAP_NEAREST (D3DTFP_POINT); levels
  *           1..6 are solid red, green, blue, magenta, cyan, yellow, so the picture shows
  *           which level the GPU sampled
+ *   texfile F  use the mip chain dumped by the debug vmhal3d (C:\vmhal.tex.bin: per level 12
+ *           dwords 'TEXL', level, w, h, internalformat, format, type, bpp, ..., bytes, then the
+ *           bytes) instead of the checker, GL_NEAREST_MIPMAP_NEAREST when it has levels > 0
+ *   flatshade 1  glShadeModel(GL_FLAT) (D3DSHADE_FLAT, as Half-Life draws)
+ *   pvfirst 1  glProvokingVertex(GL_FIRST_VERTEX_CONVENTION) (Direct3D's flat-shading vertex)
  *   count N draw only the first N records
  *   flush N glFlush after every N-th draw (nouveau kicks, like upstream nv50 does per draw)
  *
@@ -128,6 +133,8 @@ static struct
 	void (__stdcall *ReadPixels)(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, void *);
 	void (__stdcall *Finish)(void);
 	void (__stdcall *Flush)(void);
+	void (__stdcall *ShadeModel)(GLenum);
+	void (__stdcall *ProvokingVertex)(GLenum);
 	void (__stdcall *GenTextures)(GLsizei, GLuint *);
 	void (__stdcall *BindTexture)(GLenum, GLuint);
 	void (__stdcall *TexImage2D)(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, const void *);
@@ -195,7 +202,8 @@ int main(int argc, char **argv)
 {
 	const char *in = argc > 1 ? argv[1] : "-", *out = argc > 2 ? argv[2] : "tlvtest.ppm";
 	const char *dll = "mesa3d.dll";
-	int i, W = 640, H = 480, fan = 0, fbo = 0, tex = 0, flush = 0, draws = 0, count = 0, mip = 0;
+	int i, W = 640, H = 480, fan = 0, fbo = 0, tex = 0, flush = 0, draws = 0, count = 0, mip = 0, flatshade = 0, pvfirst = 0;
+	const char *texfile = NULL;
 	for(i = 3; i + 1 < argc; i += 2)
 	{
 		if(!strcmp(argv[i], "dll")) dll = argv[i + 1];
@@ -207,6 +215,9 @@ int main(int argc, char **argv)
 		else if(!strcmp(argv[i], "flush")) flush = atoi(argv[i + 1]);
 		else if(!strcmp(argv[i], "count")) count = atoi(argv[i + 1]);
 		else if(!strcmp(argv[i], "mip")) mip = atoi(argv[i + 1]);
+		else if(!strcmp(argv[i], "texfile")) { texfile = argv[i + 1]; tex = 1; }
+		else if(!strcmp(argv[i], "flatshade")) flatshade = atoi(argv[i + 1]);
+		else if(!strcmp(argv[i], "pvfirst")) pvfirst = atoi(argv[i + 1]);
 	}
 
 	tri_t *t = builtin; long n = sizeof(builtin) / sizeof(builtin[0]);
@@ -239,11 +250,11 @@ int main(int argc, char **argv)
 	LOAD(ClearColor); LOAD(ClearDepth); LOAD(MatrixMode); LOAD(LoadIdentity); LOAD(Begin); LOAD(End);
 	LOAD(Vertex4fv); LOAD(Color4fv); LOAD(Normal3f); LOAD(MultiTexCoord4f); LOAD(DepthFunc);
 	LOAD(DepthMask); LOAD(CullFace); LOAD(FrontFace); LOAD(ReadPixels); LOAD(Finish);
-	LOAD(Flush); LOAD(GenTextures); LOAD(BindTexture); LOAD(TexImage2D); LOAD(TexParameteri); LOAD(TexEnvi);
+	LOAD(Flush); LOAD(ShadeModel); LOAD(ProvokingVertex); LOAD(GenTextures); LOAD(BindTexture); LOAD(TexImage2D); LOAD(TexParameteri); LOAD(TexEnvi);
 	LOAD(ActiveTexture); LOAD(GenFramebuffers); LOAD(BindFramebuffer); LOAD(FramebufferTexture2D);
 	LOAD(CheckFramebufferStatus);
 	if(g_missing) return 2;
-	printf("renderer: %s\nversion:  %s\nflat %d hal %d fan %d fbo %d tex %d mip %d flush %d\n", gl.GetString(GL_RENDERER), gl.GetString(GL_VERSION), flat, hal, fan, fbo, tex, mip, flush);
+	printf("renderer: %s\nversion:  %s\nflat %d hal %d fan %d fbo %d tex %d mip %d flush %d flatshade %d texfile %s\n", gl.GetString(GL_RENDERER), gl.GetString(GL_VERSION), flat, hal, fan, fbo, tex, mip, flush, flatshade, texfile ? texfile : "-");
 
 	if(fbo)
 	{
@@ -265,8 +276,27 @@ int main(int argc, char **argv)
 		for(i = 0; i < 64 * 64; i++) chk[i] = (((i & 63) ^ (i >> 6)) & 8) ? 0xffffffff : 0xff808080;
 		gl.ActiveTexture(GL_TEXTURE0);
 		gl.GenTextures(1, &tt); gl.BindTexture(GL_TEXTURE_2D, tt);
-		gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 64, 64, 0, GL_RGBA, GL_UNSIGNED_BYTE, chk);
-		if(mip)
+		if(texfile)
+		{
+			FILE *tf = fopen(texfile, "rb");
+			DWORD hd[12]; int levels = 0;
+			if(!tf) { printf("cannot open %s\n", texfile); return 2; }
+			while(fread(hd, sizeof(hd), 1, tf) == 1 && hd[0] == 0x4C584554)
+			{
+				void *data = malloc(hd[11] + 4);
+				if(!data || fread(data, 1, hd[11], tf) != hd[11]) { printf("short texture file\n"); return 2; }
+				gl.TexImage2D(GL_TEXTURE_2D, hd[1], hd[4], hd[2], hd[3], 0, hd[5], hd[6], data);
+				printf("texfile level %lu %lux%lu ifmt %#lx fmt %#lx type %#lx\n", (unsigned long)hd[1], (unsigned long)hd[2], (unsigned long)hd[3], (unsigned long)hd[4], (unsigned long)hd[5], (unsigned long)hd[6]);
+				free(data);
+				levels++;
+			}
+			fclose(tf);
+			mip = levels > 1;
+			gl.TexParameteri(GL_TEXTURE_2D, 0x813D /* GL_TEXTURE_MAX_LEVEL */, levels - 1);
+		}
+		else
+			gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 64, 64, 0, GL_RGBA, GL_UNSIGNED_BYTE, chk);
+		if(mip && !texfile)
 		{
 			static const DWORD lc[7] = { 0, 0xff0000ff, 0xff00ff00, 0xffff0000, 0xffff00ff, 0xffffff00, 0xff00ffff };
 			static DWORD lv[32 * 32];
@@ -286,6 +316,8 @@ int main(int argc, char **argv)
 		gl.Enable(GL_TEXTURE_2D);
 	}
 
+	if(flatshade) gl.ShadeModel(0x1D00 /* GL_FLAT */);
+	if(pvfirst) gl.ProvokingVertex(0x8E4D /* GL_FIRST_VERTEX_CONVENTION */);
 	gl.Viewport(0, 0, W, H);
 	gl.FrontFace(GL_CCW);
 	gl.ClearColor(0, 0, 0, 1); gl.ClearDepth(1.0);

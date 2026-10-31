@@ -11,5 +11,22 @@ Built:    2026-10-17 on this host, i686-w64-mingw32-gcc, config.mk: D3DHAL=1
           applied (sections marked shared, required for a DDraw HAL).
 Source checkout: /home/guilherme/projects/audio_reverse/vmhal9x-src
 
+vmhal9x.dll and vmdisp9x.dll are that build unchanged.
+
+vmhal3d.dll (since build 3119, 2026-10-31) = the same commit and config.mk with two
+patches from this folder, applied in this order:
+  vmhal3d-ddfifo.patch     MesaBufferTexturesChanges read the FBHDA dd_fifo item
+                           before advancing (the newest texture change waited for
+                           the next one) and marked tmu[i] instead of tmu[tmu]
+  vmhal3d-flatshade.patch  Direct3D flat shading drawn with GL smooth shading when
+                           all vertex colours of a DrawPrimitives2 call are equal
+                           (the G86 gives clipped flat-shaded triangles a garbage
+                           colour: Half-Life's white corner wedges)
+Rebuild: git archive the commit into an empty folder, copy config.mk and the
+fixlink/nocrt/regex submodule folders (and fixlink.bin) from the checkout, strip the
+CRs of the five patched files (upstream is CRLF), apply both patches with patch -p1
+(from the "--- a/" line on), make vmhal3d.dll. The same steps without the patches
+rebuild the shipped 3118 vmhal3d.dll byte for byte except the PE timestamp/checksum.
+
 Direct3D additionally needs mesa3d.dll from https://github.com/JHRobotics/mesa9x
-(not shipped here; ~44 MB).
+(built here, ../mesa9x-bin).

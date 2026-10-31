@@ -210,3 +210,15 @@ state to the 3D class when a Mesa/nouveau choice is in doubt.
 `analysis/win98_vdd/README.md`: the DDK debug `VDD.VXD` with symbols, disassembled during
 E4 (display-driver API keyed on device id; the mini-VDD of a non-VGA devnode is reachable
 only through its id; `IgnoreRegistry` and DDC behaviours).
+
+
+## nv4_disp.dll: SHADE_MODEL (2026-10-31)
+
+- The only immediate write of the nv50 3D method SHADE_MODEL (0x12d4) found in
+  `nv4_disp.dll`: `or eax,0x412d4` at 0x35092d (header = 1 dword, subchannel from
+  [edi+0x400]&7 << 13), data = constant 2, inside a long fixed state-setup sequence (with
+  0x13b0, 0x0fb4, 0x0d08). No per-draw shade-model switching was found, which fits the
+  Win98 finding: the G86's hardware flat shading gives CLIPPED polygons a garbage colour
+  (Half-Life Direct3D white wedges, docs/HW3D_PLAN.md "White wedges"), so NVIDIA's
+  Direct3D path apparently does not rely on it. Value 2 is not one of nouveau's enums
+  (0x1d00 flat / 0x1d01 smooth) - meaning not decoded yet.
