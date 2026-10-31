@@ -29,6 +29,145 @@
  
  # Example to build multi target HAL:
  #ifdef i486
+--- a/d3d.c
++++ b/d3d.c
+@@ -317,7 +317,7 @@
+ 			caps.PrimitiveMiscCaps =
+ 				D3DPMISCCAPS_BLENDOP | // Device supports the alpha-blending operations defined in the D3DBLENDOP enumerated type. 
+ 				D3DPMISCCAPS_CLIPPLANESCALEDPOINTS | // Device correctly clips scaled points of size greater than 1.0 to user-defined clipping planes. 
+-				//D3DPMISCCAPS_CLIPTLVERTS | // Device clips post-transformed vertex primitives. 
++				D3DPMISCCAPS_CLIPTLVERTS | // Device clips post-transformed vertex primitives. (XP nv4_disp sets it) 
+ 				//D3DPMISCCAPS_COLORWRITEENABLE | // Device supports per-channel writes for the render target color buffer through the D3DRS_COLORWRITEENABLE state. 
+ 				D3DPMISCCAPS_CULLCCW | // The driver supports counterclockwise culling through the D3DRS_CULLMODE state. (This applies only to triangle primitives.) This flag corresponds to the D3DCULL_CCW member of the D3DCULL enumerated type. 
+ 				D3DPMISCCAPS_CULLCW | // The driver supports clockwise triangle culling through the D3DRS_CULLMODE state. (This applies only to triangle primitives.) This flag corresponds to the D3DCULL_CW member of the D3DCULL enumerated type. 
+@@ -377,10 +377,10 @@
+ 			
+ 			/* some happy values from ref driver */
+ 			caps.MaxVertexW      = 1.0e10;
+-			caps.GuardBandLeft   = -8192.0f;
+-			caps.GuardBandTop    = -8192.0f;
+-			caps.GuardBandRight  = 8192.0f;
+-			caps.GuardBandBottom = 8192.0f;
++			caps.GuardBandLeft   = -1.0e8f; /* XP nv4_disp */
++			caps.GuardBandTop    = -1.0e8f;
++			caps.GuardBandRight  = 1.0e8f;
++			caps.GuardBandBottom = 1.0e8f;
+ 			caps.ExtentsAdjust   = 0.0f; //  AA kernel is 1.0 x 1.0
+ 			caps.StencilCaps = MYSTENCIL_CAPS;
+ 			caps.FVFCaps = 8;
+@@ -682,10 +682,10 @@
+ 		dxcaps.dwStencilCaps = MYSTENCIL_CAPS;
+ 
+ 		/* some happy values from ref driver */
+-		dxcaps.dvGuardBandLeft   = -32768.0f;
+-		dxcaps.dvGuardBandTop    = -32768.0f;
+-		dxcaps.dvGuardBandRight  = 32767.0f;
+-		dxcaps.dvGuardBandBottom = 32767.0f;
++		dxcaps.dvGuardBandLeft   = -1.0e8f; /* XP nv4_disp */
++		dxcaps.dvGuardBandTop    = -1.0e8f;
++		dxcaps.dvGuardBandRight  = 1.0e8f;
++		dxcaps.dvGuardBandBottom = 1.0e8f;
+ 		dxcaps.dvExtentsAdjust = 0.0f; //  AA kernel is 1.0 x 1.0
+ 		dxcaps.dvMaxVertexW = 1.0e10;
+ 
+--- a/d3d_caps.h
++++ b/d3d_caps.h
+@@ -100,7 +100,8 @@
+ #define triCaps6 {               \
+ 	sizeof(D3DPRIMCAPS),          \
+ 	/* miscCaps */                \
+-	D3DPMISCCAPS_CULLNONE         \
++	D3DPMISCCAPS_CLIPTLVERTS /* XP nv4_disp: tri/line misc 0x272 */ \
++	| D3DPMISCCAPS_CULLNONE         \
+ 	| D3DPMISCCAPS_CULLCW         \
+ 	| D3DPMISCCAPS_CULLCCW        \
+ 	| D3DPMISCCAPS_MASKZ          \
+@@ -264,8 +265,6 @@
+ 	| D3DDEVCAPS_EXECUTESYSTEMMEMORY /* must be set */
+ 	| D3DDEVCAPS_DRAWPRIMITIVES2
+ 	| D3DDEVCAPS_DRAWPRIMITIVES2EX
+-	| D3DDEVCAPS_SORTINCREASINGZ
+-	| D3DDEVCAPS_SORTEXACT
+ 	| D3DDEVCAPS_HWVERTEXBUFFER
+ 	| D3DDEVCAPS_CANRENDERAFTERFLIP /* must be set on 2k driver */
+ 	| D3DDEVCAPS_HWINDEXBUFFER, /* DX8 */
+--- a/d3dhal.c
++++ b/d3dhal.c
+@@ -330,6 +330,74 @@
+ 			UMVertices += pd->dwVertexOffset;
+ 		}
+ 
++		{
++			/* T61 investigation: one-shot raw DP2 capture. When C:\vmhal.capon appears, buffer
++			   every DP2 call in memory until two scene ends (SCENECAPTURE=0) have passed, so the
++			   second scene is complete, then write C:\vmhal.cap once and never again. */
++			static DWORD cap_last = 0, cap_len = 0, cap_ends = 0; static int cap_state = 0; static LPBYTE cap_buf = NULL;
++			#define CAP_MAX (12*1024*1024)
++			if(cap_state == 0 && GetTickCount() - cap_last > 500)
++			{
++				cap_last = GetTickCount();
++				if(GetFileAttributesA("C:\\vmhal.capon") != INVALID_FILE_ATTRIBUTES)
++				{
++					cap_buf = (LPBYTE)HeapAlloc(GetProcessHeap(), 0, CAP_MAX);
++					cap_state = cap_buf ? 1 : 2;
++				}
++			}
++			if(cap_state == 1)
++			{
++				DWORD fvf = pd->dwVertexType, stride = 0, rec[8];
++				switch(fvf & D3DFVF_POSITION_MASK) { case D3DFVF_XYZRHW: stride = 16; break; case D3DFVF_XYZ: stride = 12; break; default: stride = 12; break; }
++				if(fvf & D3DFVF_NORMAL) stride += 12;
++				if(fvf & D3DFVF_DIFFUSE) stride += 4;
++				if(fvf & D3DFVF_SPECULAR) stride += 4;
++				stride += ((fvf & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT) * 8;
++				/* only the vertex range this batch references (the runtime's buffer is 32768 vertices) */
++				DWORD vmin = 0xffffffff, vmax = 0, k, ends = 0;
++				LPBYTE cp = cmdBufferStart;
++				while(cp + 4 <= cmdBufferEnd)
++				{
++					BYTE op = cp[0]; WORD cnt = *(WORD*)(cp + 2); cp += 4;
++					if(op == 8) { for(k = 0; k < cnt; k++) if(((DWORD*)cp)[k*2] == 62 && ((DWORD*)cp)[k*2+1] == 0) ends++; cp += 8 * cnt; }
++					else if(op == 25) cp += 8 * cnt;
++					else if(op == 23) { cp += 4; cp = (LPBYTE)(((DWORD)cp + 3) & ~3); cp += stride * (cnt + 2); }
++					else if(op == 26)
++					{
++						DWORD base = *(WORD*)cp; cp += 2;
++						for(k = 0; k < (DWORD)cnt * 3; k++) { DWORD v = base + ((WORD*)cp)[k]; if(v < vmin) vmin = v; if(v > vmax) vmax = v; }
++						cp += 6 * cnt;
++					}
++					else if(op == 18) { DWORD st = *(WORD*)cp; cp += 2; if(st < vmin) vmin = st; if(st + 3*cnt > vmax) vmax = st + 3*cnt; }
++					else if(op == 21) { DWORD st = *(WORD*)cp; cp += 2; if(st < vmin) vmin = st; if(st + cnt + 2 > vmax) vmax = st + cnt + 2; }
++					else if(op == 28) cp += 16 * cnt;
++					else if(op == 29 || op == 32) cp += 8 * cnt;
++					else if(op == 42) cp += 16 + 16 * cnt;
++					else { vmin = 0; vmax = pd->dwVertexLength ? pd->dwVertexLength - 1 : 0; break; }
++				}
++				if(vmin == 0xffffffff) { vmin = 0; vmax = 0; }
++				if(vmax >= pd->dwVertexLength) vmax = pd->dwVertexLength ? pd->dwVertexLength - 1 : 0;
++				rec[0] = 0x43325044; /* 'DP2C' */
++				rec[1] = fvf; rec[2] = (DWORD)(cmdBufferEnd - cmdBufferStart);
++				rec[3] = vertices ? (vmax - vmin + 1) * stride : 0;
++				rec[4] = pd->dwFlags; rec[5] = vmin; rec[6] = stride; rec[7] = (DWORD)cmdBufferStart;
++				if(cap_len + sizeof(rec) + rec[2] + rec[3] <= CAP_MAX)
++				{
++					memcpy(cap_buf + cap_len, rec, sizeof(rec)); cap_len += sizeof(rec);
++					memcpy(cap_buf + cap_len, cmdBufferStart, rec[2]); cap_len += rec[2];
++					if(rec[3]) { memcpy(cap_buf + cap_len, vertices + vmin * stride, rec[3]); cap_len += rec[3]; }
++					cap_ends += ends;
++				}
++				else cap_ends = 99;
++				if(cap_ends >= 3)
++				{
++					HANDLE h = CreateFileA("C:\\vmhal.cap", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
++					if(h != INVALID_HANDLE_VALUE) { DWORD wr; WriteFile(h, cap_buf, cap_len, &wr, NULL); CloseHandle(h); }
++					HeapFree(GetProcessHeap(), 0, cap_buf); cap_buf = NULL;
++					cap_state = 2;
++				}
++			}
++		}
+ 		rc = MesaDraw6(ctx, cmdBufferStart, cmdBufferEnd, vertices, UMVertices, pd->dwVertexType, &pd->dwErrorOffset, RStates, pd->dwVertexLength);
+ 
+ 		//MesaSpaceIdentityReset(ctx);
 --- a/debug.c
 +++ b/debug.c
 @@ -48,6 +48,31 @@
@@ -106,6 +245,40 @@
  							MesaSceneEnd(ctx);
  							break;
  						case 1: /* after clear (start scene) */
+--- a/mesa3d_buffer.c
++++ b/mesa3d_buffer.c
+@@ -538,6 +538,10 @@
+ 	
+ 	while(ctx->fifo_top != hda->dd_fifo_top)
+ 	{
++		/* the VxD writes at top+1 and then publishes top: step first, then read
++		   (reading first re-read the item already seen and left the newest one
++		   unprocessed until the next notification arrived) */
++		ctx->fifo_top = (ctx->fifo_top + 1) % hda->dd_fifo_length;
+ 		FBHDA_DD_fifo_item_t *item = &hda->dd_fifo[ctx->fifo_top];
+ 		DWORD tmu;
+ 		DWORD i = 0;
+@@ -558,9 +562,9 @@
+ 						{
+ 							for(tmu = 0; tmu < ctx->tmu_count; tmu++)
+ 							{
+-								if(ddsurf->dxid == ctx->state.tmu[i].active_dxid)
++								if(ddsurf->dxid == ctx->state.tmu[tmu].active_dxid)
+ 								{
+-									ctx->state.tmu[i].reload = TRUE;
++									ctx->state.tmu[tmu].reload = TRUE;
+ 								}
+ 							}
+ 						} // loop ddsurf = ddsurf->up
+@@ -572,8 +576,6 @@
+ 				break;
+ 			}
+ 		}
+-		
+-		ctx->fifo_top = (ctx->fifo_top + 1) % hda->dd_fifo_length;
+ 	}
+ }
+ 
 --- a/mesa3d_draw.c
 +++ b/mesa3d_draw.c
 @@ -55,6 +55,7 @@
@@ -179,7 +352,93 @@
  		entry->proc.pglVertex4fv(&tmp4[0]);
 --- a/mesa3d_draw6.c
 +++ b/mesa3d_draw6.c
-@@ -1143,6 +1143,7 @@
+@@ -942,6 +942,85 @@
+ 					RENDER_BEGIN(fvf);
+ 	    		//MesaDrawFVFs(ctx, GL_TRIANGLE_FAN, prim, 0, count);
+ 	    		MesaVertexDrawBlock(ctx, GL_TRIANGLE_FAN, prim, 0, count, ctx->state.vertex.stride);
++					{
++						/* T61 investigation: C:\vmhal.redfan -> overdraw every fan in solid red,
++						   no texture/blend/alpha/depth/cull, to see where the fans land */
++						static DWORD rf_last = 0; static BOOL rf_on = FALSE;
++						if(GetTickCount() - rf_last > 500) { rf_on = GetFileAttributesA("C:\\vmhal.redfan") != INVALID_FILE_ATTRIBUTES; rf_last = GetTickCount(); }
++						/* C:\vmhal.gls -> dump the GL state at the first 4 fans of the process to C:\vmhal.gls.txt */
++						static int gls_n = 0; static DWORD gls_last = 0; static BOOL gls_on = FALSE;
++						if(GetTickCount() - gls_last > 500) { gls_on = GetFileAttributesA("C:\\vmhal.gls") != INVALID_FILE_ATTRIBUTES; gls_last = GetTickCount(); }
++						if(gls_on && gls_n < 4)
++						{
++							FILE *gf = fopen("C:\\vmhal.gls.txt", "a");
++							if(gf)
++							{
++								static const struct { GLenum e; const char *n; } en[] = {
++									{0x0B50,"LIGHTING"},{0x0B60,"FOG"},{0x3000,"CLIP0"},{0x3001,"CLIP1"},{0x3002,"CLIP2"},{0x3003,"CLIP3"},{0x3004,"CLIP4"},{0x3005,"CLIP5"},
++									{0x0C11,"SCISSOR"},{0x8037,"POLYOFS_FILL"},{0x0B57,"COLOR_MATERIAL"},{0x0BC0,"ALPHA_TEST"},{0x0BE2,"BLEND"},{0x0B90,"STENCIL"},
++									{0x0B71,"DEPTH_TEST"},{0x0B44,"CULL_FACE"},{0x8620,"VERTEX_PROGRAM"},{0x8804,"FRAGMENT_PROGRAM"},{0x864F,"DEPTH_CLAMP"},
++									{0x0BA1,"NORMALIZE"},{0x803A,"RESCALE_NORMAL"},{0x8458,"COLOR_SUM"},{0x0B42,"POLY_STIPPLE"},{0x0B54,"SHADE_MODEL"},
++									{0x0B40,"POLYGON_MODE"},{0x0BA0,"MATRIX_MODE"},{0x0BA3,"MV_DEPTH"},{0x0BA4,"PROJ_DEPTH"},{0x8B8D,"CUR_PROGRAM"},
++									{0x8CA6,"DRAW_FBO"},{0x84E0,"ACTIVE_TEX"},{0x0B70,"DEPTH_RANGE"},{0x0BA2,"VIEWPORT"},{0x0C10,"SCISSOR_BOX"},{0x0B74,"DEPTH_FUNC"},{0x0B72,"DEPTH_WRITEMASK"} };
++								static const struct { GLenum e; const char *n; } tu[] = {
++									{0x0DE0,"TEX1D"},{0x0DE1,"TEX2D"},{0x806F,"TEX3D"},{0x8513,"CUBE"},{0x84F5,"RECT"},{0x0C60,"GEN_S"},{0x0C61,"GEN_T"},{0x0C62,"GEN_R"},{0x0C63,"GEN_Q"} };
++								GLint iv[4], act = 0; GLfloat m[16]; DWORD k, u;
++								fprintf(gf, "=== fan %d count %lu stride %lu zscale %f vpnorm %f %f %f %f identity_mode %d tmu_count %d\n", gls_n, (unsigned long)count,
++									(unsigned long)ctx->state.vertex.stride, ctx->matrix.zscale, ctx->matrix.vpnorm[0], ctx->matrix.vpnorm[1], ctx->matrix.vpnorm[2], ctx->matrix.vpnorm[3],
++									ctx->matrix.identity_mode, ctx->tmu_count);
++								for(k = 0; k < sizeof(en)/sizeof(en[0]); k++)
++								{
++									iv[0] = iv[1] = iv[2] = iv[3] = -7;
++									if(en[k].e == 0x0B70) { GLfloat f[2]; entry->proc.pglGetFloatv(en[k].e, f); fprintf(gf, "%s=%f,%f ", en[k].n, f[0], f[1]); continue; }
++									entry->proc.pglGetIntegerv(en[k].e, iv);
++									fprintf(gf, "%s=%d", en[k].n, iv[0]);
++									if(iv[1] != -7) fprintf(gf, ",%d,%d,%d", iv[1], iv[2], iv[3]);
++									fprintf(gf, " ");
++								}
++								fprintf(gf, "\nGL error after enables: 0x%X\n", entry->proc.pglGetError());
++								entry->proc.pglGetFloatv(0x0BA6, m); fprintf(gf, "MV:   "); for(k = 0; k < 16; k++) fprintf(gf, "%g ", m[k]); fprintf(gf, "\n");
++								entry->proc.pglGetFloatv(0x0BA7, m); fprintf(gf, "PROJ: "); for(k = 0; k < 16; k++) fprintf(gf, "%g ", m[k]); fprintf(gf, "\n");
++								entry->proc.pglGetIntegerv(0x84E0, &act);
++								for(u = 0; u < 4; u++)
++								{
++									entry->proc.pglActiveTexture(GL_TEXTURE0 + u);
++									fprintf(gf, "unit%lu: active_dxid %lu ", (unsigned long)u, u < (DWORD)ctx->tmu_count ? (unsigned long)ctx->state.tmu[u].active_dxid : 0);
++									for(k = 0; k < sizeof(tu)/sizeof(tu[0]); k++) { iv[0] = -7; entry->proc.pglGetIntegerv(tu[k].e, iv); fprintf(gf, "%s=%d ", tu[k].n, iv[0]); }
++									entry->proc.pglGetFloatv(0x0BA8, m); fprintf(gf, " TEXM: "); for(k = 0; k < 16; k++) fprintf(gf, "%g ", m[k]); fprintf(gf, "\n");
++								}
++								entry->proc.pglActiveTexture(act);
++								for(k = 0; k < count; k++)
++								{
++									GLfloat *fv = (GLfloat*)(prim + k*ctx->state.vertex.stride);
++									DWORD *dv = (DWORD*)fv;
++									fprintf(gf, "v%lu: x %f y %f z %f rhw %f diffuse %08lX tex %f %f\n", (unsigned long)k, fv[0], fv[1], fv[2], fv[3], (unsigned long)dv[4], fv[5], fv[6]);
++								}
++								fprintf(gf, "GL error at end: 0x%X\n", entry->proc.pglGetError());
++								fclose(gf);
++							}
++							gls_n++;
++						}
++						if(rf_on)
++						{
++							static const GLenum caps[6] = {GL_TEXTURE_2D, GL_BLEND, GL_ALPHA_TEST, GL_DEPTH_TEST, GL_CULL_FACE, GL_FOG};
++							GLint was[6]; DWORD k;
++							entry->proc.pglActiveTexture(GL_TEXTURE0);
++							for(k = 0; k < 6; k++) { entry->proc.pglGetIntegerv(caps[k], &was[k]); entry->proc.pglDisable(caps[k]); }
++							entry->proc.pglBegin(GL_TRIANGLE_FAN);
++							for(k = 0; k < count; k++)
++							{
++								GLfloat *fv = (GLfloat*)(prim + k*ctx->state.vertex.stride), o[4];
++								o[3] = 1.0f/fv[3];
++								o[0] = (((fv[0] - ctx->matrix.vpnorm[0]) * ctx->matrix.vpnorm[2]) - 1.0f)*o[3];
++								o[1] = (((fv[1] - ctx->matrix.vpnorm[1]) * ctx->matrix.vpnorm[3]) - 1.0f)*o[3];
++								o[2] = (fv[2]*ctx->matrix.zscale)*o[3];
++								entry->proc.pglColor4f(1.0f, 0.0f, 0.0f, 1.0f);
++								entry->proc.pglVertex4fv(o);
++							}
++							entry->proc.pglEnd();
++							for(k = 0; k < 6; k++) if(was[k]) entry->proc.pglEnable(caps[k]);
++						}
++					}
+ 
+ 					prim += ctx->state.vertex.stride * count;
+ 					//PRIM_ALIGN;
+@@ -1143,6 +1222,7 @@
  #ifdef TRACE_ON
  						D3DHAL_DP2ZRANGE *zrange = (D3DHAL_DP2ZRANGE*)prim;
  						TOPIC("DEPTH", "D3DDP2OP_ZRANGE = %f %f", zrange->dvMinZ, zrange->dvMaxZ);
@@ -197,65 +456,3 @@
  	TOPIC("SHADER", "Viewport: [%d %d %d %d]", ctx->matrix.viewport[0], ctx->matrix.viewport[1], ctx->matrix.viewport[2], ctx->matrix.viewport[3]);
  
  	ctx->matrix.vpnorm[0] = ctx->matrix.viewport[0];
---- a/d3d.c
-+++ b/d3d.c
-@@ -317,7 +317,7 @@
- 			caps.PrimitiveMiscCaps =
- 				D3DPMISCCAPS_BLENDOP | // Device supports the alpha-blending operations defined in the D3DBLENDOP enumerated type. 
- 				D3DPMISCCAPS_CLIPPLANESCALEDPOINTS | // Device correctly clips scaled points of size greater than 1.0 to user-defined clipping planes. 
--				//D3DPMISCCAPS_CLIPTLVERTS | // Device clips post-transformed vertex primitives. 
-+				D3DPMISCCAPS_CLIPTLVERTS | // Device clips post-transformed vertex primitives. (XP nv4_disp sets it) 
- 				//D3DPMISCCAPS_COLORWRITEENABLE | // Device supports per-channel writes for the render target color buffer through the D3DRS_COLORWRITEENABLE state. 
- 				D3DPMISCCAPS_CULLCCW | // The driver supports counterclockwise culling through the D3DRS_CULLMODE state. (This applies only to triangle primitives.) This flag corresponds to the D3DCULL_CCW member of the D3DCULL enumerated type. 
- 				D3DPMISCCAPS_CULLCW | // The driver supports clockwise triangle culling through the D3DRS_CULLMODE state. (This applies only to triangle primitives.) This flag corresponds to the D3DCULL_CW member of the D3DCULL enumerated type. 
-@@ -377,10 +377,10 @@
- 			
- 			/* some happy values from ref driver */
- 			caps.MaxVertexW      = 1.0e10;
--			caps.GuardBandLeft   = -8192.0f;
--			caps.GuardBandTop    = -8192.0f;
--			caps.GuardBandRight  = 8192.0f;
--			caps.GuardBandBottom = 8192.0f;
-+			caps.GuardBandLeft   = -1.0e8f; /* XP nv4_disp */
-+			caps.GuardBandTop    = -1.0e8f;
-+			caps.GuardBandRight  = 1.0e8f;
-+			caps.GuardBandBottom = 1.0e8f;
- 			caps.ExtentsAdjust   = 0.0f; //  AA kernel is 1.0 x 1.0
- 			caps.StencilCaps = MYSTENCIL_CAPS;
- 			caps.FVFCaps = 8;
-@@ -682,10 +682,10 @@
- 		dxcaps.dwStencilCaps = MYSTENCIL_CAPS;
- 
- 		/* some happy values from ref driver */
--		dxcaps.dvGuardBandLeft   = -32768.0f;
--		dxcaps.dvGuardBandTop    = -32768.0f;
--		dxcaps.dvGuardBandRight  = 32767.0f;
--		dxcaps.dvGuardBandBottom = 32767.0f;
-+		dxcaps.dvGuardBandLeft   = -1.0e8f; /* XP nv4_disp */
-+		dxcaps.dvGuardBandTop    = -1.0e8f;
-+		dxcaps.dvGuardBandRight  = 1.0e8f;
-+		dxcaps.dvGuardBandBottom = 1.0e8f;
- 		dxcaps.dvExtentsAdjust = 0.0f; //  AA kernel is 1.0 x 1.0
- 		dxcaps.dvMaxVertexW = 1.0e10;
- 
---- a/d3d_caps.h
-+++ b/d3d_caps.h
-@@ -100,7 +100,8 @@
- #define triCaps6 {               \
- 	sizeof(D3DPRIMCAPS),          \
- 	/* miscCaps */                \
--	D3DPMISCCAPS_CULLNONE         \
-+	D3DPMISCCAPS_CLIPTLVERTS /* XP nv4_disp: tri/line misc 0x272 */ \
-+	| D3DPMISCCAPS_CULLNONE         \
- 	| D3DPMISCCAPS_CULLCW         \
- 	| D3DPMISCCAPS_CULLCCW        \
- 	| D3DPMISCCAPS_MASKZ          \
-@@ -264,8 +265,6 @@
- 	| D3DDEVCAPS_EXECUTESYSTEMMEMORY /* must be set */
- 	| D3DDEVCAPS_DRAWPRIMITIVES2
- 	| D3DDEVCAPS_DRAWPRIMITIVES2EX
--	| D3DDEVCAPS_SORTINCREASINGZ
--	| D3DDEVCAPS_SORTEXACT
- 	| D3DDEVCAPS_HWVERTEXBUFFER
- 	| D3DDEVCAPS_CANRENDERAFTERFLIP /* must be set on 2k driver */
- 	| D3DDEVCAPS_HWINDEXBUFFER, /* DX8 */

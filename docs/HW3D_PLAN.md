@@ -1319,6 +1319,55 @@ C:\nvkick.txt, C:\nvclk.txt.
     batch (vertices + the bound texture's format and first texels) and the full-screen
     z=0.5 draw; then compare with the XP driver (nv4_disp.dll DrawPrimitives2) for the same
     DP2 ops. Run HL D3D under XP on the T61 for the reference picture (needs the user).
+- XP reference session (2026-10-31, user at the T61): NVIDIA's driver renders c1a0
+  perfectly at 1024x768x32 (analysis/t61-remote/xp-ref/hl_second_run.png); XP's driver has
+  NO 16-bit modes (its DX7 dxdiag test and a 16-bit d3d8test fail there for that reason;
+  D3D8/D3D9 pass). `gl_clear 1` paints the screen red under XP TOO - Half-Life quirk, so
+  the "base pass never lands" conclusion above was a FALSE LEAD.
+- ROOT CAUSE FOUND (2026-10-31), fixed in build 3118 - a shim bug, not vmhal3d:
+  1. Raw DP2 capture (debug vmhal3d: one-shot, buffers two full scenes in memory while
+     C:\vmhal.capon exists, then writes C:\vmhal.cap once - the first per-call fopen
+     version hung the T61) replayed on the PC as screen-space triangles
+     (tools/remote/dp2replay.py) = XP's picture. Half-Life's data is right: XYZRHW, rhw
+     0.0007..0.25 (0.25 = its near plane), z 0..1, near-plane-clipped polygons as
+     TRIANGLEFAN_IMM with vertices up to +-8000 px off screen.
+  2. The HAL's GL calls (identity matrices, glVertex4fv(ndc*w, z*0.99*w, w=1/rhw), cull,
+     depth) replayed on the PC's Mesa and on OUR mesa3d.dll under Wine = right. A GL-state
+     dump inside the HAL on the T61 (C:\vmhal.gls) = nothing exotic.
+  3. driver/vmdisp9x-nv/tools/tlvtest.c (new): the same triangles through mesa3d.dll's
+     OSMesa with switches for each thing the HAL does. On the T61 GPU: plain = right; +
+     glMultiTexCoord4f AND glNormal3f per vertex (`hal 1`) = Half-Life's damage; either one
+     alone = right; llvmpipe = right; glFlush every <=64 draws = right. Threshold: the
+     first 4100 triangles right, from ~4150 (~740 KB of 60-byte vertices in ONE kick) the
+     earliest draws get overwritten, more with every triangle after.
+  4. Trace in nouveau_buffer_invalidate: Mesa's 512 KiB immediate-mode stream buffer, full,
+     had fence NULL -> "not busy" -> its storage was reused from offset 0 while the frame's
+     first draws (the tram's near walls) still waited for the kick.
+  5. Why: nv50 fences resources by walking the bufctx `pending` list at state validation and
+     `current` after a kick (nv50_bufctx_fence). The shim's libdrm (nvshim.c) kept refs in
+     an array only and left both lists EMPTY, so no suballocated buffer was ever fenced.
+     Harmless before 3095 (every draw a synchronous kick); since 3095 draws accumulate until
+     a flush. Fix: libdrm's semantics - refn links into `pending`, push_kref_bufctx (= the
+     pushbuf validate points) moves pending -> current, bufctx_reset relinks.
+  - 3118 on the T61 (tlvtest from C:\remote, then installed): stream buffer "busy, new
+    storage" at 0x20080000; `hal 1` pixel-identical to the clean frame; Half-Life -d3d c1a0
+    = the tram, walls, fans, desk and scientists as under XP
+    (analysis/t61-remote/hl-d3d/3118-c1a0.png). Fake-GPU Wine runs validator-clean;
+    wgltest frames/2 s in the fake 3960 vs 5352 (3117) default scene, 23 vs 29 stress.
+    T61 like-for-like, Half-Life OpenGL c1a0 (C:\NVBACKUP 3117 mesa3d.dll swapped in): 3117
+    46.2 fps, 3118 40.6 fps (-12%). Per frame both make 4 kicks / ~36,750 pushbuffer
+    dwords / ~6.9 ms submit; the shim's validate grew 808 -> 1,210 kcycles (+0.2 ms); the
+    rest (~2.5 ms) is Mesa/nouveau CPU work now that buffers are fenced (bufctx list walks,
+    fence refs, fresh storage instead of reuse) - NEXT: profile and win it back.
+  - Still open: white wedges in the screen corners = single triangles of the near-plane
+    fans (e.g. #113/#59 of the capture, the base texture shared with list triangles that
+    draw fine). tlvtest with a mip chain shows no LOD/clipping problem in GL for them, so it
+    is Half-Life's texture/state on those polygons - next step.
+  - Also found on the way (upstream vmhal9x, not shipped): MesaBufferTexturesChanges reads
+    the FBHDA dd_fifo item BEFORE advancing (re-reads the item it saw, leaves the newest
+    one unprocessed until the next arrives) and marks `tmu[i]` (the hash-lookup counter)
+    instead of `tmu[tmu]` for reload; the patch is in the scratch debug tree, Half-Life was
+    unchanged with it.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim

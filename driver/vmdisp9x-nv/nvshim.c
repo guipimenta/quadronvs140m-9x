@@ -1505,6 +1505,7 @@ struct shim_bufctx {
 	struct nouveau_bufctx base;
 	struct nouveau_bufref refs[SHIM_MAXREF];
 	uint8_t               bin[SHIM_MAXREF];
+	uint8_t               cur[SHIM_MAXREF];   /* 3118: 0 = on base.pending, 1 = on base.current */
 	int                   nref;
 };
 
@@ -2176,6 +2177,40 @@ void nouveau_bufctx_del(struct nouveau_bufctx **pbc)
 	if(pbc && *pbc) { free((struct shim_bufctx *)*pbc); *pbc = NULL; }
 }
 
+/* 3118: libdrm's bufctx lists. A new ref goes on `pending`; validating the
+ * bufctx (PUSH_VAL, and the re-validation after a kick: push_kref_bufctx)
+ * moves `pending` to `current`; nouveau_bufctx_reset unlinks a bin's refs.
+ * nv50 fences its resources by walking these lists (nv50_bufctx_fence:
+ * `pending` at state validation, `current` after a kick), and nouveau's
+ * suballocator decides from those fences whether a buffer is still in use.
+ * 3095-3117 kept the refs only in the array and left both lists empty, so no
+ * suballocated buffer ever got a fence: harmless while every draw was a
+ * synchronous kick (pre-3095), but since draws accumulate until a flush,
+ * nouveau_buffer_invalidate found Mesa's full 512 KiB immediate-mode vertex
+ * buffer "not busy" and reused its storage from offset 0 - overwriting the
+ * frame's first draws before the GPU read them (Half-Life Direct3D's near
+ * walls; tools/tlvtest.c 'hal 1' breaks past ~740 KB of vertices per kick). */
+static void shim_list_tail(struct list_head *h, struct list_head *e)
+{
+	e->prev = h->prev; e->next = h;
+	h->prev->next = e; h->prev = e;
+}
+static void bufctx_relink(struct shim_bufctx *bc)
+{
+	int i;
+	bc->base.pending.prev = bc->base.pending.next = &bc->base.pending;
+	bc->base.current.prev = bc->base.current.next = &bc->base.current;
+	for(i = 0; i < bc->nref; i++)
+		shim_list_tail(bc->cur[i] ? &bc->base.current : &bc->base.pending, &bc->refs[i].thead);
+}
+static void bufctx_validated(struct shim_bufctx *bc)
+{
+	int i, moved = 0;
+	for(i = 0; i < bc->nref; i++)
+		if(!bc->cur[i]) { bc->cur[i] = 1; moved = 1; }
+	if(moved) bufctx_relink(bc);
+}
+
 static struct nouveau_bufref *bufctx_add(struct shim_bufctx *bc, int bin, struct nouveau_bo *bo,
                                          uint32_t flags)
 {
@@ -2188,6 +2223,8 @@ static struct nouveau_bufref *bufctx_add(struct shim_bufctx *bc, int bin, struct
 	r->bo    = bo;
 	r->flags = flags;
 	bc->bin[bc->nref] = (uint8_t)bin;
+	bc->cur[bc->nref] = 0;
+	shim_list_tail(&bc->base.pending, &r->thead);
 	bc->nref++;
 	g_st_kc[1] += shim_tsc() - t;
 	return r;
@@ -2227,10 +2264,12 @@ void nouveau_bufctx_reset(struct nouveau_bufctx *bc, int bin)
 		{
 			b->refs[j] = b->refs[i];
 			b->bin[j]  = b->bin[i];
+			b->cur[j]  = b->cur[i];
 		}
 		j++;
 	}
 	b->nref = j;
+	bufctx_relink(b);   /* 3118: the array moved; rebuild pending/current */
 	g_st_kc[1] += shim_tsc() - t;
 }
 
@@ -2495,7 +2534,9 @@ static void push_kref_bufctx(struct shim_push *p)
 {
 	struct shim_bufctx *bc = (struct shim_bufctx *)p->base.bufctx;
 	int i;
-	if(!bc || shim_nokref()) return;
+	if(!bc) return;
+	bufctx_validated(bc);   /* 3118: libdrm's pushbuf_validate: pending -> current */
+	if(shim_nokref()) return;
 	for(i = 0; i < bc->nref; i++)
 		push_kref(p, bc->refs[i].bo);
 }

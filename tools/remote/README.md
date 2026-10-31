@@ -15,7 +15,7 @@ stores it as `t61u<crc32>.exe` and uploads it only when that version is missing.
 | `t61.py ping` / `info` / `ps` | reachability; Windows, folders, memory, screen mode; processes |
 | `t61.py dir C:\nvmini` / `type C:\nvlast.txt` | list a folder, print a file |
 | `t61.py get C:\nvshim.log out.log` | any path, any size (split into 60 MiB parts, CRC32 end to end) |
-| `t61.py put mesa3d.dll C:\somewhere\mesa3d.dll` | same, the other way |
+| `t61.py put mesa3d.dll C:\somewhere\mesa3d.dll` | same, the other way, in 8 MiB parts (w98ctl gives one PUT 20 s in total); the 80 MB mesa3d.dll takes ~3 min, so try a new one from `C:\remote` first (`tlvtest.exe ... dll C:\remote\m3d.dll`, `ostest dll ...`) before installing it |
 | `t61.py run -t 300 ostest.exe threads 1` | run an exe in `C:\remote` (or a `C:\path\x.exe` in its own folder), print its output |
 | `t61.py sh -t 60 "dir /b C:\NVLOGS" "ver"` | DOS lines run as a batch file in `C:\remote` (one per argument; newlines split too) |
 | `t61.py start C:\WINDOWS\SYSTEM\dxdiag.exe` / `kill dxdiag.exe` | start without waiting / terminate |

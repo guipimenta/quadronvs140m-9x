@@ -1,0 +1,20 @@
+d3d8test (build 3116): fullscreen 640x480 16-bit, 30 frames, hardware if offered vertex processing
+=== round 1 of 1
+-> Direct3DCreate8(220)
+   Direct3DCreate8 = 00247A80
+-> GetAdapterIdentifier
+   GetAdapterIdentifier = 0x00000000
+   adapter: NVIDIA Quadro NVS 140M / nv4_disp.dll
+-> GetAdapterDisplayMode
+   GetAdapterDisplayMode = 0x00000000
+   mode 1024x768 format 22
+-> GetDeviceCaps(HAL)
+   GetDeviceCaps(HAL) = 0x00000000
+   DevCaps 001bbef0, TnL yes, PrimitiveMiscCaps 00000ef2, MaxTextureWidth 8192, VertexShaderVersion fffe0101, PixelShaderVersion ffff0104
+-> CheckDeviceType(HAL)
+   CheckDeviceType(HAL) = 0x00000000
+-> CheckDepthStencilMatch(D16)
+   CheckDepthStencilMatch(D16) = 0x00000000
+-> CreateDevice(HAL)
+   CreateDevice(HAL) = 0x8876086c
+RESULT: FAIL (no device)

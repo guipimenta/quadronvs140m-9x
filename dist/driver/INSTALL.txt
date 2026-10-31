@@ -1,5 +1,5 @@
 =====================================================================
-HOW TO USE (build 3117): install the driver, play the game
+HOW TO USE (build 3118): install the driver, play the game
 =====================================================================
 New machine: Display > Settings > Advanced > Adapter > Change > Have Disk > vmdisp9x.inf,
 pick the NVS 140M entry, reboot. The INF sets everything: every OpenGL program and (3116)
@@ -128,6 +128,27 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3118 - HALF-LIFE IN DIRECT3D DRAWS RIGHT. mesa3d.dll only: copy it to
+C:\WINDOWS\SYSTEM, no reboot (nvmini.vxd / nvmini.drv / nvprobe.exe restamped, copying
+them is optional). Also affects OpenGL games: please check Half-Life in OpenGL too.
+What was wrong: since 3095 the GPU path collects a whole frame of draws and sends them
+in one go (sending every draw separately cost 13 s per frame). The memory layer under
+Mesa (our replacement for Linux's libdrm) never told the GPU driver which buffers the
+collected draws still had to read, so the driver believed every buffer was idle. When a
+frame had more than ~740 KB of vertex data, Mesa's vertex buffer filled up, the driver
+let Mesa start it over from the beginning, and the frame's first draws (in Half-Life's
+Direct3D renderer: the tram's walls right next to the camera) were overwritten before
+the GPU drew them - the misplaced walls and the scraps of other textures. Now the
+driver knows which buffers are still in use and gives Mesa a fresh one, exactly as on
+Linux. Found by capturing one Half-Life frame on the T61, replaying it on the PC, and
+narrowing it down with a new test program (tlvtest.exe, see docs/HW3D_PLAN.md).
+Checked remotely on the T61 (2026-10-31): Half-Life -d3d c1a0 shows the tram, its walls
+and the Black Mesa desk as NVIDIA's XP driver does. Half-Life in OpenGL runs, but the
+correct bookkeeping costs speed: 40.6 fps in c1a0 against 46.2 on 3117 (same scene, same
+machine) - to be won back in a later build.
+Still open: small white wedges in the screen corners on some polygons right at the
+camera in Half-Life's tram (Direct3D only).
+T61 test: Half-Life in OpenGL as usual (does it look right? feel slower?), then -d3d.
 Build 3117 (CONFIRMED on the T61, released v3117) - DXDIAG'S DIRECTX 8 TEST FIX. nvmini.vxd only: copy it to C:\WINDOWS\SYSTEM
 and reboot (mesa3d.dll, nvmini.drv and the rest stay 3116).
 What was wrong: dxdiag's DirectX 7 test ran on the GPU, then the DirectX 8 test closed

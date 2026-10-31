@@ -43,6 +43,7 @@ HERE = Path(__file__).resolve().parent
 HELPER = HERE / "t61util.exe"
 REMOTE_DIR = Path(os.environ.get("W98REMOTE_DIR", Path.home() / "projects/win98-remote"))
 CHUNK = 60 * 1024 * 1024          # under the agent's 64 MiB per-file limit
+PUT_CHUNK = 8 * 1024 * 1024       # uploads: w98ctl gives one PUT 20 s in total
 SYSDIR = "C:\\WINDOWS\\SYSTEM"
 BACKUP = "C:\\NVBACKUP"
 LOGS = ["C:\\nvshim.log", "C:\\nvlast.txt", "C:\\nvkick.txt", "C:\\nvtail.txt", "C:\\nvclk.txt"]
@@ -93,7 +94,7 @@ class T61:
         return res["exit_code"], out
 
     def crc(self, path):
-        _, out = self.util("crc", path, echo=False)
+        _, out = self.util("crc", path, echo=False, timeout=300)
         size, crc = map(int, out.split()[:2])
         return size, crc
 
@@ -119,25 +120,27 @@ class T61:
     def put(self, local, remote):
         local = Path(local)
         data = local.read_bytes()
-        if not is_path(remote) and len(data) <= CHUNK:
+        if not is_path(remote) and len(data) <= PUT_CHUNK:
             self.c.put(local, remote)
             print(f"{local} -> {remote} ({len(data)} bytes, CRC32 ok)")
             return
         parts = []
-        for i, off in enumerate(range(0, max(len(data), 1), CHUNK)):
+        # w98ctl's PUT gives sendall a 20 s budget for the whole part: send 8 MiB parts
+        for i, off in enumerate(range(0, max(len(data), 1), PUT_CHUNK)):
             p = self.tmp / f"t61p{i}.bin"
-            p.write_bytes(data[off:off + CHUNK])
+            p.write_bytes(data[off:off + PUT_CHUNK])
             self.c.put(p, p.name)
             parts.append(p.name)
         stage = "t61put.bin"
+        slow = 60 + len(data) // (256 * 1024)   # the T61 joins/copies ~1 MiB/s on a busy FAT32 disk
         if len(parts) == 1:
             stage = parts[0]
         else:
-            self.util("join", stage, *parts, echo=False)
+            self.util("join", stage, *parts, echo=False, timeout=slow)
         if is_path(remote):
-            self.util("copy", stage, remote, echo=False)
+            self.util("copy", stage, remote, echo=False, timeout=slow)
         elif stage != remote:
-            self.util("copy", stage, remote, echo=False)
+            self.util("copy", stage, remote, echo=False, timeout=slow)
         for name in set(parts + [stage]):
             self.util("del", name, echo=False, check=False)
         size, crc = self.crc(remote)

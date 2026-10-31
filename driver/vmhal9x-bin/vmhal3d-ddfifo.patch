@@ -1,0 +1,41 @@
+vmhal3d (JHRobotics/vmhal9x 8bc480e) MesaBufferTexturesChanges, found 2026-10-31, NOT in the shipped
+vmhal3d.dll yet: the VxD's surf_notify writes the FBHDA dd_fifo item at top+1 and then publishes
+top, but the consumer read item[fifo_top] before advancing - it re-read the item it had already
+seen and left the newest one unprocessed until another notification arrived. Also the reload
+mark used tmu[i] (i = the hash-lookup counter) instead of tmu[tmu]. Half-Life Direct3D was
+unchanged with it on the T61 (its damage was the shim bug fixed in 3118).
+
+--- a/mesa3d_buffer.c
++++ b/mesa3d_buffer.c
+@@ -538,6 +538,10 @@
+ 	
+ 	while(ctx->fifo_top != hda->dd_fifo_top)
+ 	{
++		/* the VxD writes at top+1 and then publishes top: step first, then read
++		   (reading first re-read the item already seen and left the newest one
++		   unprocessed until the next notification arrived) */
++		ctx->fifo_top = (ctx->fifo_top + 1) % hda->dd_fifo_length;
+ 		FBHDA_DD_fifo_item_t *item = &hda->dd_fifo[ctx->fifo_top];
+ 		DWORD tmu;
+ 		DWORD i = 0;
+@@ -558,9 +562,9 @@
+ 						{
+ 							for(tmu = 0; tmu < ctx->tmu_count; tmu++)
+ 							{
+-								if(ddsurf->dxid == ctx->state.tmu[i].active_dxid)
++								if(ddsurf->dxid == ctx->state.tmu[tmu].active_dxid)
+ 								{
+-									ctx->state.tmu[i].reload = TRUE;
++									ctx->state.tmu[tmu].reload = TRUE;
+ 								}
+ 							}
+ 						} // loop ddsurf = ddsurf->up
+@@ -572,8 +576,6 @@
+ 				break;
+ 			}
+ 		}
+-		
+-		ctx->fifo_top = (ctx->fifo_top + 1) % hda->dd_fifo_length;
+ 	}
+ }
+ 

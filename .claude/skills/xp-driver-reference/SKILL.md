@@ -1,6 +1,6 @@
 ---
 name: xp-driver-reference
-description: The working NVIDIA Windows XP driver for this exact GPU (G86 / Quadro NVS 140M) is in the repo and the T61 dual-boots XP. Consult it to understand how Direct3D (DirectDraw/D3D DDI, caps, formats, DrawPrimitives2, clipping), OpenGL and the hardware are really driven, whenever the Win98 Direct3D/OpenGL path misbehaves (vmhal9x/vmhal3d, Mesa OSMesa/nouveau) or a hardware question comes up.
+description: The working NVIDIA Windows XP driver for this exact GPU (G86 / Quadro NVS 140M) is in the repo and the T61 dual-boots XP; wine9x (WineD3D for Win9x, source in ~/projects/wine9x) is the second, source-level Direct3D-to-OpenGL reference. Consult them to understand how Direct3D (DirectDraw/D3D DDI, caps, formats, DrawPrimitives2, clipping), OpenGL and the hardware are really driven, whenever the Win98 Direct3D/OpenGL path misbehaves (vmhal9x/vmhal3d, Mesa OSMesa/nouveau) or a hardware question comes up.
 ---
 
 # NVIDIA's Windows XP driver: the working reference
@@ -90,3 +90,21 @@ driver is a working implementation of the same contract for the same GPU.
 
 When you learn something new from these binaries, add it to disassembly-findings.md (exact
 addresses, the conventions used) so it is never re-derived.
+
+## Second reference: wine9x (WineD3D on Win9x, source)
+
+`~/projects/wine9x` (https://github.com/JHRobotics/wine9x, cloned 2026-10-31 at 5fa464d) is
+Wine 1.7.55's WineD3D ported to Windows 9x by the vmhal9x author: `winedd.dll` (DirectDraw /
+Direct3D 6-7), `wined8.dll`, `wined9.dll` over `wined3d.dll`, on any OpenGL 2.1 ICD (ours:
+mesa3d.dll), with per-application switchers (`DDSwitcher`/`D8Switcher`/`D9Switcher`). Where
+the XP driver shows *what* the right result is, wine9x shows *how to get it through OpenGL*
+in readable source - the same job vmhal3d does, done independently. Consult it for
+Direct3D-to-GL translation questions (state mapping, formats, flips, texture management).
+Known points:
+
+- Pre-transformed (XYZRHW) vertices: `wined3d/directx.c:5899` `position_float4` sends
+  `glVertex4f(x/rhw, y/rhw, z/rhw, 1/rhw)` with an ortho projection (`state.c`, `last_was_rhw`)
+  - mathematically what vmhal3d's `SV_UNPROJECT` does; its fast path converts them into a
+  real vertex buffer first (`wined3d/buffer.c:543`) instead of immediate mode.
+- Its README names Half-Life as an application that breaks under Wine (switch it to the
+  system DLL), so it is a reference, not a drop-in replacement for vmhal3d.
