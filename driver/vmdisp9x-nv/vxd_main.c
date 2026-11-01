@@ -1027,6 +1027,7 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 			/* 3117: only when the process closes its LAST handle (see NV_proc_close) */
 			if(NV_proc_close(params->tagProcess))
 			{
+				NV_gpu_quiesce();                     /* 3122: its queued work runs out first */
 				NV_gpu_release(params->tagProcess);   /* 3110: the GPU channel's owner is gone */
 				NV_gart_release(params->tagProcess);  /* 3115: and its system-memory buffers with it */
 			}
@@ -1356,6 +1357,34 @@ DWORD __stdcall Device_IO_Control_proc(DWORD vmhandle, struct DIOCParams *params
 		{
 			nv_gpu_submit_t sb;
 			NV_gpu_submit(inBuf, params->cbInBuffer / 4, &sb);
+			memcpy(outBuf, &sb, sizeof(sb));
+			rc = 0;
+			break;
+		}
+		case OP_NV_SUBMIT_ASYNC:
+		{
+			nv_gpu_submit_t sb;
+			NV_gpu_submit_async(inBuf, params->cbInBuffer / 4, &sb);
+			memcpy(outBuf, &sb, sizeof(sb));
+			rc = 0;
+			break;
+		}
+		case OP_NV_GPU_IDLE:
+		{
+			nv_gpu_submit_t sb;
+			NV_gpu_idle(&sb);
+			memcpy(outBuf, &sb, sizeof(sb));
+			rc = 0;
+			break;
+		}
+		case OP_NV_SUBMIT_IB:
+		{
+			nv_gpu_submit_t sb;
+			const unsigned long *a = (const unsigned long *)inBuf;
+			if(params->cbInBuffer < 12)
+				memset(&sb, 0, sizeof(sb));
+			else
+				NV_gpu_submit_ib(a[0], a[1], &sb, a[2] ? 1 : 0);
 			memcpy(outBuf, &sb, sizeof(sb));
 			rc = 0;
 			break;

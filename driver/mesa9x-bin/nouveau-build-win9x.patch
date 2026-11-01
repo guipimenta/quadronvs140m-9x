@@ -1860,7 +1860,7 @@ index 12b3e391..c8356359 100644
 +libkernel32.a: extra/kernel32.def
 +	$(DLLTOOL) -A -C -k -d $< -l $@
 diff --git a/mesa-25.1.x.mk b/mesa-25.1.x.mk
-index 46cccbb9..48500104 100644
+index 46cccbb9..c0c2e5c4 100644
 --- a/mesa-25.1.x.mk
 +++ b/mesa-25.1.x.mk
 @@ -980,7 +980,20 @@ MesaSVGAWinsysLib_SRC  = \
@@ -1880,7 +1880,7 @@ index 46cccbb9..48500104 100644
 +	  $(wildcard $(MESA_VER)/src/gallium/drivers/nouveau/nv50/*.c)) \
 +	$(wildcard $(MESA_VER)/src/nouveau/codegen/*.cpp) \
 +	$(MESA_VER)/src/gallium/winsys/nouveau/drm/nouveau_drm_winsys.c \
-+	$(NVDRV)/nvshim.c $(NVDRV)/nvshim_stubs.c
++	$(NVDRV)/nvshim.c $(NVDRV)/nvshim_stubs.c $(NVDRV)/emutls9x.c
 +
  MesaGdiLib_SRC = \
    $(MESA_VER)/src/gallium/winsys/sw/gdi/gdi_sw_winsys.c \
@@ -2068,6 +2068,36 @@ index be9f2520..26637906 100644
     if (nv50->rast->pipe.clamp_vertex_color)
        colors |= NV50_3D_SEMANTIC_COLOR_CLMP_EN;
  
+diff --git a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_surface.c b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_surface.c
+index 7f661065..ff1d7892 100644
+--- a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_surface.c
++++ b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_surface.c
+@@ -555,7 +555,12 @@ nv50_clear(struct pipe_context *pipe, unsigned buffers, const struct pipe_scisso
+    }
+ 
+ out:
++#ifndef WIN9X
+    PUSH_KICK(push);
++#endif
++   /* Win9x nvshim (nvidia_reverse build 3122): no kick per clear, as 3095 did
++    * for draws - every kick costs a fence BO and a VxD submit; the work goes
++    * out with the next flush like any draw */
+    simple_mtx_unlock(&nv50->screen->state_lock);
+ }
+ 
+@@ -1758,7 +1763,12 @@ nv50_blit(struct pipe_context *pipe, const struct pipe_blit_info *info)
+       BEGIN_NV04(push, NV50_3D(SAMPLECNT_ENABLE), 1);
+       PUSH_DATA (push, 1);
+    }
++#ifndef WIN9X
+    PUSH_KICK(push);
++#endif
++   /* Win9x nvshim (build 3122): no kick per blit - a GL_RGB texture upload is
++    * a blit, and Quake 2 engine lightmaps (GL_RGB, rewritten by every dynamic
++    * light) made 50-130 kicks a frame in a Soldier of Fortune fight */
+    simple_mtx_unlock(&nv50->screen->state_lock);
+ }
+ 
 diff --git a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_vbo.c b/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_vbo.c
 index 0a8230dd..1e6f36ca 100644
 --- a/mesa-25.1.x/src/gallium/drivers/nouveau/nv50/nv50_vbo.c
@@ -2246,7 +2276,7 @@ index 2912a10f..89952f5d 100644
      * - via D3DKMTQueryAdapterInfo(KMTQAITYPE_UMOPENGLINFO) on WDDM,
      * - or ExtEscape on XPDM and can be used to ensure the KMD and OpenGL ICD
 diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_framebuffer.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_framebuffer.c
-index 0eb72d92..af90cc06 100644
+index 0eb72d92..9588bc07 100644
 --- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_framebuffer.c
 +++ b/mesa-25.1.x/src/gallium/frontends/wgl/stw_framebuffer.c
 @@ -1,3 +1,11 @@
@@ -2338,11 +2368,52 @@ index 0eb72d92..af90cc06 100644
     if (!stw_dev)
        return false;
  
-@@ -779,6 +800,8 @@ DrvSwapBuffers(HDC hdc)
+@@ -716,6 +737,34 @@ stw_framebuffer_present_locked(HDC hdc,
+ static void
+ wait_swap_interval(struct stw_framebuffer *fb, int interval)
+ {
++#ifdef WIN9X
++   /* Win9x (nvidia_reverse build 3123): Sleep() has a 5 ms granularity on
++    * Windows 98 unless someone called timeBeginPeriod, so the sleep-and-fudge
++    * below overslept by up to 5 ms a frame (44% of Soldier of Fortune's samples
++    * on the G86 sat in it). Pace to the period instead: present no earlier
++    * than the previous present + period, sleeping whole ticks while more than
++    * 6 ms remain and polling the clock for the rest. A frame that already took
++    * longer than the period is not delayed. */
++   {
++      int64_t now = os_time_get_nano() / 1000;
++      int64_t period = (int64_t)(1.0e6 / stw_dev->refresh_rate * interval);
++      if (fb->prev_swap_time != 0) {
++         int64_t target = fb->prev_swap_time + period;
++         if (now < target && target - now <= period) {
++            while (target - now > 6000) {
++               Sleep(1);
++               now = os_time_get_nano() / 1000;
++            }
++            while (now < target) {
++               Sleep(0);
++               now = os_time_get_nano() / 1000;
++            }
++         }
++      }
++      fb->prev_swap_time = now;
++      return;
++   }
++#endif
+    /* Note: all time variables here are in units of microseconds */
+    int64_t cur_time = os_time_get_nano() / 1000;
+ 
+@@ -779,6 +828,14 @@ DrvSwapBuffers(HDC hdc)
  {
     struct stw_framebuffer *fb;
  
-+   M9XT("stw: SwapBuffers hdc", hdc, 0);
++   {  /* 3123: one line per frame cost ~0.5 ms on Win98 (file write + VxD
++       * ring); keep the first 64, then one in 1024 */
++      static unsigned nswap = 0;
++      if (nswap < 64 || (nswap & 1023) == 0)
++         M9XT("stw: SwapBuffers hdc", hdc, nswap);
++      nswap++;
++   }
 +
     if (!stw_dev)
        return false;
@@ -2461,6 +2532,36 @@ index d7db69a2..97b7426c 100644
 +   M9XT("stw: choose count/best", count, bestindex);
     return bestindex;
  }
+diff --git a/mesa-25.1.x/src/gallium/frontends/wgl/stw_st.c b/mesa-25.1.x/src/gallium/frontends/wgl/stw_st.c
+index 1c2b6c4b..42a21af7 100644
+--- a/mesa-25.1.x/src/gallium/frontends/wgl/stw_st.c
++++ b/mesa-25.1.x/src/gallium/frontends/wgl/stw_st.c
+@@ -403,6 +403,12 @@ notify_before_flush_cb(void* _args)
+       pipe->flush_resource(pipe, args->stwfb->textures[ST_ATTACHMENT_BACK_LEFT]);
+ }
+ 
++#ifdef WIN9X
++/* 3122: set by the gallium wgl target when the screen is the GPU (nouveau),
++ * whose present is a blit the GPU runs after the frame - no CPU wait needed */
++int mesa9x_gpu_present = 0;
++#endif
++
+ void
+ stw_st_flush(struct st_context *st,
+              struct pipe_frontend_drawable *drawable,
+@@ -417,7 +423,11 @@ stw_st_flush(struct st_context *st,
+    args.stwfb = stwfb;
+    args.flags = flags;
+ 
+-   if (flags & ST_FLUSH_END_OF_FRAME && !stwfb->fb->winsys_framebuffer)
++   if (flags & ST_FLUSH_END_OF_FRAME && !stwfb->fb->winsys_framebuffer
++#ifdef WIN9X
++       && !mesa9x_gpu_present   /* 3122: the shim throttles to one queued frame instead */
++#endif
++       )
+       flags |= ST_FLUSH_WAIT;
+ 
+    if (flags & ST_FLUSH_WAIT)
 diff --git a/mesa-25.1.x/src/gallium/targets/osmesa/osmesa_target.c b/mesa-25.1.x/src/gallium/targets/osmesa/osmesa_target.c
 index 25985dd9..7892078f 100644
 --- a/mesa-25.1.x/src/gallium/targets/osmesa/osmesa_target.c
@@ -2569,7 +2670,7 @@ index 25985dd9..7892078f 100644
        winsys->destroy(winsys);
        return NULL;
 diff --git a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
-index 8017cd00..668adc36 100644
+index 8017cd00..219d20fc 100644
 --- a/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 +++ b/mesa-25.1.x/src/gallium/targets/wgl/wgl.c
 @@ -41,6 +41,12 @@
@@ -2598,7 +2699,7 @@ index 8017cd00..668adc36 100644
  
  #ifdef WIN9X
  #include "3d_accel.h"
-@@ -92,6 +104,27 @@ void crt_locks_destroy();
+@@ -92,6 +104,29 @@ void crt_locks_destroy();
  
  static const char *created_driver_name = NULL;
  
@@ -2610,6 +2711,8 @@ index 8017cd00..668adc36 100644
 +extern void nvshim_set_front(uint32_t phys, uint32_t size);
 +extern void nvshim_stats(uint32_t *v);
 +extern void nvshim_vsync_wait(uint32_t active_lines);   /* 3096: NVSHIM_VSYNC=1 */
++extern void nvshim_frame_end(void);                     /* 3122: at most one frame queued on the GPU */
++extern int mesa9x_gpu_present;                          /* 3122: stw_st.c - no end-of-frame CPU wait */
 +extern void (*mesa9x_trace_hook)(const char *label, unsigned n, const uint32_t *v);
 +static void nvt(const char *pre, const char *str, unsigned n, uint32_t a0, uint32_t a1)
 +{
@@ -2626,7 +2729,7 @@ index 8017cd00..668adc36 100644
  static struct pipe_screen *
  wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  {
-@@ -99,6 +132,16 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
+@@ -99,6 +134,18 @@ wgl_screen_create_by_name(HDC hDC, const char* driver, struct sw_winsys *winsys)
  
     debug_printf("tried driver: %s\n", driver);
  
@@ -2636,14 +2739,16 @@ index 8017cd00..668adc36 100644
 +      nvt("wgl: nouveau_drm_screen_create enter lasterr", NULL, 1, GetLastError(), 0);
 +      screen = nouveau_drm_screen_create(0);   /* fd ignored; opens the VxD */
 +      nvt("wgl: nouveau_drm_screen_create exit screen/lasterr", NULL, 2, (uint32_t)(uintptr_t)screen, GetLastError());
-+      if (screen)
++      if (screen) {
 +         use_nouveau = true;
++         mesa9x_gpu_present = 1;
++      }
 +   }
 +#endif
  #ifdef GALLIUM_LLVMPIPE
     if (strcmp(driver, "llvmpipe") == 0) {
  # ifdef HAVE_CRTEX
-@@ -138,6 +181,13 @@ wgl_screen_create(HDC hDC)
+@@ -138,6 +185,13 @@ wgl_screen_create(HDC hDC)
     struct sw_winsys *winsys;
     UNUSED bool sw_only = debug_get_bool_option("LIBGL_ALWAYS_SOFTWARE", false);
  
@@ -2657,7 +2762,7 @@ index 8017cd00..668adc36 100644
     winsys = gdi_create_sw_winsys(gdi_sw_acquire_hdc_by_value, gdi_sw_release_hdc_by_value);
     if (!winsys)
        return NULL;
-@@ -175,15 +225,30 @@ wgl_screen_create(HDC hDC)
+@@ -175,15 +229,30 @@ wgl_screen_create(HDC hDC)
     	  }
  #endif
     	
@@ -2689,7 +2794,7 @@ index 8017cd00..668adc36 100644
     winsys->destroy(winsys);
     return NULL;
  }
-@@ -237,6 +302,199 @@ wgl_present(struct pipe_screen *screen,
+@@ -237,6 +306,207 @@ wgl_present(struct pipe_screen *screen,
     }
  #endif
  
@@ -2709,7 +2814,7 @@ index 8017cd00..668adc36 100644
 +      {
 +         static struct pipe_resource *front = NULL;
 +         static int front_tried = 0;
-+         static uint32_t nframes = 0, t_last = 0;
++         static uint32_t nframes = 0, t_last = 0, t_frame = 0, frame_max = 0;
 +         static int cpu_present = -1;
 +         FBHDA_t *hda;
 +         if (cpu_present < 0) {
@@ -2831,15 +2936,19 @@ index 8017cd00..668adc36 100644
 +                     nvshim_vsync_wait(hda->height);
 +                     ctx->blit(ctx, &blit);
 +                     ctx->flush(ctx, NULL, 0);
++                     nvshim_frame_end();
 +                  }
 +               }
 +               /* once per ~2 s: frame rate + shim counters (kicks, flushed/read dwords, traps) */
 +               nframes++;
 +               {
 +                  uint32_t now = GetTickCount();
++                  /* 3122: the longest frame of the window - the frame-rate drops */
++                  if (t_frame && now - t_frame > frame_max) frame_max = now - t_frame;
++                  t_frame = now;
 +                  if (t_last == 0) t_last = now;
 +                  if (now - t_last >= 2000) {
-+                     uint32_t st[20];
++                     uint32_t st[24];
 +                     nvshim_stats(st);
 +                     nvt("wgl: present frames/ms", NULL, 2, nframes, now - t_last);
 +                     nvt("wgl: stats kicks/kickdw", NULL, 2, st[0], st[4]);
@@ -2852,7 +2961,11 @@ index 8017cd00..668adc36 100644
 +                     nvt("wgl: stats vsync waits/ms", NULL, 2, st[13], st[14]);          /* 3096: NVSHIM_VSYNC */
 +                     nvt("wgl: stats m2mf splits", NULL, 1, st[15], 0);                  /* 3096: copies cut across kicks (now handled) */
 +                     nvt("wgl: stats vram checks/mismatches", NULL, 2, st[16], st[17]);   /* 3097: NVSHIM_VERIFYVRAM */
-+                     nframes = 0; t_last = now;
++                     nvt("wgl: stats fence waits n/ms", NULL, 2, st[18], st[19]);       /* 3122 */
++                     nvt("wgl: stats idle waits/deferred frees", NULL, 2, st[20], st[21]);
++                     nvt("wgl: stats frame max ms/kicks in flight", NULL, 2, frame_max, st[22]);
++                     nvt("wgl: stats waits by map/by throttle", NULL, 2, st[23] & 0xffff, st[23] >> 16);
++                     nframes = 0; t_last = now; frame_max = 0;
 +                  }
 +               }
 +               return;
@@ -2889,7 +3002,7 @@ index 8017cd00..668adc36 100644
  #ifdef GALLIUM_SOFTPIPE
     winsys = softpipe_screen(screen)->winsys;
     dt = softpipe_resource(res)->dt;
-@@ -326,6 +584,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -326,6 +596,13 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  
        stw_init(&stw_winsys, hinstDLL);
        stw_init_thread();
@@ -2903,7 +3016,7 @@ index 8017cd00..668adc36 100644
        break;
  
     case DLL_THREAD_ATTACH:
-@@ -337,6 +602,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+@@ -337,6 +614,10 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
        break;
  
     case DLL_PROCESS_DETACH:

@@ -1419,6 +1419,28 @@ C:\nvkick.txt, C:\nvclk.txt.
     repeat 2 PASS; Half-Life -d3d c1a0 identical to 3119 (analysis/t61-remote/dk2/,
     hl-d3d/3121-c1a0*.png).
 
+  - OpenGL speed (Soldier of Fortune, user's recorded fight action.dm2 as timedemo,
+    analysis/t61-remote/sof/action.dm2) -> 3123, 35.5 -> 56 fps:
+    1. 3122 (unpackaged): asynchronous submits nouveau's way - OP_NV_SUBMIT_ASYNC queues,
+       OP_NV_GPU_IDLE drains, the shim appends a 3D QUERY fence (GART word) to every kick,
+       BOs carry busy_seq, frees of busy BOs deferred, nvshim_frame_end keeps one frame
+       queued, stw skips ST_FLUSH_WAIT on the GPU screen; DIOC_CLOSEHANDLE quiesces first.
+    2. Tiled-BO cache in the shim (GL_RGB lightmap uploads made a temp tiled texture per
+       update: OP_NV_VM_KIND + TLB flush twice + a kick); nv50_surface.c no PUSH_KICK after
+       blit/clear on WIN9X. Kicks in a fight 50-130 -> 3-4 a frame.
+    3. emutls9x.c (thread_local without winpthreads), pthread9x benaphore mutex
+       (driver/mesa9x-bin/pthread9x-fast-mutex.patch: the old one took a global spinlock
+       4x and a semaphore wait+release per uncontended pair, ~40% of the CPU samples).
+    4. GART command ring: RAMFC+0x48 = the VM ctxdma, IB ring and entries are VM addresses;
+       OP_NV_SUBMIT_IB {vm, dwords, async}; shim 3 MiB ring per pushbuf, a window is
+       reused once the fence of every kick in it passed; FIFO TLB flush (engine 5) after
+       GART maps. Removes the 2-4.6 ms/frame BAR1 copy.
+    5. Win9x swap pacing in stw_framebuffer.c (Win98 Sleep granularity 5 ms; Mesa's
+       sleep*1.75 overslept); early kicks every 8192 dwords (Mesa calls pushbuf_space only
+       when short, so the shim reports a short end); less per-frame logging.
+    Tools: t61util prof records callers (stack scan; profsym.py --callers). Now CPU-bound
+    (~16 ms/frame: Mesa immediate mode + the game). texcheck, d3d8test PASS on the T61.
+
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim
 and blit it to the visible framebuffer (first version), later a 2D-engine blit into

@@ -28,6 +28,8 @@ automatically. Lifts the agent's limits: absolute Windows paths, files over
                                          (game input via t61input.vxd: DirectInput sees it)
   t61.py debug EXE [ARGS]                (run EXE detached under a debugger: crash module+offset,
                                           registers, stack in C:\\remote\\t61debug.txt)
+  t61.py prof DELAY DUR MS EXE [ARGS]    (as debug, plus an EIP sampler every MS ms for DUR s from
+                                          DELAY s: C:\\remote\\t61prof.txt; tools/remote/profsym.py)
 
 Environment: W98REMOTE_DIR (default ~/projects/win98-remote) holds
 controller/w98ctl.py and controller.json.
@@ -301,7 +303,7 @@ def main():
             t.c.put(HERE / "t61input" / "t61input.vxd", "t61input.vxd")
             code, _ = t.util(v, *x, timeout=60, check=False)
             return 0 if code == 0 else 1
-        elif v in ("wins", "kids", "focus", "close", "press", "waitwin", "click", "key", "text", "autostart", "debug") and (x or v == "wins"):
+        elif v in ("wins", "kids", "focus", "close", "press", "waitwin", "click", "key", "text", "autostart", "debug", "prof") and (x or v == "wins"):
             secs = int(x[1]) + 15 if v == "waitwin" and len(x) == 2 else 60
             code, _ = t.util(v, *x, timeout=min(secs, 600), check=False)
             return 0 if code == 0 else 1

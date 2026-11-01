@@ -842,6 +842,13 @@ static unsigned long g_ib_put     = 0;    /* next free IB ring entry index */
 static unsigned long g_drain_off    = 0;  /* 3098: pusher/cache drain latched off after a timeout */
 static unsigned long g_drain_logged = 0;
 static unsigned long g_nsub       = 0;    /* 3095: submits so far (log gating) */
+/* 3122: where a synchronous submit's time goes, in units of 256 TSC cycles:
+ * copying the stream into the VRAM pushbuffer through BAR1, waiting for the
+ * pusher (IB GET), draining the pusher/cache, waiting for PGRAPH idle. One
+ * 'S> perf' line per 1024 submits (nvtail). */
+static DWORD perf_tsc(void);
+#pragma aux perf_tsc = "rdtsc" "shrd eax, edx, 8" value [eax] modify exact [eax edx];
+static unsigned long g_pf_n, g_pf_dw, g_pf_copy, g_pf_ib, g_pf_drain, g_pf_gr;
 static int           nsub_verbose = 0;
 #define NVGPU_PUSHBUF_SIZE 0x00100000UL   /* 1 MiB command data region            */
 #define NVGPU_IB          0x03300000UL    /* IB ring (indirect-buffer entries)     */
@@ -906,18 +913,22 @@ static unsigned long nv_chan_init(void)
 	gpu_ramht(0xbeef0003UL, NVGPU_VMDMA   - NVGPU_RAMIN, 0);
 
 	NV_vram_fill(NVGPU_RAMFC, 0x100 / 4, 0);
-	NV_vram_wr32(NVGPU_RAMFC + 0x48, (NVGPU_VRAMDMA - NVGPU_RAMIN) >> 4);
+	/* 3123: the pushbuffer ctxdma is the VM one, as nouveau's channels have it
+	 * (nv50_fifo_chan: the push dmaobj targets the channel VM): IB entries and
+	 * the IB ring itself are VM addresses, so a command stream can sit in GART
+	 * (the shim's ring, OP_NV_SUBMIT_IB) or in VRAM through the 1:1 window. */
+	NV_vram_wr32(NVGPU_RAMFC + 0x48, (NVGPU_VMDMA - NVGPU_RAMIN) >> 4);
 	NV_vram_wr32(NVGPU_RAMFC + 0x80, (0UL << 27) | (4UL << 24) | ((NVGPU_RAMHT - NVGPU_RAMIN) >> 4));
 	NV_vram_wr32(NVGPU_RAMFC + 0x44, 0x2101ffffUL);
 	NV_vram_wr32(NVGPU_RAMFC + 0x60, 0x7fffffffUL);
 	NV_vram_wr32(NVGPU_RAMFC + 0x40, 0);
-	NV_vram_wr32(NVGPU_RAMFC + 0x08, NVGPU_PUSHBUF);
-	NV_vram_wr32(NVGPU_RAMFC + 0x10, NVGPU_PUSHBUF);
+	NV_vram_wr32(NVGPU_RAMFC + 0x08, NVGPU_VM_VRAM_BASE + NVGPU_PUSHBUF);
+	NV_vram_wr32(NVGPU_RAMFC + 0x10, NVGPU_VM_VRAM_BASE + NVGPU_PUSHBUF);
 	NV_vram_wr32(NVGPU_RAMFC + 0x7c, 0x30000001UL);
 	NV_vram_wr32(NVGPU_RAMFC + 0x78, 0);
 	NV_vram_wr32(NVGPU_RAMFC + 0x3c, 0x403f6078UL);
 	/* IB (indirect buffer) mode: 0x50 = IB ring base, 0x54 = log2(entries)<<16. */
-	NV_vram_wr32(NVGPU_RAMFC + 0x50, NVGPU_IB);
+	NV_vram_wr32(NVGPU_RAMFC + 0x50, NVGPU_VM_VRAM_BASE + NVGPU_IB);
 	NV_vram_wr32(NVGPU_RAMFC + 0x54, NVGPU_IB_ORDER << 16);
 	NV_vram_wr32(NVGPU_RAMFC + 0x88, NVGPU_CACHE >> 10);
 	NV_vram_wr32(NVGPU_RAMFC + 0x98, ramin >> 12);
@@ -1063,8 +1074,12 @@ int NV_gpu_vmkind(unsigned long phys, unsigned long size, unsigned long kind)
 		NV_vram_wr32(NVGPU_VRAMPT + i * 8 + 4, (kind & 0x7fUL) << 8);
 	(void)NV_vram_rd32(NVGPU_VRAMPT + last * 8 + 4);
 	gpu_tlb_flush();
-	dbg_printf("S> vmkind phys=%08lX size=%08lX kind=%02lX pages=%lu\n",
-	           phys, size, kind, last - first + 1);
+	{	/* 3122: one line in 256 - a fight makes hundreds of these a second */
+		static unsigned long nk = 0;
+		if(nk++ < 64UL || (nk & 255UL) == 0)
+			dbg_printf("S> vmkind phys=%08lX size=%08lX kind=%02lX pages=%lu\n",
+			           phys, size, kind, last - first + 1);
+	}
 	return 1;
 }
 
@@ -1105,6 +1120,23 @@ static void gpu_tlb_flush(void)
 	NV_wr32(0x100c80UL, (0UL << 16) | 1UL);
 	for(t = 0; t < 1000000UL; t++)
 		if(!(NV_rd32(0x100c80UL) & 1UL)) break;
+}
+
+/* 3123: the pusher now fetches command streams through the VM (the shim's GART
+ * ring), so a slab whose VM pages an earlier process used gets the FIFO's TLB
+ * flushed too - engine 5, as nouveau's nv50_fifo_tlb_flush did before the VMM
+ * rewrite. Logged once; switched off if the flush never completes. */
+static int g_fifo_flush = 1;
+static void gpu_tlb_flush_fifo(void)
+{
+	unsigned long t;
+	if(!g_fifo_flush) return;
+	NV_wr32(0x100c80UL, (5UL << 16) | 1UL);
+	for(t = 0; t < 200000UL; t++)
+		if(!(NV_rd32(0x100c80UL) & 1UL)) break;
+	if(g_fifo_flush == 1)
+		dbg_printf("S> FIFO TLB flush (engine 5): %s after %lu polls\n", t < 200000UL ? "done" : "NOT DONE", t);
+	g_fifo_flush = t < 200000UL ? 2 : 0;
 }
 
 /* write the PTEs of one slab (physical addresses re-read from the page table) */
@@ -1202,6 +1234,7 @@ int NV_gart_alloc(unsigned long npages, unsigned long tag, nv_gart_alloc_t *out)
 	}
 	(void)NV_vram_rd32(NVGPU_GARTPT + (first + npages - 1) * 8);
 	gpu_tlb_flush();
+	gpu_tlb_flush_fifo();
 	gart_mark(first, npages, 1);
 	g_gart_pages += npages;
 	out->ok = 1; out->lin = lin; out->vmoff = NVGPU_VM_GART_BASE + (first << 12);
@@ -1301,78 +1334,55 @@ static void gpu_dump_stall(unsigned long chid)
 	           NV_rd32(0x40080cUL), NV_rd32(0x400810UL), NV_rd32(0x400824UL), NV_rd32(PGRAPH_INTR_EN));
 }
 
-int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out)
+/* 3122: pusher done with every queued IB entry and its data (the region may be reused) */
+static int gpu_pusher_drain(unsigned long chid)
+{
+	unsigned long k;
+	for(k = 0; k < 4000000UL; k++)
+	{
+		if(NV_rd32(PFIFO_USER_IBGET(chid)) == g_ib_put && NV_rd32(0x3244) == NV_rd32(0x3240))
+			return 1;
+		if(NV_rd32(PFIFO_INTR_0))
+			return 0;
+		{
+			unsigned long pgi = NV_rd32(PGRAPH_INTR), u = 0;
+			if(pgi && !gpu_trap_recover(pgi, &u)) return 0;
+		}
+	}
+	return 0;
+}
+static void gpu_wedge_async(nv_gpu_submit_t *out, const char *why)
+{
+	g_gpu_wedged = 1;
+	out->wedged = 1;
+	out->ok = 0;
+	out->pfifo_intr  = NV_rd32(PFIFO_INTR_0);
+	out->pgraph_intr = NV_rd32(PGRAPH_INTR);
+	out->get = NV_rd32(PFIFO_USER_IBGET(NVGPU_CHID));
+	out->put = g_ib_put;
+	dbg_printf("S> async submit WEDGED (%s) get=%lu put=%lu pfi=%08lX pgi=%08lX status=%08lX\n",
+	           why, out->get, out->put, out->pfifo_intr, out->pgraph_intr, NV_rd32(PGRAPH_STATUS));
+	gpu_dump_stall(NVGPU_CHID);
+}
+static void gpu_perf_line(void)
+{
+	if(g_pf_n >= 1024UL)
+	{
+		dbg_printf("S> perf n=%lu dw=%lu copy=%lu ib=%lu drain=%lu gr=%lu (x256 cyc)\n",
+		           g_pf_n, g_pf_dw, g_pf_copy, g_pf_ib, g_pf_drain, g_pf_gr);
+		g_pf_n = g_pf_dw = g_pf_copy = g_pf_ib = g_pf_drain = g_pf_gr = 0;
+	}
+}
+
+/* 3122: wait until everything submitted so far has run: the pusher took every
+ * IB entry, drained its data and the method cache, PGRAPH is idle; traps raised
+ * on the way are recovered (bounded), a hang latches g_gpu_wedged. The tail of
+ * a synchronous submit, and OP_NV_GPU_IDLE after asynchronous ones. */
+static int gpu_idle_wait(nv_gpu_submit_t *out)
 {
 	const unsigned long chid = NVGPU_CHID;
-	unsigned long i, bytes = count * 4;
-
-	memset(out, 0, sizeof(*out));
-	out->build = NV_BUILD;
-	if(count == 0 || bytes > NVGPU_PUSHBUF_SIZE)
-		return 0;
-
-	/* 3087: once the GPU trapped or stopped consuming, refuse further kicks at
-	 * once instead of re-spinning the multi-second polls in ring 0 for every
-	 * frame of a render loop (that is what froze the T61 after 3086's first
-	 * frames). A reboot clears it (the channel is rebuilt from cold). */
-	if(g_gpu_wedged)
-	{
-		out->wedged      = 1;
-		out->ok          = 0;
-		out->pfifo_intr  = NV_rd32(PFIFO_INTR_0);
-		out->pgraph_intr = NV_rd32(PGRAPH_INTR);
-		out->get         = NV_rd32(PFIFO_USER_IBGET(chid));
-		out->put         = g_ib_put;
-		dbg_printf("S> submit REFUSED (wedged) cnt=%lu pgi=%08lX\n", count, out->pgraph_intr);
-		return 0;
-	}
-	/* 3095: the per-kick begin/end lines are kept for the first 64 kicks and
-	 * then one in 256 - Half-Life makes hundreds of kicks a frame and the
-	 * ring + the nvprobe tail writer were a per-kick cost; wedges, traps and
-	 * failures are always logged. */
-	nsub_verbose = (g_nsub < 64UL || (g_nsub & 255UL) == 0) ? 1 : 0;
-	g_nsub++;
-	if(nsub_verbose)
-		dbg_printf("S> submit begin cnt=%lu m0=%08lX m1=%08lX ibput=%lu\n", count, methods[0],
-		           count > 1 ? methods[1] : 0, g_ib_put);
-
-	if(!g_chan_ready)
-	{
-		out->ctxctl = nv_chan_init();
-		if(!out->ctxctl) return 0;
-		g_chan_ready = 1;
-		g_chan_put   = 0;
-		g_ib_put     = 0;
-	}
-	else
-		out->ctxctl = NV_rd32(PGRAPH_CTXCTL_CUR);
-
-	/* IB mode: place the command stream in the data region (wrap if needed),
-	 * then post an indirect-buffer entry pointing at it and advance IB_PUT. */
-	if(bytes > NVGPU_PUSHBUF_SIZE)
-	{
-		/* 3095: a whole-frame kick larger than the region would run into the
-		 * IB ring behind it; refuse it instead (the shim caps its batches) */
-		out->ok = 0;
-		dbg_printf("S> submit REFUSED (too large) bytes=%lu\n", bytes);
-		return 0;
-	}
-	if(g_chan_put + bytes > NVGPU_PUSHBUF_SIZE)
-		g_chan_put = 0;
-	for(i = 0; i < count; i++)
-		NV_vram_wr32(NVGPU_PUSHBUF + g_chan_put + i * 4, methods[i]);
-	out->put_off = NVGPU_PUSHBUF + g_chan_put;
-
-	/* IB entry (2 dwords): dw0 = command address (low), dw1 = (addr_high & 0xff)
-	 * | (byte-length << 8) - which equals dwords<<10, the hw size field. */
-	NV_vram_wr32(NVGPU_IB + g_ib_put * 8 + 0, NVGPU_PUSHBUF + g_chan_put);
-	NV_vram_wr32(NVGPU_IB + g_ib_put * 8 + 4, (bytes << 8));
-	g_chan_put += bytes;
-	g_ib_put = (g_ib_put + 1) & (NVGPU_IB_ENTRIES - 1);
-
-	NV_wr32(PFIFO_INTR_0, 0xffffffffUL);
-	(void)NV_vram_rd32(NVGPU_IB);              /* flush the IB write to VRAM */
-	NV_wr32(PFIFO_USER_IBPUT(chid), g_ib_put); /* kick: advance the IB put index */
+	unsigned long i;
+	DWORD pf_t1 = perf_tsc(), pf_t2, pf_t3, pf_t4;
 	for(i = 0; i < 2000000UL; i++)
 	{
 		unsigned long pgi;
@@ -1389,6 +1399,7 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 		}
 	}
 	out->idle_loops = i;
+	pf_t2 = perf_tsc();
 	/* 3098: IBGET==put only says the pusher TOOK this kick's IB entries; it may
 	 * still be fetching their pushbuffer data (CACHE1 DMA_GET 0x3244 behind
 	 * DMA_PUT 0x3240) and the puller may still hold methods in the cache (CACHE1
@@ -1421,7 +1432,10 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 		}
 		out->idle_loops += j;
 	}
+	pf_t3 = perf_tsc();
 	out->gr_idle = gpu_wait(PGRAPH_STATUS, 0xffffffffUL, 0, 4000000UL);
+	pf_t4 = perf_tsc();
+	g_pf_ib += pf_t2 - pf_t1; g_pf_drain += pf_t3 - pf_t2; g_pf_gr += pf_t4 - pf_t3;
 	for(i = 0; i < 4; i++)
 	{
 		unsigned long pgi = NV_rd32(PGRAPH_INTR);   /* traps raised while draining */
@@ -1469,6 +1483,197 @@ int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *
 		           out->get, out->pfifo_intr, out->idle_loops, out->gr_idle, out->c1_get,
 		           NV_rd32(0x3210UL), NV_rd32(0x3270UL), out->pull0);
 	return 1;
+}
+
+
+/* 3123: post one IB entry (VM address, bytes) and advance IB_PUT. dw0 = address
+ * low, dw1 = address bits 32-39 | (byte length << 8), the hw size field. */
+static void gpu_ib_post(unsigned long vm, unsigned long bytes)
+{
+	const unsigned long chid = NVGPU_CHID;
+	NV_vram_wr32(NVGPU_IB + g_ib_put * 8 + 0, vm);
+	NV_vram_wr32(NVGPU_IB + g_ib_put * 8 + 4, (bytes << 8));
+	g_ib_put = (g_ib_put + 1) & (NVGPU_IB_ENTRIES - 1);
+	NV_wr32(PFIFO_INTR_0, 0xffffffffUL);
+	(void)NV_vram_rd32(NVGPU_IB);              /* flush the IB write to VRAM */
+	NV_wr32(PFIFO_USER_IBPUT(chid), g_ib_put); /* kick: advance the IB put index */
+}
+
+/* the checks every submit makes before it queues anything: 0 = refuse */
+static int gpu_submit_prep(unsigned long count, unsigned long bytes, nv_gpu_submit_t *out, int async)
+{
+	const unsigned long chid = NVGPU_CHID;
+
+	memset(out, 0, sizeof(*out));
+	out->build = NV_BUILD;
+	if(count == 0 || bytes > NVGPU_PUSHBUF_SIZE)
+		return 0;
+
+	/* 3087: once the GPU trapped or stopped consuming, refuse further kicks at
+	 * once instead of re-spinning the multi-second polls in ring 0 for every
+	 * frame of a render loop (that is what froze the T61 after 3086's first
+	 * frames). A reboot clears it (the channel is rebuilt from cold). */
+	if(g_gpu_wedged)
+	{
+		out->wedged      = 1;
+		out->ok          = 0;
+		out->pfifo_intr  = NV_rd32(PFIFO_INTR_0);
+		out->pgraph_intr = NV_rd32(PGRAPH_INTR);
+		out->get         = NV_rd32(PFIFO_USER_IBGET(chid));
+		out->put         = g_ib_put;
+		dbg_printf("S> submit REFUSED (wedged) cnt=%lu pgi=%08lX\n", count, out->pgraph_intr);
+		return 0;
+	}
+	/* 3095: the per-kick begin/end lines are kept for the first 64 kicks and
+	 * then one in 256 - Half-Life makes hundreds of kicks a frame and the
+	 * ring + the nvprobe tail writer were a per-kick cost; wedges, traps and
+	 * failures are always logged. */
+	nsub_verbose = (g_nsub < 64UL || (g_nsub & 255UL) == 0) ? 1 : 0;
+	g_nsub++;
+
+	if(!g_chan_ready)
+	{
+		out->ctxctl = nv_chan_init();
+		if(!out->ctxctl) return 0;
+		g_chan_ready = 1;
+		g_chan_put   = 0;
+		g_ib_put     = 0;
+	}
+	else
+		out->ctxctl = NV_rd32(PGRAPH_CTXCTL_CUR);
+
+	if(async)
+	{
+		/* 3122: traps raised by earlier queued work */
+		unsigned long pgi = NV_rd32(PGRAPH_INTR), k;
+		for(k = 0; pgi && k < 4 && out->traps < 16UL; k++)
+		{
+			out->traps++;
+			gpu_trap_recover(pgi, &out->trap_units);
+			pgi = NV_rd32(PGRAPH_INTR);
+		}
+	}
+	if(async)
+	{
+		/* 3122: never let the IB put index catch up with get (a full ring) */
+		unsigned long next = (g_ib_put + 1) & (NVGPU_IB_ENTRIES - 1), k;
+		for(k = 0; k < 4000000UL && NV_rd32(PFIFO_USER_IBGET(chid)) == next; k++)
+			if(NV_rd32(PGRAPH_INTR) || NV_rd32(PFIFO_INTR_0)) break;
+		if(NV_rd32(PFIFO_USER_IBGET(chid)) == next)
+		{
+			gpu_wedge_async(out, "ib full");
+			return 0;
+		}
+	}
+	return 1;
+}
+
+static int gpu_submit_done(nv_gpu_submit_t *out, int async)
+{
+	if(async)
+	{
+		out->ok = 1;
+		out->get = NV_rd32(PFIFO_USER_IBGET(NVGPU_CHID));
+		out->put = g_ib_put;
+		return 1;
+	}
+	return gpu_idle_wait(out);
+}
+
+static int gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out, int async)
+{
+	const unsigned long chid = NVGPU_CHID;
+	unsigned long i, bytes = count * 4;
+	DWORD pf_t0 = 0;
+
+	if(!gpu_submit_prep(count, bytes, out, async))
+		return 0;
+	if(nsub_verbose)
+		dbg_printf("S> submit begin cnt=%lu m0=%08lX m1=%08lX ibput=%lu\n", count, methods[0],
+		           count > 1 ? methods[1] : 0, g_ib_put);
+
+	/* IB mode: place the command stream in the data region (wrap if needed),
+	 * then post an indirect-buffer entry pointing at it and advance IB_PUT. */
+	if(g_chan_put + bytes > NVGPU_PUSHBUF_SIZE)
+	{
+		/* 3122: queued kicks may still be fetching from the start of the region:
+		 * let the pusher take everything before overwriting it */
+		if(async && !gpu_pusher_drain(chid))
+		{
+			gpu_wedge_async(out, "wrap");
+			return 0;
+		}
+		g_chan_put = 0;
+	}
+	pf_t0 = perf_tsc();
+	for(i = 0; i < count; i++)
+		NV_vram_wr32(NVGPU_PUSHBUF + g_chan_put + i * 4, methods[i]);
+	out->put_off = NVGPU_PUSHBUF + g_chan_put;
+	gpu_ib_post(NVGPU_VM_VRAM_BASE + NVGPU_PUSHBUF + g_chan_put, bytes);
+	g_chan_put += bytes;
+	{
+		DWORD pf_t1 = perf_tsc();
+		g_pf_n++; g_pf_dw += count; g_pf_copy += pf_t1 - pf_t0;
+		gpu_perf_line();
+	}
+	return gpu_submit_done(out, async);
+}
+
+/* 3123: a command stream the shim already wrote into its GART ring (VM address
+ * vm, count dwords): only the IB entry is written - no copy through BAR1. The
+ * shim does not touch those dwords again before the kick's fence has passed. */
+int NV_gpu_submit_ib(unsigned long vm, unsigned long count, nv_gpu_submit_t *out, int async)
+{
+	unsigned long bytes = count * 4;
+	if(!gpu_submit_prep(count, bytes, out, async))
+		return 0;
+	if(vm < NVGPU_VM_GART_BASE || vm + bytes > NVGPU_VM_GART_BASE + (NV_GART_PAGES_MAX << 12) || (vm & 3UL))
+	{
+		dbg_printf("S> submit_ib REFUSED vm=%08lX cnt=%lu\n", vm, count);
+		return 0;
+	}
+	if(nsub_verbose)
+		dbg_printf("S> submit_ib cnt=%lu vm=%08lX ibput=%lu\n", count, vm, g_ib_put);
+	out->put_off = vm;
+	gpu_ib_post(vm, bytes);
+	g_pf_n++; g_pf_dw += count;
+	gpu_perf_line();
+	return gpu_submit_done(out, async);
+}
+
+int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out)
+{
+	return gpu_submit(methods, count, out, 0);
+}
+
+/* 3122: asynchronous submit - queue the stream and return; completion is
+ * tracked by the caller's own fence write (shim) or OP_NV_GPU_IDLE */
+int NV_gpu_submit_async(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out)
+{
+	return gpu_submit(methods, count, out, 1);
+}
+
+int NV_gpu_idle(nv_gpu_submit_t *out)
+{
+	memset(out, 0, sizeof(*out));
+	out->build = NV_BUILD;
+	if(!g_chan_ready || g_gpu_wedged)
+	{
+		out->ok = g_chan_ready ? 0 : 1;
+		out->wedged = g_gpu_wedged ? 1 : 0;
+		return 1;
+	}
+	return gpu_idle_wait(out);
+}
+
+/* 3122: a process lets go of the channel (last handle closed): let its queued
+ * work finish before its system-memory pages are freed under the GPU */
+void NV_gpu_quiesce(void)
+{
+	nv_gpu_submit_t sb;
+	memset(&sb, 0, sizeof(sb));          /* gpu_idle_wait counts traps in it */
+	if(g_chan_ready && !g_gpu_wedged)
+		(void)gpu_idle_wait(&sb);
 }
 
 /* Read up to 64 dwords of VRAM back to ring-3 (result readback for tests). */

@@ -69,4 +69,4 @@ Limits:
 
 Build the helper (checked against Win98 exports):
 
-    i686-w64-mingw32-gcc -O2 -s -Wall -Wno-format-truncation tools/remote/t61util.c -o tools/remote/t61util.exe -lgdi32
+    i686-w64-mingw32-gcc -O2 -s -Wall -Wno-format-truncation tools/remote/t61util.c -o tools/remote/t61util.exe -lgdi32 -lwinmm

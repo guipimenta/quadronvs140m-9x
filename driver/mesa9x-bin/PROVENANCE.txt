@@ -42,3 +42,9 @@ built against API 20250702 - usable for Direct3D only, never as the ICD.
   DLLs> mesa3d.dll` (the Win98 KERNEL32/USER32/GDI32/ADVAPI32/MSVCRT/WS2_32 exports are
   taken from a Win98 SE install) and require "missing on Win98: none" for every DLL.
   Verified in the VM: 576 ICD pixel formats, GL_RENDERER "llvmpipe (LLVM 18.18, 128 bits)".
+
+2026-11-01 (build 3123) - mesa3d.dll = this tree + nouveau-build-win9x.patch (regenerated: adds
+  stw_st.c, stw_framebuffer.c pacing, nv50_surface.c, emutls9x.c in the .mk) + the pthread9x
+  submodule (winpthreads, JHRobotics/pthread9x 2a54bf4) with pthread9x-fast-mutex.patch: a
+  benaphore mutex (lock word + semaphore only on contention, owner = TIB address).
+  Rebuild: `make -C winpthreads` then `make mesa3d.w98me.dll`; impcheck: none missing.

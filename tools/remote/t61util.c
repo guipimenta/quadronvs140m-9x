@@ -23,6 +23,9 @@
  *                               agent console's quit/End Task prompts (force: EWX_FORCE)
  *   debug <exe> [args]          run exe detached under the debug API; DLL loads, exceptions with
  *                               module+offset, registers and stack go to t61debug.txt
+ *   prof DELAY DUR MS <exe> [args] as debug, and sample every thread's EIP every MS ms for DUR s
+ *                               from DELAY s after launch -> t61prof.txt (address histogram);
+ *                               on Win98 each sample costs the game ~1-2 ms, so MS=10 keeps it close
  *   endtasks                    only the watcher (a shutdown already stuck on those prompts)
  *   wins [title]                visible top-level windows (title substring, case-insensitive)
  *   kids <title>                those windows and all their child controls
@@ -42,6 +45,7 @@
  */
 #include <windows.h>
 #include <tlhelp32.h>
+#include <mmsystem.h>
 #include <stdio.h>  /* sprintf/_vsnprintf only: output goes through out() */
 #include <stdlib.h>
 #include <string.h>
@@ -388,6 +392,40 @@ static int shot_scanout(BYTE *bits, int w, int h, DWORD stride, DWORD *page)
 	if (!ok || !hda || IsBadReadPtr(hda, sizeof(*hda)) || !hda->vram_pm32) return 0;
 	if ((int)hda->width != w || (int)hda->height != h || (hda->bpp != 16 && hda->bpp != 32)) return 0;
 	*page = hda->surface;
+	/* vram_pm32 is GDI's RAM shadow on nvmini; OpenGL on the GPU draws into VRAM
+	 * itself, so read the real scanout through the VxD (OP_NV_VRAM_READ2, 1024
+	 * dwords per call) when it is there, the shadow otherwise. */
+	{
+		static DWORD row[4096];
+		HANDLE v = CreateFileA("\\\\.\\nvmini.vxd", 0, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		if (v != INVALID_HANDLE_VALUE && hda->pitch <= sizeof(row)) {
+			int good = 1;
+			for (y = 0; y < h && good; y++) {
+				DWORD in[2], got, done = 0, dw = (hda->pitch + 3) / 4;
+				const BYTE *src = (const BYTE *)row;
+				BYTE *d = bits + (DWORD)(h - 1 - y) * stride;
+				while (done < dw) {
+					in[0] = hda->surface + (DWORD)y * hda->pitch + done * 4;
+					in[1] = dw - done > 1024 ? 1024 : dw - done;
+					if (!DeviceIoControl(v, 0x501A, in, sizeof(in), row + done, in[1] * 4, &got, NULL)) { good = 0; break; }
+					done += in[1];
+				}
+				if (hda->bpp == 32) {
+					for (x = 0; x < w; x++, src += 4, d += 3) { d[0] = src[0]; d[1] = src[1]; d[2] = src[2]; }
+				} else {
+					for (x = 0; x < w; x++, src += 2, d += 3) {
+						WORD q = (WORD)(src[0] | (src[1] << 8));
+						d[0] = (BYTE)((q & 0x1f) << 3 | (q & 0x1f) >> 2);
+						d[1] = (BYTE)((q >> 5 & 0x3f) << 2 | (q >> 5 & 0x3f) >> 4);
+						d[2] = (BYTE)((q >> 11) << 3 | (q >> 11) >> 2);
+					}
+				}
+			}
+			CloseHandle(v);
+			if (good) return 2;
+		}
+		else if (v != INVALID_HANDLE_VALUE) CloseHandle(v);
+	}
 	for (y = 0; y < h; y++) {
 		const BYTE *src = hda->vram_pm32 + hda->surface + (DWORD)y * hda->pitch;
 		BYTE *d = bits + (DWORD)(h - 1 - y) * stride;
@@ -440,7 +478,7 @@ static int cmd_shot(const char *dst)
 	WriteFile(f, bits, size, &wr, NULL);
 	CloseHandle(f);
 	DeleteObject(bm);
-	if (scan) out("screen %dx%d (scanout page at VRAM +0x%lx) saved to %s\n", w, h, (unsigned long)page, dst);
+	if (scan) out("screen %dx%d (scanout page at VRAM +0x%lx, %s) saved to %s\n", w, h, (unsigned long)page, scan == 2 ? "read from VRAM" : "GDI shadow", dst);
 	else out("screen %dx%d saved to %s\n", w, h, dst);
 	return 0;
 }
@@ -935,12 +973,118 @@ static void dump_crash(DWORD tid, EXCEPTION_RECORD *er)
 	dump_thread(tid);
 }
 
+/* prof: sample every thread's EIP about once a millisecond (timeBeginPeriod(1),
+ * SuspendThread + GetThreadContext + ResumeThread) for DUR seconds starting DELAY
+ * seconds after launch, then write C:\remote\t61prof.txt: the module list and one
+ * "thread eip count module+offset" line per distinct address (the host resolves
+ * symbols). A thread inside a VxD call shows its ring-3 call site (DeviceIoControl). */
+#define PROF_MAX 400000
+static DWORD *peip; static BYTE *pthr; static DWORD pn, pdelay, pdur, pms = 1, ptick;
+/* Up to PROF_RA likely return addresses per sample, found by scanning the first
+ * PROF_SCAN bytes of the stack for values that point just after a call
+ * instruction in a loaded module (works without frame pointers; may include a
+ * stale one). Written raw as "s thread eip ra..." lines after the histogram. */
+#define PROF_RA 4
+#define PROF_SCAN 1024
+static DWORD *pra;
+static int in_module(DWORD a)
+{
+	int i;
+	for (i = 0; i < ndmod; i++) if (a >= dmod[i].base + 0x1000 && a < dmod[i].base + dmod[i].size) return 1;
+	return 0;
+}
+static int after_call(DWORD a)
+{
+	BYTE b[8]; SIZE_T got = 0;
+	if (!ReadProcessMemory(dproc, (LPCVOID)(DWORD_PTR)(a - 7), b, 7, &got) || got != 7) return 0;
+	if (b[2] == 0xE8) return 1;                                      /* call rel32 */
+	if (b[5] == 0xFF && ((b[6] >> 3) & 7) == 2 && (b[6] >> 6) == 3) return 1;   /* call reg */
+	if (b[5] == 0xFF && ((b[6] >> 3) & 7) == 2 && (b[6] >> 6) == 0 && (b[6] & 7) != 4 && (b[6] & 7) != 5) return 1; /* call [reg] */
+	if (b[4] == 0xFF && ((b[5] >> 3) & 7) == 2 && (b[5] >> 6) == 1) return 1;   /* call [reg+d8] */
+	if (b[1] == 0xFF && ((b[2] >> 3) & 7) == 2 && ((b[2] >> 6) == 2 || b[2] == 0x15)) return 1; /* call [reg+d32] / [abs] */
+	if (b[3] == 0xFF && ((b[4] >> 3) & 7) == 2 && (b[4] >> 6) == 1 && (b[4] & 7) == 4) return 1; /* call [sib+d8] */
+	return 0;
+}
+static int prof_cmp(const void *a, const void *b)
+{
+	DWORD x = *(const DWORD *)a, y = *(const DWORD *)b;
+	DWORD tx = pthr[x], ty = pthr[y];
+	if (tx != ty) return tx < ty ? -1 : 1;
+	if (peip[x] != peip[y]) return peip[x] < peip[y] ? -1 : 1;
+	return 0;
+}
+static DWORD WINAPI prof_thread(LPVOID u)
+{
+	DWORD t0, i, j, *ord, run, off; CONTEXT c; HANDLE f; const char *m; int k;
+	char line[200]; DWORD w; static DWORD stk[PROF_SCAN / 4];
+	(void)u;
+	Sleep(pdelay * 1000);
+	timeBeginPeriod(1);
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+	t0 = GetTickCount();
+	while (GetTickCount() - t0 < pdur * 1000 && pn + 128 < PROF_MAX) {
+		for (k = 0; k < ndthr; k++) {
+			HANDLE th = dthr[k].h;
+			if (SuspendThread(th) == (DWORD)-1) continue;
+			c.ContextFlags = CONTEXT_CONTROL;
+			if (GetThreadContext(th, &c)) {
+				SIZE_T got = 0;
+				peip[pn] = c.Eip; pthr[pn] = (BYTE)k;
+				if (!ReadProcessMemory(dproc, (LPCVOID)(DWORD_PTR)c.Esp, stk, PROF_SCAN, &got)) got = 0;
+				ResumeThread(th);
+				memset(pra + pn * PROF_RA, 0, PROF_RA * sizeof(DWORD));
+				for (i = 0, j = 0; i < got / 4 && j < PROF_RA; i++)
+					if (in_module(stk[i]) && after_call(stk[i])) pra[pn * PROF_RA + j++] = stk[i];
+				pn++;
+			} else
+				ResumeThread(th);
+		}
+		ptick++;
+		Sleep(pms);
+	}
+	t0 = GetTickCount() - t0;
+	timeEndPeriod(1);
+	refresh_modules();
+	f = CreateFileA("t61prof.txt", GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (f == INVALID_HANDLE_VALUE) return 0;
+	sprintf(line, "samples %lu ticks %lu ms %lu interval %lu threads %d\r\n", (unsigned long)pn, (unsigned long)ptick, (unsigned long)t0, (unsigned long)pms, ndthr);
+	WriteFile(f, line, (DWORD)strlen(line), &w, NULL);
+	for (k = 0; k < ndthr; k++) {
+		sprintf(line, "thread %d id %lx\r\n", k, (unsigned long)dthr[k].id);
+		WriteFile(f, line, (DWORD)strlen(line), &w, NULL);
+	}
+	for (k = 0; k < ndmod; k++) {
+		sprintf(line, "module %08lx %08lx %s\r\n", (unsigned long)dmod[k].base, (unsigned long)dmod[k].size, dmod[k].name);
+		WriteFile(f, line, (DWORD)strlen(line), &w, NULL);
+	}
+	ord = (DWORD *)HeapAlloc(GetProcessHeap(), 0, (pn + 1) * sizeof(DWORD));
+	if (ord) {
+		for (i = 0; i < pn; i++) ord[i] = i;
+		qsort(ord, pn, sizeof(DWORD), prof_cmp);
+		for (i = 0; i < pn; i += run) {
+			for (run = 1; i + run < pn && pthr[ord[i + run]] == pthr[ord[i]] && peip[ord[i + run]] == peip[ord[i]]; run++) ;
+			m = where(peip[ord[i]], &off);
+			sprintf(line, "%d %08lx %lu %s+%lx\r\n", pthr[ord[i]], (unsigned long)peip[ord[i]], (unsigned long)run, m ? m : "?", m ? (unsigned long)off : 0UL);
+			WriteFile(f, line, (DWORD)strlen(line), &w, NULL);
+		}
+	}
+	if (pra)
+		for (i = 0; i < pn; i++) {
+			DWORD *r = pra + i * PROF_RA;
+			sprintf(line, "s %d %08lx %08lx %08lx %08lx %08lx\r\n", pthr[i], (unsigned long)peip[i],
+			        (unsigned long)r[0], (unsigned long)r[1], (unsigned long)r[2], (unsigned long)r[3]);
+			WriteFile(f, line, (DWORD)strlen(line), &w, NULL);
+		}
+	CloseHandle(f);
+	return 0;
+}
+
 static int cmd_debugrun(const char *exe)
 {
 	char dir[MAX_PATH], full[MAX_PATH], *fp, msg[512];
 	STARTUPINFOA si; PROCESS_INFORMATION pi; DEBUG_EVENT ev; DWORD cont, t0 = GetTickCount();
 	int firstbp = 1, dumps = 0, i;
-	const char *args = rest_of_line(3);
+	const char *args = rest_of_line(pdur ? 6 : 3);
 	dlog = CreateFileA("t61debug.txt", GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (dlog == INVALID_HANDLE_VALUE) return 1;
 	if (!SearchPathA(NULL, exe, NULL, MAX_PATH, full, &fp)) { dout("cannot find %s\r\n", exe); return 1; }
@@ -955,6 +1099,14 @@ static int cmd_debugrun(const char *exe)
 	dout("debugging pid %lx: %s\r\n", (unsigned long)pi.dwProcessId, cmdbuf);
 	dproc = pi.hProcess;
 	dpid = pi.dwProcessId;
+	if (pdur) {
+		DWORD ptid;
+		peip = (DWORD *)HeapAlloc(GetProcessHeap(), 0, PROF_MAX * sizeof(DWORD));
+		pthr = (BYTE *)HeapAlloc(GetProcessHeap(), 0, PROF_MAX);
+		pra = (DWORD *)HeapAlloc(GetProcessHeap(), 0, PROF_MAX * PROF_RA * sizeof(DWORD));
+		if (peip && pthr && pra) CloseHandle(CreateThread(NULL, 0, prof_thread, NULL, 0, &ptid));
+		dout("profiling %lu s after %lu s -> t61prof.txt\r\n", (unsigned long)pdur, (unsigned long)pdelay);
+	}
 	for (;;) {
 		if (!WaitForDebugEvent(&ev, INFINITE)) break;
 		cont = DBG_CONTINUE;
@@ -1110,6 +1262,12 @@ int main(int argc, char **argv)
 	if (!strcmp(c, "rebootwatch")) return cmd_rebootwatch(1);
 	if (!strcmp(c, "endwatch")) return cmd_rebootwatch(0);
 	if (!strcmp(c, "debugrun") && argc >= 3) return cmd_debugrun(argv[2]);
+	if (!strcmp(c, "profrun") && argc >= 6) {
+		pdelay = (DWORD)atoi(argv[2]); pdur = (DWORD)atoi(argv[3]); pms = (DWORD)atoi(argv[4]);
+		if (!pdur) pdur = 1;
+		if (!pms) pms = 1;
+		return cmd_debugrun(argv[5]);
+	}
 	if (!DuplicateHandle(GetCurrentProcess(), so, GetCurrentProcess(), &hout, 0, FALSE, DUPLICATE_SAME_ACCESS)) hout = so;
 	else {
 		CloseHandle(so);
@@ -1174,6 +1332,11 @@ int main(int argc, char **argv)
 	if (!strcmp(c, "debug") && argc >= 3) {
 		char mode[1024];
 		snprintf(mode, sizeof(mode), "debugrun %s", rest_of_line(2));
+		return spawn_detached(mode);
+	}
+	if (!strcmp(c, "prof") && argc >= 6) {
+		char mode[1024];
+		snprintf(mode, sizeof(mode), "profrun %s", rest_of_line(2));
 		return spawn_detached(mode);
 	}
 	out("usage: t61util info | dir P | type P | crc P | copy S D | part S OFF LEN D | join D P... |\n"

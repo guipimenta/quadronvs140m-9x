@@ -367,6 +367,39 @@ static int fake_class_is_gfx(uint32_t c)
 
 /* Walk one kick like the puller would. Returns 0 when it would stall (and
  * logs why: which dword, which value), 1 when it runs through. */
+/* 3122: an asynchronous fake submit does not write its QUERYs at once: they
+ * wait in this queue (tagged with the submit number) and land two submits
+ * later, or at OP_NV_GPU_IDLE / a synchronous submit - a GPU that lags behind
+ * the CPU, so the shim's fence waits, busy BOs and deferred frees all run. */
+#define FAKE_QMAX 1024
+static struct { uint32_t addr, val, tag; } g_fake_q[FAKE_QMAX];
+static int      g_fake_nq = 0;
+static uint32_t g_fake_atag = 0;          /* asynchronous submits so far */
+static int      g_fake_defer = 0;         /* fake_run: queue the QUERY writes (set around an async submit) */
+static int fake_query_write(uint32_t qaddr, uint32_t qseq)
+{
+	if(qaddr >= NVSHIM_VM_GART && qaddr < NVSHIM_VM_GART_END)
+	{	/* 3115: a fence in a GART BO - the write lands in the slab's memory */
+		uint8_t *gp = fake_gart_ptr(qaddr);
+		if(!gp) return 0;
+		memcpy(gp, &qseq, 4);
+		return 1;
+	}
+	if(qaddr < NVSHIM_VM_BASE + NVSHIM_HEAP_MIN || qaddr >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
+		return 0;
+	fake_wr32(qaddr - NVSHIM_VM_BASE, qseq);
+	return 1;
+}
+static void fake_retire(uint32_t keep)   /* apply the queued writes of all but the last `keep` async submits */
+{
+	int i, j = 0;
+	for(i = 0; i < g_fake_nq; i++)
+	{
+		if(g_fake_atag - g_fake_q[i].tag >= keep) (void)fake_query_write(g_fake_q[i].addr, g_fake_q[i].val);
+		else g_fake_q[j++] = g_fake_q[i];
+	}
+	g_fake_nq = j;
+}
 static int fake_run(const uint32_t *m, uint32_t count)
 {
 	uint32_t i = 0, qaddr = 0, qseq = 0;
@@ -397,18 +430,19 @@ static int fake_run(const uint32_t *m, uint32_t count)
 				else if(mm == 0x1b08) qseq = v;
 				else if(mm == 0x1b0c)
 				{
+					int okq;
 					if(qaddr >= NVSHIM_VM_GART && qaddr < NVSHIM_VM_GART_END)
-					{	/* 3115: a fence in a GART BO - the write lands in the slab's memory */
-						uint8_t *gp = fake_gart_ptr(qaddr);
-						if(!gp) { NVLOG3("FAKE WEDGE QUERY address in an unmapped GART page dword/addr/get", i + 1 + k, qaddr, v); return 0; }
-						memcpy(gp, &qseq, 4);
+						okq = fake_gart_ptr(qaddr) != NULL;
+					else
+						okq = !(qaddr < NVSHIM_VM_BASE + NVSHIM_HEAP_MIN || qaddr >= NVSHIM_VM_BASE + NVSHIM_HEAP_END);
+					if(!okq) { NVLOG3("FAKE WEDGE QUERY address outside the VM window / unmapped GART dword/addr/get", i + 1 + k, qaddr, v); return 0; }
+					if(g_fake_defer && g_fake_nq < FAKE_QMAX)
+					{
+						g_fake_q[g_fake_nq].addr = qaddr; g_fake_q[g_fake_nq].val = qseq; g_fake_q[g_fake_nq].tag = g_fake_atag;
+						g_fake_nq++;
 					}
 					else
-					{
-						if(qaddr < NVSHIM_VM_BASE + NVSHIM_HEAP_MIN || qaddr >= NVSHIM_VM_BASE + NVSHIM_HEAP_END)
-						{ NVLOG3("FAKE WEDGE QUERY address outside VM window dword/addr/get", i + 1 + k, qaddr, v); return 0; }
-						fake_wr32(qaddr - NVSHIM_VM_BASE, qseq);
-					}
+						(void)fake_query_write(qaddr, qseq);
 				}
 			}
 		}
@@ -464,11 +498,44 @@ static BOOL fake_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, D
 		for(i = 0; i < w[1]; i++) fake_wr32(w[0] + i * 4, w[2 + i]);
 		return TRUE;
 	}
+	case OP_NV_GPU_IDLE:
+	{
+		nv_gpu_submit_t *sb = (nv_gpu_submit_t *)out;
+		if(outsz < sizeof(*sb)) return FALSE;
+		fake_retire(0);
+		memset(sb, 0, sizeof(*sb));
+		sb->ok = 1; sb->get = sb->put = g_fake_ib; sb->build = NVSHIM_BUILD;
+		if(ret) *ret = sizeof(*sb);
+		return TRUE;
+	}
+	case OP_NV_SUBMIT_IB:
+	{
+		/* 3123: a stream in the shim's GART ring - read it where the GPU would */
+		nv_gpu_submit_t *sb = (nv_gpu_submit_t *)out;
+		const uint8_t *a, *b;
+		if(insz < 12 || outsz < sizeof(*sb)) return FALSE;
+		memset(sb, 0, sizeof(*sb));
+		sb->build = NVSHIM_BUILD;
+		if(ret) *ret = sizeof(*sb);
+		if(w[1] == 0) return TRUE;                       /* the shim's probe */
+		a = fake_gart_ptr(w[0]); b = fake_gart_ptr(w[0] + w[1] * 4 - 4);
+		if(!a || b != a + (w[1] * 4 - 4))
+		{
+			NVLOG2("FAKE WEDGE IB stream outside one GART slab vm/count", w[0], w[1]);
+			sb->wedged = 1;
+			return TRUE;
+		}
+		return fake_ioctl(w[2] ? OP_NV_SUBMIT_ASYNC : OP_NV_SUBMIT, (void *)a, w[1] * 4, out, outsz, ret);
+	}
+	case OP_NV_SUBMIT_ASYNC:
 	case OP_NV_SUBMIT:
 	{
 		nv_gpu_submit_t *sb = (nv_gpu_submit_t *)out; uint32_t count = insz / 4;
 		if(outsz < sizeof(*sb)) return FALSE;
+		if(op == OP_NV_SUBMIT) fake_retire(0);
+		else { g_fake_atag++; fake_retire(2); g_fake_defer = 1; }
 		memset(sb, 0, sizeof(*sb));
+		sb->build = NVSHIM_BUILD;
 		sb->put_off = 0x03200000UL + g_fake_put;
 		sb->ctxctl  = 0x80003000UL;
 		if(!fake_run(w, count))
@@ -482,6 +549,7 @@ static BOOL fake_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, D
 			g_fake_ib  = (g_fake_ib + 1) & 255;
 			sb->ok = 1; sb->get = sb->put = g_fake_ib; sb->idle_loops = 1;
 		}
+		g_fake_defer = 0;
 		if(ret) *ret = sizeof(*sb);
 		return TRUE;
 	}
@@ -554,6 +622,124 @@ static BOOL shim_ioctl(DWORD op, void *in, DWORD insz, void *out, DWORD outsz, D
 
 static int g_gpu_dead = 0;   /* 3087: set after a wedged/failed kick; no more submits */
 static int g_submit_data = 0; /* 3094: the submit in flight is a pushbuf_data payload (index data), not methods */
+/* ========================= 3122: asynchronous submits ==================
+ * nouveau's way: a kick queues the stream and returns, so the CPU builds the
+ * next batch while the GPU runs this one (3121 waited for the GPU at every kick:
+ * Soldier of Fortune spent ~6 of its ~17 ms a frame inside the submit with the
+ * CPU idle, then ~11 ms on the CPU with the GPU idle). Completion is tracked
+ * the way libdrm's kernel does it: every asynchronous kick ends with a 3D
+ * QUERY write of its sequence number into a word of system memory (GART,
+ * snooped) - the same packet as Mesa's nv50 fence - and every BO the kick
+ * referenced remembers that number. nouveau_bo_map/nouveau_bo_wait with RD/WR
+ * wait for it (NOBLOCK: -EBUSY), a BO Mesa frees while still busy keeps its
+ * memory on a deferred list until its kick has run, and the present waits for
+ * the previous frame (at most one frame queued). A wait that does not see the
+ * fence move within 50 ms falls back to OP_NV_GPU_IDLE (the VxD's full drain,
+ * trap recovery and hang detection). NVSHIM_SYNC=1 (environment or the
+ * per-application mesa key) = the synchronous submits of 3121; a VxD without
+ * OP_NV_SUBMIT_ASYNC, no GART or NVSHIM_VERIFYVRAM also stay synchronous. */
+static int      g_async = -1;               /* -1 undecided, 0 synchronous, 1 asynchronous */
+static uint32_t g_seq_sub = 0;              /* last fence sequence submitted */
+static uint32_t g_seq_done = 0;             /* last one known to have run */
+static volatile uint32_t *g_fence_ptr = NULL;
+static uint32_t g_fence_vm = 0;
+static int      g_3d_bound = 0;             /* subchannel 3 holds the 3D object (the fence packet needs it) */
+struct shim_bo;
+static struct shim_bo *g_zombies = NULL;    /* freed by Mesa, still in queued GPU work */
+static uint32_t g_nzombies = 0;
+static uint32_t g_st_wait_n = 0, g_st_wait_ms = 0, g_st_idle_n = 0;
+static int g_ib_ok = -1;              /* 3123: OP_NV_SUBMIT_IB answered (1), not (0), not asked yet (-1) */
+static uint32_t g_st_wait_ring = 0;   /* 3123: waits for a GART command-ring window the GPU still read */
+static uint32_t g_st_wait_map = 0, g_st_wait_frame = 0;   /* waits from nouveau_bo_map/_wait, from the present throttle */
+/* 3122: where buffer-object time goes (TSC cycles; logged and reset by nvshim_stats every 2 s) */
+enum { BC_NEW_GART, BC_NEW_VRAM, BC_NEW_TILED, BC_NEW_TCACHE, BC_MAP, BC_FREE, BC_KIND, BC_N };
+static uint32_t g_bc_n[BC_N];
+static uint64_t g_bc_cyc[BC_N];
+static uint32_t gart_alloc(uint32_t size, uint32_t align, uint8_t **ptr);
+static void shim_reap(void);
+static int g_ntcache;
+static uint32_t g_st_tc_hit = 0, g_st_tc_miss = 0;
+static struct shim_bo *tcache_take(uint32_t asize, uint32_t kind);
+static void tcache_flush(void);
+static int shim_verifyvram(void);
+#ifndef NVSHIM_STANDALONE
+const char *os_get_option(const char *name);
+#endif
+static int shim_seq_busy(uint32_t seq) { return seq != 0 && (int32_t)(seq - g_seq_done) > 0; }
+static int shim_async(void)
+{
+	if(g_async < 0)
+	{
+		char b[8]; DWORD n = GetEnvironmentVariableA("NVSHIM_SYNC", b, sizeof(b));
+		const char *v = (n > 0 && n < sizeof(b)) ? b : NULL;
+#ifndef NVSHIM_STANDALONE
+		if(!v) v = os_get_option("NVSHIM_SYNC");
+#endif
+		g_async = (v && v[0] != '0') ? 0 : 1;
+		if(shim_verifyvram()) g_async = 0;
+		if(g_async)
+		{
+			uint8_t *fp = NULL;
+			uint32_t vm = gart_alloc(0x100, 0x100, &fp);
+			if(!vm || !fp) g_async = 0;
+			else { g_fence_vm = vm; g_fence_ptr = (volatile uint32_t *)fp; *g_fence_ptr = 0; }
+		}
+		NVLOG2("submits: asynchronous (1) or synchronous (0) / fence vm", (uint32_t)g_async, g_fence_vm);
+	}
+	return g_async;
+}
+static void shim_fence_poll(void)
+{
+	if(g_fence_ptr)
+	{
+		uint32_t v = *g_fence_ptr;
+		if((int32_t)(v - g_seq_done) > 0 && (int32_t)(g_seq_sub - v) >= 0)
+			g_seq_done = v;
+	}
+	if(g_zombies) shim_reap();
+}
+static void vxd_idle(void)
+{
+	nv_gpu_submit_t sb; DWORD ret = 0;
+	memset(&sb, 0, sizeof(sb));
+	g_st_idle_n++;
+	if(!shim_ioctl(OP_NV_GPU_IDLE, NULL, 0, &sb, sizeof(sb), &ret) || !sb.ok)
+	{
+		static int nf = 0;
+		if(nf++ < 16) NVLOG3("GPU idle wait FAIL wedged/get/put", sb.wedged, sb.get, sb.put);
+		if(sb.wedged && !g_gpu_dead) { g_gpu_dead = 1; NVLOG1("GPU DEAD - found by the idle wait, traps", sb.traps); }
+	}
+	if(sb.traps) NVLOG3("idle wait TRAP recovered traps/units/wedged", sb.traps, sb.trap_units, sb.wedged);
+	if(g_fence_ptr && *g_fence_ptr != g_seq_sub)
+	{	/* everything ran, yet the fence word says otherwise: the write is not reaching us */
+		static int nl = 0;
+		if(nl++ < 16) NVLOG2("WARN fence word behind after idle seq/submitted", *g_fence_ptr, g_seq_sub);
+	}
+	g_seq_done = g_seq_sub;                  /* idle = everything queued has run */
+}
+static void shim_wait_seq(uint32_t seq)
+{
+	DWORD t0;
+	uint32_t spins = 0;
+	if(!shim_seq_busy(seq)) return;
+	shim_fence_poll();
+	if(!shim_seq_busy(seq)) return;
+	g_st_wait_n++;
+	t0 = GetTickCount();
+	while(shim_seq_busy(seq) && !g_gpu_dead)
+	{
+		uint32_t v = g_fence_ptr ? *g_fence_ptr : 0;
+		if((int32_t)(v - g_seq_done) > 0 && (int32_t)(g_seq_sub - v) >= 0) { g_seq_done = v; continue; }
+		if((++spins & 1023) == 0 && (shim_fake() || GetTickCount() - t0 > 50))
+		{	/* the fake GPU lags until asked; the real one should never take this long */
+			if(!shim_fake()) { static int ns = 0; if(ns++ < 16) NVLOG3("fence wait SLOW - idle wait seq/done/ms", seq, g_seq_done, GetTickCount() - t0); }
+			vxd_idle();
+		}
+	}
+	if(g_gpu_dead) g_seq_done = g_seq_sub;
+	g_st_wait_ms += GetTickCount() - t0;
+	if(g_zombies) shim_reap();
+}
 /* 3095: why a kick happened - 0 Mesa's own PUSH_KICK (flush/swap/fence wait),
  * 1 pushbuf full, 2 kref list full, 3 bo_map, 4 bo_wait, 5 pushbuf_data
  * fallback. Half-Life on 3094 made ~1,160 kicks per frame, all of them from
@@ -613,6 +799,11 @@ static void nvshim_lastkick(uint32_t phase, uint32_t n, uint32_t count, uint32_t
 		                0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
 		if(f == INVALID_HANDLE_VALUE) return;
 	}
+	/* 3122: with asynchronous submits a kick cannot hang inside the VxD, and
+	 * two file writes per kick were ~half a kick's CPU time in a fight (100+
+	 * kicks a frame): one line in 64, failures always */
+	if(g_async > 0 && phase != 2 && (n & 63) != 0)
+		return;
 	v[0] = phase; v[1] = n; v[2] = count; v[3] = m0; v[4] = m1; v[5] = GetTickCount();
 	{ const char *h = "last kick: phase(0 in,1 ok,2 fail)/n/cnt/m0/m1/tick"; while(*h) buf[p++] = *h++; }
 	for(k = 0; k < 6; k++)
@@ -655,10 +846,32 @@ void nvshim_stats(uint32_t *v)
 	v[13] = g_st_vsync_n; v[14] = g_st_vsync_ms;            /* 3096 */
 	v[15] = g_st_m2mf_split;
 	v[16] = g_st_vchk; v[17] = g_st_vbad;                   /* 3097 */
+	v[18] = g_st_wait_n; v[19] = g_st_wait_ms;              /* 3122: fence waits (map/wait/throttle) */
+	v[20] = g_st_idle_n; v[21] = g_nzombies; v[22] = g_seq_sub - g_seq_done;   /* 3122: idle fallbacks, deferred frees, kicks in flight */
+	v[23] = (g_st_wait_map & 0xffff) | (g_st_wait_frame << 16);                /* 3122: busy-BO map waits | throttle waits << 16 */
+#ifndef NVSHIM_STANDALONE
+	{	/* 3122: buffer-object cost since the last call, n / kcycles per path */
+		static const char *const nm[BC_N] = { "stats bo_new gart n/kcyc", "stats bo_new vram n/kcyc", "stats bo_new tiled n/kcyc",
+		                                      "stats bo_new tcache n/kcyc", "stats bo_map n/kcyc", "stats bo_free n/kcyc", "stats kind ioctl n/kcyc" };
+		int k;
+		for(k = 0; k < BC_N; k++) { NVLOG2(nm[k], g_bc_n[k], (uint32_t)(g_bc_cyc[k] / 1000)); g_bc_n[k] = 0; g_bc_cyc[k] = 0; }
+		NVLOG3("stats tcache hit/miss/entries", g_st_tc_hit, g_st_tc_miss, (uint32_t)g_ntcache);
+		NVLOG2("stats ring waits / ib submits ok", g_st_wait_ring, (uint32_t)g_ib_ok);
+		g_st_tc_hit = g_st_tc_miss = 0; g_st_wait_ring = 0;
+	}
+#endif
 }
 static void shim_refresh_queries(const uint32_t *m, uint32_t count);
 static void shim_kick_scan(const uint32_t *m, uint32_t count, int verify);
-static int vxd_submit(const uint32_t *methods, uint32_t count)
+/* ib_vm != 0: methods already sit in the shim's GART ring at that VM address
+ * (3123) - the VxD only writes the IB entry. methods is still the CPU view of
+ * the same dwords (scan, dump, log). */
+static int vxd_submit_ex(const uint32_t *methods, uint32_t count, int async, uint32_t ib_vm);
+static int vxd_submit(const uint32_t *methods, uint32_t count, int async)
+{
+	return vxd_submit_ex(methods, count, async, 0);
+}
+static int vxd_submit_ex(const uint32_t *methods, uint32_t count, int async, uint32_t ib_vm)
 {
 	nv_gpu_submit_t sb;
 	DWORD ret = 0, t0, t1;
@@ -683,15 +896,47 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 #endif
 	/* 3094: every DMA source this stream names must be a live, flushed BO
 	 * (verify pass of the same walk that directed the flush) */
-	if(!g_submit_data)
-		shim_kick_scan(methods, count, 1);
+	{	/* 3123: a check (it only warns): every kick for the first 4096, then one in 64 */
+		static uint32_t nver = 0;
+		if(!g_submit_data && (nver < 4096 || (nver & 63) == 0))
+			shim_kick_scan(methods, count, 1);
+		nver++;
+	}
 	memset(&sb, 0, sizeof(sb));
 	t0 = GetTickCount();
 #ifndef NVSHIM_STANDALONE
 	nvshim_lastkick(0, (uint32_t)nkick, count, methods[0], count > 1 ? methods[1] : 0);
 #endif
-	if(!shim_ioctl(OP_NV_SUBMIT, (void*)methods, count * 4,
-	               &sb, sizeof(sb), &ret) || !sb.ok)
+	if(ib_vm)
+	{
+		uint32_t in[3];
+		in[0] = ib_vm; in[1] = count; in[2] = (uint32_t)async;
+		if(!shim_ioctl(OP_NV_SUBMIT_IB, in, sizeof(in), &sb, sizeof(sb), &ret) || sb.build == 0)
+		{	/* cannot happen after a good probe; copy this stream the old way */
+			NVLOG2("submits: OP_NV_SUBMIT_IB failed - copying through the VxD; ret/build", ret, sb.build);
+			g_ib_ok = 0;
+			memset(&sb, 0, sizeof(sb));
+		}
+		else
+			goto submitted;
+	}
+	if(async)
+	{
+		/* 3122: a VxD without OP_NV_SUBMIT_ASYNC answers nothing (build 0): go
+		 * synchronous for good and submit this stream the old way */
+		if(!shim_ioctl(OP_NV_SUBMIT_ASYNC, (void*)methods, count * 4, &sb, sizeof(sb), &ret) || sb.build == 0)
+		{
+			NVLOG2("submits: the VxD has no OP_NV_SUBMIT_ASYNC (pre-3122) - synchronous; ret/build", ret, sb.build);
+			g_async = 0;
+			async = 0;
+			memset(&sb, 0, sizeof(sb));
+		}
+	}
+	if(!async && (!shim_ioctl(OP_NV_SUBMIT, (void*)methods, count * 4,
+	               &sb, sizeof(sb), &ret) || !sb.ok))
+		sb.ok = 0;
+submitted:
+	if(!sb.ok)
 	{
 #ifndef NVSHIM_STANDALONE
 		nvshim_lastkick(2, (uint32_t)nkick, count, methods[0], count > 1 ? methods[1] : 0);
@@ -733,7 +978,11 @@ static int vxd_submit(const uint32_t *methods, uint32_t count)
 	 * so Mesa's fence.update (which reads the screen fence BO's map directly,
 	 * never through bo_map) sees the sequence. Before this, no fence ever
 	 * signalled on the T61 and every nouveau_fence_wait quietly failed. */
-	shim_refresh_queries(methods, count);
+	if(!async)
+	{
+		g_seq_done = g_seq_sub;                  /* a synchronous submit drains everything queued before it */
+		shim_refresh_queries(methods, count);
+	}
 	return 0;
 }
 
@@ -817,10 +1066,12 @@ static void vxd_vram_write(uint32_t off, const uint32_t *src, uint32_t dwords)
 static void vxd_vmkind(uint32_t phys, uint32_t size, uint32_t kind)
 {
 	uint32_t in[3]; DWORD r = 0, ret = 0;
+	uint64_t t0 = shim_tsc();
 	if(!nvshim_open())
 		return;
 	in[0] = phys; in[1] = size; in[2] = kind;
 	shim_ioctl(OP_NV_VM_KIND, in, sizeof(in), &r, sizeof(r), &ret);
+	g_bc_n[BC_KIND]++; g_bc_cyc[BC_KIND] += shim_tsc() - t0;
 	{	/* 3095: first 512 then one in 256, like bo_new; a failure (bit 31) always */
 		static uint32_t nk = 0;
 		if(nk < 512 || (nk & 255) == 0 || !r) NVLOG3("bo_kind phys/size/kind", phys, size, kind | (r ? 0 : 0x80000000UL));
@@ -1221,7 +1472,11 @@ static void vxd_gart_kind(uint32_t vm, uint32_t size, uint32_t kind)
 	uint32_t in[3]; DWORD r = 0, ret = 0;
 	if(!nvshim_open()) return;
 	in[0] = vm; in[1] = size; in[2] = kind;
-	shim_ioctl(OP_NV_GART_KIND, in, sizeof(in), &r, sizeof(r), &ret);
+	{
+		uint64_t t0 = shim_tsc();
+		shim_ioctl(OP_NV_GART_KIND, in, sizeof(in), &r, sizeof(r), &ret);
+		g_bc_n[BC_KIND]++; g_bc_cyc[BC_KIND] += shim_tsc() - t0;
+	}
 	{
 		static uint32_t nk = 0;
 		if(nk < 512 || (nk & 255) == 0 || !r) NVLOG3("bo_kind GART vm/size/kind", vm, size, kind | (r ? 0 : 0x80000000UL));
@@ -1231,6 +1486,7 @@ static void vxd_gart_kind(uint32_t vm, uint32_t size, uint32_t kind)
 
 
 /* ========================= private structs ============================ */
+#define SHIM_FENCE_DW 8   /* 3122: spare dwords past a pushbuf's cap for the kick fence */
 #define SHIM_MAXREF 2048   /* 3095: was 512 - a GoldSrc frame references several hundred texture BOs */
 
 struct shim_push;
@@ -1251,6 +1507,9 @@ struct shim_bo {
 	uint32_t kgen;        /* 3095: kick generation the range below belongs to */
 	uint32_t klo, khi;    /* 3095: union of the byte ranges this kick's stream reads (BO offsets) */
 	int      kwhole;      /* 3095: referenced in a way the walk cannot bound: flush it whole */
+	uint32_t busy_seq;    /* 3122: the last asynchronous kick that referenced it (shim fence sequence) */
+	struct shim_bo *znext;   /* 3122: deferred-free list (freed by Mesa while the GPU still uses it) */
+	int      tcached;     /* 3122: dead tiled BO kept (registered, kind set) for reuse */
 };
 #define SHIM_MAXBO 8192   /* 3112: was 4096 - a Quake 2 engine level keeps more BOs than that alive */
 static struct shim_bo *g_bos[SHIM_MAXBO];   /* live BOs, for address -> BO lookups */
@@ -1424,6 +1683,7 @@ static void shim_kick_scan(const uint32_t *m, uint32_t count, int verify)
 	{
 		uint32_t h = m[i], typ = h >> 29, subc = (h >> 13) & 7, mthd = h & 0x1ffc, n = (h >> 18) & 0x7ff, k;
 		if((typ != 0 && typ != 2) || i + 1 + n > count) return;   /* malformed: the puller walk reports it */
+		if(!verify && typ == 0 && subc == 3 && mthd == 0 && n == 1) g_3d_bound = 1;   /* 3122: SET_OBJECT 3D */
 		for(k = 0; k < n; k++)
 		{
 			uint32_t mm = typ == 0 ? mthd + 4 * k : mthd, v = m[i + 1 + k];
@@ -1509,16 +1769,23 @@ struct shim_bufctx {
 	int                   nref;
 };
 
+#define SHIM_RING_BYTES 0x300000   /* 3123: 3 MiB GART command ring per pushbuf (2+ windows of the largest cap) */
+#define SHIM_SEGMAX     512        /* kicks in flight in one ring (the VxD's IB ring holds 255) */
 struct shim_push {
 	struct nouveau_pushbuf base;
-	uint32_t *buf;
+	uint32_t *buf;        /* the batch being built: a malloc'd buffer, or a window of ring */
 	uint32_t  cap;        /* dwords */
+	uint32_t *ring;       /* 3123: GART command ring (NULL: copy submits through the VxD) */
+	uint32_t  ring_vm, ring_dw, pos;   /* its VM address, size and the window's dword offset */
+	struct { uint32_t start, end, seq; } seg[SHIM_SEGMAX];   /* ring ranges still being read */
+	int       seg_head, seg_n;
 	struct nouveau_bo *refn[SHIM_MAXREF];   /* 3094: BOs kref'd for the next kick (a reference each) */
 	int       nrefn;
 	uint32_t  gen;        /* 3095: bumped when the list is dropped; BOs carry (push, gen) to dedup in O(1) */
 };
 static void push_unref_all(struct shim_push *p);
 static void push_kref_bufctx(struct shim_push *p);
+static uint32_t push_limit(struct shim_push *p);   /* 3123 */
 
 /* ========================= drm / device / client ====================== */
 int nouveau_drm_new(int fd, struct nouveau_drm **pdrm)
@@ -1679,6 +1946,20 @@ static uint32_t shim_rd32(uint32_t off)
 	if(!shim_ioctl(OP_NV_RD32, in, sizeof(in), out, sizeof(out), &ret)) return 0xffffffffUL;
 	return out[0];
 }
+/* 3122: wgl.c's present, after its last flush: wait until the GPU has run the
+ * PREVIOUS frame, so the CPU stays at most one frame ahead (libGL's swap
+ * throttling; without it the command region would fill with frames of input lag) */
+void nvshim_frame_end(void)
+{
+	static uint32_t prev = 0;
+	if(g_async > 0)
+	{
+		if(shim_seq_busy(prev)) g_st_wait_frame++;
+		shim_wait_seq(prev);
+		prev = g_seq_sub;
+	}
+}
+
 void nvshim_vsync_wait(uint32_t active_lines)
 {
 	static int on = -1;
@@ -1698,6 +1979,7 @@ void nvshim_vsync_wait(uint32_t active_lines)
 		}
 	}
 	if(!on) return;
+	if(g_async > 0) shim_wait_seq(g_seq_sub);   /* 3122: the frame's draws have run (they did when submits were synchronous) */
 	t0 = GetTickCount();
 	{
 		/* 3097: also accept the raster counter WRAPPING (a new frame began) - works
@@ -1850,9 +2132,10 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 	struct shim_bo *b;
 	uint32_t phys = 0, gvm = 0;
 	uint8_t *gptr = NULL;
-	int tiled, want_gart, gart_on;
+	int tiled, want_gart, gart_on, zretry = 0;
 	uint64_t t = shim_tsc();
 	if(size == 0) size = 0x100;
+	if(g_zombies) shim_fence_poll();          /* 3122: memory of BOs whose kicks have run */
 	/* 3115: placement the way nouveau's TTM does it - a GART request (fence,
 	 * staging, stream buffers: NOUVEAU_BO_GART without VRAM) goes to system
 	 * memory; a VRAM request goes to the VRAM heap and, when that is full, to
@@ -1869,9 +2152,32 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 		if(align < 0x10000) align = 0x10000;
 		size = ((uint32_t)size + 0xffffUL) & ~0xffffUL;
 	}
+place:
+	if(tiled && !want_gart && g_ntcache)
+	{	/* 3122: a dead tiled BO of this size and kind, kind already in its PTEs */
+		struct shim_bo *c = tcache_take(((uint32_t)size + 0xffUL) & ~0xffUL, config->nv50.memtype & 0x7f);
+		if(c)
+		{
+			uint32_t fl = flags;
+			c->refcnt = 1;
+			c->base.size = size; c->base.flags = fl; c->base.map = NULL;
+			c->base.config = *config;
+			c->shadow_sz = 0; c->clean = NULL;
+			c->kgen = 0; c->kwhole = 0; c->znext = NULL;
+			*pbo = &c->base;
+			g_bc_n[BC_NEW_TCACHE]++; g_bc_cyc[BC_NEW_TCACHE] += shim_tsc() - t;
+			return 0;
+		}
+	}
 	if(!want_gart || !gart_on)
 		phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f),
 		                  shim_kind_class(tiled ? (config->nv50.memtype & 0x7f) : 0));
+	if(!phys && (!want_gart || !gart_on) && g_ntcache)
+	{	/* 3122: VRAM short - give the cached tiled BOs back first */
+		tcache_flush();
+		phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f),
+		                  shim_kind_class(tiled ? (config->nv50.memtype & 0x7f) : 0));
+	}
 	if(!phys && !gart_on)
 	{
 		/* 3097: nothing is evicted here, but pending work holds the staging BOs
@@ -1898,6 +2204,7 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 		{
 			if(!g_cur_push || g_cur_push->cur == (uint32_t*)((struct shim_push_hdr*)g_cur_push)->buf) break;
 			g_kick_src = 6; nouveau_pushbuf_kick(g_cur_push); g_kick_src = 0;
+			shim_wait_seq(g_seq_sub);             /* 3122: and let it run, so what it held is freed */
 			push_kref_bufctx((struct shim_push *)g_cur_push);
 			phys = heap_alloc((uint32_t)size, align, tiled && shim_kind_wants_hi(config->nv50.memtype & 0x7f),
 			                  shim_kind_class(tiled ? (config->nv50.memtype & 0x7f) : 0));
@@ -1918,6 +2225,12 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 			if(ng < 16 || (ng & 255) == 0) NVLOG3("bo_new: VRAM full and GART exhausted sz/gart total/cap", (uint32_t)size, g_gart_total, shim_gart_cap());
 			ng++;
 		}
+	}
+	if(!phys && !gvm && !zretry && g_nzombies)
+	{	/* 3122: BOs freed while the GPU still had them: wait for it, then retry */
+		zretry = 1;
+		shim_wait_seq(g_seq_sub);
+		goto place;
 	}
 	if(!phys && !gvm)
 	{
@@ -1960,7 +2273,7 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 		return -1;
 	}
 #ifndef NVSHIM_STANDALONE
-	if(((g_vheap.allocs + g_gart_allocs) & 255) == 0)
+	if(((g_vheap.allocs + g_gart_allocs) & 8191) == 0)   /* 3123: was every 256 - Mesa makes ~60 BOs a frame */
 	{
 		uint32_t ft, lg; heap_stats(&ft, &lg);
 		NVLOG3("heap allocs/used/largest", g_vheap.allocs, g_vheap.used, lg);
@@ -1997,6 +2310,10 @@ int nouveau_bo_new(struct nouveau_device *dev, uint32_t flags, uint32_t align,
 	shim_bo_register(b);
 	*pbo = &b->base;
 	g_st_kc[4] += shim_tsc() - t;
+	{
+		int k = gvm ? BC_NEW_GART : (b->kind ? BC_NEW_TILED : BC_NEW_VRAM);
+		g_bc_n[k]++; g_bc_cyc[k] += shim_tsc() - t;
+	}
 	return 0;
 }
 
@@ -2022,10 +2339,20 @@ int nouveau_bo_map(struct nouveau_bo *bo, uint32_t access, struct nouveau_client
 	 * kicks per frame (a lightmap update or draw buffer map each) = 13 s/frame. */
 	if((access & (NOUVEAU_BO_RD | NOUVEAU_BO_WR)) && b->nkref)
 		shim_kick_bo(b, 3);
+	if((access & (NOUVEAU_BO_RD | NOUVEAU_BO_WR)) && shim_seq_busy(b->busy_seq))
+	{	/* 3122: libdrm's map = wait for the BO (the kernel's CPU_PREP) */
+		if(access & NOUVEAU_BO_NOBLOCK)
+		{
+			shim_fence_poll();
+			if(shim_seq_busy(b->busy_seq)) return -16;   /* -EBUSY */
+		}
+		else { g_st_wait_map++; shim_wait_seq(b->busy_seq); }
+	}
 	if(b->gart)
 	{	/* 3115: the map IS the memory the GPU reads and writes (snooped) */
 		b->base.map = b->gart;
 		g_st_kc[4] += shim_tsc() - t;
+		g_bc_n[BC_MAP]++; g_bc_cyc[BC_MAP] += shim_tsc() - t;
 		return 0;
 	}
 	if(!b->base.map)
@@ -2069,7 +2396,95 @@ int nouveau_bo_map(struct nouveau_bo *bo, uint32_t access, struct nouveau_client
 		memcpy(b->clean, b->base.map, b->shadow_sz);
 	}
 	g_st_kc[4] += shim_tsc() - t;
+	g_bc_n[BC_MAP]++; g_bc_cyc[BC_MAP] += shim_tsc() - t;
 	return 0;
+}
+
+/* 3122: a cache of dead tiled VRAM BOs. A GL_RGB texture upload (Quake 2
+ * engine lightmaps, rewritten by every dynamic light in a fight) makes the
+ * state tracker create and destroy a temporary tiled texture, and each create
+ * and destroy is an OP_NV_VM_KIND ioctl (PTE rewrite + TLB flush). A dead
+ * tiled BO is kept with its kind and handed to the next allocation of the
+ * same size and kind. It stays REGISTERED, so the row-block rule (3109) still
+ * sees its class while it waits. Flushed when the VRAM heap runs short. */
+#define TCACHE_MAX   48
+#define TCACHE_BYTES (16u << 20)
+static struct shim_bo *g_tcache[TCACHE_MAX];
+static int      g_ntcache = 0;
+static uint32_t g_tcache_bytes = 0;
+static void shim_bo_free_storage(struct shim_bo *old)
+{
+	if(old->gart)
+	{	/* 3115: the map was the slab memory itself */
+		if(old->kind) vxd_gart_kind(old->vm, old->asize, 0);
+		gart_free(old->vm, old->asize);
+	}
+	else if(!old->external)
+	{
+		if(old->kind) vxd_vmkind(old->phys, old->asize, 0);   /* back to linear */
+		heap_free(&g_vheap, old->phys, old->asize);
+	}
+	free(old);
+}
+static void tcache_drop(int i)
+{
+	struct shim_bo *b = g_tcache[i];
+	g_tcache[i] = g_tcache[--g_ntcache];
+	g_tcache_bytes -= b->asize;
+	shim_bo_unregister(b);
+	shim_bo_free_storage(b);
+}
+static void tcache_flush(void)
+{
+	while(g_ntcache) tcache_drop(g_ntcache - 1);
+}
+static struct shim_bo *tcache_take(uint32_t asize, uint32_t kind)
+{
+	int i;
+	for(i = 0; i < g_ntcache; i++)
+		if(g_tcache[i]->asize == asize && g_tcache[i]->kind == kind)
+		{
+			struct shim_bo *b = g_tcache[i];
+			g_tcache[i] = g_tcache[--g_ntcache];
+			g_tcache_bytes -= b->asize;
+			b->tcached = 0;
+			g_st_tc_hit++;
+			return b;
+		}
+	g_st_tc_miss++;
+	return NULL;
+}
+/* 3122: give a dead BO's memory back (now, or when the GPU is done with it) */
+static void shim_bo_release(struct shim_bo *old)
+{
+	uint64_t t0 = shim_tsc();
+	if(!old->gart && !old->external && old->kind && old->asize <= TCACHE_BYTES / 4)
+	{
+		if(g_ntcache >= TCACHE_MAX || g_tcache_bytes + old->asize > TCACHE_BYTES)
+			tcache_drop(0);                  /* the oldest goes */
+		if(g_ntcache < TCACHE_MAX && g_tcache_bytes + old->asize <= TCACHE_BYTES)
+		{
+			old->tcached = 1;
+			old->busy_seq = 0; old->nkref = 0; old->kref_push = NULL;
+			shim_bo_register(old);
+			g_tcache[g_ntcache++] = old;
+			g_tcache_bytes += old->asize;
+			g_bc_n[BC_FREE]++; g_bc_cyc[BC_FREE] += shim_tsc() - t0;
+			return;
+		}
+	}
+	shim_bo_free_storage(old);
+	g_bc_n[BC_FREE]++; g_bc_cyc[BC_FREE] += shim_tsc() - t0;
+}
+static void shim_reap(void)
+{
+	struct shim_bo **pz = &g_zombies;
+	while(*pz)
+	{
+		struct shim_bo *z = *pz;
+		if(!shim_seq_busy(z->busy_seq)) { *pz = z->znext; g_nzombies--; shim_bo_release(z); }
+		else pz = &z->znext;
+	}
 }
 
 void nouveau_bo_ref(struct nouveau_bo *bo, struct nouveau_bo **pref)
@@ -2080,22 +2495,20 @@ void nouveau_bo_ref(struct nouveau_bo *bo, struct nouveau_bo **pref)
 	if(old && --old->refcnt == 0)
 	{
 		shim_bo_unregister(old);
-		if(old->gart)
-		{	/* 3115: the map was the slab memory itself */
-			if(old->kind) vxd_gart_kind(old->vm, old->asize, 0);
-			gart_free(old->vm, old->asize);
-		}
-		else
+		if(!old->gart)
 		{
 			if(old->base.map) free(old->base.map);
 			if(old->clean) free(old->clean);
-			if(!old->external)
-			{
-				if(old->kind) vxd_vmkind(old->phys, old->asize, 0);   /* back to linear */
-				heap_free(&g_vheap, old->phys, old->asize);
-			}
+			old->base.map = NULL; old->clean = NULL;
 		}
-		free(old);
+		/* 3122: queued GPU work may still read or write it (libdrm's kernel keeps
+		 * a GEM object alive until its fences signal): keep the memory until then */
+		if(!old->external && shim_seq_busy(old->busy_seq))
+		{
+			old->znext = g_zombies; g_zombies = old; g_nzombies++;
+		}
+		else
+			shim_bo_release(old);
 	}
 	if(pref)
 		*pref = bo;
@@ -2110,6 +2523,15 @@ int nouveau_bo_wait(struct nouveau_bo *bo, uint32_t access, struct nouveau_clien
 	 * wait, pull the latest VRAM contents into the shadow. */
 	if((access & (NOUVEAU_BO_RD | NOUVEAU_BO_WR)) && b->nkref)
 		shim_kick_bo(b, 4);
+	if((access & (NOUVEAU_BO_RD | NOUVEAU_BO_WR)) && shim_seq_busy(b->busy_seq))
+	{	/* 3122: wait until the kicks that use it have run */
+		if(access & NOUVEAU_BO_NOBLOCK)
+		{
+			shim_fence_poll();
+			if(shim_seq_busy(b->busy_seq)) return -16;   /* -EBUSY */
+		}
+		else { g_st_wait_map++; shim_wait_seq(b->busy_seq); }
+	}
 	if((access & NOUVEAU_BO_RD) && b->base.map && !b->gart)
 	{
 		vxd_vram_read(b->phys, (uint32_t*)b->base.map, (b->shadow_sz + 3) / 4);
@@ -2288,7 +2710,32 @@ int nouveau_pushbuf_new(struct nouveau_client *client, struct nouveau_object *ch
 	 * Mesa asks for 512 KiB which the shim had read as dwords (2 MiB) */
 	if(p->cap > 0x3C000) p->cap = 0x3C000;
 	if(shim_pushcap() && p->cap > shim_pushcap()) p->cap = shim_pushcap();   /* 3096: simulation knob */
-	p->buf = malloc(p->cap * 4);
+	/* 3123: nouveau's way - the commands are built in system memory the GPU
+	 * fetches from (GART), and a kick only posts an IB entry. Needs the fences
+	 * (async submits) to know when a stretch of the ring may be written again. */
+	if(shim_async() && g_ib_ok != 0 && !shim_verifyvram())
+	{
+		if(g_ib_ok < 0)
+		{
+			nv_gpu_submit_t sb; uint32_t in[3] = { 0, 0, 1 }; DWORD r = 0;
+			memset(&sb, 0, sizeof(sb));
+			g_ib_ok = (shim_ioctl(OP_NV_SUBMIT_IB, in, sizeof(in), &sb, sizeof(sb), &r) && sb.build != 0) ? 1 : 0;
+			NVLOG2("submits: GART command ring (OP_NV_SUBMIT_IB) yes/no, VxD build", (uint32_t)g_ib_ok, sb.build);
+		}
+		if(g_ib_ok > 0)
+		{
+			uint8_t *rp = NULL;
+			uint32_t vm = gart_alloc(SHIM_RING_BYTES, 0x1000, &rp);
+			if(vm && rp)
+			{
+				p->ring = (uint32_t *)rp; p->ring_vm = vm; p->ring_dw = SHIM_RING_BYTES / 4; p->pos = 0;
+				NVLOG2("pushbuf GART ring vm/bytes", vm, SHIM_RING_BYTES);
+			}
+			else
+				NVLOG0("pushbuf GART ring: no GART memory - copy submits");
+		}
+	}
+	p->buf = p->ring ? p->ring : malloc((p->cap + SHIM_FENCE_DW) * 4);   /* 3122: room for the kick's fence packet */
 	if(!p->buf) { free(p); return -1; }
 	p->base.client  = client;
 	p->base.channel = chan;
@@ -2307,7 +2754,12 @@ void nouveau_pushbuf_del(struct nouveau_pushbuf **ppush)
 	{
 		struct shim_push *p = (struct shim_push *)*ppush;
 		push_unref_all(p);
-		if(p->buf) free(p->buf);
+		if(p->ring)
+		{
+			shim_wait_seq(g_seq_sub);          /* the GPU may still be reading it */
+			gart_free(p->ring_vm, SHIM_RING_BYTES);
+		}
+		else if(p->buf) free(p->buf);
 		free(p);
 		*ppush = NULL;
 	}
@@ -2470,6 +2922,49 @@ static void push_unref_all(struct shim_push *p)
 	p->gen++;
 }
 
+/* 3122: every BO this kick may touch is busy until the kick's fence lands */
+static void push_mark_busy(struct shim_push *p, uint32_t seq)
+{
+	int i;
+	if(p->base.bufctx)
+	{
+		struct shim_bufctx *bc = (struct shim_bufctx *)p->base.bufctx;
+		for(i = 0; i < bc->nref; i++)
+			if(bc->refs[i].bo) ((struct shim_bo *)bc->refs[i].bo)->busy_seq = seq;
+	}
+	for(i = 0; i < p->nrefn; i++)
+		if(p->refn[i]) ((struct shim_bo *)p->refn[i])->busy_seq = seq;
+}
+
+/* 3123: the next batch's window of the ring: p->cap dwords plus the fence,
+ * contiguous (wrap to the start when the rest is too short), and no part of
+ * it still queued for the GPU - wait for the newest kick that overlaps it. */
+static void push_window(struct shim_push *p)
+{
+	uint32_t need = p->cap + SHIM_FENCE_DW, wait = 0;
+	int i;
+	if(p->pos + need > p->ring_dw) p->pos = 0;
+	while(p->seg_n && !shim_seq_busy(p->seg[p->seg_head].seq))
+	{	/* retired */
+		p->seg_head = (p->seg_head + 1) % SHIM_SEGMAX; p->seg_n--;
+	}
+	for(i = 0; i < p->seg_n; i++)
+	{
+		int k = (p->seg_head + i) % SHIM_SEGMAX;
+		if(p->seg[k].start < p->pos + need && p->pos < p->seg[k].end) wait = p->seg[k].seq;
+	}
+	if(wait)
+	{
+		g_st_wait_ring++;
+		shim_wait_seq(wait);
+		while(p->seg_n && !shim_seq_busy(p->seg[p->seg_head].seq))
+		{
+			p->seg_head = (p->seg_head + 1) % SHIM_SEGMAX; p->seg_n--;
+		}
+	}
+	p->buf = p->ring + p->pos;
+}
+
 int nouveau_pushbuf_kick(struct nouveau_pushbuf *push)
 {
 	struct shim_push *p = (struct shim_push *)push;
@@ -2484,7 +2979,42 @@ int nouveau_pushbuf_kick(struct nouveau_pushbuf *push)
 	push_flush_refs(p);
 	g_st_kc[3] += shim_tsc() - tf;
 	if(count)
-		ret = vxd_submit(p->buf, count);
+	{
+		int as = shim_async() && g_3d_bound;
+		uint32_t seq = 0;
+		if(as)
+		{	/* 3122: the kick's own fence, after everything it queued (buf has
+			 * SHIM_FENCE_DW spare dwords past cap); the packet nv50_screen_fence_emit writes */
+			uint32_t *f = p->buf + count;
+			seq = ++g_seq_sub;
+			f[0] = 0x00107b00UL;                 /* QUERY_ADDRESS_HIGH, 4 dwords, subchannel 3 (3D) */
+			f[1] = 0;
+			f[2] = g_fence_vm;
+			f[3] = seq;
+			f[4] = 0x1000f010UL;                 /* QUERY_GET: SHORT | unit CROP | UNK4, write the sequence */
+		}
+		ret = vxd_submit_ex(p->buf, count + (as ? 5 : 0), as,
+		                    (p->ring && g_ib_ok > 0) ? p->ring_vm + p->pos * 4 : 0);
+		if(as)
+		{
+			if(!g_async) g_seq_done = g_seq_sub;   /* fell back to a synchronous submit */
+			push_mark_busy(p, seq);
+			shim_fence_poll();
+		}
+		if(p->ring)
+		{
+			uint32_t used = (count + (as ? 5 : 0) + 3) & ~3u;   /* next window 16-byte aligned */
+			if(as && g_async && p->seg_n < SHIM_SEGMAX)
+			{
+				int k = (p->seg_head + p->seg_n) % SHIM_SEGMAX;
+				p->seg[k].start = p->pos; p->seg[k].end = p->pos + used; p->seg[k].seq = seq;
+				p->seg_n++;
+			}
+			else if(as && g_async)
+				shim_wait_seq(seq);              /* no slot to remember it in: let it finish */
+			p->pos += used;
+		}
+	}
 	if(count && ret == 0 && shim_verifyvram())
 		push_verify_refs(p);                         /* 3097: what the engines just read, back from VRAM */
 
@@ -2498,8 +3028,11 @@ int nouveau_pushbuf_kick(struct nouveau_pushbuf *push)
 		x = x * 1103515245u + 12345u;
 		p->cap = shim_pushcap() - ((x >> 16) & 0xff);
 	}
-	push->end = p->buf + p->cap;
-	push_unref_all(p);                               /* submits are synchronous: the GPU is done with them */
+	if(p->ring && count)
+		push_window(p);                              /* 3123: past this kick, clear of what the GPU still reads */
+	push->cur = p->buf;
+	push->end = p->buf + push_limit(p);
+	push_unref_all(p);                               /* 3122: a BO still busy keeps its memory (shim_bo_release later) */
 
 	if(push->kick_notify)
 		push->kick_notify(push);
@@ -2541,19 +3074,55 @@ static void push_kref_bufctx(struct shim_push *p)
 		push_kref(p, bc->refs[i].bo);
 }
 
+/* 3123: kick a batch once it holds this many dwords (0 = only when full), so
+ * the GPU starts on a frame while the CPU still builds it. Games that call
+ * glFinish every frame (Quake 2 engines: Soldier of Fortune) otherwise run CPU
+ * and GPU strictly one after the other. NVSHIM_KICKDW overrides. */
+static int32_t g_kick_dw = -1;
+static uint32_t shim_kick_dw(void)
+{
+	if(g_kick_dw < 0)
+	{
+		char b[16]; DWORD n = GetEnvironmentVariableA("NVSHIM_KICKDW", b, sizeof(b));
+		const char *v = (n > 0 && n < sizeof(b)) ? b : NULL;
+#ifndef NVSHIM_STANDALONE
+		if(!v) v = os_get_option("NVSHIM_KICKDW");
+#endif
+		g_kick_dw = v ? (int32_t)strtoul(v, NULL, 0) : 8192;
+		NVLOG1("pushbuf: early kick every N dwords", (uint32_t)g_kick_dw);
+	}
+	return (uint32_t)g_kick_dw;
+}
+
+/* how far Mesa may write before it has to ask nouveau_pushbuf_space: the
+ * early-kick size in async ring mode (Mesa's PUSH_SPACE only calls us when the
+ * space runs short), else the whole batch */
+static uint32_t push_limit(struct shim_push *p)
+{
+	uint32_t k = (p->ring && g_async > 0 && g_3d_bound) ? shim_kick_dw() : 0;
+	return (k && k < p->cap) ? k : p->cap;
+}
+
 int nouveau_pushbuf_space(struct nouveau_pushbuf *push, uint32_t dwords, uint32_t relocs,
                           uint32_t pushes)
 {
 	struct shim_push *p = (struct shim_push *)push;
 	uint32_t used = (uint32_t)(push->cur - p->buf);
 	(void)relocs; (void)pushes;
-	if(used + dwords > p->cap)
+	if(used + dwords > push_limit(p) && used + dwords <= p->cap && used < 64)
+	{	/* one packet larger than the early-kick size: let this batch grow */
+		push->end = p->buf + p->cap;
+		return 0;
+	}
+	if(used + dwords > push_limit(p))
 	{
 		int ret;
 		g_kick_src = 1; ret = nouveau_pushbuf_kick(push); g_kick_src = 0;   /* flush what we have, start fresh */
 		if(ret) return ret;
 		push_kref_bufctx(p);                   /* 3094: like libdrm, re-validate the bufctx after a forced flush */
 		used = 0;
+		if(dwords > (uint32_t)(push->end - p->buf))
+			push->end = p->buf + p->cap;       /* 3123: a request beyond the early-kick size */
 	}
 	if(dwords > p->cap)
 		return -1;                             /* single batch too large */
@@ -2590,6 +3159,7 @@ void nouveau_pushbuf_data(struct nouveau_pushbuf *push, struct nouveau_bo *bo, u
 		}
 		memcpy(push->cur, src + offset, (size_t)dwords * 4);
 		push->cur += dwords;
+		if(push->cur > push->end) push->end = p->buf + p->cap;   /* 3123: past an early-kick limit */
 		return;
 	}
 	/* fallback (BO without a CPU shadow): the two-submit path */
@@ -2597,7 +3167,7 @@ void nouveau_pushbuf_data(struct nouveau_pushbuf *push, struct nouveau_bo *bo, u
 	if(src)
 	{
 		g_submit_data = 1;                     /* 3094: index payload, not methods (dump tag, no kick check) */
-		(void)vxd_submit((const uint32_t*)(src + offset), dwords);
+		(void)vxd_submit((const uint32_t*)(src + offset), dwords, 0);
 		g_submit_data = 0;
 	}
 }

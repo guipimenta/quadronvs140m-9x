@@ -14,7 +14,7 @@
 /* VxD DeviceIoControl opcodes (vxd_nv.h). */
 #define OP_NV_PROBE         0x5000  /* 3099: nv_hwinfo_t (29 dwords, vxd_nv.h); [22] = the VxD's NV_BUILD */
 #define NVSHIM_HWINFO_BUILD 22      /* dword index of nv_hwinfo_t.build                                   */
-#define NVSHIM_BUILD        3120UL  /* this shim's own build (bump with every nvshim.c change; the        */
+#define NVSHIM_BUILD        3123UL  /* this shim's own build (bump with every nvshim.c change; the        */
                                     /* standalone nvprobe build uses NV_BUILD from vxd_nv.h instead)      */
 #define OP_NV_RD32          0x5001  /* 3094: read BAR0 MMIO dwords: in[0]=byte offset, in[1]=count -> out dwords (GRAPH_UNITS 0x1540) */
 #define OP_NV_SUBMIT      0x5013  /* submit a ring-3 method stream to the channel */
@@ -28,6 +28,9 @@
 #define OP_NV_GART_ALLOC    0x501C  /* 3115: in[0] = 4 KiB pages -> nv_gart_alloc_t (ring-3 linear address + VM offset) */
 #define OP_NV_GART_FREE     0x501D  /* 3115: in[0] = the linear address OP_NV_GART_ALLOC returned */
 #define OP_NV_GART_KIND     0x501E  /* 3115: in[0] = GART VM address, [1] = size, [2] = storage kind of those 4 KiB PTEs */
+#define OP_NV_SUBMIT_ASYNC  0x501F  /* 3122: OP_NV_SUBMIT without the wait - queue the stream and return */
+#define OP_NV_GPU_IDLE      0x5020  /* 3122: wait until everything queued has run (out = nv_gpu_submit_t) */
+#define OP_NV_SUBMIT_IB     0x5021  /* 3123: in = {vm, dwords, async}: queue a stream already in the caller's GART ring (no copy); out = nv_gpu_submit_t */
 
 /* OP_NV_SUBMIT result (nv50_gpu.h: nv_gpu_submit_t). nvshim.c reads .ok only;
  * the rest keeps the layout identical to the VxD's so the ioctl memcpy fits. */

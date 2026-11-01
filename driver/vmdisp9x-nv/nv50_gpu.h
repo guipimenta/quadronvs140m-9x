@@ -71,6 +71,10 @@ typedef struct nv_gpu_vread
 } nv_gpu_vread_t;
 
 int NV_gpu_submit(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out);
+int NV_gpu_submit_async(unsigned long *methods, unsigned long count, nv_gpu_submit_t *out);   /* 3122 */
+int NV_gpu_idle(nv_gpu_submit_t *out);                                                          /* 3122 */
+int NV_gpu_submit_ib(unsigned long vm, unsigned long count, nv_gpu_submit_t *out, int async);   /* 3123 */
+void NV_gpu_quiesce(void);                                                                      /* 3122 */
 int NV_gpu_vram_read(unsigned long offset, unsigned long count, nv_gpu_vread_t *out);
 
 /* M5.3c: bind an object at a caller-chosen handle (Mesa's RAMHT handle set) */
