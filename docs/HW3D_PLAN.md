@@ -1440,6 +1440,19 @@ C:\nvkick.txt, C:\nvclk.txt.
        when short, so the shim reports a short end); less per-frame logging.
     Tools: t61util prof records callers (stack scan; profsym.py --callers). Now CPU-bound
     (~16 ms/frame: Mesa immediate mode + the game). texcheck, d3d8test PASS on the T61.
+  - 3124: Soldier of Fortune's NEW GAME cutscene (map tsr1) froze Windows (power cycle).
+    VRAM full, ~200 storage-kind changes a second; no trap, no log line. The G86 is a
+    g84_gr chip in nouveau: g84_gr_tlb_flush turns PGRAPH FIFO access off (0x400500 bit
+    0), waits until no 3-bit unit field of 0x400380/384/388 is 1 (busy), flushes
+    0x100c80, turns access back on - flushing a busy PGRAPH is a hardware bug. Our VxD
+    flushed directly; sync submits (<= 3121) hit an idle PGRAPH by luck, the async ones
+    flush mid-render. Fixed nouveau's way (VxD); a PGRAPH still busy after the bounded
+    wait latches the GPU wedged instead of a ~1 s ring-0 poll per flush. Shim: storage
+    kind tracked per page (64 KiB VRAM / 4 KiB GART, unknown after any object bind), no
+    reset to linear at free: kind ioctls 18-25 a frame -> ~0 in the fight. User played
+    the cutscene through; fight timedemo unchanged (53-54 fps for 3123 and 3124 in the
+    same T61 session - compare builds in one session, the T61's speed drifts); texcheck,
+    d3d8test PASS.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim

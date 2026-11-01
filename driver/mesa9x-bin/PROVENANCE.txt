@@ -48,3 +48,7 @@ built against API 20250702 - usable for Direct3D only, never as the ICD.
   submodule (winpthreads, JHRobotics/pthread9x 2a54bf4) with pthread9x-fast-mutex.patch: a
   benaphore mutex (lock word + semaphore only on contention, owner = TIB address).
   Rebuild: `make -C winpthreads` then `make mesa3d.w98me.dll`; impcheck: none missing.
+
+2026-11-01 (build 3124) - mesa3d.dll = the 3123 tree and patches unchanged; only the shim
+  (driver/vmdisp9x-nv/nvshim.c, compiled into the DLL by the .mk) changed: storage kinds
+  tracked per page. `make mesa3d.w98me.dll`; impcheck: none missing.
