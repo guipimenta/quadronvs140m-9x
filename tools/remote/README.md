@@ -24,6 +24,7 @@ stores it as `t61u<crc32>.exe` and uploads it only when that version is missing.
 | `t61.py install FILE...` | copy into C:\WINDOWS\SYSTEM, previous copy kept in C:\NVBACKUP |
 | `t61.py reboot [force]` | restart like the Start menu, wait for the agent, skip the network logon (Cancel, nothing typed), wait for the desktop |
 | `t61.py autostart on\|off\|show` | start the agent at boot: RunServices (before logon) + Run, both `C:\remote\t61boot.exe supervise` |
+| `t61.py remote on\|off\|show\|menu` | the agent only while debugging. `on`: autostart on, the supervisor starts now (it adopts a running agent), and the Start menu gets Programs > Remote debugging > ON / OFF. `off`: autostart off, supervisor and agent stopped (this connection ends). `show`: Run keys, supervisor, agent. `menu`: only the shortcuts |
 | `t61.py wins [TITLE]` / `kids TITLE` | visible windows / a window's controls (class, id, rectangle, text) |
 | `t61.py press TITLE BUTTON` | click a dialog button by its text (works without focus or coordinates) |
 | `t61.py focus TITLE` / `close TITLE` / `waitwin TITLE SECS` | foreground, WM_CLOSE, wait for a window |
@@ -34,9 +35,13 @@ stores it as `t61u<crc32>.exe` and uploads it only when that version is missing.
 
 Limits:
 
-- Autostart is ON since 2026-10-30: `t61boot.exe supervise` (a copy of the helper) keeps
-  `w98agent.exe` running and retries every 10 s while the network is not up; its log is
-  `C:\remote\t61boot.log`. A hang at boot or shutdown still needs a power cycle by hand.
+- Autostart: `t61boot.exe supervise` (a copy of the helper) keeps `w98agent.exe` running and
+  retries every 10 s while the network is not up; its log is `C:\remote\t61boot.log`. When
+  not debugging, turn it all off at the T61 with Start > Programs > Remote debugging >
+  Remote debugging OFF (no agent window, nothing at boot) and back on with
+  Remote debugging ON before a remote session: it stays on across reboots until switched
+  off. Both shortcuts run `C:\remote\t61boot.exe remote on|off gui`. While it is off nothing
+  here can reach the T61. A hang at boot or shutdown still needs a power cycle by hand.
 - `reboot force` (ExitWindowsEx EWX_FORCE from the console helper) hung the T61 once after
   the display driver's Disable; the default goes through SHExitWindowsEx like the Start menu.
 - A file in use cannot be replaced (mesa3d.dll while a GL/D3D program runs: `kill` it first).

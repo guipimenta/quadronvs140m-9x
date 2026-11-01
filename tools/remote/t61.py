@@ -21,6 +21,9 @@ automatically. Lifts the agent's limits: absolute Windows paths, files over
   t61.py endtasks                        (a shutdown stuck on End Task prompts: answer them, then as reboot)
   t61.py wait [SECS]                     (wait for the agent to answer)
   t61.py autostart on|off|show           (HKLM RunServices + Run start t61boot.exe supervise at boot)
+  t61.py remote on|off|show|menu         (the agent only while debugging: on = autostart + supervisor now
+                                          + Start menu "Remote debugging ON/OFF"; off = stop it all,
+                                          this connection ends; turn it back on at the T61's Start menu)
   t61.py wins [TITLE] | kids TITLE | focus TITLE | close TITLE
   t61.py press TITLE BUTTON              (click a dialog button by its text)
   t61.py waitwin TITLE SECS | click X Y [right|double] | key COMBO... | text STRING
@@ -303,7 +306,7 @@ def main():
             t.c.put(HERE / "t61input" / "t61input.vxd", "t61input.vxd")
             code, _ = t.util(v, *x, timeout=60, check=False)
             return 0 if code == 0 else 1
-        elif v in ("wins", "kids", "focus", "close", "press", "waitwin", "click", "key", "text", "autostart", "debug", "prof") and (x or v == "wins"):
+        elif v in ("wins", "kids", "focus", "close", "press", "waitwin", "click", "key", "text", "autostart", "remote", "debug", "prof") and (x or v == "wins"):
             secs = int(x[1]) + 15 if v == "waitwin" and len(x) == 2 else 60
             code, _ = t.util(v, *x, timeout=min(secs, 600), check=False)
             return 0 if code == 0 else 1

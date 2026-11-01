@@ -37,13 +37,17 @@
  *   text <string>               type a string
  *   pending <dst> <src>         WININIT.INI [rename] dst=src: replace a file in use at the next boot
  *   autostart on|off|show       HKLM Run key "W98Remote" = <this folder>\t61boot.exe supervise
+ *   remote on|off|show|menu [gui] the agent only while debugging: on = autostart on + supervisor now
+ *                               + Start menu "Remote debugging ON/OFF" shortcuts; off = autostart off,
+ *                               supervisor and agent stopped; gui = message box (the shortcuts)
  *   supervise                   (from the Run key) keep w98agent.exe running, log t61boot.log
  *
  * Output goes to stdout, which the agent stores in lastrun.log. Exit code 0 =
  * done, 1 = failed, 2 = usage, 124 = the exec/sh child timed out.
- * Build: i686-w64-mingw32-gcc -O2 -s -Wall tools/remote/t61util.c -o tools/remote/t61util.exe -lgdi32
+ * Build: i686-w64-mingw32-gcc -O2 -s -Wall -Wno-format-truncation tools/remote/t61util.c -o tools/remote/t61util.exe -lgdi32 -lwinmm -lole32 -luuid -lshell32
  */
 #include <windows.h>
+#include <shlobj.h>
 #include <tlhelp32.h>
 #include <mmsystem.h>
 #include <stdio.h>  /* sprintf/_vsnprintf only: output goes through out() */
@@ -1189,47 +1193,88 @@ static void boot_log(const char *dir, const char *msg, DWORD v)
 	CloseHandle(f);
 }
 
+/* The first process with that file name (0 = none). */
+static DWORD find_pid(const char *name)
+{
+	PROCESSENTRY32 pe; HANDLE s; DWORD pid = 0;
+	s = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (s == INVALID_HANDLE_VALUE) return 0;
+	pe.dwSize = sizeof(pe);
+	if (Process32First(s, &pe)) do {
+		if (!lstrcmpiA(base_name(pe.szExeFile), name) && pe.th32ProcessID != GetCurrentProcessId()) { pid = pe.th32ProcessID; break; }
+	} while (Process32Next(s, &pe));
+	CloseHandle(s);
+	return pid;
+}
+
 /* Keeps w98agent.exe (same folder) running: it exits at once when the network
- * is not up yet (it binds a fixed IPv4), so retry every 10 s, forever. */
+ * is not up yet (it binds a fixed IPv4), so retry every 10 s until `remote off`
+ * sets the stop event. An agent already running (a supervisor replaced by a
+ * newer t61boot.exe) is adopted, not started twice. */
 static int cmd_supervise(void)
 {
-	char dir[MAX_PATH], exe[MAX_PATH + 16], *s; DWORD code, t0, n = 0;
-	STARTUPINFOA si; PROCESS_INFORMATION pi;
+	char dir[MAX_PATH], exe[MAX_PATH + 16], *s; DWORD code, t0, n = 0, pid;
+	STARTUPINFOA si; PROCESS_INFORMATION pi; HANDLE stop, w[2];
 	CreateMutexA(NULL, TRUE, "W98RemoteSupervisor");
 	if (GetLastError() == ERROR_ALREADY_EXISTS) return 0;
+	stop = CreateEventA(NULL, TRUE, FALSE, "W98RemoteStop");
 	GetModuleFileNameA(NULL, dir, sizeof(dir));
 	if ((s = strrchr(dir, '\\')) != NULL) *s = 0;
 	sprintf(exe, "%s\\w98agent.exe", dir);
 	FreeConsole();
 	boot_log(dir, "supervisor up, pid", GetCurrentProcessId());
 	for (;;) {
-		memset(&si, 0, sizeof(si));
-		si.cb = sizeof(si);
 		t0 = GetTickCount();
-		if (!CreateProcessA(exe, NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, dir, &si, &pi)) {
-			boot_log(dir, "cannot start w98agent.exe, error", GetLastError());
-			Sleep(30000);
-			continue;
+		pi.hProcess = NULL;
+		if ((pid = find_pid("w98agent.exe")) != 0 && (pi.hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, pid)) != NULL)
+			boot_log(dir, "adopted running agent, pid", pid);
+		else {
+			memset(&si, 0, sizeof(si));
+			si.cb = sizeof(si);
+			if (!CreateProcessA(exe, NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, dir, &si, &pi)) {
+				boot_log(dir, "cannot start w98agent.exe, error", GetLastError());
+				if (WaitForSingleObject(stop, 30000) == WAIT_OBJECT_0) break;
+				continue;
+			}
+			boot_log(dir, "agent started, attempt", ++n);
+			CloseHandle(pi.hThread);
 		}
-		boot_log(dir, "agent started, attempt", ++n);
-		CloseHandle(pi.hThread);
-		WaitForSingleObject(pi.hProcess, INFINITE);
+		w[0] = pi.hProcess; w[1] = stop;
+		if (WaitForMultipleObjects(2, w, FALSE, INFINITE) == WAIT_OBJECT_0 + 1) { CloseHandle(pi.hProcess); break; }
 		GetExitCodeProcess(pi.hProcess, &code);
 		CloseHandle(pi.hProcess);
 		boot_log(dir, "agent exited, code", code);
-		Sleep(GetTickCount() - t0 < 30000 ? 10000 : 2000);
+		if (WaitForSingleObject(stop, GetTickCount() - t0 < 30000 ? 10000 : 2000) == WAIT_OBJECT_0) break;
 	}
+	boot_log(dir, "remote off: supervisor stops, pid", GetCurrentProcessId());
 	return 0;
 }
 
-static int cmd_autostart(const char *what)
+/* Terminate every process with that file name except this one. */
+static int kill_others(const char *name)
+{
+	DWORD pid; HANDLE h; int n = 0;
+	while ((pid = find_pid(name)) != 0 && n < 8) {
+		h = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+		if (!h || !TerminateProcess(h, 1)) { if (h) CloseHandle(h); break; }
+		CloseHandle(h);
+		out("stopped %s %08lx\n", name, (unsigned long)pid);
+		n++;
+		Sleep(300);
+	}
+	return n;
+}
+
+/* replace: a supervisor running an older t61boot.exe is stopped so the copy
+ * can be updated (`remote on` starts a new one, which adopts the agent). */
+static int cmd_autostart(const char *what, int replace)
 {
 	char self[MAX_PATH], dst[MAX_PATH], val[MAX_PATH + 16], *s; HKEY k; DWORD type, len; int i;
 	if (!strcmp(what, "on")) {
 		GetModuleFileNameA(NULL, self, sizeof(self));
 		strcpy(dst, self);
 		if ((s = strrchr(dst, '\\')) != NULL) strcpy(s + 1, "t61boot.exe");
-		if (lstrcmpiA(self, dst) && !CopyFileA(self, dst, FALSE)) {
+		if (lstrcmpiA(self, dst) && !CopyFileA(self, dst, FALSE) && !(replace && kill_others("t61boot.exe") && CopyFileA(self, dst, FALSE))) {
 			if (GetFileAttributesA(dst) == INVALID_FILE_ATTRIBUTES) return fail("copy", dst);
 			out("t61boot.exe is running: kept that copy\n");
 		}
@@ -1253,6 +1298,102 @@ static int cmd_autostart(const char *what)
 	return 0;
 }
 
+/* ---- remote on|off: the agent only while debugging -------------------------- */
+
+static const char RMENU[] = "Remote debugging";
+
+/* Start menu > Programs > Remote debugging > ON / OFF, both "t61boot.exe remote
+ * on|off gui", so the switch works at the T61 when the agent is not running. */
+static int remote_menu(const char *boot)
+{
+	static const char *const what[2] = { "ON", "OFF" };
+	char dir[MAX_PATH], wd[MAX_PATH], lnk[MAX_PATH + 64], args[32], *s; WCHAR wl[MAX_PATH + 64];
+	LPITEMIDLIST pidl; IShellLinkA *sl; IPersistFile *pf; int i, ok = 0;
+	if (SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAMS, &pidl) != S_OK) return fail("Programs folder", "");
+	i = SHGetPathFromIDListA(pidl, dir);
+	CoTaskMemFree(pidl);
+	if (!i) return fail("Programs folder", "");
+	lstrcatA(dir, "\\");
+	lstrcatA(dir, RMENU);
+	CreateDirectoryA(dir, NULL);
+	strcpy(wd, boot);
+	if ((s = strrchr(wd, '\\')) != NULL) *s = 0;
+	CoInitialize(NULL);
+	for (i = 0; i < 2; i++) {
+		if (CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLinkA, (void **)&sl) != S_OK) break;
+		sprintf(args, "remote %s gui", i ? "off" : "on");
+		sl->lpVtbl->SetPath(sl, boot);
+		sl->lpVtbl->SetArguments(sl, args);
+		sl->lpVtbl->SetWorkingDirectory(sl, wd);
+		sl->lpVtbl->SetShowCmd(sl, SW_SHOWMINNOACTIVE);
+		sprintf(lnk, "%s\\%s %s.lnk", dir, RMENU, what[i]);
+		MultiByteToWideChar(CP_ACP, 0, lnk, -1, wl, MAX_PATH + 64);
+		if (sl->lpVtbl->QueryInterface(sl, &IID_IPersistFile, (void **)&pf) == S_OK) {
+			if (pf->lpVtbl->Save(pf, wl, TRUE) == S_OK) { out("shortcut %s\n", lnk); ok++; }
+			pf->lpVtbl->Release(pf);
+		}
+		sl->lpVtbl->Release(sl);
+	}
+	CoUninitialize();
+	SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_PATHA, dir, NULL);
+	return ok == 2 ? 0 : fail("shortcuts in", dir);
+}
+
+/* Started detached by `remote off` after the stop event: give the agent time
+ * to send the reply of the request that ran us, then stop it. (Not t61boot.exe
+ * by name: the OFF shortcut's own message box is one.) */
+static int cmd_agentstop(void)
+{
+	Sleep(1500);
+	kill_others("w98agent.exe");
+	return 0;
+}
+
+static int cmd_remote(const char *what, int gui)
+{
+	char boot[MAX_PATH], cmd[MAX_PATH + 32], *s; HANDLE h; DWORD pid; int r;
+	STARTUPINFOA si; PROCESS_INFORMATION pi;
+	GetModuleFileNameA(NULL, boot, sizeof(boot));
+	if ((s = strrchr(boot, '\\')) != NULL) strcpy(s + 1, "t61boot.exe");
+	if (gui) FreeConsole();
+	if (!strcmp(what, "on")) {
+		if ((r = cmd_autostart("on", 1)) != 0) goto done;
+		remote_menu(boot);
+		sprintf(cmd, "\"%s\" supervise", boot);
+		memset(&si, 0, sizeof(si));
+		si.cb = sizeof(si);
+		if (!CreateProcessA(boot, cmd, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &si, &pi)) { r = fail("start", cmd); goto done; }
+		CloseHandle(pi.hThread); CloseHandle(pi.hProcess);
+		out("remote debugging ON: the agent runs now and starts at every boot\n");
+	} else if (!strcmp(what, "off")) {
+		cmd_autostart("off", 0);
+		if ((h = OpenEventA(EVENT_MODIFY_STATE, FALSE, "W98RemoteStop")) != NULL) { SetEvent(h); CloseHandle(h); }
+		if ((r = spawn_detached("agentstop")) != 0) goto done;
+		out("remote debugging OFF: the agent stops now and no longer starts at boot\n");
+	} else if (!strcmp(what, "show")) {
+		r = cmd_autostart("show", 0);
+		h = OpenMutexA(SYNCHRONIZE, FALSE, "W98RemoteSupervisor");
+		out("supervisor: %s\n", h ? "running" : "not running");
+		if (h) CloseHandle(h);
+		pid = find_pid("w98agent.exe");
+		if (pid) out("agent: running, pid %08lx\n", (unsigned long)pid);
+		else out("agent: not running\n");
+		return r;
+	} else if (!strcmp(what, "menu")) {
+		return remote_menu(boot);
+	} else {
+		out("usage: remote on|off|show|menu [gui]\n");
+		return 2;
+	}
+done:
+	if (gui) {
+		if (r) MessageBoxA(NULL, "Could not switch remote debugging (see C:\\remote\\t61boot.log).", RMENU, MB_ICONERROR | MB_SETFOREGROUND);
+		else if (!strcmp(what, "on")) MessageBoxA(NULL, "Remote debugging is ON.\n\nThe remote agent runs now and starts at every boot until you choose Remote debugging OFF.", RMENU, MB_ICONINFORMATION | MB_SETFOREGROUND);
+		else MessageBoxA(NULL, "Remote debugging is OFF.\n\nThe remote agent is stopped and no longer starts at boot. Choose Remote debugging ON to bring it back.", RMENU, MB_ICONINFORMATION | MB_SETFOREGROUND);
+	}
+	return r;
+}
+
 int main(int argc, char **argv)
 {
 	const char *c = argc > 1 ? argv[1] : "";
@@ -1261,6 +1402,7 @@ int main(int argc, char **argv)
 	if (!strcmp(c, "supervise")) return cmd_supervise();   /* own console handling */
 	if (!strcmp(c, "rebootwatch")) return cmd_rebootwatch(1);
 	if (!strcmp(c, "endwatch")) return cmd_rebootwatch(0);
+	if (!strcmp(c, "agentstop")) return cmd_agentstop();
 	if (!strcmp(c, "debugrun") && argc >= 3) return cmd_debugrun(argv[2]);
 	if (!strcmp(c, "profrun") && argc >= 6) {
 		pdelay = (DWORD)atoi(argv[2]); pdur = (DWORD)atoi(argv[3]); pms = (DWORD)atoi(argv[4]);
@@ -1302,7 +1444,8 @@ int main(int argc, char **argv)
 	if (!strcmp(c, "click") && (argc == 4 || argc == 5)) return cmd_click(atoi(argv[2]), atoi(argv[3]), argc == 5 ? argv[4] : NULL);
 	if (!strcmp(c, "key") && argc >= 3) { int i, r = 0; for (i = 2; i < argc && !r; i++) r = cmd_key(argv[i]); return r; }
 	if (!strcmp(c, "text") && argc == 3) return cmd_text(argv[2]);
-	if (!strcmp(c, "autostart") && argc == 3) return cmd_autostart(argv[2]);
+	if (!strcmp(c, "autostart") && argc == 3) return cmd_autostart(argv[2], 0);
+	if (!strcmp(c, "remote") && (argc == 3 || (argc == 4 && !strcmp(argv[3], "gui")))) return cmd_remote(argv[2], argc == 4);
 	if (!strcmp(c, "pending") && argc == 4) {
 		/* WININIT.INI [rename] dst=src: applied at the next boot before Windows loads
 		 * anything, the only way to replace a DLL in use (the shared-arena HAL).
@@ -1344,6 +1487,7 @@ int main(int argc, char **argv)
 	       "               ps | kill NAME | shot FILE.bmp | wins [TITLE] | kids TITLE |\n"
 	       "               focus TITLE | close TITLE | press TITLE BUTTON | waitwin TITLE SECS |\n"
 	       "               click X Y [right|double] | key COMBO... | text STRING | autostart on|off|show\n"
+	       "               remote on|off|show|menu [gui]\n"
 	       "               reboot [force]\n");
 	return 2;
 }
