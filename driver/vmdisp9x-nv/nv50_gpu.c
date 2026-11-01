@@ -1114,12 +1114,60 @@ static unsigned long g_gart_map[NV_GART_PAGES_MAX / 32];   /* VM page bitmap, bi
 static unsigned long g_gart_pages = 0;                      /* pages in use */
 static unsigned long g_gart_ptbuf[64];                      /* _CopyPageTable chunk */
 
+/* 3124: nouveau's g84_gr_tlb_flush (the G86 is a g84_gr chip): flushing
+ * PGRAPH's TLB while its units are busy is a hardware bug on G84+, so PGRAPH
+ * FIFO access goes off (0x400500 bit 0), the flush waits until no unit in
+ * 0x400380/384/388 reads busy (3-bit fields, 1 = busy), then flushes and turns
+ * access back on. Until 3121 every submit waited for idle, so the flush hit an
+ * idle PGRAPH by luck; the asynchronous submits of 3122+ flush mid-render
+ * (Soldier of Fortune's tsr1 cutscene: ~200 VM kind changes a second) and the
+ * GPU hung, then every later flush spun its full poll in ring 0 = Windows
+ * frozen. A PGRAPH still busy (PGRAPH_STATUS) after the bounded wait latches
+ * the GPU as wedged, and a wedged GPU gets no more waits (each would only
+ * stall ring 0); unit fields busy under an idle status switch the wait off. */
+static void gpu_dump_stall(unsigned long chid);
+static unsigned long g_tlb_timeouts = 0;
+static int g_tlb_idle_off = 0;           /* unit fields read busy while PGRAPH_STATUS is idle: stop waiting on them */
+static int gpu_gr_units_idle(void)
+{
+	static const unsigned long reg[3] = { 0x400380UL, 0x400384UL, 0x400388UL };
+	unsigned long tmp; int r;
+	for(r = 0; r < 3; r++)
+		for(tmp = NV_rd32(reg[r]); tmp; tmp >>= 3)
+			if((tmp & 7UL) == 1UL) return 0;
+	return 1;
+}
 static void gpu_tlb_flush(void)
 {
-	unsigned long t;
+	unsigned long t, fifo;
+	if(g_gpu_wedged)
+	{
+		NV_wr32(0x100c80UL, (0UL << 16) | 1UL);   /* nothing runs any more: no waits */
+		return;
+	}
+	fifo = NV_rd32(0x400500UL);
+	NV_wr32(0x400500UL, fifo & ~1UL);
+	for(t = 0; t < 400000UL && !g_tlb_idle_off; t++)
+		if(gpu_gr_units_idle()) break;
+	if(t >= 400000UL)
+	{
+		unsigned long st = NV_rd32(PGRAPH_STATUS);
+		if(g_tlb_timeouts++ < 8UL)
+			dbg_printf("S> PGRAPH TLB flush idle TIMEOUT: status=%08lX 380=%08lX 384=%08lX 388=%08lX -> %s\n",
+			           st, NV_rd32(0x400380UL), NV_rd32(0x400384UL), NV_rd32(0x400388UL),
+			           st ? "GPU wedged" : "unit wait off");
+		if(st) { g_gpu_wedged = 1; gpu_dump_stall(NVGPU_CHID); }
+		else g_tlb_idle_off = 1;
+	}
 	NV_wr32(0x100c80UL, (0UL << 16) | 1UL);
 	for(t = 0; t < 1000000UL; t++)
 		if(!(NV_rd32(0x100c80UL) & 1UL)) break;
+	if(t >= 1000000UL)
+	{
+		if(g_tlb_timeouts++ < 8UL)
+			dbg_printf("S> PGRAPH TLB flush TIMEOUT (0x100c80=%08lX)\n", NV_rd32(0x100c80UL));
+	}
+	NV_wr32(0x400500UL, fifo);
 }
 
 /* 3123: the pusher now fetches command streams through the VM (the shim's GART
