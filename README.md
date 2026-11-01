@@ -33,8 +33,27 @@ documentation as hardware references.
   simulated environment: a QEMU Win98 harness, a fake-GPU mode of the shim
   (runs Mesa's whole nv50 path under Wine or in the VM and validates every
   command stream), and a kick-stream validator. See `docs/HW3D_PLAN.md`.
-- **Next:** Half-Life through the OpenGL ICD route (fullscreen mode changes,
-  textures), then Direct3D via Mesa9x's wrapper.
+- **Games on the GPU (builds 3095-3124, 2026-10-28 to 2026-11-01).** OpenGL and
+  Direct3D programs run on the G86 with no per-game setup: install the driver,
+  play the game.
+  - 3095: **Half-Life plays** on the GPU through the OpenGL ICD; 3109: clean at
+    1024×768 (nouveau's VRAM row-block rule for tiled and linear buffers).
+  - 3110: every OpenGL program uses the GPU by default (registry, no batch file);
+    one process owns the GPU channel, a second one falls back to software.
+  - 3115: GART (system-memory buffers through the GPU's page tables, nouveau's
+    way): **Soldier of Fortune plays** on the GPU.
+  - 3116-3117: **Direct3D on the GPU** (vmhal3d through Mesa's OSMesa); dxdiag's
+    DirectX 7/8/9 tests pass. 3121: Dungeon Keeper 2 renders right.
+  - 3123: OpenGL faster (Soldier of Fortune's fight demo 35.5 → 56 fps): asynchronous
+    submits with fences, a GART command ring, faster locks in Mesa.
+  - 3124: Soldier of Fortune's opening cutscene no longer freezes Windows (the GPU
+    TLB flush done nouveau's G84 way).
+- **Download:** the [Releases](https://github.com/guipimenta/quadronvs140m-9x/releases)
+  page has the packaged driver (`nvmini-<build>.zip`); `INSTALL.txt` inside says
+  how to install or update it.
+- **Next:** OpenGL is now CPU-bound (Mesa's immediate-mode path plus the game,
+  about 16 ms a frame in Soldier of Fortune's fight); Half-Life's OpenGL renderer
+  is due a recheck on the latest builds.
 
 ## Layout
 
@@ -42,11 +61,21 @@ documentation as hardware references.
   `vxd_nv.{c,h}` (G86 detect + MMIO/VRAM access), `vxd_main_nv.c`, `nv50_disp.h`
   (NV50 register map), `tools/nvprobe.c` (user-space probe/peek tool), plus the
   `nvmini` makefile target and small `#ifdef NV_DETECT` hooks.
-- `dist/driver/` — the current built driver + INF + `nvprobe.exe` + dump
-  batches, ready to copy to the T61.
-- `tools/` — Python reverse-engineering helpers (LE/VxD parser, trace scripts).
+- `driver/vmdisp9x-nv/nv50_gpu.c`, `nvshim.c` — the GPU side: PFIFO channel, GPU
+  virtual memory and GART in the VxD; `nvshim.c` replaces libdrm_nouveau inside
+  `mesa3d.dll` (buffer objects, pushbuffers, fences) on top of the VxD's ioctls.
+- `driver/mesa9x-bin/` — the patches and recipe (`PROVENANCE.txt`) that build
+  `mesa3d.dll` from [Mesa9x](https://github.com/JHRobotics/mesa9x) with nouveau's
+  nv50 driver. `driver/vmhal9x-bin/` — the same for the DirectDraw/Direct3D HAL
+  ([vmhal9x](https://github.com/JHRobotics/vmhal9x)).
+- `dist/driver/` — the current built driver + INF + test tools + diagnostic
+  batches, ready to copy to the T61 (`tools/make_dist.sh` fills it).
+- `tools/` — Python reverse-engineering helpers (LE/VxD parser, trace scripts,
+  `nvkick_decode.py` command-stream validator), `qemu98/` (headless Win98 VM
+  harness), `remote/` (drives the T61 over the LAN: files, runs, input,
+  screenshots, debugger, reboots).
 - `analysis/` — our RE write-ups (the raw proprietary binaries are gitignored).
-- `docs/` — roadmap and the M3 plan.
+- `docs/` — roadmap, the M3 plan and `HW3D_PLAN.md` (GPU 3D, build by build).
 
 ## Build
 
@@ -59,8 +88,13 @@ export EDPATH="$WATCOM/eddat"
 export INCLUDE="$WATCOM/h/win:$WATCOM/h"
 gcc fixlink/fixlink.c -o ./fixlink.bin      # one-time
 wmake nvmini.vxd nvmini.drv
-INCLUDE="$WATCOM/h/nt:$WATCOM/h" wcl386 -bt=nt -l=nt -q -fe=nvprobe.exe tools/nvprobe.c
+i686-w64-mingw32-gcc -O2 -s -DNVSHIM_STANDALONE tools/nvprobe.c nvshim.c -I. -o tools/nvprobe.exe
 ```
+
+`mesa3d.dll` (OpenGL ICD and Direct3D rasterizer) is cross-built with MinGW from
+Mesa9x plus `driver/mesa9x-bin/*.patch`; the full recipe is in
+`driver/mesa9x-bin/PROVENANCE.txt`. `tools/make_dist.sh` then repopulates
+`dist/driver/`.
 
 ## Legal
 
