@@ -659,6 +659,7 @@ static uint32_t gart_alloc(uint32_t size, uint32_t align, uint8_t **ptr);
 static void shim_reap(void);
 static int g_ntcache;
 static uint32_t g_st_tc_hit = 0, g_st_tc_miss = 0;
+static uint32_t g_st_kind_skip = 0;   /* 3124: kind changes skipped (the pages already had it) */
 static struct shim_bo *tcache_take(uint32_t asize, uint32_t kind);
 static void tcache_flush(void);
 static int shim_verifyvram(void);
@@ -857,7 +858,8 @@ void nvshim_stats(uint32_t *v)
 		for(k = 0; k < BC_N; k++) { NVLOG2(nm[k], g_bc_n[k], (uint32_t)(g_bc_cyc[k] / 1000)); g_bc_n[k] = 0; g_bc_cyc[k] = 0; }
 		NVLOG3("stats tcache hit/miss/entries", g_st_tc_hit, g_st_tc_miss, (uint32_t)g_ntcache);
 		NVLOG2("stats ring waits / ib submits ok", g_st_wait_ring, (uint32_t)g_ib_ok);
-		g_st_tc_hit = g_st_tc_miss = 0; g_st_wait_ring = 0;
+		NVLOG1("stats kind changes skipped", g_st_kind_skip);
+		g_st_tc_hit = g_st_tc_miss = 0; g_st_wait_ring = 0; g_st_kind_skip = 0;
 	}
 #endif
 }
@@ -1485,6 +1487,39 @@ static void vxd_gart_kind(uint32_t vm, uint32_t size, uint32_t kind)
 }
 
 
+/* 3124: the storage kind each page's PTEs hold, as far as this process knows
+ * (0xff = unknown: another process may have left any kind there). A kind
+ * change is a VxD ioctl plus a PGRAPH TLB flush, which since 3124 waits for
+ * PGRAPH's units to idle (nouveau's g84 flush) - so pages keep their kind when
+ * a BO is freed, and a new BO asks for a change only where a page holds a
+ * different kind. Tiled BOs own whole pages (64 KiB aligned in VRAM, 4 KiB
+ * GART pages under a 64 KiB-aligned BO), so a linear BO setting its pages to 0
+ * never touches a live tiled one. Until 3123 every tiled BO cost two flushes,
+ * one at create and one at free (back to linear). */
+#define KIND_VPAGES (NVSHIM_HEAP_END >> 16)                       /* 64 KiB VRAM pages */
+#define KIND_GPAGES ((uint32_t)NVSHIM_GART_MAX << 8)              /* 4 KiB GART pages */
+static uint8_t g_vkind[KIND_VPAGES];
+static uint8_t g_gkind[KIND_GPAGES];
+static int     g_kind_init = 0;
+static void shim_set_kind(int gart, uint32_t addr, uint32_t size, uint32_t kind)
+{
+	uint8_t *tab; uint32_t first, last, n, i;
+	if(size == 0) return;
+	if(!g_kind_init) { memset(g_vkind, 0xff, sizeof(g_vkind)); memset(g_gkind, 0xff, sizeof(g_gkind)); g_kind_init = 1; }
+	if(gart) { tab = g_gkind; n = KIND_GPAGES; first = (addr - NVSHIM_VM_GART) >> 12; last = (addr - NVSHIM_VM_GART + size - 1) >> 12; }
+	else     { tab = g_vkind; n = KIND_VPAGES; first = addr >> 16; last = (addr + size - 1) >> 16; }
+	if(last >= n || first > last)
+	{	/* outside the table: always ask */
+		if(gart) vxd_gart_kind(addr, size, kind); else vxd_vmkind(addr, size, kind);
+		return;
+	}
+	for(i = first; i <= last; i++)
+		if(tab[i] != (uint8_t)kind) break;
+	if(i > last) { g_st_kind_skip++; return; }
+	if(gart) vxd_gart_kind(addr, size, kind); else vxd_vmkind(addr, size, kind);
+	for(i = first; i <= last; i++) tab[i] = (uint8_t)kind;
+}
+
 /* ========================= private structs ============================ */
 #define SHIM_FENCE_DW 8   /* 3122: spare dwords past a pushbuf's cap for the kick fence */
 #define SHIM_MAXREF 2048   /* 3095: was 512 - a GoldSrc frame references several hundred texture BOs */
@@ -2052,6 +2087,7 @@ int nouveau_object_new(struct nouveau_object *parent, uint64_t handle, uint32_t 
 {
 	struct nouveau_object *obj = calloc(1, sizeof(*obj));
 	NVLOG2("object_new handle/oclass", (uint32_t)handle, oclass);
+	g_kind_init = 0;   /* 3124: a bind can rebuild the VxD channel (page tables back to linear): forget the kinds */
 	if(!obj) return -1;
 	obj->parent = parent;
 	obj->handle = handle;
@@ -2302,11 +2338,8 @@ place:
 		if(gvm) { if(ngb < 512 || (ngb & 255) == 0) NVLOG3("bo_new GART sz/vm/flags", (uint32_t)size, gvm, flags); ngb++; }
 		else    { if(nb < 512 || (nb & 255) == 0) NVLOG3("bo_new sz/phys/vmoff", (uint32_t)size, phys, (uint32_t)b->base.offset); nb++; }
 	}
-	if(b->kind)
-	{
-		if(gvm) vxd_gart_kind(gvm, b->asize, b->kind);
-		else    vxd_vmkind(phys, b->asize, b->kind);
-	}
+	if(gvm) shim_set_kind(1, gvm, b->asize, b->kind);   /* 3124: linear BOs too - pages keep a freed BO's kind */
+	else    shim_set_kind(0, phys, b->asize, b->kind);
 	shim_bo_register(b);
 	*pbo = &b->base;
 	g_st_kc[4] += shim_tsc() - t;
@@ -2416,13 +2449,11 @@ static void shim_bo_free_storage(struct shim_bo *old)
 {
 	if(old->gart)
 	{	/* 3115: the map was the slab memory itself */
-		if(old->kind) vxd_gart_kind(old->vm, old->asize, 0);
-		gart_free(old->vm, old->asize);
+		gart_free(old->vm, old->asize);           /* 3124: the pages keep their kind (shim_set_kind) */
 	}
 	else if(!old->external)
 	{
-		if(old->kind) vxd_vmkind(old->phys, old->asize, 0);   /* back to linear */
-		heap_free(&g_vheap, old->phys, old->asize);
+		heap_free(&g_vheap, old->phys, old->asize);   /* 3124: the pages keep their kind (shim_set_kind) */
 	}
 	free(old);
 }
