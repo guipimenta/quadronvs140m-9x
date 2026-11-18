@@ -1,5 +1,5 @@
 =====================================================================
-HOW TO USE (build 3124): install the driver, play the game
+HOW TO USE (build 3125): install the driver, play the game
 =====================================================================
 New machine: Display > Settings > Advanced > Adapter > Change > Have Disk > vmdisp9x.inf,
 pick the NVS 140M entry, reboot. The INF sets everything: every OpenGL program and (3116)
@@ -11,6 +11,7 @@ Updating a machine that already runs 3110 or later: copy from this folder
     mesa3d.dll   -> C:\WINDOWS\SYSTEM   (overwrite)
     vmhal3d.dll  -> C:\WINDOWS\SYSTEM   (overwrite; in use while Windows runs: copy it in
                                          safe mode or let WININIT.INI do it, then reboot)
+    vmhal9x.dll  -> C:\WINDOWS\SYSTEM   (overwrite; same as vmhal3d.dll)
     nvmini.vxd   -> C:\WINDOWS\SYSTEM   (overwrite; reboot only when the notes below say so)
     everything else -> C:\NVMINI          (test tools; only needed when I ask for a log)
 and double-click d3dsetup.reg once (it carries the same compatibility list as the INF).
@@ -130,6 +131,25 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3125 - GTA 3: TEXTURES RIGHT, GAMEPLAY 17.9 -> 28.4 FPS (the game caps itself at 30).
+vmhal9x.dll + vmhal3d.dll: copy both to C:\WINDOWS\SYSTEM (in use while Windows runs:
+safe mode or WININIT.INI) and reboot (nvmini.vxd / nvprobe.exe only restamped, mesa3d.dll
+stays 3124). Checked on the T61: GTA 3 new game, Dungeon Keeper 2 menu, d3d8test.
+What changed:
+- Direct3D 8 told games it could take 8-bit palettized textures, but never converted
+  them: GTA 3 drew many surfaces blank. It no longer offers them.
+- DirectDraw never got back the memory of a texture a game released until the game
+  quit. GTA 3 filled the whole 63 MB texture heap, then threw out and reloaded textures
+  all the time (garbled or missing textures, a crash on exit). Released memory is now
+  freed at once.
+- Direct3D drawing reached OpenGL one vertex at a time, 4-6 calls per vertex (GTA 3
+  draws about 90,000 vertices a frame). Each Direct3D draw now goes over as one vertex
+  array. To compare with the old way, create an empty file C:\vmhal.slow and restart
+  the game.
+Known: GTA 3 froze the T61 3 times in about 8 starts, some two minutes after starting,
+before any 3D drawing (probably during the intro movies; cause not found yet). Letting
+the movies play out and pressing keys only at the menu worked in the last test. If it
+freezes, send me C:\nvshim.log after the reset.
 Build 3124 - NO MORE FREEZE IN SOLDIER OF FORTUNE'S OPENING CUTSCENE (New Game, map tsr1).
 nvmini.vxd + mesa3d.dll: copy both to C:\WINDOWS\SYSTEM and reboot (nvmini.drv /
 nvprobe.exe restamped; vmhal9x.dll / vmhal3d.dll stay 3121). Checked on the T61: the

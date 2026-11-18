@@ -1,0 +1,327 @@
+vmhal3d (JHRobotics/vmhal9x 8bc480e) vertex-array fast path. The Direct3D draw functions
+(MesaVertexDrawStream/StreamIndex for DX8 streams, MesaVertexDrawBlock/BlockIndex for
+DX6/7 and DrawPrimitiveUP vertices) passed every vertex to GL in immediate mode, 4-6 GL
+calls per vertex. GTA 3 sends ~83-98k vertices per frame: 40 of its 60 ms per frame on the
+T61 (16.5 fps standing at the first gameplay spot). When the D3D vertex layout maps 1:1 to
+GL client arrays, one glDrawArrays/glDrawElements now draws the whole call: XYZ(W) floats,
+float3 normals, D3DCOLOR diffuse as a GL_BGRA colour array, float1-4 texcoords per stage
+(D3DTSS_TEXCOORDINDEX honoured), and D3DMCS_COLOR1 material sources through
+GL_COLOR_MATERIAL when they map to one GL mode (on only around the draw: Mesa ignores
+glMaterial for tracked params while it is on). Pretransformed XYZRHW, vertex blending,
+flat shading, projected texcoords, specular-sourced materials and other layouts keep the
+immediate path. GTA 3: 17.9 -> 24.3 fps at the same spot, picture unchanged.
+C:\vmhal.slow switches the fast path off (A/B). Strip the CRs of mesa3d_draw.c and
+mesa3d_api.h first (upstream is CRLF). Apply after vmhal3d-staledelete.patch.
+
+--- a/mesa3d_draw.c
++++ b/mesa3d_draw.c
+@@ -845,6 +845,240 @@
+ }
+ #endif
+ 
++/*
++ * Vertex-array fast path (nvmini, GTA 3 performance, 2026-11-18).
++ *
++ * The draw functions below hand each vertex to GL in immediate mode: 4-6 GL
++ * calls per vertex (texcoords, colour, normal, position). GTA 3 sends ~100k
++ * vertices per frame, so that alone cost ~40 ms per frame on the T61. When the
++ * vertex layout maps 1:1 to GL client arrays (no pretransformed XYZRHW, no
++ * vertex blending, no projected texcoords, smooth shading) the whole call is
++ * drawn with one glDrawArrays/glDrawElements instead (GTA 3: 16.5 -> 24 fps).
++ * Vertex colours that drive the lit material (D3DMCS_COLOR1) go through
++ * GL_COLOR_MATERIAL when they map to one GL mode; the immediate path does the
++ * same with a glMaterialfv per vertex. Anything else keeps the immediate path.
++ * GL_TRIANGLES keeps D3D's culling: the immediate path emits each triangle
++ * reversed together with a reversed cull face, which is the same picture as
++ * natural order with the normal cull face; the reversal only matters for the
++ * provoking vertex of flat shading, which this path excludes.
++ */
++#ifndef GL_BGRA
++#define GL_BGRA 0x80E1
++#endif
++
++#define MESA_FA_VERTEX 0x001
++#define MESA_FA_NORMAL 0x002
++#define MESA_FA_COLOR  0x004
++#define MESA_FA_TEX0   0x100
++
++typedef struct _mesa_fast_arrays_t
++{
++	const BYTE *xyzw;    DWORD xyzw_stride;
++	const BYTE *normal;  DWORD normal_stride;
++	const BYTE *diffuse; DWORD diffuse_stride;
++	const BYTE *tc[MESA_TMU_MAX]; DWORD tc_stride[MESA_TMU_MAX]; /* per vertex texcoord set (D3D coordindex) */
++} mesa_fast_arrays_t;
++
++/* C:\\vmhal.slow present = fast path off (A/B tests) */
++static int mesa_fast_off = -1;
++
++NUKED_INLINE void MesaFastClient(mesa3d_entry_t *entry, mesa3d_ctx_t *ctx, DWORD bit, GLenum arr, BOOL on)
++{
++	if(on)
++	{
++		if(!(ctx->fast_cs & bit))
++		{
++			entry->proc.pglEnableClientState(arr);
++			ctx->fast_cs |= bit;
++		}
++	}
++	else if(ctx->fast_cs & bit)
++	{
++		entry->proc.pglDisableClientState(arr);
++		ctx->fast_cs &= ~bit;
++	}
++}
++
++static int MesaFastSize(mesa_vertex_data_t t)
++{
++	switch(t)
++	{
++		case MESA_VDT_FLOAT1: return 1;
++		case MESA_VDT_FLOAT2: return 2;
++		case MESA_VDT_FLOAT3: return 3;
++		case MESA_VDT_FLOAT4: return 4;
++		default: return 0;
++	}
++}
++
++/* TRUE: the client arrays describe this draw, the caller issues one glDraw* */
++static BOOL MesaFastArrays(mesa3d_entry_t *entry, mesa3d_ctx_t *ctx, const mesa_fast_arrays_t *fa)
++{
++	int i;
++	DWORD m = ctx->state.material.untracked;
++	BOOL matv = ctx->state.material.lighting && ctx->state.material.color_vertex;
++	mesa_vertex_data_t tn = ctx->state.vertex.type.normal;
++	GLenum cm;
++
++	if(mesa_fast_off < 0)
++	{
++		mesa_fast_off = (GetFileAttributesA("C:\\vmhal.slow") != 0xFFFFFFFFUL) ? 1 : 0;
++	}
++	if(mesa_fast_off) return FALSE;
++
++	if(ctx->state.vertex.xyzrhw || ctx->matrix.weight != 0) return FALSE;
++	if(ctx->state.shade_gl != GL_SMOOTH) return FALSE;
++	if(ctx->state.vertex.type.xyzw != MESA_VDT_FLOAT3 && ctx->state.vertex.type.xyzw != MESA_VDT_FLOAT4) return FALSE;
++	if(tn != MESA_VDT_NONE && tn != MESA_VDT_FLOAT3 && tn != MESA_VDT_FLOAT4) return FALSE;
++	if(ctx->state.vertex.type.diffuse != MESA_VDT_NONE && ctx->state.vertex.type.diffuse != MESA_VDT_D3DCOLOR) return FALSE;
++	cm = 0;
++	if(matv)
++	{
++		if(ctx->state.vertex.type.diffuse == MESA_VDT_D3DCOLOR)
++		{
++			switch(m & (MESA_MAT_DIFFUSE_C1 | MESA_MAT_AMBIENT_C1 | MESA_MAT_EMISSIVE_C1 | MESA_MAT_SPECULAR_C1))
++			{
++				case 0: break;
++				case MESA_MAT_DIFFUSE_C1 | MESA_MAT_AMBIENT_C1: cm = GL_AMBIENT_AND_DIFFUSE; break;
++				case MESA_MAT_DIFFUSE_C1:  cm = GL_DIFFUSE; break;
++				case MESA_MAT_AMBIENT_C1:  cm = GL_AMBIENT; break;
++				case MESA_MAT_EMISSIVE_C1: cm = GL_EMISSION; break;
++				case MESA_MAT_SPECULAR_C1: cm = GL_SPECULAR; break;
++				default: return FALSE; /* several params from one colour: glMaterialfv per vertex */
++			}
++		}
++		if(ctx->state.vertex.type.specular == MESA_VDT_D3DCOLOR &&
++			((m & (MESA_MAT_DIFFUSE_C2 | MESA_MAT_AMBIENT_C2 | MESA_MAT_EMISSIVE_C2)) || ctx->state.specular_vertex))
++			return FALSE;
++	}
++	for(i = 0; i < ctx->tmu_count; i++)
++	{
++		if(!ctx->state.tmu[i].active_dxid || ctx->state.tmu[i].coordscalc_used) continue;
++		if(ctx->state.tmu[i].projected) return FALSE;
++		if(MesaFastSize(ctx->state.vertex.type.texcoords[ctx->state.tmu[i].coordindex]) == 0) return FALSE;
++	}
++
++	entry->proc.pglVertexPointer(ctx->state.vertex.type.xyzw == MESA_VDT_FLOAT3 ? 3 : 4, GL_FLOAT, fa->xyzw_stride, fa->xyzw);
++	MesaFastClient(entry, ctx, MESA_FA_VERTEX, GL_VERTEX_ARRAY, TRUE);
++
++	if(tn == MESA_VDT_NONE)
++	{
++		MesaFastClient(entry, ctx, MESA_FA_NORMAL, GL_NORMAL_ARRAY, FALSE);
++		entry->proc.pglNormal3f(0.0f, 0.0f, 1.0f);
++	}
++	else
++	{
++		entry->proc.pglNormalPointer(GL_FLOAT, fa->normal_stride, fa->normal);
++		MesaFastClient(entry, ctx, MESA_FA_NORMAL, GL_NORMAL_ARRAY, TRUE);
++	}
++
++	if(ctx->state.vertex.type.diffuse == MESA_VDT_D3DCOLOR)
++	{
++		/* D3DCOLOR 0xAARRGGBB = bytes B,G,R,A (ARB_vertex_array_bgra) */
++		entry->proc.pglColorPointer(GL_BGRA, GL_UNSIGNED_BYTE, fa->diffuse_stride, fa->diffuse);
++		MesaFastClient(entry, ctx, MESA_FA_COLOR, GL_COLOR_ARRAY, TRUE);
++	}
++	else
++	{
++		MesaFastClient(entry, ctx, MESA_FA_COLOR, GL_COLOR_ARRAY, FALSE);
++		LoadColor1(entry, ctx, ctx->dxif >= MESA_CTX_IF_DX8 ? DEF_DIFFUSE_DX8 : DEF_DIFFUSE, TRUE);
++	}
++
++	for(i = 0; i < ctx->tmu_count; i++)
++	{
++		DWORD bit = MESA_FA_TEX0 << i;
++		BOOL on = ctx->state.tmu[i].active_dxid && !ctx->state.tmu[i].coordscalc_used;
++		if(on)
++		{
++			int ci = ctx->state.tmu[i].coordindex;
++			entry->proc.pglClientActiveTexture(GL_TEXTURE0 + i);
++			entry->proc.pglTexCoordPointer(MesaFastSize(ctx->state.vertex.type.texcoords[ci]), GL_FLOAT, fa->tc_stride[ci], fa->tc[ci]);
++			if(!(ctx->fast_cs & bit))
++			{
++				entry->proc.pglEnableClientState(GL_TEXTURE_COORD_ARRAY);
++				ctx->fast_cs |= bit;
++			}
++		}
++		else
++		{
++			if(ctx->fast_cs & bit)
++			{
++				entry->proc.pglClientActiveTexture(GL_TEXTURE0 + i);
++				entry->proc.pglDisableClientState(GL_TEXTURE_COORD_ARRAY);
++				ctx->fast_cs &= ~bit;
++			}
++			if(ctx->state.tmu[i].active_dxid) /* coordscalc_used: same constant as the immediate path */
++			{
++				entry->proc.pglMultiTexCoord4f(GL_TEXTURE0+i, 0.0f, 0.0f, 0.0f, 1.0f);
++			}
++		}
++	}
++
++	/* while GL_COLOR_MATERIAL is on, Mesa ignores glMaterial for the tracked params,
++	   so it is on only around the draw itself (FAST_DRAW_END) */
++	if(cm)
++	{
++		if(ctx->fast_cm_mode != cm)
++		{
++			entry->proc.pglColorMaterial(GL_FRONT_AND_BACK, cm);
++			ctx->fast_cm_mode = cm;
++		}
++		entry->proc.pglEnable(GL_COLOR_MATERIAL);
++	}
++	ctx->fast_cm = cm;
++
++	return TRUE;
++}
++
++/* DX8 streams (ptr.*), vertex 0 = stream vertex 'base' */
++static void MesaFastFromStream(mesa3d_ctx_t *ctx, mesa_fast_arrays_t *fa, int base)
++{
++	int i;
++	fa->xyzw_stride    = ctx->state.vertex.ptr.xyzw_stride32*4;
++	fa->xyzw           = (const BYTE*)ctx->state.vertex.ptr.xyzw + (LONG)fa->xyzw_stride*base;
++	fa->normal_stride  = ctx->state.vertex.ptr.normal_stride32*4;
++	fa->normal         = (const BYTE*)ctx->state.vertex.ptr.normal + (LONG)fa->normal_stride*base;
++	fa->diffuse_stride = ctx->state.vertex.ptr.diffuse_stride32*4;
++	fa->diffuse        = (const BYTE*)ctx->state.vertex.ptr.diffuse + (LONG)fa->diffuse_stride*base;
++	for(i = 0; i < MESA_TMU_MAX; i++)
++	{
++		fa->tc_stride[i] = ctx->state.vertex.ptr.texcoords_stride32[i]*4;
++		fa->tc[i]        = (const BYTE*)ctx->state.vertex.ptr.texcoords[i] + (LONG)fa->tc_stride[i]*base;
++	}
++}
++
++/* one interleaved FVF buffer (pos.* = offsets in DWORDs) */
++static void MesaFastFromBuffer(mesa3d_ctx_t *ctx, mesa_fast_arrays_t *fa, const BYTE *buf, DWORD stride8)
++{
++	int i;
++	fa->xyzw    = buf + ctx->state.vertex.pos.xyzw*4;    fa->xyzw_stride    = stride8;
++	fa->normal  = buf + ctx->state.vertex.pos.normal*4;  fa->normal_stride  = stride8;
++	fa->diffuse = buf + ctx->state.vertex.pos.diffuse*4; fa->diffuse_stride = stride8;
++	for(i = 0; i < MESA_TMU_MAX; i++)
++	{
++		fa->tc[i] = buf + ctx->state.vertex.pos.texcoords[i]*4; fa->tc_stride[i] = stride8;
++	}
++}
++
++#define FAST_DRAW_END if(ctx->fast_cm){ entry->proc.pglDisable(GL_COLOR_MATERIAL); }
++
++#define FAST_DRAW_ARRAYS(_first) \
++	if(MesaFastArrays(entry, ctx, &fa)){ \
++		entry->proc.pglDrawArrays(gltype, (_first), cnt); \
++		FAST_DRAW_END \
++		return; \
++	}
++
++#define FAST_DRAW_ELEMENTS(_index, _first, _stride8) \
++	if(MesaFastArrays(entry, ctx, &fa)){ \
++		if((_stride8) == 4) \
++			entry->proc.pglDrawElements(gltype, cnt, GL_UNSIGNED_INT, ((const DWORD*)(_index)) + (_first)); \
++		else \
++			entry->proc.pglDrawElements(gltype, cnt, GL_UNSIGNED_SHORT, ((const WORD*)(_index)) + (_first)); \
++		FAST_DRAW_END \
++		return; \
++	}
++
+ #define VETREX_DRAW_SWITCH \
+ 	switch(gltype){ \
+ 		case GL_TRIANGLES: \
+@@ -892,6 +1126,9 @@
+ 	TOPIC("GL", "glBegin(%d)", gltype);
+ 	mesa3d_entry_t *entry = ctx->entry;
+ 	int i;
++	mesa_fast_arrays_t fa;
++	MesaFastFromStream(ctx, &fa, 0);
++	FAST_DRAW_ARRAYS(start)
+ 
+ 	VETREX_DRAW_SWITCH
+ }
+@@ -906,6 +1143,9 @@
+ 	TOPIC("GL", "glBegin(%d)", gltype);
+ 	mesa3d_entry_t *entry = ctx->entry;
+ 	int i;
++	mesa_fast_arrays_t fa;
++	MesaFastFromStream(ctx, &fa, base);
++	FAST_DRAW_ELEMENTS(index, start, index_stride8)
+ 
+ 	WORD  *windex =  (WORD*)index;
+ 	DWORD *dindex = (DWORD*)index;
+@@ -923,6 +1163,9 @@
+ 	TOPIC("GL", "glBegin(%d)", gltype);
+ 	mesa3d_entry_t *entry = ctx->entry;
+ 	int i;
++	mesa_fast_arrays_t fa;
++	MesaFastFromBuffer(ctx, &fa, ptr, stride);
++	FAST_DRAW_ARRAYS(start)
+ 
+ 	VETREX_DRAW_SWITCH
+ }
+@@ -937,6 +1180,9 @@
+ 	TOPIC("GL", "glBegin(%d)", gltype);
+ 	mesa3d_entry_t *entry = ctx->entry;
+ 	int i;
++	mesa_fast_arrays_t fa;
++	MesaFastFromBuffer(ctx, &fa, ptr, stride);
++	FAST_DRAW_ELEMENTS(index, start, index_stride8)
+ 
+ 	WORD  *windex =  (WORD*)index;
+ 	DWORD *dindex = (DWORD*)index;
+--- a/mesa3d_api.h
++++ b/mesa3d_api.h
+@@ -117,3 +117,12 @@
+ MESA_API(glScalef, void, (GLfloat x, GLfloat y, GLfloat z))
+ MESA_API(glGenerateMipmap, void, (GLenum target))
+ MESA_API(glHint, void, (GLenum target, GLenum mode))
++MESA_API(glVertexPointer, void, (GLint size, GLenum type, GLsizei stride, const void *pointer))
++MESA_API(glNormalPointer, void, (GLenum type, GLsizei stride, const void *pointer))
++MESA_API(glColorPointer, void, (GLint size, GLenum type, GLsizei stride, const void *pointer))
++MESA_API(glTexCoordPointer, void, (GLint size, GLenum type, GLsizei stride, const void *pointer))
++MESA_API(glClientActiveTexture, void, (GLenum texture))
++MESA_API(glEnableClientState, void, (GLenum array))
++MESA_API(glDisableClientState, void, (GLenum array))
++MESA_API(glDrawArrays, void, (GLenum mode, GLint first, GLsizei count))
++MESA_API(glDrawElements, void, (GLenum mode, GLsizei count, GLenum type, const void *indices))
+--- a/mesa3d.h
++++ b/mesa3d.h
+@@ -483,6 +483,11 @@
+ 	} temp;
+ 	
+ 	mesa_pal8_t *first_pal;
++
++	/* vertex-array fast path (mesa3d_draw.c) */
++	DWORD  fast_cs;      /* client arrays enabled in this GL context, MESA_FA_* bits */
++	GLenum fast_cm;      /* GL_COLOR_MATERIAL mode on for the current fast draw, 0 = off */
++	GLenum fast_cm_mode; /* last glColorMaterial mode set */
+ } mesa3d_ctx_t;
+ 
+ #if 0

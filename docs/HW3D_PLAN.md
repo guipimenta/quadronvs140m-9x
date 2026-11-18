@@ -1453,6 +1453,25 @@ C:\nvkick.txt, C:\nvclk.txt.
     the cutscene through; fight timedemo unchanged (53-54 fps for 3123 and 3124 in the
     same T61 session - compare builds in one session, the T61's speed drifts); texcheck,
     d3d8test PASS.
+  - 3125: GTA 3 (Direct3D 8, RenderWare, 640x480x16) - textures blank/garbled and 16 fps.
+    Three vmhal9x/vmhal3d patches (driver/vmhal9x-bin, PROVENANCE.txt), no VxD change:
+    1. vmhal9x-nop8.patch: the DX8 format list always offered D3DFMT_P8, which the HAL
+       never converts (mesa3d_buffer.c FIXME) -> palettized textures drew blank. P8 now
+       only with the "palette" setting.
+    2. vmhal9x-destroyfree.patch: DestroySurface32 returned DDHAL_DRIVER_HANDLED, so
+       DirectDraw never freed PLEASEALLOC heap blocks until the DDraw object died. GTA 3
+       filled the 63 MB WRAM heap, the runtime evicted every texture and then failed
+       ~2400 creates/s. NOTHANDLED -> 18-24 MB stay free, clean exit.
+    3. vmhal3d-fastdraw.patch: perf.c timers showed 57 of 60 ms/frame in DP2, ~98k
+       vertices/frame through glBegin/glVertex. Draws whose vertex layout maps to client
+       arrays (D3DCOLOR via GL_BGRA, texcoords by TEXCOORDINDEX, D3DMCS_COLOR1 materials
+       via GL_COLOR_MATERIAL - GTA's lit world needs it) go out as one glDrawArrays /
+       glDrawElements; XYZRHW, blending, flat shading, projected texcoords stay immediate.
+       C:\vmhal.slow = off. Gameplay start 17.9 -> 28.4 fps (30 = the game's limiter).
+    T61: gameplay picture right, DK2 menu (DX6 path) right at 34.9 fps, d3d8test PASS.
+    Open: an intermittent T61 freeze ~130 s into GTA 3's startup (3 of ~8 starts, before
+    any draw reached GL; the shim log ends after context creation - intro movies?).
+    Remaining per frame: GL draws 13 ms, TextureLoad 4.4, readback 3.9, texenv ~5.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim

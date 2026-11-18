@@ -1,0 +1,26 @@
+vmhal9x (JHRobotics/vmhal9x 8bc480e) DestroySurface32 returned DDHAL_DRIVER_HANDLED for
+surfaces DirectDraw's heap manager had allocated (DDHAL_PLEASEALLOC_*), so DirectDraw never
+freed them: a released surface kept its video memory until the program's DirectDraw object
+went away (T61 test: 32 x 256 KiB textures released, free memory unchanged). GTA 3 streams
+textures, filled the 63 MB heap within minutes, and the Direct3D runtime then failed
+thousands of texture creations a second (untextured world, very low frame rates; GTA 3 also
+crashed on exit). Returning DDHAL_DRIVER_NOTHANDLED lets DirectDraw free the block.
+Found 2026-11-17 with GTA 3 on the T61.
+
+--- a/ddraw.c
++++ b/ddraw.c
+@@ -408,7 +408,13 @@ DDENTRY_FPUSAVE(DestroySurface32, LPDDHAL_DESTROYSURFACEDATA, lpd)
+ */
+ 	TOPIC("GARBAGE", "SurfaceDelete() success");
+ 	lpd->ddRVal = DD_OK;
+-	return DDHAL_DRIVER_HANDLED;
++	/* NOTHANDLED: DirectDraw's heap manager allocated these surfaces
++	 * (DDHAL_PLEASEALLOC_*) and frees them only when the driver does not
++	 * claim the destroy. With HANDLED every released surface stayed allocated
++	 * until its DirectDraw object went away: GTA 3 streams textures, filled the
++	 * 63 MB heap within minutes and then failed thousands of texture creations
++	 * a second (untextured world, very low frame rates). */
++	return DDHAL_DRIVER_NOTHANDLED;
+ }
+ 
+ /* return tenths of millisecionds */

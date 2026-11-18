@@ -13,7 +13,8 @@ Source checkout: /home/guilherme/projects/audio_reverse/vmhal9x-src
 
 vmdisp9x.dll is that build unchanged.
 
-vmhal9x.dll and vmhal3d.dll (since 2026-10-31, after build 3120) = the same commit and
+vmhal9x.dll and vmhal3d.dll (since 2026-10-31, after build 3120; both again
+2026-11-18) = the same commit and
 config.mk with the patches from this folder, applied in this order:
   vmhal9x-flippitch.patch  (vmhal9x) flip-chain surfaces get the screen's pitch on any
                            driver, not only VESA (NV50 pads 800x600 rows to 1792 bytes)
@@ -31,12 +32,22 @@ config.mk with the patches from this folder, applied in this order:
   vmhal3d-staledelete.patch a late dd_fifo DELETE no longer destroys the texture that
                            reused its dxid (needs nvmini.vxd 3121+, which returns real
                            surface uids; before, no dd_fifo item ever matched)
-The last four are Dungeon Keeper 2 (800x600 black world, menu text tiles; T61, GPU and
-llvmpipe).
+  vmhal9x-nop8.patch       (vmhal9x) the Direct3D 8 format list offers D3DFMT_P8 only with
+                           the "palette" setting (the HAL never converted P8 texels: GTA 3's
+                           palettized textures drew blank)
+  vmhal9x-destroyfree.patch (vmhal9x) DestroySurface32 returns NOTHANDLED, so DirectDraw
+                           frees the heap block (released surfaces leaked their memory until
+                           the program exited: GTA 3 filled the 63 MB heap and thrashed)
+  vmhal3d-fastdraw.patch   (vmhal3d) Direct3D draws whose vertex layout maps to GL client
+                           arrays go out as one glDrawArrays/glDrawElements instead of 4-6
+                           immediate-mode calls per vertex (GTA 3: 17.9 -> 28.4 fps);
+                           C:\vmhal.slow switches it off
+The four after flatshade are Dungeon Keeper 2 (800x600 black world, menu text tiles; T61,
+GPU and llvmpipe); the last three are GTA 3 (2026-11-17/18; nop8 and destroyfree change vmhal9x.dll only).
 Rebuild: git archive the commit into an empty folder, copy config.mk and the
 fixlink/nocrt/regex submodule folders (and fixlink.bin) from the checkout, strip the
-CRs of the ten patched files (ddraw.c mesa3d.h mesa3d.c mesa3d_buffer.c d3dhal.c
-mesa3d_draw6.c vmhal9x.h blt32.c d3d.c vmhal3d.def; upstream is CRLF), apply the
+CRs of the twelve patched files (ddraw.c mesa3d.h mesa3d.c mesa3d_buffer.c d3dhal.c
+mesa3d_draw6.c vmhal9x.h blt32.c d3d.c vmhal3d.def mesa3d_draw.c mesa3d_api.h; upstream is CRLF), apply the
 patches with patch -p1 (from the "--- a/" line on), make vmhal3d.dll vmhal9x.dll.
 The same steps without the patches rebuild the shipped 3118 DLLs byte for byte
 except the PE timestamp/checksum.

@@ -1,0 +1,46 @@
+vmhal9x (JHRobotics/vmhal9x 8bc480e) offered D3DFMT_P8 in its Direct3D 8 format list
+unconditionally, but the HAL never converts P8 texels for OpenGL (mesa3d_buffer.c: the
+palette branch is a FIXME), so every P8 texture drew blank. GTA 3 (RenderWare) keeps its
+8-bit textures palettized when the device offers P8: white loading screens, untextured
+buildings. P8 is now offered only with the "palette" setting, like the DX6/7 list; NVIDIA's
+own G86 driver offers no P8 either, and RenderWare expands the texels itself.
+Found 2026-11-17 with GTA 3 on the T61.
+
+--- a/d3d.c
++++ b/d3d.c
+@@ -200,6 +200,17 @@ DDENTRY_FPUSAVE(CreateSurfaceEx32, LPDDHAL_CREATESURFACEEXDATA, lpcsxd)
+ 	return DDHAL_DRIVER_HANDLED;
+ }
+ 
++/* D3DFMT_P8 is the last DX8 format. Offer it only with the "palette" setting
++ * (like the DX6/7 list): the HAL never converts P8 texels for GL, so P8
++ * textures drew blank (GTA 3's world and loading screens). NVIDIA's own G86
++ * driver offers no P8 either, and RenderWare then expands the texels itself. */
++static DWORD dx8_format_count(void)
++{
++	VMHAL_enviroment_t env;
++	GetVMHALenv(&env);
++	return env.allow_palette ? MYTEXTUREFORMATSDX8_COUNT : MYTEXTUREFORMATSDX8_COUNT - 1;
++}
++
+ DDENTRY_FPUSAVE(DestroyDDLocal32, LPDDHAL_DESTROYDDLOCALDATA, lpdddd)
+ {
+ 	TRACE_ENTRY
+@@ -246,7 +257,7 @@ static void GetDriverInfo2(DD_GETDRIVERINFO2DATA* pgdi2, LONG *lpRVal, DWORD *lp
+ 			// we support. Get the extended data structure so
+ 			// we can fill in the format count field.
+ 			DD_GETFORMATCOUNTDATA *pgfcd = (DD_GETFORMATCOUNTDATA*)pgdi2;
+-			pgfcd->dwFormatCount = MYTEXTUREFORMATSDX8_COUNT;
++			pgfcd->dwFormatCount = dx8_format_count();
+ 			// Note : DX9 runtime passes in 0x900 in dwReserved
+ 			*lpActualSize = sizeof(DD_GETFORMATCOUNTDATA);
+ 			*lpRVal = DD_OK;
+@@ -259,7 +270,7 @@ static void GetDriverInfo2(DD_GETDRIVERINFO2DATA* pgdi2, LONG *lpRVal, DWORD *lp
+ 			// Get the extended data structure so we can fill in
+ 			// the format field.
+ 			DD_GETFORMATDATA *pgfd = (DD_GETFORMATDATA*)pgdi2;
+-			if(pgfd->dwFormatIndex >= MYTEXTUREFORMATSDX8_COUNT)
++			if(pgfd->dwFormatIndex >= dx8_format_count())
+ 			{
+ 				*lpActualSize = 0;
+ 				*lpRVal       = DDERR_INVALIDPARAMS;
