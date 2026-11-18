@@ -1,0 +1,59 @@
+vmhal3d (JHRobotics/vmhal9x 8bc480e) native DXT textures. MesaBufferTextureLoad decoded every
+DXT1/3/5 texture level to RGBA8 on the CPU (MesaDXT1/3/5, ported from Wine9x) and uploaded
+that, although Mesa's nv50 samples S3TC itself. GTA 3 streams DXT textures while the player
+moves: the decode cost up to 0.2-0.4 s per new area on the T61, and every texture took 4-8x
+its size in video memory. A DXT level without a colour key now goes to GL unchanged with
+glCompressedTexImage2D (block size from the level's width/height); colour-keyed DXT surfaces
+keep the CPU path (the decoder applies the key). The GL must list
+GL_EXT_texture_compression_s3tc; registry hal\dxtconvert=1 forces the old decode.
+Apply after vmhal3d-fastdraw.patch (mesa3d_buffer.c is LF after the CR strip).
+
+--- a/mesa3d_buffer.c
++++ b/mesa3d_buffer.c
+@@ -671,6 +671,21 @@
+ 	}
+ }
+ 
++/* DXT textures go to GL compressed unless the registry asks for the old CPU
++ * decode (HKLM\Software\vmdisp9x\...\hal dxtconvert=1) or GL lacks S3TC. */
++static int mesa_dxt_native = -1;
++static BOOL MesaDXTNative(mesa3d_ctx_t *ctx)
++{
++	if(mesa_dxt_native < 0)
++	{
++		const char *ext = (const char *)ctx->entry->proc.pglGetString(GL_EXTENSIONS);
++		mesa_dxt_native = (ext != NULL && strstr(ext, "GL_EXT_texture_compression_s3tc") != NULL) ? 1 : 0;
++		if(vmhal_setup_str("hal", "dxtconvert", FALSE) != NULL && vmhal_setup_dw("hal", "dxtconvert"))
++			mesa_dxt_native = 0;
++	}
++	return mesa_dxt_native ? TRUE : FALSE;
++}
++
+ NUKED_LOCAL void MesaBufferTextureLoad(mesa3d_ctx_t *ctx, DWORD dxid, int tmu, BOOL force)
+ {
+ 	TOPIC("SURFEX", "MesaBufferTextureLoad(..., %d, %d, %d)", dxid, tmu, force);
+@@ -797,7 +812,23 @@
+ 					else
+ 					{
+ 						void *data = NULL;
+-						if(glinfo.compressed)
++						if(glinfo.compressed && !glinfo.colorkey && MesaDXTNative(ctx))
++						{
++							/* the G86 samples DXT1/3/5 itself: upload the blocks as they are
++							 * (was: decoded to RGBA8 on the CPU - GTA 3 streams DXT textures,
++							 * 0.2-0.4 s per new area, and 4-8x the texture memory) */
++							GLsizei dxt_size = ((glinfo.width + 3) / 4) * ((glinfo.height + 3) / 4) *
++								(glinfo.internalformat == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ? 8 : 16);
++							GL_CHECK(entry->proc.pglCompressedTexImage2D(
++								glinfo.target,
++								level,
++								glinfo.internalformat,
++								glinfo.width,
++								glinfo.height,
++								0,
++								dxt_size, dd->flatptr));
++						}
++						else if(glinfo.compressed)
+ 						{
+ 							switch(glinfo.internalformat)
+ 							{

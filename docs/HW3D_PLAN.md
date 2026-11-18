@@ -1472,6 +1472,25 @@ C:\nvkick.txt, C:\nvclk.txt.
     Open: an intermittent T61 freeze ~130 s into GTA 3's startup (3 of ~8 starts, before
     any draw reached GL; the shim log ends after context creation - intro movies?).
     Remaining per frame: GL draws 13 ms, TextureLoad 4.4, readback 3.9, texenv ~5.
+  - 3126: GTA 3 stalled for seconds while moving and "hung" on quit. Three fixes:
+    1. nvmini.vxd (vxd_fbhda_dd.c): print_surfaces() dumped the whole FBHDA surface table
+       at every FBHDA_DD_surface_set/delete; DBGRING dbg_printf also does outp(0xE9) per
+       character (slow on real hardware) -> 0.3-2 s per streamed texture with ~2000
+       surfaces. Compiled out (DBG_SURFACES); per-surface lines commented. Scripted route
+       (gdrive.exe: held keys/mouse via t61input.vxd, per-flip QPC log): worst frame
+       2141 -> 589 ms, frames >250 ms 15 -> 2; r1 27.3 / r2 28.8 fps.
+    2. vmhal3d-dxtnative.patch: DXT1/3/5 levels without a colour key ->
+       glCompressedTexImage2D (was a CPU decode to RGBA8); hal\dxtconvert=1 = old.
+       TextureLoad in slow frames 946 -> 512 ms.
+    3. vmhal3d-freeptr.patch: hal3d_free(void **) got the buffer itself in MesaDestroyCtx
+       (osbuf, temp.buf), the failed-create path and MesaTempFree -> HeapFree(first
+       pixel) -> KernelEx page fault in hal3d_ContextDestroy32 on exit, its box hidden
+       behind the last frame (Progman left at 640x480 -> garbage bar). Found with
+       `t61.py kids` (now reads Edit text: the crash Details) + a Toolhelp/
+       ReadProcessMemory stack read + an unstripped vmhal3d relink.
+    Remaining hitches were the T61 disk in PIO (DMACurrentlyUsed=00, 2.3 MB/s, ~70% CPU in
+    ring 0; whole-system gaps of 20-56 ms). The user enabled DMA: smooth. Ruled out with
+    timers: shader compiles (all during load), shim GPU waits/ioctls, inline vertex push.
 
 ### NEXT: (a) real present for the nouveau screen (wgl_present is a stub guard, so a
 drawn frame never reaches the display) - read the GPU color buffer back via the shim

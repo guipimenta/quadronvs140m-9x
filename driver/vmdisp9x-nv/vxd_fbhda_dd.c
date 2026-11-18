@@ -113,7 +113,7 @@ static void surf_move(DWORD start_index, DWORD new_cnt, DWORD old_cnt)
 	DWORD move_dst = start_index + new_cnt;
 	DWORD resize = new_cnt-old_cnt; /* may carry */
 
-	dbg_printf("surf_move: %ld %ld %ld\n", start_index, new_cnt, old_cnt);
+	//dbg_printf("surf_move: %ld %ld %ld\n", start_index, new_cnt, old_cnt); /* 3126: per-surface, see print_surfaces */
 	
 	if((surfaces_tlb_length+resize) > surfaces_tlb_size)
 	{
@@ -340,8 +340,14 @@ BOOL FBHDA_DD_surface_get(void *flat, FBHDA_DD_surface_t *info)
 	return FALSE;
 }
 
+/* 3126: the table dump is compiled out. It ran at every surface create/delete: with
+ * DBGRING each character also goes to I/O port 0xE9 (a slow bus write on real
+ * hardware), so GTA 3's ~2000 texture surfaces cost 0.3-2 s per texture it streamed
+ * in (the T61 stalled for seconds while walking), and a 16 KB ring cannot hold the
+ * dump anyway. Build with -DDBG_SURFACES to get it back. */
 static void print_surfaces()
 {
+#ifdef DBG_SURFACES
 	DWORD i;
 	dbg_printf("+-------------------\n");
 	for(i = 0; i < surfaces_tlb_length; i++)
@@ -353,6 +359,7 @@ static void print_surfaces()
 			surfaces_tlb[i].width, surfaces_tlb[i].height);
 	}
 	dbg_printf("+-------------------\n");
+#endif
 }
 
 BOOL FBHDA_DD_surface_set(void *flat, FBHDA_DD_surface_t *info)
@@ -365,7 +372,7 @@ BOOL FBHDA_DD_surface_set(void *flat, FBHDA_DD_surface_t *info)
 		return FALSE;
 	}
 
-	dbg_printf("FBHDA_DD_surface_set(%lX:%ld)\n", flat, info->size);
+	//dbg_printf("FBHDA_DD_surface_set(%lX:%ld)\n", flat, info->size); /* 3126: per-surface, see print_surfaces */
 
 	if(sutf_tlb_lookup(flat, info->size, &first, &cnt))
 	{
@@ -439,7 +446,7 @@ BOOL FBHDA_DD_surface_set(void *flat, FBHDA_DD_surface_t *info)
 void FBHDA_DD_surface_delete(void *flat)
 {
 	surface_t *s;
-	dbg_printf("FBHDA_DD_surface_delete(%lX)\n", flat);
+	//dbg_printf("FBHDA_DD_surface_delete(%lX)\n", flat); /* 3126: per-surface, see print_surfaces */
 
 	if(surf_off_valid(flat))
 	{

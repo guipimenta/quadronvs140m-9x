@@ -517,9 +517,12 @@ static int text_equal(HWND w, const char *want)
 
 static void print_window(HWND w, int indent)
 {
-	char t[200], c[64]; RECT r;
-	GetWindowTextA(w, t, sizeof(t));
+	char t[2048], c[64]; RECT r; DWORD_PTR n = 0;
+	GetWindowTextA(w, t, 200);
 	GetClassNameA(w, c, sizeof(c));
+	/* Edit controls keep their text to themselves: ask (e.g. a crash dialog's Details box). */
+	if (!lstrcmpiA(c, "Edit") && !SendMessageTimeoutA(w, WM_GETTEXT, sizeof(t), (LPARAM)t, SMTO_ABORTIFHUNG, 2000, &n))
+		t[0] = 0;
 	GetWindowRect(w, &r);
 	out("%*s%08lx %-20s id %-5d %s%s (%ld,%ld)-(%ld,%ld) \"%s\"\n", indent, "", (unsigned long)(DWORD_PTR)w, c,
 	    GetDlgCtrlID(w), IsWindowVisible(w) ? "" : "hidden ", IsWindowEnabled(w) ? "" : "disabled ",

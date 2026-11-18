@@ -1,5 +1,5 @@
 =====================================================================
-HOW TO USE (build 3125): install the driver, play the game
+HOW TO USE (build 3126): install the driver, play the game
 =====================================================================
 New machine: Display > Settings > Advanced > Adapter > Change > Have Disk > vmdisp9x.inf,
 pick the NVS 140M entry, reboot. The INF sets everything: every OpenGL program and (3116)
@@ -131,6 +131,26 @@ GoldSrc-shaped frame (600 glBegin/glEnd quads over 72 textures, 32 lightmap patc
 The autoexec.cfg in the half-life folder is the SOFTWARE-renderer speed config; on
 the GPU path it is optional (r_dynamic 0 and gl_picmip 1 still cut texture updates
 and texture memory).
+Build 3126 - GTA 3: NO MORE MULTI-SECOND FREEZES WHILE MOVING, AND QUITTING WORKS.
+nvmini.vxd + vmhal3d.dll: copy both to C:\WINDOWS\SYSTEM (vmhal3d.dll is in use while
+Windows runs: safe mode or WININIT.INI) and reboot (nvprobe.exe restamped; nvmini.drv,
+vmhal9x.dll and mesa3d.dll unchanged). Checked on the T61: GTA 3 runs smooth with DMA on,
+quits to a clean desktop.
+What changed:
+- Every time a game created or deleted a texture, the driver wrote its whole surface
+  list to the debug log, one slow I/O write per character. GTA 3 loads textures as you
+  move through the city and froze for up to two seconds at a time. That logging is gone.
+- Compressed (DXT) textures now go to the GPU as they are instead of being unpacked on
+  the CPU first: faster streaming and 4-8 times less video memory. To get the old way
+  back, set hal\dxtconvert=1 in the driver's registry settings.
+- Quitting GTA 3 crashed the Direct3D helper (it freed a wrong pointer). The crash box
+  was hidden behind the game's last picture, so the game looked stuck until it was
+  force-closed, and the desktop came back with a garbage bar at the bottom. It now quits
+  cleanly.
+Still slow? The remaining hitches were the hard disk: Windows 98 ran it without DMA
+(2.3 MB/s, most of the CPU). Device Manager > Disk drives > your disk > Settings > tick
+DMA, reboot (BIOS SATA mode = Compatibility). If Windows then hangs at boot, untick it
+again in Safe Mode.
 Build 3125 - GTA 3: TEXTURES RIGHT, GAMEPLAY 17.9 -> 28.4 FPS (the game caps itself at 30).
 vmhal9x.dll + vmhal3d.dll: copy both to C:\WINDOWS\SYSTEM (in use while Windows runs:
 safe mode or WININIT.INI) and reboot (nvmini.vxd / nvprobe.exe only restamped, mesa3d.dll

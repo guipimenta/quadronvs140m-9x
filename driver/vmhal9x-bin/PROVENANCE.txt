@@ -14,7 +14,7 @@ Source checkout: /home/guilherme/projects/audio_reverse/vmhal9x-src
 vmdisp9x.dll is that build unchanged.
 
 vmhal9x.dll and vmhal3d.dll (since 2026-10-31, after build 3120; both again
-2026-11-18) = the same commit and
+2026-11-18, vmhal3d.dll 2026-11-19) = the same commit and
 config.mk with the patches from this folder, applied in this order:
   vmhal9x-flippitch.patch  (vmhal9x) flip-chain surfaces get the screen's pitch on any
                            driver, not only VESA (NV50 pads 800x600 rows to 1792 bytes)
@@ -42,8 +42,14 @@ config.mk with the patches from this folder, applied in this order:
                            arrays go out as one glDrawArrays/glDrawElements instead of 4-6
                            immediate-mode calls per vertex (GTA 3: 17.9 -> 28.4 fps);
                            C:\vmhal.slow switches it off
+  vmhal3d-dxtnative.patch  (vmhal3d) DXT1/3/5 levels without a colour key go to GL compressed
+                           (glCompressedTexImage2D) instead of a CPU decode to RGBA8; registry
+                           hal\dxtconvert=1 = old decode (GTA 3 streaming, 2026-11-19)
+  vmhal3d-freeptr.patch    (vmhal3d) hal3d_free gets the pointer's address in MesaDestroyCtx,
+                           the failed-create path and MesaTempFree (HeapFree was called on the
+                           buffer's first pixel: GTA 3 crashed in KernelEx when quitting)
 The four after flatshade are Dungeon Keeper 2 (800x600 black world, menu text tiles; T61,
-GPU and llvmpipe); the last three are GTA 3 (2026-11-17/18; nop8 and destroyfree change vmhal9x.dll only).
+GPU and llvmpipe); the last five are GTA 3 (2026-11-17/19; nop8 and destroyfree change vmhal9x.dll only).
 Rebuild: git archive the commit into an empty folder, copy config.mk and the
 fixlink/nocrt/regex submodule folders (and fixlink.bin) from the checkout, strip the
 CRs of the twelve patched files (ddraw.c mesa3d.h mesa3d.c mesa3d_buffer.c d3dhal.c

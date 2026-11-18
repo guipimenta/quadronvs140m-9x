@@ -1,0 +1,45 @@
+vmhal3d (JHRobotics/vmhal9x 8bc480e) frees the right pointer. hal3d_free(void **ptr) frees *ptr
+and clears it, but four calls in mesa3d.c passed the buffer itself (void * converts to void **
+silently): MesaDestroyCtx's osbuf and temp.buf, the failed-create path's osbuf, and
+MesaTempFree's non-scratch buffers. Each called HeapFree on the buffer's first four bytes (for
+osbuf, the top-left pixel of the last frame) and leaked the real block. With KernelEx that
+HeapFree faults (KEXBASEN.DLL): GTA 3 crashed in hal3d_ContextDestroy32 when quitting, its
+"illegal operation" box hidden behind the game's last frame, so the game looked hung until it
+was force-closed. Now the address of the pointer is passed.
+Apply after vmhal3d-dxtnative.patch (mesa3d.c is LF after the CR strip).
+
+--- a/mesa3d.c
++++ b/mesa3d.c
+@@ -563,7 +563,7 @@
+ 					entry->proc.pOSMesaDestroyContext(ctx->osctx);
+ 
+ 				if(ctx->osbuf)
+-					hal3d_free(ctx->osbuf);
++					hal3d_free(&ctx->osbuf);
+ 			}
+ 			else
+ 			{
+@@ -744,12 +744,12 @@
+ 
+ 	if(ctx->osbuf != NULL)
+ 	{
+-		hal3d_free(ctx->osbuf);
++		hal3d_free(&ctx->osbuf);
+ 	}
+ 	
+ 	if(ctx->temp.buf)
+ 	{
+-		hal3d_free(ctx->temp.buf);
++		hal3d_free(&ctx->temp.buf);
+ 		ctx->temp.size = ctx->temp.width = 0;
+ 		ctx->temp.buf = NULL;
+ 	}
+@@ -4384,7 +4384,7 @@
+ 		}
+ 		else
+ 		{
+-			hal3d_free(ptr);
++			hal3d_free(&ptr);
+ 		}
+ 	}
+ }
