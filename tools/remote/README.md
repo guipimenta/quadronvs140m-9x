@@ -20,7 +20,7 @@ stores it as `t61u<crc32>.exe` and uploads it only when that version is missing.
 | `t61.py sh -t 60 "dir /b C:\NVLOGS" "ver"` | DOS lines run as a batch file in `C:\remote` (one per argument; newlines split too) |
 | `t61.py start C:\WINDOWS\SYSTEM\dxdiag.exe` / `kill dxdiag.exe` | start without waiting / terminate |
 | `t61.py logs DIR` | fetch C:\nvshim.log, nvlast, nvkick, nvtail, nvclk |
-| `t61.py shot screen.png` | screenshot of the T61 desktop |
+| `t61.py shot screen.png [shadow]` | screenshot of the T61 desktop (`shadow`: from the RAM shadow) |
 | `t61.py install FILE...` | copy into C:\WINDOWS\SYSTEM, previous copy kept in C:\NVBACKUP |
 | `t61.py reboot [force]` | restart like the Start menu, wait for the agent, skip the network logon (Cancel, nothing typed), wait for the desktop |
 | `t61.py autostart on\|off\|show` | start the agent at boot: RunServices (before logon) + Run, both `C:\remote\t61boot.exe supervise` |
@@ -47,9 +47,11 @@ Limits:
 - A file in use cannot be replaced (mesa3d.dll while a GL/D3D program runs: `kill` it first).
 - The debugger cannot see faults in 16-bit code (DDRAW16, nvmini.drv): such a process can
   vanish with exit code -1 and no exception event.
-- `shot` reads the VRAM page the display driver's FBHDA says is on screen (`surface`), so
-  page-flipping DirectDraw/Direct3D games show their visible page (until 2026-10-31 it
-  captured GDI's page, black in about 3 of 4 shots of a flipping game).
+- `shot` reads the scanout, VRAM 0 (nvmini's native mode is single-buffered: the blitter
+  copies the page the FBHDA says is on screen, `surface`, a RAM-shadow offset, to VRAM 0).
+  Until 2026-11-17 it read VRAM at `surface` and gave flipping games (GTA 3) stripes of
+  stale VRAM. VRAM reads are slow, so a moving scene still comes out banded:
+  `shot X.png shadow` reads the shown RAM-shadow page instead (consistent, no VRAM).
   Without an FBHDA (or at 8 bpp) it falls back to GDI: `shot` captures what GDI sees. OpenGL programs on the GPU present through our own
   path straight into the scanout, so `shot` shows the last GDI picture (e.g. Half-Life's
   "Loading...") while the game runs. Direct3D (vmhal3d) frames do show. A VRAM scanout
@@ -74,4 +76,4 @@ Limits:
 
 Build the helper (checked against Win98 exports):
 
-    i686-w64-mingw32-gcc -O2 -s -Wall -Wno-format-truncation tools/remote/t61util.c -o tools/remote/t61util.exe -lgdi32 -lwinmm
+    i686-w64-mingw32-gcc -O2 -s -Wall -Wno-format-truncation tools/remote/t61util.c -o tools/remote/t61util.exe -lgdi32 -lwinmm -lole32 -luuid -lshell32

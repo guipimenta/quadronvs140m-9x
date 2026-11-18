@@ -386,6 +386,7 @@ struct fbhda_head {
 };
 #define OP_FBHDA_SETUP 0x110B
 
+static int shot_shadow = 0;   /* "shot DST shadow": read the RAM shadow (what the program drew), not VRAM */
 static int shot_scanout(BYTE *bits, int w, int h, DWORD stride, DWORD *page)
 {
 	struct fbhda_head *hda = NULL;
@@ -401,7 +402,7 @@ static int shot_scanout(BYTE *bits, int w, int h, DWORD stride, DWORD *page)
 	 * dwords per call) when it is there, the shadow otherwise. */
 	{
 		static DWORD row[4096];
-		HANDLE v = CreateFileA("\\\\.\\nvmini.vxd", 0, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		HANDLE v = shot_shadow ? INVALID_HANDLE_VALUE : CreateFileA("\\\\.\\nvmini.vxd", 0, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 		if (v != INVALID_HANDLE_VALUE && hda->pitch <= sizeof(row)) {
 			int good = 1;
 			for (y = 0; y < h && good; y++) {
@@ -409,7 +410,11 @@ static int shot_scanout(BYTE *bits, int w, int h, DWORD stride, DWORD *page)
 				const BYTE *src = (const BYTE *)row;
 				BYTE *d = bits + (DWORD)(h - 1 - y) * stride;
 				while (done < dw) {
-					in[0] = hda->surface + (DWORD)y * hda->pitch + done * 4;
+					/* the scanout is VRAM 0: nvmini's native mode is single-buffered, the
+					 * blitter copies the current shadow page (hda->surface, a RAM offset)
+					 * there. Reading VRAM at hda->surface gave flipping games stripes of
+					 * stale VRAM (GTA 3, 2026-11-17). */
+					in[0] = (DWORD)y * hda->pitch + done * 4;
 					in[1] = dw - done > 1024 ? 1024 : dw - done;
 					if (!DeviceIoControl(v, 0x501A, in, sizeof(in), row + done, in[1] * 4, &got, NULL)) { good = 0; break; }
 					done += in[1];
@@ -1432,6 +1437,7 @@ int main(int argc, char **argv)
 	if (!strcmp(c, "ps") && argc == 2) return cmd_ps(NULL);
 	if (!strcmp(c, "kill") && argc == 3) return cmd_ps(argv[2]);
 	if (!strcmp(c, "shot") && argc == 3) return cmd_shot(argv[2]);
+	if (!strcmp(c, "shot") && argc == 4 && !strcmp(argv[3], "shadow")) { shot_shadow = 1; return cmd_shot(argv[2]); }
 	if (!strcmp(c, "wins") && argc <= 3) { EnumWindows(enum_top, (LPARAM)(argc == 3 ? argv[2] : "*")); return 0; }
 	if (!strcmp(c, "kids") && argc == 3) { EnumWindows(enum_top_kids, (LPARAM)argv[2]); return 0; }
 	if (!strcmp(c, "focus") && argc == 3) return cmd_focus(argv[2], 0);

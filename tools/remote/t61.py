@@ -273,8 +273,8 @@ def main():
                     t.get(log, dest / log.split("\\")[-1])
                 else:
                     print(f"{log}: not present")
-        elif v == "shot" and len(x) == 1:
-            t.util("shot", "t61shot.bmp")
+        elif v == "shot" and len(x) in (1, 2):
+            t.util("shot", "t61shot.bmp", *x[1:2])
             bmp = t.tmp / "shot.bmp"
             t.c.get("t61shot.bmp", bmp)
             t.util("del", "t61shot.bmp", echo=False)
